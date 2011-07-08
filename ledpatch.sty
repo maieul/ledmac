@@ -1,0 +1,316 @@
+% ledpatch.sty
+% Copyright Peter Wilson 2004, 2005
+% herries dot press at earthlink dot net
+%
+% Patch(es) for ledmac
+%
+%
+%%%%\ProvidesFile{ledpatch}[2004/12/18 v0.1 patches for ledmac v0.6]
+%\ProvidesFile{ledpatch}[2005/01/11 v0.2 patches for ledmac v0.6]
+%\ProvidesFile{ledpatch}[2005/03/24 v0.3 patches for ledmac v0.7]
+%\ProvidesFile{ledpatch}[2005/04/15 v0.3a patches for ledmac v0.7]
+%\ProvidesFile{ledpatch}[2005/06/02 v0.4 patches for ledmac v0.7]
+\ProvidesFile{ledpatch}[2005/08/22 v0.5 patches for ledmac v0.7]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% v0.5 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% There was a missing \else in \l@dcheckcols just before the
+%%% error message. The symptom was reported by Tobias Verbeke.
+
+\renewcommand*{\l@dcheckcols}{%
+  \ifnum\l@dcolcount=1\relax
+  \else
+    \ifnum\l@dampcount=1\relax
+    \else
+      \ifnum\l@dcolcount=\l@dampcount\relax
+      \else
+        \l@d@err@UnequalColumns
+      \fi
+    \fi
+    \l@dampcount=\l@dcolcount
+  \fi}
+
+%%% \startlock and \endlock did not work properly in the middle
+%%% of a line. Problem reported by Stefano Cracolic
+%%% Letting S stand for \startlock and E for \endlock and t for regular
+%%% text, numbering is per the following examples:
+%%%
+%%%  1 Sttttt     1 Sttttt     1 Sttttt     1 Sttttt    
+%%%    tttttt       tttttt       tttttt       tttttt    
+%%%  2 ttEStt     2 ttttES       tttttE       tttttt    
+%%%    tttttt       tttttt     2 Sttttt     2 EStttt    
+%%%    tttttt       tttttt       tttttt       tttttt    
+%%%    ttEttt       ttEttt       ttEttt       ttEttt    
+%%%  3 tttttt     3 tttttt     3 tttttt     3 tttttt    
+%%%  4 tttStt     4 tttttS     4 tttStt     4 ttSEtt    
+%%%    tttttt       tttttt       tttttt     5 tttttt    
+%%%    tttttt       tttttt       tttttt     6 tttttt    
+%%%    ttEttt       Ettttt       tttttE     7 tttttt    
+%%%  5 tttttt     5 tttttt     5 tttttt     8 tttttt    
+
+\renewcommand*{\do@lockon}{%
+  \ifx\next\lock@off
+    \global\let\lock@off=\skip@lockoff
+  \else
+    \do@lockonL
+  \fi}
+
+\newcommand*{\do@lockonL}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@list
+%%    \ifcase\sub@lock
+%%      \sub@lock \@ne
+%%    \else
+%%      \sub@lock \z@
+%%    \fi
+    \ifnum\sub@lock=\z@
+      \sub@lock \@ne
+    \else
+      \ifnum\sub@lock=\thr@@
+        \sub@lock \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@list
+%%      \ifcase\@lock
+%%        \@lock \@ne
+%%      \else
+%%        \@lock \z@
+%%      \fi
+    \ifnum\@lock=\z@
+      \@lock \@ne
+    \else
+      \ifnum\@lock=\thr@@
+        \@lock \@ne
+      \fi
+    \fi
+  \fi}
+
+\newcommand*{\do@lockoffL}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+    \xright@appenditem{-1006}\to\actions@list
+    \ifnum\sub@lock=\tw@
+      \sub@lock \thr@@
+    \else
+      \sub@lock \z@
+    \fi
+  \else
+    \xright@appenditem{-1004}\to\actions@list
+    \ifnum\@lock=\tw@
+      \@lock \thr@@
+    \else
+      \@lock \z@
+    \fi
+  \fi}
+\renewcommand*{\do@lockoff}{\do@lockoffL}
+\global\let\lock@off=\do@lockoff
+
+\renewcommand*{\do@actions@fixedcode}{%
+  \ifcase\@l@dtempcnta
+  \or%                     % 1001
+    \global\sublines@true
+  \or%                     % 1002
+    \global\sublines@false
+  \or%                     % 1003
+%%    \ifcase\@lock
+%%      \global\@lock=\@ne
+%%    \else
+%%      \global\@lock=\z@
+%%    \fi
+      \global\@lock=\@ne
+  \or%                     % 1004
+    \ifnum\@lock=\tw@
+      \global\@lock=\thr@@
+    \else
+      \global\@lock=\z@
+    \fi
+  \or%                     % 1005
+5%    \ifcase\sub@lock
+%%      \global\sub@lock=\@ne
+%%    \else
+%%      \global\sub@lock=\z@
+%%    \fi
+     \global\sub@lock=\@ne
+  \or%                     % 1006
+    \ifnum\sub@lock=\tw@
+      \global\sub@lock=\thr@@
+    \else
+      \global\sub@lock=\z@
+    \fi
+  \or%                     % 1007
+    \l@dskipnumbertrue
+  \else
+    \led@warn@BadAction
+  \fi}
+
+
+
+%%% Reworked the sidenotes code.
+%%% Sidenotes are normally aligned on their bottom lines,
+%%% i.e, multiline notes extend upwards. To align notes on
+%%% their top lines (multiline notes extend downwards):
+%%% \rightnoteupfalse and/or \leftnoteupfalse. The default
+%%% is, of course, \rightnoteuptrue and \leftnoteuptrue.
+
+\newif\ifrightnoteup
+  \rightnoteuptrue
+
+\renewcommand*{\l@drsnote}[1]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vl@drsnote{#1}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+
+\renewcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
+
+\renewcommand*{\setl@drp@rbox}[1]{%
+  {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
+   \global\setbox\l@drp@rbox
+   \ifrightnoteup
+     =\vbox to\z@{\vss#1}%
+   \else
+     =\vbox to0.7\baselineskip{\strut#1\vss}%
+   \fi}}
+
+\newif\ifleftnoteup
+  \leftnoteuptrue
+
+\renewcommand*{\l@dlsnote}[1]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+
+\renewcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
+
+\renewcommand*{\setl@dlp@rbox}[1]{%
+  {\parindent\z@\hsize=\ledlsnotewidth\ledlsnotefontsetup
+   \global\setbox\l@dlp@rbox
+   \ifleftnoteup
+     =\vbox to\z@{\vss #1}%
+   \else
+     =\vbox to 0.70\baselineskip{\strut#1\vss}%
+   \fi}}
+
+\renewcommand*{\l@dcsnote}[1]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+
+\renewcommand*{\vl@dcsnote}[1]{\gdef\l@dcsnotetext{#1}}
+ 
+\renewcommand*{\affixside@note}{%
+  \gdef\@templ@d{}%
+  \ifx\@templ@d\l@dcsnotetext \else
+    \if@twocolumn
+      \if@firstcolumn
+        \setl@dlp@rbox{\l@dcsnotetext}%
+      \else
+        \setl@drp@rbox{\l@dcsnotetext}%
+      \fi
+    \else
+      \@l@dtempcntb=\sidenote@margin
+      \ifnum\@l@dtempcntb>\@ne
+        \advance\@l@dtempcntb by\page@num
+      \fi
+      \ifodd\@l@dtempcntb
+        \setl@drp@rbox{\l@dcsnotetext}%
+      \else
+        \setl@dlp@rbox{\l@dcsnotetext}%
+      \fi
+    \fi
+  \fi}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% v0.4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% The instructions on page 26 in the manual regarding creating
+%%% a new familiar footnote series are incorrect. Instead follow
+%%% how the provided series are defined, that is, for example:
+%%% \makeatletter
+%%% \newcommand{\footnoteD}[1]{%
+%%%   \stepcounter{footnoteD}%
+%%%   \protected@xdef\@thefnmarkD{\thefootnoteD}%
+%%%   \@footnotemarkD
+%%%   \vfootnoteD{D}{#1}\m@mmf@prepare}
+%%% 
+%%% \newcounter{footnoteD} 
+%%%   \renewcommand{\thefootnoteD}{\arabic{footnoteD}}
+%%% \newinsert\footinsD
+%%% 
+%%% \newcommand{\mpfootnoteD}[1]{%
+%%%   \stepcounter{footnoteD}%
+%%%   \protected@xdef\@thefnmarkD{\thefootnoteD}%
+%%%   \@footnotemarkD 
+%%%   \mpvfootnoteD{D}{#1}\m@mmf@prepare}
+%%% \newinsert\mpfootinsD
+%%% 
+%%% \footnormalX{D}
+%%% \addfootinsX{D}
+%%% \makeatother
+%%% 
+
+%%% Change \addfootinsX to correct screwups in defining new familar 
+%%% series footnotes. Problem initially noted by Dirk Schlimm 
+%%% (dschlimm@gmail.com) in private email, 2005/05/31
+
+\renewcommand*{\addfootinsX}[1]{%
+  \footnormalX{#1}%
+  \g@addto@macro{\doxtrafeeti}{%
+    \setbox\@outputbox \vbox{%
+      \unvbox\@outputbox
+      \ifvoid\@nameuse{footins#1}\else
+        \@nameuse{footstart#1}{#1}\@nameuse{footgroup#1}{#1}\fi}}%
+  \g@addto@macro{\doreinxtrafeeti}{%
+    \ifvoid\@nameuse{footins#1}\else
+      \insert\@nameuse{footins#1}{\unvbox\@nameuse{footins#1}}\fi}%
+%%%  \g@addto@macro{\l@dfambeginmini}{%
+%%%    \expandafter\let\csname footnote#1\endcsname=\@nameuse{mpfootnote#1}}%
+  \g@addto@macro{\l@dfambeginmini}{%
+    \expandafter\expandafter\expandafter\let\expandafter\expandafter
+      \csname footnote#1\endcsname \csname mpfootnote#1\endcsname}%
+%%%  \g@addto@macro{\l@dfamendmini}{%
+%%%    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1{#1}}}%
+  \g@addto@macro{\l@dfamendmini}{%
+    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1}{#1}\fi}%
+}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% v0.3a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Slight efficiency improvement (particularly for ledpar)
+
+\newcommand*{\l@dunhbox@line}[1]{\unhbox #1}
+
+\renewcommand*{\do@line}{%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@linehook
+\l@demptyd@ta
+   \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@num
+  \affixline@num
+  \hb@xt@ \linewidth{\l@dld@ta\add@inserts\affixside@note
+    \l@dlsn@te
+%%%%    {\ledllfill\hb@xt@ \wd\one@line{\new@line\unhbox\one@line}\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+    \l@drsn@te
+  }}
+  \add@penalties}
+
+
+\endinput
+
+%%%%%%%%%%% earlier patches now in ledmac.sty itself
+

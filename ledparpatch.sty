@@ -1,0 +1,470 @@
+% ledparpatch.sty
+% Copyright Peter Wilson 2004, 2005
+% herries dot press at earthlink dot net
+%
+% Patch(es) for ledpar
+%
+%
+%\ProvidesFile{ledparpatch}[2005/01/11 v0.1 patches for ledpar v0.2]
+%\ProvidesFile{ledparpatch}[2005/04/15 v0.2 patches for ledpar v0.2]
+%\ProvidesFile{ledparpatch}[2005/08/22 v0.3 patches for ledpar v0.3b]
+\ProvidesFile{ledparpatch}[2005/09/15 v0.4 patches for ledpar v0.3b]
+
+%%%%%%%%%%%%%%%%%%%%%%%%% v0.3 (& v0.4) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% sidenote extensions
+
+\renewcommand*{\l@drsnote}[1]{%
+  \ifnumberedpar@
+    \ifledRcol
+      \xright@appenditem{\noexpand\vl@drsnote{#1}}%
+                         \to\inserts@listR
+      \global\advance\insert@countR \@ne
+    \else
+      \xright@appenditem{\noexpand\vl@drsnote{#1}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne
+    \fi
+  \fi\ignorespaces}
+
+\renewcommand*{\l@dlsnote}[1]{%
+  \ifnumberedpar@
+    \ifledRcol
+      \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
+                         \to\inserts@listR
+      \global\advance\insert@countR \@ne
+    \else
+      \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne
+    \fi
+  \fi\ignorespaces}
+
+\renewcommand*{\l@dcsnote}[1]{%
+  \ifnumberedpar@
+    \ifledRcol
+      \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
+                         \to\inserts@listR
+      \global\advance\insert@countR \@ne
+    \else
+      \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne
+    \fi
+  \fi\ignorespaces}
+
+\renewcommand*{\affixside@noteR}{%
+  \gdef\@templ@d{}%
+  \ifx\@templ@d\l@dcsnotetext \else
+    \if@twocolumn
+      \if@firstcolumn
+        \setl@dlp@rbox{\l@dcsnotetext}%
+      \else
+        \setl@drp@rbox{\l@dcsnotetext}%
+      \fi
+    \else
+      \@l@dtempcntb=\sidenote@marginR
+      \ifnum\@l@dtempcntb>\@ne
+        \advance\@l@dtempcntb by\page@num
+      \fi
+      \ifodd\@l@dtempcntb
+        \setl@drp@rbox{\l@dcsnotetext}%
+      \else
+        \setl@dlp@rbox{\l@dcsnotetext}%
+      \fi
+    \fi
+  \fi}
+
+%%% startlock/endlock fixes
+
+
+\newcount\@lockR
+\newcount\sub@lockR
+
+\newcommand*{\do@lockonR}{%
+  \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@listR
+    \ifnum\sub@lockR=\z@
+      \sub@lockR \@ne
+    \else
+      \ifnum\sub@lockR=\thr@@
+        \sub@lockR \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@listR
+    \ifnum\@lockR=\z@
+      \@lockR \@ne
+    \else
+      \ifnum\@lockR=\thr@@
+        \@lockR \@ne
+      \fi
+    \fi
+  \fi}
+
+\renewcommand*{\do@lockon}{%
+  \ifx\next\lock@off
+    \global\let\lock@off=\skip@lockoff
+  \else
+    \ifledRcol
+      \do@lockonR
+    \else
+      \do@lockonL
+    \fi
+  \fi}
+  
+\newcommand{\do@lockoffR}{%
+  \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+  \ifsublines@
+    \xright@appenditem{-1006}\to\actions@listR
+    \ifnum\sub@lockR=\tw@
+      \sub@lockR \thr@@
+    \else
+      \sub@lockR \z@
+    \fi
+  \else
+    \xright@appenditem{-1004}\to\actions@listR
+    \ifnum\@lockR=\tw@
+      \@lockR \thr@@
+    \else
+      \@lockR \z@
+    \fi
+  \fi}
+
+\renewcommand*{\do@lockoff}{%
+  \ifledRcol
+    \do@lockoffR
+  \else
+    \do@lockoffL
+  \fi}
+\global\let\lock@off=\do@lockoff
+
+\newcommand*{\do@actions@fixedcodeR}{%
+  \ifcase\@l@dtempcnta% 
+  \or%                     % 1001
+    \global\sublines@true
+  \or%                     % 1002
+    \global\sublines@false
+  \or%                     % 1003
+    \global\@lockR=\@ne
+  \or%                     % 1004
+    \ifnum\@lockR=\tw@
+      \global\@lockR=\thr@@
+    \else
+      \global\@lockR=\z@
+    \fi
+  \or%                     % 1005
+     \global\sub@lockR=\@ne
+  \or%                     % 1006
+    \ifnum\sub@lockR=\tw@
+      \global\sub@lockR=\thr@@
+    \else
+      \global\sub@lockR=\z@
+    \fi
+  \or%                     % 1007
+    \l@dskipnumbertrue
+  \else
+    \led@warn@BadAction
+  \fi}
+
+\renewcommand*{\do@actionsR}{%
+  \global\let\do@actions@nextR=\relax
+  \@l@dtempcntb=\absline@numR
+  \ifnum\@l@dtempcntb<\next@actionlineR\else
+    \ifnum\next@actionR>-1001\relax
+      \global\page@numR=\next@actionR
+      \ifbypage@R
+        \global\line@numR \z@  \global\subline@numR \z@
+      \fi
+    \else
+      \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -5001\relax
+        \ifsublines@
+          \global\subline@numR=\@l@dtempcnta
+        \else
+          \global\line@numR=\@l@dtempcnta
+        \fi
+      \else
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -1000\relax
+        \do@actions@fixedcodeR
+      \fi
+    \fi
+    \ifx\actionlines@listR\empty
+      \gdef\next@actionlineR{1000000}%
+    \else
+      \gl@p\actionlines@listR\to\next@actionlineR
+      \gl@p\actions@listR\to\next@actionR
+      \global\let\do@actions@nextR=\do@actionsR
+    \fi
+  \fi
+  \do@actions@nextR}
+
+
+\newcommand{\@l@regR}{%
+  \ifx\l@dchset@num\relax \else
+    \advance\absline@numR \@ne
+    \set@line@action
+    \let\l@dchset@num\relax
+    \advance\absline@numR \m@ne
+    \advance\line@numR \m@ne%   % do we need this?
+  \fi
+  \advance\absline@numR \@ne
+  \ifx\next@page@numR\relax \else
+    \page@action
+    \let\next@page@numR\relax
+  \fi
+  \ifx\sub@change\relax \else
+    \ifnum\sub@change>\z@
+      \sublines@true
+    \else
+      \sublines@false
+    \fi
+    \sub@action
+    \let\sub@change\relax
+  \fi
+  \ifcase\@lockR
+  \or
+    \@lockR \tw@
+  \or\or
+    \@lockR \z@
+  \fi
+  \ifcase\sub@lockR
+  \or
+    \sub@lockR \tw@
+  \or\or
+    \sub@lockR \z@
+  \fi
+  \ifsublines@
+    \ifnum\sub@lockR<\tw@
+      \advance\subline@numR \@ne
+    \fi
+  \else
+    \ifnum\@lockR<\tw@
+      \advance\line@numR \@ne \subline@numR \z@
+    \fi
+  \fi}
+
+\renewcommand*{\@l}[2]{%
+  \fix@page{#1}%
+  \ifledRcol
+    \@l@regR
+  \else
+    \@l@reg
+  \fi}
+
+\renewcommand*{\beginnumberingR}{%
+  \ifnumberingR
+    \led@err@NumberingStarted
+    \endnumberingR
+  \fi
+  \global\l@dnumpstartsR \z@
+  \global\pst@rtedRfalse
+  \global\numberingRtrue
+  \global\advance\section@numR \@ne
+  \global\absline@numR \z@
+  \global\line@numR \z@
+  \global\@lockR \z@
+  \global\sub@lockR \z@
+  \global\sublines@false
+  \global\let\next@page@numR\relax
+  \global\let\sub@change\relax
+  \message{Section \the\section@numR R }%
+  \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
+  \l@dend@stuff}
+
+\renewcommand*{\getline@numR}{%
+  \global\advance\absline@numR \@ne
+  \do@actionsR
+  \do@ballastR
+  \ifsublines@
+    \ifnum\sub@lockR<\tw@
+      \global\advance\subline@numR \@ne
+    \fi
+  \else
+    \ifnum\@lockR<\tw@
+      \global\advance\line@numR \@ne 
+      \global\subline@numR \z@
+    \fi
+  \fi}
+
+
+\newcommand*{\ch@cksub@l@ckR}{%
+  \ifcase\sub@lockR
+  \or
+    \ifnum\sublock@disp=\@ne
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\sublock@disp=\tw@
+    \else
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\sublock@disp=\z@
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \fi}
+
+\newcommand*{\ch@ck@l@ckR}{%
+  \ifcase\@lockR
+  \or
+    \ifnum\lock@disp=\@ne
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\lock@disp=\tw@
+    \else
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\lock@disp=\z@
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \fi}
+
+\newcommand*{\f@x@l@cksR}{%
+  \ifcase\@lockR
+  \or
+    \global\@lockR \tw@
+  \or \or
+    \global\@lockR \z@
+  \fi
+  \ifcase\sub@lockR
+  \or
+    \global\sub@lockR \tw@
+  \or \or
+    \global\sub@lockR \z@
+  \fi}
+
+
+%% #1 = subline@numR
+%% #2 = c@firstsublinenumR
+%% #3 = c@sublinenumincrementR
+%%%%%% v0.4 put \relax after each argument; e.g., by #3 -> by #3\relax
+\providecommand*{\l@dcalcnum}[3]{%
+  \ifnum #1 > #2\relax
+    \@l@dtempcnta = #1\relax
+    \advance\@l@dtempcnta by -#2\relax
+    \divide\@l@dtempcnta by #3\relax
+    \multiply\@l@dtempcnta by #3\relax
+    \advance\@l@dtempcnta by #2\relax
+  \else
+    \@l@dtempcnta=#2\relax
+  \fi}
+
+\renewcommand*{\affixline@numR}{%
+\ifl@dskipnumber
+  \global\l@dskipnumberfalse
+\else
+  \ifsublines@
+    \@l@dtempcntb=\subline@numR
+    \l@dcalcnum{\subline@numR}{\c@firstsublinenumR}{\c@sublinenumincrementR}%
+    \ch@cksub@lockR
+  \else
+    \@l@dtempcntb=\line@numR
+    \ifx\linenumberlist\empty
+      \l@dcalcnum{\line@numR}{\c@firstlinenumR}{\c@linenumincrementR}%
+    \else
+      \@l@dtempcnta=\line@numR
+      \edef\rem@inder{,\linenumberlist,\number\line@numR,}%
+        \edef\sc@n@list{\def\noexpand\sc@n@list
+        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
+      \sc@n@list\expandafter\sc@n@list\rem@inder|%
+        \ifx\rem@inder\empty\advance\@l@dtempcnta\@ne\fi
+     \fi
+     \ch@ck@l@ckR
+  \fi
+  \ifnum\@l@dtempcnta=\@l@dtempcntb
+    \if@twocolumn
+      \if@firstcolumn
+        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+      \else
+        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+      \fi
+    \else
+      \@l@dtempcntb=\line@marginR
+      \ifnum\@l@dtempcntb>\@ne
+        \advance\@l@dtempcntb by\page@numR
+      \fi
+      \ifodd\@l@dtempcntb
+        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+      \else
+        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+      \fi
+    \fi
+  \fi
+  \f@x@l@cksR
+\fi}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%% v0.2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand*{\do@lineL}{%
+  \advance\countLline \@ne
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
+  {\vbadness=10000 
+   \splittopskip=\z@
+   \do@lineLhook
+   \l@demptyd@ta
+   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
+                           to\baselineskip}% 
+  \unvbox\one@line \global\setbox\one@line=\lastbox 
+  \getline@num
+  \setbox\l@dleftbox
+  \hb@xt@ \Lcolwidth{%
+    \affixline@num
+    \l@dld@ta
+    \add@inserts
+    \affixside@note
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }}%
+  \add@penaltiesL
+  \global\advance\@donereallinesL\@ne
+  \global\advance\@donetotallinesL\@ne
+\else
+  \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+  \global\advance\@donetotallinesL\@ne
+\fi}
+
+\renewcommand*{\do@lineR}{%
+  \advance\countRline \@ne
+  \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
+  {\vbadness=10000 
+   \splittopskip=\z@
+   \do@lineRhook
+   \l@demptyd@ta
+   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
+                           to\baselineskip}% 
+  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
+  \getline@numR
+  \setbox\l@drightbox
+  \hb@xt@ \Rcolwidth{%
+    \affixline@numR
+    \l@dld@ta
+    \add@insertsR
+    \affixside@noteR
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@lineR{\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }}%
+  \add@penaltiesR
+  \global\advance\@donereallinesR\@ne
+  \global\advance\@donetotallinesR\@ne
+\else
+  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
+  \global\advance\@donetotallinesR\@ne
+\fi}
+
+\endinput
+
+%%%%%%%%%%%%%%%%%%%% v0.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%% v0.1 stuff now in ledpar.sty itself
+
