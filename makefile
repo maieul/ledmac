@@ -10,10 +10,10 @@ PACKAGE = *.dtx \
 
 
 
-.PHONY: all dist clean cleanall
+.PHONY: all dist clean
 
 
-all: ledmac.sty ledmac.pdf ledpar.sty ledpar.pdf ledarab.sty ledarab.pdf
+all: ledmac.sty ledmac.pdf ledpar.sty ledpar.pdf ledarab.sty ledarab.pdf dist
 
 doc: *.pdf
 
@@ -28,10 +28,10 @@ doc: *.pdf
 
 
 dist: $(PACKAGE)
-	@$(RM) ledmac.zip
-	zip ledmac.zip $(PACKAGE)
+	@$(RM) ../ledmac.zip
+	zip ../ledmac.zip $(PACKAGE)
+	
 
 clean:
 	@$(RM) *.aux *.log *.out *.toc *tex *.pdf ledmac.sty ledarab.sty ledpar.sty afoot.sty *ind *ilg  *lof *idx
-cleanall: clean
-	@$(RM)  *.zip
+
