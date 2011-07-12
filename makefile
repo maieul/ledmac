@@ -8,9 +8,9 @@ PACKAGE = *.dtx \
 		  README \
 		  Makefile
 
-EPS = djd17novL.eps djdpoems3.eps ledarden.eps ledfeat.eps djd17novR.eps  djdpoems4.eps  ledbraonain.eps  ledioc.eps  djdpoems1.eps  egarab.eps  ledeasy.eps  ledmixed.eps   djdpoems2.eps  egarabpar.eps  ledekker.eps  villon.eps
 
-.PHONY: all doc dist clean cleanall
+
+.PHONY: all dist clean cleanall
 
 
 all: ledmac.sty ledmac.pdf ledpar.sty ledpar.pdf ledarab.sty ledarab.pdf
@@ -20,8 +20,10 @@ doc: *.pdf
 %.sty: %.ins %.dtx 
 	pdflatex $*.ins
 
-%.pdf: %.ins %.dtx $(EPS)
+%.pdf: %.sty %.dtx djd17novL.eps# djdpoems3.eps ledarden.eps ledfeat.eps djd17novR.eps djdpoems4.eps ledbraonain.eps ledioc.eps djdpoems1.eps egarab.eps ledeasy.eps ledmixed.eps djdpoems2.eps egarabpar.eps ledekker.eps villon.eps
 	pdflatex $*.dtx
+	makeindex $*
+	pdlatex $*.dtx
 
 
 dist: $(PACKAGE)
@@ -29,7 +31,6 @@ dist: $(PACKAGE)
 	@zip ledmac.zip $(PACKAGE)
 
 clean:
-	@$(RM) *.aux *.log *.out *.toc *tex
-
+	@$(RM) *.aux *.log *.out *.toc *tex *.pdf *sty
 cleanall: clean
-	@$(RM) ledmac.sty ledpar.sty ledarab.sty *.zip
+	@$(RM)  *.zip
