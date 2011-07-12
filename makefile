@@ -17,6 +17,7 @@ all: ledmac.sty ledmac.pdf ledpar.sty ledpar.pdf ledarab.sty ledarab.pdf
 
 doc: *.pdf
 
+
 %.sty: %.ins %.dtx 
 	@pdflatex $*.ins
 
@@ -31,6 +32,6 @@ dist: $(PACKAGE)
 	zip ledmac.zip $(PACKAGE)
 
 clean:
-	@$(RM) *.aux *.log *.out *.toc *tex *.pdf *sty *ind *ilg
+	@$(RM) *.aux *.log *.out *.toc *tex *.pdf ledmac.sty ledarab.sty ledpar.sty afoot.sty *ind *ilg  *lof *idx
 cleanall: clean
 	@$(RM)  *.zip
