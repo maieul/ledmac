@@ -23,7 +23,9 @@ doc: *.pdf
 
 %.pdf: %.sty %.dtx djd17novL.eps djdpoems3.eps ledarden.eps ledfeat.eps djd17novR.eps djdpoems4.eps ledbraonain.eps ledioc.eps djdpoems1.eps egarab.eps ledeasy.eps ledmixed.eps djdpoems2.eps egarabpar.eps ledekker.eps villon.eps
 	@pdflatex $*.dtx
-	@makeindex -s gind.ist $*
+	@makeindex -s gind.ist -o $*.ind $*.idx
+	@makeindex -s gglo.ist -o $*.gls $*.glo
+	@pdflatex $*.dtx
 	@pdflatex $*.dtx
 
 
