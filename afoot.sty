@@ -1,0 +1,125 @@
+%%
+%% This is file `afoot.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% ledarab.dtx  (with options: `afoot')
+%% 
+%%   Author: Peter Wilson (Herries Press) herries dot press at earthlink dot net
+%%   Copyright 2005 Peter R. Wilson
+%% 
+%%   This work may be distributed and/or modified under the
+%%   conditions of the LaTeX Project Public License, either
+%%   version 1.3 of this license or (at your option) any
+%%   later version.
+%%   The latest version of the license is in
+%%      http://www.latex-project.org/lppl.txt
+%%   and version 1.3 or later is part of all distributions of
+%%   LaTeX version 2003/06/01 or later.
+%% 
+%%   This work has the LPPL maintenance status "unmaintained".
+%% 
+%%   This work consists of the files listed in the README file.
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{afoot}[2005/03/24 v0.1 PW's version of ArabTeX's afoot.sty]
+
+\ifx \footglue \undefined % normal case
+\else                   % fnpara.sty is present
+  \long\def\@makefntext#1{{$^{\@thefnmark}$}#1\nobreak }
+\fi
+
+%%% Make the LaTeX \cs{footnote} catcode-safe, like in Plain TeX.
+
+\def \@footnotetext {%        new, do not yet read footnote text
+  \insert \footins \bgroup
+  \ifx \footglue \undefined %  prepare normal footnote
+    \interlinepenalty \interfootnotelinepenalty \floatingpenalty \@MM
+    \splittopskip \footnotesep \splitmaxdepth \dp \strutbox
+  \else
+    \global\long\def \@makefntext ##1{{$^{\@thefnmark }$}##1\nobreak }%
+    \setbox0=\hbox \bgroup % fnpara.sty is present
+    \floatingpenalty=20000 \footnotesize
+  \fi
+  \edef\@currentlabel{\csname p@footnote\endcsname\@thefnmark}%
+  \a@fntext }
+
+\def \@mpfootnotetext {%
+  \global \setbox \@mpfootins \vbox \bgroup
+    \edef \@currentlabel {\csname p@mpfootnote\endcsname \@thefnmark }%
+  \unvbox \@mpfootins \reset@font \a@fntext }
+
+\def \a@fntext {% common part for footnote text
+  \footnotesize \hsize \columnwidth \@parboxrestore \clubpenalty 5000
+  \@makefntext {\rule {\z@ }{\footnotesep }}\futurelet \next \fo@t }
+
+%%%%%%%%%%%%%%%%%%%%%%%% \footnote, parts from Plain %%%%%%%%%%%%%%%%%
+
+\def\fo@t{%
+  \ifcat
+    \bgroup \noexpand\next
+    \let\next\f@@t
+  \else
+    \let\next\f@t
+  \fi
+  \next }
+\def\f@@t{\bgroup\aftergroup\@foot\let\next}
+\def\f@t#1{#1\@foot}
+\def\@foot{\unskip \strut \lineskiplimit -20pt \endgraf \egroup }
+
+%%%%%%%%% footnote inside an Arabic environment, Roman document style
+
+\def\a@footnote{%
+  \def\@foot{% ArabTeX-LaTeX version
+    \ifx \footglue \undefined % normal case
+      \unskip \strut
+    \else                     % fnpara.sty is present
+      \penalty-10 \hskip\footglue \egroup % box 0
+      \dp0=0pt \ht0=\fudgefactor\wd0 \box0
+     \fi
+     \egroup \arab@codes \set@arabfont \test@token }%
+  \def\@footnotemark{\af@fnmarkb@x \a@spacetrue}%
+  \rmfamily \parindent \a@parindent \unarab@codes \footnote }
+
+\def\af@fnmarkb@x{%
+  \a@spacefalse \putword@box \@makefnmark}
+
+\def\a@footnotemark{%
+  \def\@footnotemark{\af@fnmarkb@x \a@spacefalse \arab@codes \test@token}%
+  \unarab@codes \footnotemark }
+
+%%%%%%%%% footnote inside an Arabic environment, Arabic document style
+
+\def\a@@footnote{% ArabTeX-LaTeX version
+  \def\@footnotemark{\af@fnmarkb@x \a@spacetrue}%
+  \def\a@fntext{\a@@fntext }%
+  \footnote }
+
+\def\a@@fntext#1{% some common code for footnote text
+  \def\end{%
+    \a@par \egroup \test@token }%
+  \hsize \columnwidth \@parboxrestore
+  \initlineb@x \@footnotemark \test@token #1 \end }
+
+\def\a@@footnotemark{%
+  \def\@footnotemark{\af@fnmarkb@x \a@spacetrue \test@token}%
+  \footnotemark }
+
+\def \LRfootnotes {% left to right, Arabic document
+  \let \a@c@footnote \a@footnote
+  \let \a@c@footnotemark \a@footnotemark }
+\all@wcmd \LRfootnotes
+
+\def \RLfootnotes {% right to left, Arabic document
+  \let \a@c@footnote \a@@footnote
+  \let \a@c@footnotemark \a@@footnotemark }
+\all@wcmd \RLfootnotes
+\let \arabfootnotes \RLfootnotes
+\all@wcmd \arabfootnotes
+
+\LRfootnotes
+
+\endinput
+%%
+%% End of file `afoot.sty'.

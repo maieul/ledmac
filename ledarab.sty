@@ -1,0 +1,213 @@
+%%
+%% This is file `ledarab.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% ledarab.dtx  (with options: `ledarab')
+%% 
+%%   Author: Peter Wilson (Herries Press) herries dot press at earthlink dot net
+%%   Copyright 2005 Peter R. Wilson
+%% 
+%%   This work may be distributed and/or modified under the
+%%   conditions of the LaTeX Project Public License, either
+%%   version 1.3 of this license or (at your option) any
+%%   later version.
+%%   The latest version of the license is in
+%%      http://www.latex-project.org/lppl.txt
+%%   and version 1.3 or later is part of all distributions of
+%%   LaTeX version 2003/06/01 or later.
+%% 
+%%   This work has the LPPL maintenance status "unmaintained".
+%% 
+%%   This work consists of the files listed in the README file.
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ledarab}[2005/03/24 v0.1 Cooperation between arabtex and ledmac]
+
+\providecommand*{\tr@ce@n}{\tracingmacros 0}
+\providecommand*{\tr@ce@ff}{\edef \tr@ce@n
+{\nxp\tracingmacros \the\tracingmacros }\tracingmacros 0}
+\let \tr@ce@n \relax
+
+\newif\if@l@dparpack
+  \@l@dparpackfalse
+\@ifpackageloaded{ledpar}{\@l@dparpacktrue}{\@l@dparpackfalse}
+
+\renewcommand*{\do@linehook}{%
+  \advance\baselineskip 1ex}
+
+%%%%%%%%%%%%%%%%%%%%% ledpar fix %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\arabledparfixi}{%
+\renewcommand*{\do@lineLhook}{%
+  \advance\baselineskip 1ex}
+\renewcommand*{\do@lineRhook}{%
+  \advance\baselineskip 1ex}
+\newcommand*{\a@l@dparparamsL}{%
+  \ifnum \parshape = \z@
+     \a@hsize \Lcolwidth
+     \a@leftmargin \z@
+  \else
+    \a@hsize \Lcolwidth \a@leftmargin \@totalleftmargin
+  \fi
+  \a@leftmargin \z@
+  \a@prevgraf \z@ \spreadfalse }
+\newcommand*{\a@l@dparparamsR}{%
+  \ifnum \parshape = \z@
+     \a@hsize \Rcolwidth
+     \a@leftmargin \z@
+  \else
+    \a@hsize \Rcolwidth \a@leftmargin \@totalleftmargin
+  \fi
+  \a@leftmargin \z@
+  \a@prevgraf \z@ \spreadfalse }
+\renewcommand*{\Leftsidehook}{%
+  \let\a@parparams\a@l@dparparamsL}
+\renewcommand*{\Rightsidehook}{%
+  \let\a@parparams\a@l@dparparamsR}
+\newcommand*{\ledarabstrut}{%
+  \rule[-1ex]{0pt}{4ex}}
+\newcommand*{\savestruts}{%
+  \let\oldl@dstr@tL\ledstrutL
+  \let\oldl@dstr@tR\ledstrutR}
+\newcommand*{\restorestruts}{%
+  \let\ledstrutL\oldl@dstr@tL
+  \let\ledstrutR\oldl@dstr@tR}
+\newcommand*{\latinarabic}{%
+  \def\ledstrutL{\ledarabstrut}%
+  \def\ledstrutR{}}
+\newcommand*{\arabiclatin}{%
+  \def\ledstrutL{}%
+  \def\ledstrutR{\ledarabstrut}}
+
+}% end of \newcommand{\arabledparfixi}{...
+
+\if@l@dparpack
+  \arabledparfixi
+  \savestruts
+\fi
+%%%%%%%%%%%%%%%%%%%%% end major ledpar fix %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand*{\a@c@edtext}{%
+  \tr@ce@n \leavea@vmode \unarab@codes
+\begingroup
+  \tr@ce@ff \rmfamily \tr@ce@n \a@@edtext}
+
+\newcommand*{\a@@edtext}[1]{%
+%%%  \def\next@command{\a@@@edtext {\RL{#1}}}% causes errors
+  \def\next@command{\a@@@edtext {#1}}%
+  \futurelet \next@token \test@space }
+
+\def\a@edget@text #1\@@{%
+  \a@edappend{\flag@start}\a@@Linsert{#1}}
+
+\newcommand*{\a@edend@lemma}{%
+  \ifx\end@lemmas\empty \else
+    \gl@p\end@lemmas\to\x@lemma
+    \x@lemma
+    \global\let\x@lemma=\relax
+  \fi}
+
+\newcommand*{\a@edput@text}{%
+  \a@Lunpack \putwordb@x {\ins@skip }}
+
+\newcommand*{\a@edappend}[1]{%
+  \setbox \lineb@x \hbox {\unhbox \lineb@x #1}}
+
+\newcommand{\a@@@edtext}[2]{
+  \no@expands
+  \def\next@command{\test@special}%
+%%%  \xdef \@tag{#1}\set@line % the original produces roman in notes
+%%%  \def\@@@tag{\RL{#1}} \xdef\@tag{\@@@tag}\set@line % produces errors
+  \xdef \@tag{{\RL{#1}}}\set@line% produces arabic in notes GOOD ONE!!
+  \global\insert@count=0
+  \aftergroup \a@edget@text
+  \ignorespaces #2\relax
+\endgroup
+%%%  #1\a@edend@lemma \@@ %% gives roman in arabic text
+  \showlemma{#1}\a@edend@lemma \@@% GOOD ONE
+  \a@edput@text \a@edappend {\flag@end }%
+  \arab@codes
+  \a@spacetrue
+\tr@ce@ff \test@token}
+
+\renewcommand{\showlemma}[1]{%
+  \ifin@arab\RL{#1}\else #1\fi} % arabic in text, but roman in notes
+
+\all@wcmd{\beginnumbering}
+\all@wcmd{\endnumbering}
+
+\if@l@dparpack
+  \all@wcmd{\beginnumberingR}
+  \all@wcmd{\endnumberingR}
+\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\let\a@par=\a@@par % save for \a@@everypar in \a@c@autopar
+
+\def\a@c@pstart{\pstart \test@token}
+\def\a@c@pend{\a@par \pend \a@par \test@token}
+
+\def\a@c@autopar{% use inside Arabic environment
+\ifnumbering \else \errmessage
+{\string\autopar\space must be used within a numbered section}%
+\beginnumbering
+\fi
+\a@@everypar= {\setbox0 = \box \lineb@x \let \next \test@token
+\a@par \pstart % starts a group
+\def \a@@par {\a@par \pend \a@par }%
+\def \end {\a@par \pend \test@token \end }%
+\a@@everypar= {}\arab@indent }%
+\a@spacefalse \test@token}
+
+\all@w@ne{\@arabic}
+\newcommand*{\arablinenumr@p}[1]{\RL{\@arabic{#1}}}
+
+\def\linenumrep#1{\LR{\@arabic{#1}}}
+\let\oldlinenumrep\linenumrep
+\def\sublinenumrep#1{\LR{\@arabic{#1}}}
+\let\oldsublinenumrep\sublinenumrep
+\newcommand*{\arablnumrep}{\global\let\linenumrep\arablinenumr@p
+                           \global\let\sublinenumrep\arablinenumr@p}
+\newcommand*{\restorelnumrep}{\global\let\linenumrep\oldlinenumrep
+                              \global\let\sublinenumrep\oldsublinenumrep}
+\all@wcmd{\arablnumrep}
+\all@wcmd{\restorelnumrep}
+
+\if@l@dparpack
+  \def\linenumrepR#1{\LR{\@arabic{#1}}}
+  \let\oldlinenumrepR\linenumrepR
+  \def\sublinenumrepR#1{\LR{\@arabic{#1}}}
+  \let\oldsublinenumrepR\sublinenumrepR
+  \newcommand*{\arablnumrepR}{\global\let\linenumrepR\arablinenumr@p
+                              \global\let\sublinenumrepR\arablinenumr@p}
+  \newcommand*{\restorelnumrepR}{\global\let\linenumrepR\oldlinenumrepR
+                                 \global\let\sublinenumrepR\oldsublinenumrepR}
+  \all@wcmd{\arablnumrepR}
+  \all@wcmd{\restorelnumrepR}
+\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\all@w@ne{\edlabel}
+\all@w@ne{\edpageref}
+\all@w@ne{\xpageref}
+\all@w@ne{\lineref}
+\all@w@ne{\xlineref}
+\all@w@ne{\sublineref}
+\all@w@ne{\xsublineref}
+\all@w@ne{\edindex}
+\all@w@ne{\typeout}
+\all@wtw@{\edmakelabel}
+\all@wtw@{\xxref}
+
+\if@l@dparpack
+  \all@wcmd{\Columns}
+  \all@wcmd{\Pages}
+\fi
+
+\InputIfFileExists{ledarabpatch.sty}
+
+\endinput
+%%
+%% End of file `ledarab.sty'.
