@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9041}
+% \CheckSum{9055}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -4556,6 +4556,7 @@
 %
 % \begin{macro}{\lock@on}
 % \begin{macro}{\do@lockon}
+% \begin{macro}{\do@lockonL}
 % \cs{lock@on}
 % adds an entry to the action-code list to turn line number
 % locking on. The current setting of the sub-lineation flag tells us
@@ -4570,26 +4571,34 @@
 \newcommand*{\lock@on}{\futurelet\next\do@lockon}
 \newcommand*{\do@lockon}{%
   \ifx\next\lock@off
-     \global\let\lock@off=\skip@lockoff
+    \global\let\lock@off=\skip@lockoff
   \else
-     \xright@appenditem{\the\absline@num}\to\actionlines@list
-     \ifsublines@
-       \xright@appenditem{-1005}\to\actions@list
-       \ifcase\sub@lock
-          \sub@lock \@ne
-       \else
-          \sub@lock \z@
-       \fi
-     \else
-       \xright@appenditem{-1003}\to\actions@list
-       \ifcase\@lock
-          \@lock \@ne
-       \else
-          \@lock \z@
-       \fi
-     \fi
+    \do@lockonL
   \fi}
+\newcommand*{\do@lockonL}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@list
+    \ifnum\sub@lock=\z@
+      \sub@lock \@ne
+    \else
+      \ifnum\sub@lock=\thr@@
+        \sub@lock \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@list
+    \ifnum\@lock=\z@
+      \@lock \@ne
+    \else
+      \ifnum\@lock=\thr@@
+        \@lock \@ne
+      \fi
+    \fi
+  \fi}
+  
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
