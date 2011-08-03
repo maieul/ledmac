@@ -1564,52 +1564,49 @@
 % \end{macro}
 %
 % \begin{macro}{\do@lockon}
+% \begin{macro}{\do@lockonR}
 % \cs{lock@on}
 % adds an entry to the action-code list to turn line number
 % locking on. The current setting of the sub-lineation flag tells us
 % whether this applies to line numbers or sub-line numbers.
 %    \begin{macrocode}
+\newcount\@lockR
+\newcount\sub@lockR
+
+\newcommand*{\do@lockonR}{%
+  \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@listR
+    \ifnum\sub@lockR=\z@
+      \sub@lockR \@ne
+    \else
+      \ifnum\sub@lockR=\thr@@
+        \sub@lockR \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@listR
+    \ifnum\@lockR=\z@
+      \@lockR \@ne
+    \else
+      \ifnum\@lockR=\thr@@
+        \@lockR \@ne
+      \fi
+    \fi
+  \fi}
+
 \renewcommand*{\do@lockon}{%
   \ifx\next\lock@off
-     \global\let\lock@off=\skip@lockoff
+    \global\let\lock@off=\skip@lockoff
   \else
     \ifledRcol
-       \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-       \ifsublines@
-         \xright@appenditem{-1005}\to\actions@listR
-         \ifcase\sub@lock
-           \sub@lock \@ne
-         \else
-           \sub@lock \z@
-         \fi
-       \else
-         \xright@appenditem{-1003}\to\actions@listR
-         \ifcase\@lock
-           \@lock \@ne
-         \else
-           \@lock \z@
-         \fi
-       \fi
+      \do@lockonR
     \else
-       \xright@appenditem{\the\absline@num}\to\actionlines@list
-       \ifsublines@
-         \xright@appenditem{-1005}\to\actions@list
-         \ifcase\sub@lock
-           \sub@lock \@ne
-         \else
-           \sub@lock \z@
-         \fi
-       \else
-         \xright@appenditem{-1003}\to\actions@list
-         \ifcase\@lock
-           \@lock \@ne
-         \else
-           \@lock \z@
-         \fi
-       \fi
-    \fi  
+      \do@lockonL
+    \fi
   \fi}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\lock@off}
