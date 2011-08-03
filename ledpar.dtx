@@ -2526,6 +2526,7 @@
 %
 %
 % \begin{macro}{\do@actionsR}
+% \begin{macro}{\do@actions@fixedcodeR}
 % \begin{macro}{\do@actions@nextR}
 %
 % The \cs{do@actionsR} macro
@@ -2536,41 +2537,71 @@
 % \cs{do@actions@nextR} for this.
 % \changes{v0.3}{2005/02/24}{Used \cs{do@actions@fixedcode} in \cs{do@actionsR}}
 %    \begin{macrocode}
+\newcommand*{\do@actions@fixedcodeR}{%
+  \ifcase\@l@dtempcnta% 
+  \or%                     % 1001
+    \global\sublines@true
+  \or%                     % 1002
+    \global\sublines@false
+  \or%                     % 1003
+    \global\@lockR=\@ne
+  \or%                     % 1004
+    \ifnum\@lockR=\tw@
+      \global\@lockR=\thr@@
+    \else
+      \global\@lockR=\z@
+    \fi
+  \or%                     % 1005
+     \global\sub@lockR=\@ne
+  \or%                     % 1006
+    \ifnum\sub@lockR=\tw@
+      \global\sub@lockR=\thr@@
+    \else
+      \global\sub@lockR=\z@
+    \fi
+  \or%                     % 1007
+    \l@dskipnumbertrue
+  \else
+    \led@warn@BadAction
+  \fi}
+
+
 \newcommand*{\do@actionsR}{%
   \global\let\do@actions@nextR=\relax
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
-    \ifnum\next@actionR>-1001
-       \global\page@numR=\next@actionR
-       \ifbypage@R
-         \global\line@numR=\z@ \global\subline@numR=\z@
-       \fi
+    \ifnum\next@actionR>-1001\relax
+      \global\page@numR=\next@actionR
+      \ifbypage@R
+        \global\line@numR \z@  \global\subline@numR \z@
+      \fi
     \else
-       \ifnum\next@actionR<-4999
-          \@l@dtempcnta=-\next@actionR
-          \advance\@l@dtempcnta by -5001
-          \ifsublines@
-             \global\subline@numR=\@l@dtempcnta
-          \else
-             \global\line@numR=\@l@dtempcnta
-          \fi
-       \else
-          \@l@dtempcnta=-\next@actionR
-          \advance\@l@dtempcnta by -1000
-          \do@actions@fixedcode
-       \fi
+      \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -5001\relax
+        \ifsublines@
+          \global\subline@numR=\@l@dtempcnta
+        \else
+          \global\line@numR=\@l@dtempcnta
+        \fi
+      \else
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -1000\relax
+        \do@actions@fixedcodeR
+      \fi
     \fi
     \ifx\actionlines@listR\empty
-         \gdef\next@actionlineR{1000000}%
+      \gdef\next@actionlineR{1000000}%
     \else
-         \gl@p\actionlines@listR\to\next@actionlineR
-         \gl@p\actions@listR\to\next@actionR
-         \global\let\do@actions@nextR=\do@actionsR
+      \gl@p\actionlines@listR\to\next@actionlineR
+      \gl@p\actions@listR\to\next@actionR
+      \global\let\do@actions@nextR=\do@actionsR
     \fi
   \fi
   \do@actions@nextR}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
