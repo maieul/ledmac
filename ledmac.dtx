@@ -8991,21 +8991,23 @@
 % The `footnotes' for left, right, and moveable sidenotes. The whole 
 % scheme is reminiscent of the critical footnotes code.
 %    \begin{macrocode}
+\newif\ifrightnoteup
+  \rightnoteuptrue
 \newcommand*{\l@dlsnote}[1]{%
   \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dlsnote{{\l@d@nums}{\@tag}{#1}}}%
+    \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
 \newcommand*{\l@drsnote}[1]{%
   \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@drsnote{{\l@d@nums}{\@tag}{#1}}}%
+    \xright@appenditem{\noexpand\vl@drsnote{#1}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
 \newcommand*{\l@dcsnote}[1]{%
   \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dcsnote{{\l@d@nums}{\@tag}{#1}}}%
+    \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
@@ -9020,9 +9022,9 @@
 % \begin{macro}{\vl@dcsnote}
 % Put the left/right text into boxes, but just save the moveable text.
 %    \begin{macrocode}
-\newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox#1}
-\newcommand*{\vl@drsnote}[1]{\setl@drp@rbox#1}
-\newcommand*{\vl@dcsnote}[1]{\savel@dcsnote#1}
+\newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
+\newcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
+\newcommand*{\vl@dcsnote}[1]{\gdef\l@dcsnotetext{#1}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9037,14 +9039,25 @@
 % It is these boxes that finally
 % get displayed in the margins.
 %    \begin{macrocode}
-\newcommand*{\setl@dlp@rbox}[3]{%
+\renewcommand*{\setl@dlp@rbox}[1]{%
   {\parindent\z@\hsize=\ledlsnotewidth\ledlsnotefontsetup
-   \global\setbox\l@dlp@rbox=\vbox to\z@{\vss#3}}}% aligns on bottom line
+   \global\setbox\l@dlp@rbox
+   \ifleftnoteup
+     =\vbox to\z@{\vss #1}%
+   \else
+     =\vbox to 0.70\baselineskip{\strut#1\vss}%
+   \fi}}
 %%   \global\setbox\l@dlp@rbox=\vbox to\z@{#3\vss}}}% aligns on top line
-\newcommand*{\setl@drp@rbox}[3]{%
+\renewcommand*{\setl@drp@rbox}[1]{%
   {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
-   \global\setbox\l@drp@rbox=\vbox to\z@{\vss#3}}}
-
+   \global\setbox\l@drp@rbox
+   \ifrightnoteup
+     =\vbox to\z@{\vss#1}%
+   \else
+     =\vbox to0.7\baselineskip{\strut#1\vss}%
+   \fi}}
+\newif\ifleftnoteup
+  \leftnoteuptrue
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -9070,9 +9083,9 @@
   \ifx\@templ@d\l@dcsnotetext \else
     \if@twocolumn
       \if@firstcolumn
-        \setl@dlp@rbox{}{}{\l@dcsnotetext}%
+        \setl@dlp@rbox{\l@dcsnotetext}%
       \else
-        \setl@drp@rbox{}{}{\l@dcsnotetext}%
+        \setl@drp@rbox{\l@dcsnotetext}%
       \fi
     \else
       \@l@dtempcntb=\sidenote@margin
@@ -9080,9 +9093,9 @@
         \advance\@l@dtempcntb by\page@num
       \fi
       \ifodd\@l@dtempcntb
-        \setl@drp@rbox{}{}{\l@dcsnotetext}%
+        \setl@drp@rbox{\l@dcsnotetext}%
       \else
-        \setl@dlp@rbox{}{}{\l@dcsnotetext}%
+        \setl@dlp@rbox{\l@dcsnotetext}%
       \fi
     \fi
   \fi}
