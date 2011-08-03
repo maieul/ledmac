@@ -5654,133 +5654,21 @@
 % The \cs{do@line} macro is called by \cs{pend} to
 % do all the processing for a single line of text.
 %    \begin{macrocode}
-\newcommand*{\do@line}{%
-%    \end{macrocode}
-%
-% First, pull
-% one line off the top of \cs{raw@text}, which contains the remaining
-% unprocessed lines of the paragraph. \cs{vbadness} must be cranked up to
-% suppress \verb"Underfull vbox" errors from
-% \cs{vsplit}; \cs{splittopskip} will be inserted at the top of
-% \cs{one@line}, so we zero it. (This skip will appear in the final
-% vertical list, just before every \cs{baselineskip}.)
-%    \begin{macrocode}
- {\vbadness=10000 \splittopskip=0pt
-%    \end{macrocode}
-% \begin{PW}
-% Provide a hook for potential extra settings.
-%    \begin{macrocode}
-  \do@linehook
-%    \end{macrocode}
-%  Null the \cs{...d@ta}, which may later hold line numbers, here. 
-% They will get defined within \cs{affixline@num}. Similarly for
-% \cs{l@dcsnotetext} for the text of a sidenote.
-%    \begin{macrocode}
-  \l@demptyd@ta
-%    \end{macrocode}
-% \end{PW}
-%
-%    \begin{macrocode}
- \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
-%    \end{macrocode}
-%
-% \cs{one@line} comes out of \cs{vsplit} as a \verb"vbox";
-% we now convert it to an \verb"hbox".
-%
-% This operation breaks if there's an insert connected to the
-% \phantomsection\label{doline} line. In that case, the content of the \verb"vbox"
-% \cs{one@line} before this operation is not just an \verb"hbox": it's
-% an \verb"hbox" followed by an insert. After the \cs{unvbox}, the
-% last thing on the vertical list is not the \verb"hbox" but the
-% insert. The result is that our line heads prematurely onto the
-% vertical list---with incorrect interline spacing, because there's
-% still a level of boxing that should be undone---and \cs{one@line}
-% is the void box, because the last thing on the vertical list
-% wasn't a box. The subsequent code consequently prints a blank
-% line.
-%
-% All this is why insertions need to be kept out of the paragraph
-% until this point; our footnote macros add all insertions to list
-% macros, and the \cs{add@inserts} macro below puts them onto the
-% vertical list at the proper time.
-%    \begin{macrocode}
- \unvbox\one@line \global\setbox\one@line=\lastbox
-%    \end{macrocode}
-%
-% Calculate the line and page number for this line.
-%    \begin{macrocode}
- \getline@num
-%    \end{macrocode}
-%
-% Now we'll add the line to the vertical list, with a line
-% number attached if necessary.
-%
-% The \verb"\hfil\hbox to \wd\one@line" is necessary to position a
-% hangindented line correctly: without it, \cs{one@line} gets
-% stretched out to \cs{hsize} in width and the indentation
-% disappears. This is because hanging indentation is done by
-% setting a nonzero `shift' value for the \verb"hbox" that
-% contains the line within the \verb"vbox", and that shift vanishes, like
-% the penalties, when we slice up the paragraph; one can examine
-% the \cs{ht} or \cs{wd} of a box within \TeX{}, but it provides no
-% way of examining the \cs{shift}, though it would be a trivial
-% modification of the \TeX{} program to add that function.
-% (\cs{parshape}\phantomsection\label{parshape}
-% also works by setting a nonzero shift, but this fix isn't good
-% enough there, because the total width of the lines is also varied
-% in that case; our algorithm will push all the lines of text over
-% to the right margin.)
-%
-% We put the \cs{new@line} start-of-line marker in the output list at
-% this point too: putting it within the \cs{hbox} here ensures that
-% it comes before any of the text of the line in the vertical list,
-% but cannot be broken away from it at a page break.
-%
-% \begin{PW} 
-% For LaTeX I think that \cs{linewidth} is more appropriate
-% than \cs{hsize} here.
-%
-%    It turns out (e.g., in the \verb?ledgroupsized? environment) to be useful
-% to have controllable fills at each end of the line, not just the
-% original \verb?\hfil\hbox?. Another change from the original, namely
-% adding the inserts earlier at the start of the line, lets
-% us have sidenotes in numbered text, and also regular and familiar
-% footnotes.
-% \changes{v0.5}{2004/04/03}{Changed \cs{do@line} to enable sidenotes and 
-%                            regular footnoting}
-% \changes{v0.5.1}{2004/04/10}{Changed \cs{do@line} to restore correct line 
-%                             numbering}
-% \changes{v0.5.1}{2004/04/10}{Added code to \cs{do@line} to handle
-%                             \cs{ledsidenote}s}
-%
-% \cs{affixline@num} puts the line numbers into \cs{l@dld@ta} (left)
-% and \cs{l@drd@ta} (right), so call it before starting to process the line.
-%    \begin{macrocode}
+ \renewcommand*{\do@line}{%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@linehook
+\l@demptyd@ta
+   \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@num
   \affixline@num
-%    \end{macrocode}
-% Now stick everything into a set of boxes. After calling \cs{add@inserts}
-% to grab any inserts for the line call \cs{affixside@note} to grab 
-% the texts for any moveable sidenotes going into the margin(s).
-%    \begin{macrocode}
-  \hb@xt@ \linewidth{%
-    \l@dld@ta\add@inserts\affixside@note
-    \l@dlsn@te% left side note
-    {\ledllfill
-      \hb@xt@ \wd\one@line{\new@line\unhbox\one@line}%
-      \ledrlfill\l@drd@ta%
-      \l@drsn@te}% right side note
-  }%
-%    \end{macrocode}
-%
-% Originally the footnotes and insertions for this line were pulled out of the
-% \cs{inserts@list} list macro at this point and attached, but this has
-% now been done earlier.
-% \end{PW}
-%
-% Penalties get stripped off by this slicing process; the following
-% macro puts them back in as the last step.
-%    \begin{macrocode}
- \add@penalties}
+  \hb@xt@ \linewidth{\l@dld@ta\add@inserts\affixside@note
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+    \l@drsn@te
+  }}
+  \add@penalties}
 
 %    \end{macrocode}
 % \end{macro}
@@ -12956,18 +12844,8 @@ in section~\ref{subsec}.
  \newcommand{\vffootnote}[2]{\setlp@rbox#2}
 
  \newcommand{\vgfootnote}[2]{\def\rd@ta{#2}}
+ \newcommand*{\l@dunhbox@line}[1]{\unhbox #1}
 
- \renewcommand{\do@line}{%
-  {\vbadness=10000 \splittopskip=0pt
-  \gdef\rd@ta{}% for right margin paragraph->always a few characters
-  \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
-  \unvbox\one@line \global\setbox\one@line=\lastbox
-  \getline@num
- \hbox to\hsize{\affixline@num\add@inserts\hbox to\z@% inserts added here so
-   {\hss\box\lp@rbox\kern\linenumsep}%                 that margin pars are
-    \hfil\hbox to\wd\one@line{\new@line\unhbox\one@line%   included.
-       \hbox to\z@{\kern\linenumsep\notenumfont\rd@ta\hss}}}%
-  \add@penalties} % margin pars also included in line format
 
  \renewcommand{\affixline@num}{%
    \ifsublines@
