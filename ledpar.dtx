@@ -831,11 +831,12 @@
   \global\advance\section@numR \@ne
   \global\absline@numR \z@
   \global\line@numR \z@
-  \global\@lockR \z@
-  \global\sub@lockR \z@
+  \global\subline@numR \z@
+  \global\@lock \z@
+  \global\sub@lock \z@
   \global\sublines@false
-  \global\let\next@page@numR\relax
-  \global\let\sub@change\relax
+  \global\let\next@page@numR=\relax
+  \global\let\sub@change=\relax
   \message{Section \the\section@numR R }%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
   \l@dend@stuff}
@@ -1294,69 +1295,79 @@
 %
 % The macros with \verb"action" in their names contain all the code
 % that modifies the action-code list.
-% \begin{macro}{\@l@regR}
+%
 % \begin{macro}{\@l}
 % \cs{@l} does everything related to the start of a
 % new line of numbered text. Exactly what it does depends
 % on whether right text is being processed.
 %
 %    \begin{macrocode}
-
-\newcommand{\@l@regR}{%
-  \ifx\l@dchset@num\relax \else
-    \advance\absline@numR \@ne
-    \set@line@action
-    \let\l@dchset@num\relax
-    \advance\absline@numR \m@ne
-    \advance\line@numR \m@ne%   % do we need this?
-  \fi
-  \advance\absline@numR \@ne
-  \ifx\next@page@numR\relax \else
-    \page@action
-    \let\next@page@numR\relax
-  \fi
-  \ifx\sub@change\relax \else
-    \ifnum\sub@change>\z@
-      \sublines@true
-    \else
-      \sublines@false
+\renewcommand{\@l}[2]{% 
+  \fix@page{#1}%
+  \ifledRcol
+    \ifx\l@dchset@num\relax \else
+      \advance\absline@numR \@ne
+      \set@line@action
+      \let\l@dchset@num=\relax
+      \advance\absline@numR \m@ne
+      \advance\line@numR \m@ne%  % do we need this??
     \fi
-    \sub@action
-    \let\sub@change\relax
-  \fi
-  \ifcase\@lockR
-  \or
-    \@lockR \tw@
-  \or\or
-    \@lockR \z@
-  \fi
-  \ifcase\sub@lockR
-  \or
-    \sub@lockR \tw@
-  \or\or
-    \sub@lockR \z@
-  \fi
+    \advance\absline@numR \@ne
+%    \end{macrocode}
+% Increment the absolute line-number, and perform
+% deferred actions relating to page starts and sub-lines.
+%    \begin{macrocode}
+    \ifx\next@page@numR\relax \else
+      \page@action
+      \let\next@page@numR=\relax
+    \fi
+    \ifx\sub@change\relax \else
+      \ifnum\sub@change>\z@
+        \sublines@true
+      \else
+        \sublines@false
+      \fi
+      \sub@action
+      \let\sub@change=\relax
+    \fi
+%    \end{macrocode}
+%
+% Fix the lock counters, if necessary. A value of $1$ is advanced to
+% $2$; $3$ advances to $0$; other values are unchanged.
+%    \begin{macrocode}
+         \ifcase\@lock
+            \or
+               \@lock \tw@
+            \or \or
+               \@lock \z@
+         \fi
+         \ifcase\sub@lock
+            \or
+               \sub@lock \tw@
+            \or \or
+               \sub@lock \z@
+         \fi
+%    \end{macrocode}
+%
+% Now advance the visible line number, unless it's been locked.
+%    \begin{macrocode}
   \ifsublines@
-    \ifnum\sub@lockR<\tw@
+    \ifnum\sub@lock<\tw@
       \advance\subline@numR \@ne
     \fi
   \else
-    \ifnum\@lockR<\tw@
+    \ifnum\@lock<\tw@
       \advance\line@numR \@ne \subline@numR \z@
     \fi
-  \fi}
-
-
-\renewcommand*{\@l}[2]{%
-  \fix@page{#1}%
-  \ifledRcol
-    \@l@regR
+  \fi
   \else
+%    \end{macrocode}
+% And when we are not in right text
+%    \begin{macrocode}
     \@l@reg
   \fi}
 
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\last@page@numR}
