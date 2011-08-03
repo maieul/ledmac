@@ -4,7 +4,6 @@ PACKAGE = *.dtx \
 		  ledarab.pdf \
 		  ledpar.pdf \
 		  *eps \
-		  *patch.sty \
 		  README \
 		  Makefile
 
