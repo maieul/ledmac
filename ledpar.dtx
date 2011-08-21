@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4320}
+% \CheckSum{4342}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -123,6 +123,7 @@
 % \def\fileversion{v0.3b} \def\filedate{2005/04/08}
 % \def\fileversion{v0.3c} \def\filedate{2011/06/16}
 % \def\fileversion{v0.4} \def\filedate{2011/08/03}
+% \def\fileversion{v0.5} \def\filedate{2011/08/21}
 %
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
@@ -130,7 +131,8 @@
 % \changes{v0.3a}{2005/03/30}{Minor \cs{linenummargin} fix}
 % \changes{v0.3b}{2005/04/08}{Improved parallel page balancing}
 % \changes{v0.3c}{2011/06/16}{Compatibilty with Polyglossia}
-% \changes{v0.9}{2011/08/03}{No more ledparpatch. All patches are now in the main file.}
+% \changes{v0.4}{2011/08/03}{No more ledparpatch. All patches are now in the main file.}
+% \changes{v0.5}{2011/08/21}{Corrections about \cs{section} and other titles in numbered sections}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -2216,7 +2218,14 @@
 % among other things because of potential changes in the linewidth.
 % 
 %    \begin{macrocode}
-\newcommand*{\pstartL}{\ifnumbering \else
+\newcommand*{\pstartL}{
+\if@nobreak
+	\let\@oldnobreak\@nobreaktrue
+\else
+	\let\@oldnobreak\@nobreakfalse
+\fi
+	\@nobreaktrue
+  \ifnumbering \else
     \led@err@PstartNotNumbered
     \beginnumbering
   \fi
@@ -2250,7 +2259,14 @@
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{\ifnumberingR \else
+\newcommand*{\pstartR}{
+\if@nobreak
+	\let\@oldnobreak\@nobreaktrue
+\else
+	\let\@oldnobreak\@nobreakfalse
+\fi
+	\@nobreaktrue
+  \ifnumberingR \else
     \led@err@PstartNotNumbered
     \beginnumberingR
   \fi
@@ -2303,7 +2319,8 @@
 % End the group that was begun in the \cs{pstart}.
 %    \begin{macrocode}
   \endgroup
-  \ignorespaces}
+  \ignorespaces
+  \@oldnobreak}
 
 %    \end{macrocode}
 % \end{macro}
@@ -2322,7 +2339,8 @@
   \endgraf\global\num@linesR=\prevgraf\egroup
   \global\par@lineR=0
   \endgroup
-  \ignorespaces}
+  \ignorespaces
+  \@oldnobreak}
 
 %    \end{macrocode}
 % \end{macro}
