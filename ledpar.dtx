@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4342}
+% \CheckSum{4361}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -124,6 +124,7 @@
 % \def\fileversion{v0.3c} \def\filedate{2011/06/16}
 % \def\fileversion{v0.4} \def\filedate{2011/08/03}
 % \def\fileversion{v0.5} \def\filedate{2011/08/21}
+% \def\fileversion{v0.6} \def\filedate{2011/08/22}
 %
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
@@ -133,6 +134,7 @@
 % \changes{v0.3c}{2011/06/16}{Compatibilty with Polyglossia}
 % \changes{v0.4}{2011/08/03}{No more ledparpatch. All patches are now in the main file.}
 % \changes{v0.5}{2011/08/21}{Corrections about \cs{section} and other titles in numbered sections}
+% \changes{v0.6}{2011/08/22}{Be able to us \cs{chapter} in parallel pages.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -684,7 +686,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledpar}[2011/08/21 v0.5 ledmac extension for parallel texts]
+\ProvidesPackage{ledpar}[2011/08/22 v0.6 ledmac extension for parallel texts]
 
 %    \end{macrocode}
 %
@@ -2067,6 +2069,7 @@
 %
 % \begin{environment}{pairs}
 % \begin{environment}{pages}
+% \begin{macro}{chapterinpages}
 % The \verb?pairs? environment is for parallel columns and the \verb?pages?
 % environment for parallel pages.
 %    \begin{macrocode}
@@ -2078,9 +2081,11 @@
 }
 %    \end{macrocode}
 % The \verb?pages? environment additionally sets the `column' widths to the
-% \cs{textwidth} (as known at the time the package is called).
+% \cs{textwidth} (as known at the time the package is called). As in this environnement there is  two text in parallels in 2 pages, chapter have not to start in a left page. So the \cs{chapter} command is redefined to make no test about clearing page. 
 %    \begin{macrocode}
 \newenvironment{pages}{%
+ \let\oldchapter\chapter
+ \let\chapter\chapterinpages
   \l@dpairingtrue
   \l@dpagingtrue
   \setlength{\Lcolwidth}{\textwidth}%
@@ -2088,9 +2093,15 @@
 }{%
   \l@dpairingfalse
   \l@dpagingfalse
+  \let\chapter\oldchapter
 }
+\newcommand{\chapterinpages}{\thispagestyle{plain}%
+                    \global\@topnum\z@
+                    \@afterindentfalse
+                    \secdef\@chapter\@schapter}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{environment}
 % \end{environment}
 %
