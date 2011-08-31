@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4361}
+% \CheckSum{4396}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -125,7 +125,7 @@
 % \def\fileversion{v0.4} \def\filedate{2011/08/03}
 % \def\fileversion{v0.5} \def\filedate{2011/08/21}
 % \def\fileversion{v0.6} \def\filedate{2011/08/22}
-%
+% \def\fileversion{v0.7} \def\filedate{2011/08/31}
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -135,6 +135,7 @@
 % \changes{v0.4}{2011/08/03}{No more ledparpatch. All patches are now in the main file.}
 % \changes{v0.5}{2011/08/21}{Corrections about \cs{section} and other titles in numbered sections}
 % \changes{v0.6}{2011/08/22}{Be able to us \cs{chapter} in parallel pages.}
+% \changes{v0.7}{2011/08/31}{Option `shiftedverses' which make there is no blank between two parallel verses with inequal length.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -224,7 +225,7 @@
 % through \ref{end}); 
 % and an Index to the source code. As \Ledpar{} is an adjunct to \Ledmac{}
 % I assume that you have read the \Ledmac{} manual. Also \Ledpar{} requires
-% \Ledmac{} to be used, preferably at least version 0.6 (2004/12/10).
+% \Ledmac{} to be used, preferably at least version 0.10 (2011/08/22).
 % You do not need to  read the source code for this package in order to 
 % use it but doing so may help to answer any questions you might have.
 % On a first reading,
@@ -681,16 +682,23 @@
 %
 % Announce the name and version of the package, which is 
 % targetted for LaTeX2e. The package also requires the \Ledmac{}
-% package, preferably at least version 0.6 (2004/12/10).
+% package, preferably at least version 0.10 (2011/08/22).
 %
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledpar}[2011/08/22 v0.6 ledmac extension for parallel texts]
+\ProvidesPackage{ledpar}[2011/08/31 v0.7 ledmac extension for parallel texts]
 
 %    \end{macrocode}
+%  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
 %
-%  As noted above,much of the code is a duplication of the original
+%    \begin{macrocode}
+\newif\ifshiftedverses
+\shiftedversesfalse
+\DeclareOption{shiftedverses}{\shiftedversestrue}
+\ProcessOptions
+%    \end{macrocode}
+%  As noted above, much of the code is a duplication of the original
 % \Ledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
 % I use `R' or `L' in the names of macros for the right and left code.
@@ -4027,7 +4035,11 @@
 %    \begin{macrocode}
               \do@lineL
               \advance\numpagelinesL \@ne
-              \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
+              \ifshiftedverses
+              		\ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+              \else
+              		\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
+              \fi
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
 % we can onto the page. If not, repeat for the next line.
@@ -4064,7 +4076,11 @@
 {            \loop\ifl@dsamepage
               \do@lineR
               \advance\numpagelinesR \@ne
-              \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+              \ifshiftedverses		
+              		\ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+              \else
+              		\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+              \fi
               \get@nextboxR
               \checkpageR
             \repeat
@@ -4339,7 +4355,12 @@
 % \cs{goalfraction}. \cs{ledthegoal} is calculated via \cs{check@goal}.
 %    \begin{macrocode}
 \newdimen\ledthegoal
-\newcommand*{\goalfraction}{0.9}
+\ifshiftedverses
+       \newcommand*{\goalfraction}{0.95}
+\else
+       \newcommand*{\goalfraction}{0.9}
+\fi
+
 \newcommand*{\check@goal}{%
   \ledthegoal=\goalfraction\pagegoal}
 
