@@ -18,6 +18,7 @@ doc: *.pdf
 
 
 %.sty: %.ins %.dtx 
+	rm -f $*.sty led*tex
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx djd17novL.eps djdpoems3.eps ledarden.eps ledfeat.eps djd17novR.eps djdpoems4.eps ledbraonain.eps ledioc.eps djdpoems1.eps egarab.eps ledeasy.eps ledmixed.eps djdpoems2.eps egarabpar.eps ledekker.eps villon.eps
