@@ -8994,9 +8994,10 @@
 % user commands for left and right sidenotes. \verb?\ledsidenote?\marg{text}
 % is the command for a moveable sidenote.
 %    \begin{macrocode}
-\newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
-\newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
-\newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}
+\newcommand*{\ledleftnote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@dlsnote{#1}}}
+\newcommand*{\ledrightnote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@drsnote{#1}}}
+\newcommand*{\ledsidenote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@dcsnote{#1}}}
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -10570,6 +10571,21 @@
 %
 %
 % \begin{PW}
+% The macro \cmd{\hangingsymbol} is used to insert a symbol on each hanging of verses.
+%For example,  in french typographie the symbol is `]'. We obtain it by the next code:
+%\begin{verbatim}
+%\renewcommand{\hangingsymbol}{[}
+%\end{verbatim}
+% We use the fact that ledmac run with hbox. Every 3 hbox we insert this command. To know the number of hbox, we use the counter `hboxmodulo'
+%\begin{macro}{\hangingsymbol}
+%\begin{macrocode}
+\newcommand*{\hangingsymbol}{}
+\newcounter{hbox}
+\newcounter{hboxmodulo}
+\newif\ifhangingsymbol
+\hangingsymbolfalse
+%\end{macrocode}
+%\end{macro}
 % \begin{macro}{\ampersand}
 % Within a stanza the \verb?\&? macro is going to be usurped. We need an
 % alias in case an \& needs to be typeset in a stanza. Define it rather
@@ -10664,7 +10680,26 @@
 % the user may initiate these penalties to indicate good and bad
 % places in the stanza for page breaking.
 %    \begin{macrocode}
-\def\stanza@line{\parindent=\csname sza@\number\stanza@count
+\def\stanza@line{
+            \setcounter{hbox}{0}
+            \setcounter{hboxmodulo}{0}
+            \everyhbox{%
+\ifnum \value{hbox}>2%
+       \addtocounter{hboxmodulo}{1}%
+       \ifnum \value{hboxmodulo}=2
+               \ifhangingsymbol%
+                       [%
+                       \hangingsymbolfalse%
+               \else%
+                       \hangingsymboltrue%
+               \fi%
+               \setcounter{hboxmodulo}{0}%
+       \fi%
+\else%
+\addtocounter{hbox}{1}%
+\fi%
+}
+\parindent=\csname sza@\number\stanza@count
                  @\endcsname\stanzaindentbase
             \pstart\stanza@hang\ignorespaces}
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
