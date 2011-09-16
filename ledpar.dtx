@@ -2081,7 +2081,7 @@
 % The \verb?pairs? environment is for parallel columns and the \verb?pages?
 % environment for parallel pages.
 %    \begin{macrocode}
-\newenvironment{pairs}{%
+\newenvironment{pairs}{%}
   \l@dpairingtrue
   \l@dpagingfalse
 }{%
@@ -2424,6 +2424,7 @@
 %                            some common code}
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
+ \manageparhangingsymbol
   \advance\countLline \@ne
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
   {\vbadness=10000 
@@ -2433,7 +2434,7 @@
    \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
                            to\baselineskip}% 
   \unvbox\one@line \global\setbox\one@line=\lastbox 
-  \getline@num
+  \getline@numL
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
     \affixline@num
@@ -2474,6 +2475,7 @@
 % \changes{v0.3}{2005/02/10}{Changed \cs{do@lineR} similarly to \cs{do@lineL}}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+\manageparhangingsymbol
   \advance\countRline \@ne
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
   {\vbadness=10000 
@@ -2524,9 +2526,25 @@
     \fi
   \else
     \ifnum\@lockR<\tw@
+	\addtocounter{hbox}{5}%
       \global\advance\line@numR \@ne 
       \global\subline@numR \z@
     \fi
+  \fi}
+\newcommand*{\getline@numL}{%
+  \global\advance\absline@num \@ne
+  \do@actions
+  \do@ballast
+  \ifsublines@
+     \ifnum\sub@lock<\tw@
+       \global\advance\subline@num \@ne
+     \fi
+  \else
+     \ifnum\@lock<\tw@
+       \global\advance\line@num \@ne
+       \addtocounter{hbox}{5}%
+       \global\subline@num \z@
+     \fi
   \fi}
 
 
@@ -3346,6 +3364,18 @@
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.3}{2005/02/04}{Removed extraneous spaces from \cs{normalbfnoteX}}
 %    \begin{macrocode}
+\newcommand{\manageparhangingsymbol}{%
+\setcounter{hbox}{0}%
+\ifinstanza
+            \everyhbox{%
+                \ifnum \value{hbox}=-2
+                   \hangingsymbol
+                   \fi
+      \addtocounter{hbox}{-1}%
+}
+\fi
+}
+
 \renewcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
     \ifledRcol
@@ -4126,6 +4156,7 @@
   \global\l@dpscR=\z@
   \global\l@dnumpstartsL=\z@
   \global\l@dnumpstartsR=\z@
+
   \ignorespaces}
 
 %    \end{macrocode}

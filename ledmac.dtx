@@ -5540,7 +5540,8 @@
 % them to survive past the end of the paragraph.
 %    \begin{macrocode}
 \newcommand*{\pstart}{
-	\if@nobreak
+\managehangingsymbol
+\if@nobreak
 \let\@oldnobreak\@nobreaktrue
 \else
 \let\@oldnobreak\@nobreakfalse
@@ -10591,6 +10592,29 @@
 \newcounter{hboxmodulo}
 \newif\ifhangingsymbol
 \hangingsymbolfalse
+\newif\ifinstanza
+\instanzafalse
+\newcommand{\managehangingsymbol}{\ifinstanza%
+            \setcounter{hbox}{0}%
+            \setcounter{hboxmodulo}{0}%
+            \everyhbox{%
+\ifnum \value{hbox}>2%
+       \addtocounter{hboxmodulo}{1}%
+       \ifnum \value{hboxmodulo}=2
+               \ifhangingsymbol%
+                       \hangingsymbol%
+                       \hangingsymbolfalse%
+               \else%
+                       \hangingsymboltrue%
+               \fi%
+               \setcounter{hboxmodulo}{0}%
+       \fi%
+\else%
+\addtocounter{hbox}{1}%
+\fi%
+}
+\fi}
+
 %\end{macrocode}
 %\end{macro}
 % \begin{macro}{\ampersand}
@@ -10688,24 +10712,6 @@
 % places in the stanza for page breaking.
 %    \begin{macrocode}
 \def\stanza@line{
-            \setcounter{hbox}{0}
-            \setcounter{hboxmodulo}{0}
-            \everyhbox{%
-\ifnum \value{hbox}>2%
-       \addtocounter{hboxmodulo}{1}%
-       \ifnum \value{hboxmodulo}=2
-               \ifhangingsymbol%
-                       \hangingsymbol%
-                       \hangingsymbolfalse%
-               \else%
-                       \hangingsymboltrue%
-               \fi%
-               \setcounter{hboxmodulo}{0}%
-       \fi%
-\else%
-\addtocounter{hbox}{1}%
-\fi%
-}
 \parindent=\csname sza@\number\stanza@count
                  @\endcsname\stanzaindentbase
             \pstart\stanza@hang\ignorespaces}
@@ -10748,7 +10754,8 @@
 %    \begin{macrocode}
 \let\startstanzahook\relax
 \let\endstanzaextra\relax
-\xdef\stanza{\begingroup\startstanzahook%
+\xdef\stanza{\global\noexpand\instanzatrue\expandafter
+	  \begingroup\startstanzahook%
          \catcode`\&\active\global\stanza@count\@ne
          \noexpand\ifnum\expandafter\noexpand
          \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
@@ -10758,7 +10765,7 @@
          \let\noexpand\sza@penalty\relax\noexpand\fi \def\noexpand&{%
          \noexpand\endlock\noexpand\pend\noexpand\sza@penalty\global
          \advance\stanza@count\@ne\noexpand\stanza@line}\def\noexpand
-         \&{\noexpand\endlock\noexpand\pend\endgroup\endstanzaextra}%
+         \&{\noexpand\endlock\noexpand\pend\endgroup\noexpand\instanzafalse\expandafter\endstanzaextra}%
          \noexpand\stanza@line}
 
 %    \end{macrocode}
