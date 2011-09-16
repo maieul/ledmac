@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4396}
+% \CheckSum{4448}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -126,6 +126,7 @@
 % \def\fileversion{v0.5} \def\filedate{2011/08/21}
 % \def\fileversion{v0.6} \def\filedate{2011/08/22}
 % \def\fileversion{v0.7} \def\filedate{2011/08/31}
+% \def\fileversion{v0.8} \def\filedate{2011/09/16}
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -136,6 +137,7 @@
 % \changes{v0.5}{2011/08/21}{Corrections about \cs{section} and other titles in numbered sections}
 % \changes{v0.6}{2011/08/22}{Be able to us \cs{chapter} in parallel pages.}
 % \changes{v0.7}{2011/08/31}{Option `shiftedverses' which make there is no blank between two parallel verses with inequal length.}
+% \changes{v0.8}{2011/09/16}{Possibility to have a symbol on each hanging of verses, like in the french typography. Redefine  the commande \cs{hangingsymbol} to define the character.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -647,6 +649,10 @@
 %
 %
 %
+% \DescribeMacro{\hangingsymbol}Like in ledmac, you could redefine the command \cmd{\hangingsymbol} to insert a character in each hanged line. If you use it, you must run \LaTeX two time. Example for the french typographie
+%\begin{verbatim}
+%\renewcommand{\hangingsymbol}{[\,}
+%\end{verbatim}
 % \StopEventually{}
 %
 % \clearpage
@@ -687,7 +693,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledpar}[2011/08/31 v0.7 ledmac extension for parallel texts]
+\ProvidesPackage{ledpar}[2011/09/16 v0.8 ledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -3364,16 +3370,6 @@
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.3}{2005/02/04}{Removed extraneous spaces from \cs{normalbfnoteX}}
 %    \begin{macrocode}
-\newcommand{\manageparhangingsymbol}{%
-\setcounter{hbox}{0}%
-            \everyhbox{%
-                \ifnum \value{hbox}=-2
-                   \hangingsymbol
-                   \fi
-      \addtocounter{hbox}{-1}%
-}
-}
-
 \renewcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
     \ifledRcol
@@ -3391,8 +3387,21 @@
 % \end{macro}
 %
 %
+
 % \section{Verse}
 %
+%
+% The \cmd{\manageparhangingsymbol} command is made to insert the hanging symbol (like  in the french typography).
+%\begin{macrocode}
+
+\newcommand{\manageparhangingsymbol}{%
+    \setcounter{hbox}{0}%
+    \everyhbox{%
+        \ifnum \value{hbox}=-2%
+            \hangingsymbol%
+        \fi%
+        \addtocounter{hbox}{-1}}}
+%\end{macrocode}
 % Before we can define the main stanza macros we need to be able to save 
 % and reset
 % the category code for \&. To save the current value we use
@@ -3402,6 +3411,7 @@
   \catcode`\&=\active
 
 %    \end{macrocode}
+%
 %
 %
 % \begin{environment}{astanza}
