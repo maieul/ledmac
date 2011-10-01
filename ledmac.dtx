@@ -133,6 +133,7 @@
 % \def\fileversion{v0.9.1} \def\filedate{2011/08/08}
 % \def\fileversion{v0.10} \def\filedate{2011/08/22}
 % \def\fileversion{v0.11} \def\filedate{2011/09/16}
+% \def\fileversion{v0.12} \def\filedate{2011/10/01}
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
 % \changes{v0.2.1}{2003/09/13}{Bug fixes and match with mempatch v1.8}
@@ -159,6 +160,7 @@
 % \changes{v0.9.1}{2011/08/08}{Fix some bug's linked with the integration of ledpatch on the main file.}
 % \changes{v0.10}{2011/08/22}{Corrections about \cs{section} and other titles in numbered sections}
 % \changes{v0.11}{2011/09/16}{Possibility to have a symbol on each hanging of verses, like in the french typography. Redefine  the commande \cs{hangingsymbol} to define the character.}
+% \changes{v0.12}{2011/10/01}{Possibilty to number the pstart with the commands \cs{numberpstarttrue}}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -782,6 +784,8 @@
 % and say \cs{memorybreak} between the relevant \cs{pend} and
 % \cs{pstart}.
 %
+%
+% \changes{v.0.12}{2011/10/01}{Possibilty to number \cs{pstart}. It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numerotation with \DescribeMacro{numberfalse}\cs{\numberpstartfalse}. You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. 
 % \subsection{Lineation commands}
 %
 % \DescribeMacro{\lineation}
@@ -2947,7 +2951,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledmac}[2011/09/16 v0.11 LaTeX port of EDMAC]
+\ProvidesPackage{ledmac}[2011/10/11 v0.12 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -5527,6 +5531,9 @@
 % \end{macro}
 %
 % \begin{macro}{\pstart}
+% \begin{macro}{numberpstarttrue}
+% \begin{macro}{numberpstartfalse}
+% \begin{macro}{thepstart}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -5538,7 +5545,19 @@
 % Beware: everything that occurs between \cs{pstart} and \cs{pend}
 % is happening within a group; definitions must be global if you want
 % them to survive past the end of the paragraph.
+%
+%You can use the command \cs{numberpstarttrue} to insert a number on every \cs{pstart}. To stop the numerotation, you must use \cs{numberpstartfalse}. To reset the numebering of \cs{pstarts}, insert 
+% \begin{verbatim}
+%\setcounter{pstart}{0}
+% \end{verbatim}
+%
 %    \begin{macrocode}
+
+\newcounter{pstart}
+\setcounter{pstart}{1}
+\renewcommand{\thepstart}{{\bf\@arabic\c@pstart}. }
+\newif\ifnumberpstart
+\numberpstartfalse
 \newcommand*{\pstart}{
 \managehangingsymbol
 \if@nobreak
@@ -5558,11 +5577,13 @@
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty
   \begingroup\normal@pars
-  \global\setbox\raw@text=\vbox\bgroup
+  \global\setbox\raw@text=\vbox\bgroup\ifnumberpstart\thepstart\addtocounter{pstart}{1}\fi
   \numberedpar@true}
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\pend}
 % \cs{pend} must be used to end a numbered paragraph.
 %
