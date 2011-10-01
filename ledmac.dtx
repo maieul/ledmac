@@ -3423,8 +3423,8 @@
     \fi
   \else
     \led@err@NumberingNotStarted
-  \fi}
-
+  \fi
+  \autoparfalse}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5566,7 +5566,7 @@
 \let\@oldnobreak\@nobreakfalse
 \fi
 \@nobreaktrue
-	\ifnumbering \else
+\ifnumbering \else
     \led@err@PstartNotNumbered
     \beginnumbering
   \fi
@@ -5577,7 +5577,7 @@
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty
   \begingroup\normal@pars
-  \global\setbox\raw@text=\vbox\bgroup\ifnumberpstart\thepstart\addtocounter{pstart}{1}\fi
+  \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\thepstart\fi\fi
   \numberedpar@true}
 %    \end{macrocode}
 % \end{macro}
@@ -5594,6 +5594,9 @@
   \ifnumberedpar@ \else
     \led@err@PendNoPstart
   \fi
+\ifnumberpstart
+\addtocounter{pstart}{1}
+\fi
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -5670,13 +5673,16 @@
 % \cs{pstart}, restoring the indentation that we saved, and
 % locally change \verb"\par" so that it'll do our \cs{pend} for us.
 %    \begin{macrocode}
+\newif\ifautopar
+\autoparfalse
 \newcommand*{\autopar}{\ifnumbering \else
     \led@err@AutoparNotNumbered
     \beginnumbering
   \fi
+  \autopartrue
   \everypar={\setbox0=\lastbox
     \endgraf \vskip-\parskip
-    \pstart \noindent \kern\wd0
+    \pstart \noindent \kern\wd0 \ifnumberpstart\thepstart\fi 
     \let\par=\pend}%
   \ignorespaces}
 %    \end{macrocode}
