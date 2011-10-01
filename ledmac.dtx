@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9112}
+% \CheckSum{9122}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -160,7 +160,8 @@
 % \changes{v0.9.1}{2011/08/08}{Fix some bug's linked with the integration of ledpatch on the main file.}
 % \changes{v0.10}{2011/08/22}{Corrections about \cs{section} and other titles in numbered sections}
 % \changes{v0.11}{2011/09/16}{Possibility to have a symbol on each hanging of verses, like in the french typography. Redefine  the commande \cs{hangingsymbol} to define the character.}
-% \changes{v0.12}{2011/10/01}{Possibilty to number the pstart with the commands \cs{numberpstarttrue}}
+% \changes{v0.12}{2011/10/01}{Possibility to number the pstart with the commands \cs{numberpstarttrue}.}
+% \changes{v0.12}{2011/10/01}{For compatibilty with ledpar, possibility to use \cs{autopar} on the right side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -3319,6 +3320,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\ifnumberingR}
 % \begin{macro}{\ifl@dpairing}
 % \begin{macro}{\l@dpairingtrue}
 % \begin{macro}{\l@dpairingfalse}
@@ -3326,20 +3328,28 @@
 % \begin{macro}{\pst@rtedLtrue}
 % \begin{macro}{\pst@rtedLfalse}
 % \begin{macro}{\l@dnumpstartsL}
+% \begin{macro}{\ifledRcol}
 % In preparation for the \Lpack{ledpar} package, these are related to 
 % the `left' text of parallel texts (when \cs{ifl@dpairing} is TRUE). 
 % They are explained in the \Lpack{ledpar}
 % manual.
 % \changes{v0.7}{2005/02/24}{Added \cs{l@dnumpstartsL}, \cs{ifl@dpairing} 
 %                and \cs{ifpst@rted} for/from ledpar}
+% \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from ledpar}
 %    \begin{macrocode}
 \newif\ifl@dpairing
   \l@dpairingfalse
 \newif\ifpst@rtedL
   \pst@rtedLfalse
 \newcount\l@dnumpstartsL
-
+\newif\ifledRcol
 %    \end{macrocode}
+% The \cs{ifnumberingR} flag is
+% set to \verb"true" if we're within a right text numbered section.
+%    \begin{macrocode}
+\newif\ifnumberingR
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5675,14 +5685,22 @@
 %    \begin{macrocode}
 \newif\ifautopar
 \autoparfalse
-\newcommand*{\autopar}{\ifnumbering \else
+\newcommand*{\autopar}{
+  \ifledRcol
+    \ifnumberingR \else
+    \led@err@AutoparNotNumbered
+    \beginnumberingR
+    \fi
+    \else
+    \ifnumbering \else
     \led@err@AutoparNotNumbered
     \beginnumbering
+    \fi
   \fi
   \autopartrue
   \everypar={\setbox0=\lastbox
     \endgraf \vskip-\parskip
-    \pstart \noindent \kern\wd0 \ifnumberpstart\thepstart\fi 
+    \pstart \noindent \kern\wd0 \ifnumberpstart\thepstart\fi
     \let\par=\pend}%
   \ignorespaces}
 %    \end{macrocode}
