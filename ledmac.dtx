@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9130}
+% \CheckSum{9126}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -165,6 +165,7 @@
 % \changes{v0.12}{2011/10/01}{For compatibilty with ledpar, possibility to use \cs{autopar} on the right side.}
 % \changes{v0.12.1}{2011/10/02}{The numbering of \cs{pstarts} restarts on each \cs{beginnumbering}.}
 % \changes{v0.12.1}{2011/10/02}{Don't number \cs{pstarts} of stanza.}
+%\changes{v0.13}{2011/11/01}{New stanzaindentsrepetition counter  to repeat stanza indents every \emph{n} verses.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -1467,8 +1468,7 @@
 % \end{PW}
 %
 % The numerical entries must be whole numbers, 0 or greater, separated by
-% commas without embedded spaces. There
-% must be one more entry than there are lines in the stanza. The first entry
+% commas without embedded spaces. The first entry
 % gives the hanging indentation to be used if the stanza line requires more
 % than one print line. If it is known that each stanza line will fit on
 % a single print line, then this first entry should be 0; \TeX\ does less
@@ -1476,7 +1476,21 @@
 % 0 but is never used. Enumeration is by stanza lines, not by print lines.
 % In the above example the lines are indented one unit, two units, one unit,
 % two units, with 3 units of hanging indentation in case a stanza line is too
-% long to fit on one print line. Make sure you have at least one more numerical
+% long to fit on one print line. 
+%
+%\changes{v0.13}{2011/11/01}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
+% Since the version 0.13, if the indentation is repeated every \emph{n} verses of the stanza, you can define only the \emph{n} first indentations, and say they are repeated, defining the value of  the \verb+stanzaindentsrepetition+ counter  at \emph{n}. For example :
+%\begin{verbatim}
+%\setstanzaindents{0,1,0}
+%\setcounter{stanzaindentsrepetition}{2}
+% \end{verbatim}
+%
+% is like
+%\begin{verbatim}
+%\setstanzaindents{0,1,0,1,0,1,0,1,0,1,0…}
+% \end{verbatim}
+%
+%If you don't use the  \verb+stanzaindentsrepetition+ counter,make sure you have at least one more numerical
 % entry in \verb+\setstanzavalues+ than the number of lines in the stanza.
 % The macros make no restriction on the number of lines in a stanza.
 % Stanza indentation values (and penalty values) obey \TeX's grouping
@@ -2955,7 +2969,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledmac}[2011/10/02 v0.12.1 LaTeX port of EDMAC]
+\ProvidesPackage{ledmac}[2011/11/01 v0.13 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -10226,7 +10240,7 @@
 %    \end{macrocode}
 % Left adjusted numbered lines
 %    \begin{macrocode}
-	  \ifx\@tempa\@tempb
+      \ifx\@tempa\@tempb
     \let\ledllfill\relax
   \else
     \def\@tempb{r}%
@@ -10732,15 +10746,29 @@
 % \begin{PW}
 % \begin{macro}{\setstanzaindents}
 % \begin{macro}{\setstanzapenalties}
+% \begin{macro}{\stanza@modulo}
 % In the original \verb?\setstanzavalues{sza}{...}? had to be called to
 % set the indents, and similarly \verb?\setstanzavalues{szp}{...}? 
 % to set the penalties. These two macros are a convenience to give
 % the user one less thing to worry about (misspelling the first argument).
+% Since the version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{stanza@modulo} is a command which modify the counter stanza@modulo, to obtain the remainder of the euclidian division of the  number of verses by the value of the \verb+stanzaindentsrepetition+ counter. 
+%\changes{v0.13}{2011/11/01}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
 %    \begin{macrocode}
 \newcommand*{\setstanzaindents}[1]{\setstanzavalues{sza}{#1}}
 \newcommand*{\setstanzapenalties}[1]{\setstanzavalues{szp}{#1}}
 
+\newcounter{stanzaindentsrepetition}
+\newcounter{stanza@modulo}
+
+\newcommand*{\stanza@modulo}[0]{
+    \setcounter{stanza@modulo}{\number\stanza@count}   % #1
+    \divide\c@stanza@modulo by \c@stanzaindentsrepetition    % round (#1 / #2)
+    \multiply \c@stanza@modulo by \c@stanzaindentsrepetition % round (#1 / #2) * #2
+    \addtocounter{stanza@modulo}{-\number\stanza@count}% (round (#1 / #2) * #2) - #1
+    \multiply\c@stanza@modulo by -1  %  ((round (#1 / #2) * #2) - #1)*-1 = 1 - (round (#1 / #2) * #2)
+}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{PW}
@@ -10761,17 +10789,15 @@
 % places in the stanza for page breaking.
 %    \begin{macrocode}
 \def\stanza@line{
-\parindent=\csname sza@\number\stanza@count
+    \ifnum\value{stanzaindentsrepetition}=0
+        \parindent=\csname sza@\number\stanza@count
                  @\endcsname\stanzaindentbase
-            \pstart\stanza@hang\ignorespaces}
-\xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
-            \hangindent\expandafter
-            \noexpand\csname sza@0@\endcsname\stanzaindentbase
-            \hangafter\@ne}
-\def\sza@penalty{\count@\csname szp@\number\stanza@count @\endcsname
-          \ifnum\count@>\@M\advance\count@-\@M\penalty-\else
-          \penalty\fi\count@}
-
+    \else
+        \stanza@modulo
+        \parindent=\csname sza@\thestanza@modulo
+                 @\endcsname\stanzaindentbase
+    \fi
+    \pstart\stanza@hang\ignorespaces}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -10804,7 +10830,7 @@
 \let\startstanzahook\relax
 \let\endstanzaextra\relax
 \xdef\stanza{\noexpand\instanzatrue\expandafter
-	  \begingroup\startstanzahook%
+      \begingroup\startstanzahook%
          \catcode`\&\active\global\stanza@count\@ne
          \noexpand\ifnum\expandafter\noexpand
          \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
@@ -13285,9 +13311,9 @@ in section~\ref{subsec}.
   \scriptsize
   \notenumfont\printlines#1|%
   \ifledplinenum
-  	\enspace
+      \enspace
   \else
-  	{\hskip 0em plus 0em minus .3em}
+      {\hskip 0em plus 0em minus .3em}
   \fi
   \select@lemmafont#1|#2\rbracket\enskip
   \notetextfont
