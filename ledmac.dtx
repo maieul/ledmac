@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9126}
+% \CheckSum{9119}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -10751,7 +10751,7 @@
 % set the indents, and similarly \verb?\setstanzavalues{szp}{...}? 
 % to set the penalties. These two macros are a convenience to give
 % the user one less thing to worry about (misspelling the first argument).
-% Since the version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{stanza@modulo} is a command which modify the counter stanza@modulo, to obtain the remainder of the euclidian division of the  number of verses by the value of the \verb+stanzaindentsrepetition+ counter. 
+% Since the version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{stanza@modulo} is a command which modify the counter stanza@modulo. The command adds 1 to stanz@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
 %\changes{v0.13}{2011/11/01}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
 %    \begin{macrocode}
 \newcommand*{\setstanzaindents}[1]{\setstanzavalues{sza}{#1}}
@@ -10761,11 +10761,10 @@
 \newcounter{stanza@modulo}
 
 \newcommand*{\stanza@modulo}[0]{
-    \setcounter{stanza@modulo}{\number\stanza@count}   % #1
-    \divide\c@stanza@modulo by \c@stanzaindentsrepetition    % round (#1 / #2)
-    \multiply \c@stanza@modulo by \c@stanzaindentsrepetition % round (#1 / #2) * #2
-    \addtocounter{stanza@modulo}{-\number\stanza@count}% (round (#1 / #2) * #2) - #1
-    \multiply\c@stanza@modulo by -1  %  ((round (#1 / #2) * #2) - #1)*-1 = 1 - (round (#1 / #2) * #2)
+    \addtocounter{stanza@modulo}{1}% (round (#1 / #2) * #2) - #1
+    \ifnum\value{stanza@modulo}=\value{stanzaindentsrepetition}
+    	\setcounter{stanza@modulo}{0}
+    \fi
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10830,8 +10829,8 @@
 \let\startstanzahook\relax
 \let\endstanzaextra\relax
 \xdef\stanza{\noexpand\instanzatrue\expandafter
-      \begingroup\startstanzahook%
-         \catcode`\&\active\global\stanza@count\@ne
+      	\begingroup\startstanzahook%
+         \catcode`\&\active\global\stanza@count\@ne\setcounter{stanza@modulo}{0}
          \noexpand\ifnum\expandafter\noexpand
          \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
          \let\noexpand\endlock\relax\noexpand\else\interlinepenalty
