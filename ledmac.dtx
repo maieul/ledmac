@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9151}
+% \CheckSum{9178}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -10746,26 +10746,36 @@
 % \begin{PW}
 % \begin{macro}{\setstanzaindents}
 % \begin{macro}{\setstanzapenalties}
-% \begin{macro}{\stanza@modulo}
+% \begin{macro}{\managestanza@modulo}
 % In the original \verb?\setstanzavalues{sza}{...}? had to be called to
 % set the indents, and similarly \verb?\setstanzavalues{szp}{...}? 
 % to set the penalties. These two macros are a convenience to give
 % the user one less thing to worry about (misspelling the first argument).
-% Since the version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{stanza@modulo} is a command which modify the counter stanza@modulo. The command adds 1 to stanz@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
+% Since the version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{managestanza@modulo} is a command which modify the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
 %\changes{v0.13}{2011/11/01}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
 %    \begin{macrocode}
 \newcommand*{\setstanzaindents}[1]{\setstanzavalues{sza}{#1}}
 \newcommand*{\setstanzapenalties}[1]{\setstanzavalues{szp}{#1}}
 
 \newcounter{stanzaindentsrepetition}
-\newcounter{stanza@modulo}
+\newcount\stanza@modulo
 
-\newcommand*{\stanza@modulo}[0]{
-    \addtocounter{stanza@modulo}{1}
-    \ifnum\value{stanza@modulo}>\value{stanzaindentsrepetition}
-    	\setcounter{stanza@modulo}{1}
+\newcommand*{\managestanza@modulo}[0]{
+    \advance\stanza@modulo\@ne
+    \ifnum\stanza@modulo>\value{stanzaindentsrepetition}
+     \stanza@modulo\@ne
     \fi
 }
+\def\stanza@line{
+    \ifnum\value{stanzaindentsrepetition}=0
+        \parindent=\csname sza@\number\stanza@count
+                 @\endcsname\stanzaindentbase
+    \else
+        \managestanza@modulo
+        \parindent=\csname sza@\number\stanza@modulo
+                 @\endcsname\stanzaindentbase
+    \fi
+    \pstart\stanza@hang\ignorespaces}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -10837,7 +10847,7 @@
 \let\endstanzaextra\relax
 \xdef\stanza{\noexpand\instanzatrue\expandafter
       	\begingroup\startstanzahook%
-         \catcode`\&\active\global\stanza@count\@ne\setcounter{stanza@modulo}{0}
+         \catcode`\&\active\global\stanza@count\@ne\stanza@modulo\@ne
          \noexpand\ifnum\expandafter\noexpand
          \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
          \let\noexpand\endlock\relax\noexpand\else\interlinepenalty
