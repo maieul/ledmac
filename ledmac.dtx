@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9200}
+% \CheckSum{9224}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -138,6 +138,7 @@
 % \def\fileversion{v0.13} \def\filedate{2011/11/08}
 % \def\fileversion{v0.13.1} \def\filedate{2011/11/18}
 % \def\fileversion{v0.14} \def\filedate{2012/04/04}
+% \def\fileversion{v0.15} \def\filedate{2012/05/21}
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
 % \changes{v0.2.1}{2003/09/13}{Bug fixes and match with mempatch v1.8}
@@ -797,7 +798,8 @@
 %\changes{v0.12}{2011/10/01}{Possibilty to number \cs{pstart}.}
 % It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. On each \cs{beginnumbering} the numbering restarts.
 % \subsection{Lineation commands}
-%
+% \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
+% Line numbering can be disabled with  \cs{numberlinefalse}. It can be enabled again with \cs{numberlinetrue}.
 % \DescribeMacro{\lineation}
 % Lines can be numbered either by page or by section; you specify
 % this using the \cs{lineation}\marg{arg}
@@ -2974,7 +2976,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledmac}[2012/04/04 v0.14 LaTeX port of EDMAC]
+\ProvidesPackage{ledmac}[2012/05/21 v0.15 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -5405,6 +5407,13 @@
 %
 % \end{PW}
 %
+% \begin{macro}{\ifnumberline}
+% The \cs{ifnumberline} option can be set to FALSE to disable line numbering.
+% \begin{macrocode}
+\newif\ifnumberline
+\numberlinetrue
+% \end{macrocode}
+% \end{macro}
 % \begin{macro}{\set@line}
 % The \cs{set@line} macro
 % is called by \cs{critext} to put the line-reference field and
@@ -5836,9 +5845,12 @@
 % send to the vertical list.
 %    \begin{macrocode}
 \newcommand*{\getline@num}{%
-  \global\advance\absline@num \@ne
+  \ifnumberline
+  	\global\advance\absline@num \@ne
+  \fi
   \do@actions
   \do@ballast
+  \ifnumberline
   \ifsublines@
      \ifnum\sub@lock<\tw@
        \global\advance\subline@num \@ne
@@ -5848,8 +5860,9 @@
        \global\advance\line@num \@ne
        \global\subline@num \z@
      \fi
-  \fi}
-
+  \fi
+  \fi
+  }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6062,7 +6075,10 @@
 %    \end{macrocode}
 % No number is attached if \cs{ifl@dskipnumber} is TRUE (and then it
 % is set to its normal FALSE value).
+% No number is attache if \cs{ifnumberline} is FALSE (the normal value is TRUE).
+% \changes{v0.13}{2012/05/21}{Line numbering can be disabled}
 %    \begin{macrocode}
+\ifnumberline
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
@@ -6200,7 +6216,9 @@
 % $2$; $3$ advances to $0$; other values are unchanged.
 %    \begin{macrocode}
   \f@x@l@cks
-\fi}
+\fi
+\fi
+}
 
 %    \end{macrocode}
 % \end{macro}
