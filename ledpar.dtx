@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4564}
+% \CheckSum{4574}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -132,6 +132,7 @@
 % \def\fileversion{v0.9.2}\def\filedate{2011/11/08}
 % \def\fileversion{v0.9.3}\def\filedate{2011/11/18}
 % \def\fileversion{v0.10}\def\filedate{2012/04/04}
+% \def\fileversion{v0.11}\def\filedate{2012/05/05}
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -704,7 +705,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledpar}[2012/04/04 v0.10 ledmac extension for parallel texts]
+\ProvidesPackage{ledpar}[2012/05/05 v0.11 ledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -2560,26 +2561,35 @@
 % The \cs{getline@numR} macro
 % determines the page and line numbers for the right text line we're about to
 % send to the vertical list.
+% \changes{v0.11}{2012/05/05}{Change \cs{getline@numR} and \cs{getline@numL} to allow disable line numbering (like in ledmac 0.14).}
 %    \begin{macrocode}
 \newcommand*{\getline@numR}{%
+\ifnumberline
   \global\advance\absline@numR \@ne
+\fi
   \do@actionsR
   \do@ballastR
+\ifnumberline
   \ifsublines@
     \ifnum\sub@lockR<\tw@
       \global\advance\subline@numR \@ne
     \fi
   \else
     \ifnum\@lockR<\tw@
-	\addtocounter{hbox}{10}%
-      \global\advance\line@numR \@ne 
+\addtocounter{hbox}{10}%
+      \global\advance\line@numR \@ne
       \global\subline@numR \z@
     \fi
-  \fi}
+  \fi
+\fi
+}
 \newcommand*{\getline@numL}{%
-  \global\advance\absline@num \@ne
+\ifnumberline  
+	\global\advance\absline@num \@ne
+\fi
   \do@actions
   \do@ballast
+\ifnumberline
   \ifsublines@
      \ifnum\sub@lock<\tw@
        \global\advance\subline@num \@ne
@@ -2590,7 +2600,9 @@
        \addtocounter{hbox}{10}%
        \global\subline@num \z@
      \fi
-  \fi}
+  \fi
+\fi
+}
 
 
 %    \end{macrocode}
@@ -2705,6 +2717,7 @@
 % \cs{affixline@numR} is the right text version of the 
 % \cs{affixline@num} macro.
 % \changes{v0.3}{2005/02/24}{Changed \cs{affixline@numR} to match new ledmac}
+% \changes{v0.11}{2012/05/05}{Changed \cs{affixline@numR} to allow to disable line numbering (like in ledmac 0.14)}
 %    \begin{macrocode}
 
 \providecommand*{\l@dcalcnum}[3]{%
@@ -2768,6 +2781,7 @@
 
 
 \newcommand*{\affixline@numR}{%
+\ifnumberline
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
@@ -2809,8 +2823,8 @@
     \fi
   \fi
   \f@x@l@cksR
+\fi
 \fi}
-
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
