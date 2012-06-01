@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9224}
+% \CheckSum{9302}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -797,6 +797,8 @@
 %
 %\changes{v0.12}{2011/10/01}{Possibilty to number \cs{pstart}.}
 % It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. On each \cs{beginnumbering} the numbering restarts.
+% \changes{v0.15}{2012/05/21}{Possibilty to print \cs{pstart} number in side}
+% With the \cs{sidepstartnumtrue} command, the number of \cs{pstart} will be printed in side. In this case, the line number will be not printed.
 % \subsection{Lineation commands}
 % \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
 % Line numbering can be disabled with  \cs{numberlinefalse}. It can be enabled again with \cs{numberlinetrue}.
@@ -5619,7 +5621,7 @@
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty
   \begingroup\normal@pars
-  \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\thepstart\fi\fi\fi
+  \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\ifsidepstartnum\else\thepstart\fi\fi\fi\fi
   \numberedpar@true}
 %    \end{macrocode}
 % \end{macro}
@@ -5636,9 +5638,6 @@
   \ifnumberedpar@ \else
     \led@err@PendNoPstart
   \fi
-\ifnumberpstart
-\addtocounter{pstart}{1}
-\fi
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -5662,6 +5661,10 @@
   \flush@notes
   \endgroup
   \ignorespaces
+  \ifnumberpstart
+	\addtocounter{pstart}{1}
+	\pstartnumtrue
+	\fi
   \@oldnobreak}
 
 %    \end{macrocode}
@@ -5766,6 +5769,7 @@
   \unvbox\one@line \global\setbox\one@line=\lastbox
   \getline@num
   \affixline@num
+  \affixpstart@num
   \hb@xt@ \linewidth{\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
@@ -6028,7 +6032,7 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \changes{v0.15}{2012/05/21}{New paragraph about Pstart number printing in side}
 % \subsection{Line number printing}
 %
 % \begin{macro}{\affixline@num}
@@ -6308,6 +6312,64 @@
 % \end{macro}
 % \end{PW}
 %
+% \subsection{Pstart number printing in side}
+% The printing of pstart number in side is running like the printing of line number side. There is only some difference :
+% \begin{macro}{\affixpstart@num}
+% \begin{macro}{\pstartnum}
+% \begin{itemize}
+% 	\item The counter of pstart is upgrade in the \cs{pend} command. Consequently, the \cs{affixpstart@num} command has not to upgrade it.
+% 	\item To print the pstart number only at the begining of a pstart, and not in every line, a boolean test is made. The \cs{pstartnum} boolean is set to TRUE at every \cs{pend}. It's tried in the \cs{leftpstartnum} and \cs{rightstartnum} commands. After the try, it is set to FALSE.
+% \end{itemize}
+% \begin{macro}{\leftpstartnum}
+% \begin{macro}{\rightstartnum}
+% \begin{macro}{\ifsidepstartnum}
+% \begin{macrocode}
+
+\newif\ifsidepstartnum
+\newcommand*{\affixpstart@num}{%
+	\ifsidepstartnum
+		\if@twocolumn
+	    	\if@firstcolumn
+	      		\gdef\l@dld@ta{\llap{{\leftpstartnum}}}%
+	    	\else
+	      		\gdef\l@drd@ta{\rlap{{\rightpstartnum}}}%
+	    	\fi
+	    \else
+	     	\@l@dtempcntb=\line@margin
+	    	\ifnum\@l@dtempcntb>\@ne
+      			\advance\@l@dtempcntb \page@num
+    		\fi
+    		\ifodd\@l@dtempcntb
+      			\gdef\l@drd@ta{\rlap{{\rightpstartnum}}}%
+    		\else
+      			\gdef\l@dld@ta{\llap{{\leftpstartnum}}}%
+    		\fi
+	    \fi
+	\fi
+		
+}
+%
+
+\newif\ifpstartnum
+\pstartnumtrue
+\newcommand*{\leftpstartnum}{
+	\ifpstartnum\thepstart
+	\kern\linenumsep\fi
+	\global\pstartnumfalse	
+}
+\newcommand*{\rightpstartnum}{
+	\ifpstartnum
+	\kern\linenumsep
+	\thepstart
+	\fi
+	\global\pstartnumfalse
+}
+%\end{macro}
+%\end{macro}
+%\end{macro}
+%\end{macro}
+%\end{macro}
+%\end{macrocode}
 % \subsection{Add insertions to the vertical list}
 %
 % \begin{macro}{\inserts@list}
