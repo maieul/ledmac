@@ -2849,6 +2849,7 @@
 % \begin{macro}{\rightpstartnumR}
 % \begin{macro}{\leftpstartnumL}
 % \begin{macro}{\rightpstartnumL}
+% \begin{macro}{\ifpstartnumR}
 %\begin{macrocode}
 
 \newcommand*{\affixpstart@numL}{%
@@ -2904,18 +2905,20 @@
 \thepstartL
 \global\pstartnumfalse\fi
 }
-
+\newif\ifpstartnumR
+\pstartnumRtrue
 \newcommand*{\leftpstartnumR}{
-\ifpstartnum
+\ifpstartnumR
 \thepstartR
-\kern\linenumsep\global\pstartnumfalse\fi
+\kern\linenumsep\global\pstartnumRfalse\fi
 }
 \newcommand*{\rightpstartnumR}{
-\ifpstartnum\kern\linenumsep
+\ifpstartnumR\kern\linenumsep
 \thepstartR
-\global\pstartnumfalse\fi
+\global\pstartnumRfalse\fi
 }
 % \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3940,12 +3943,15 @@
 % \section{Parallel columns}
 %
 % \begin{macro}{\Columns}
+% \changes{v0.11}{2012/05/05}{Pstart number can be printed in side}
 % The \cs{Columns} command results in the previous Left and
 % Right texts being typeset in matching columns. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
   \fi
@@ -3965,7 +3971,9 @@
 % two by two (left and right pairs).
 %    \begin{macrocode}
     \check@pstarts
-    \loop\if@pstarts
+    \loop\if@pstarts                
+        \global\pstartnumtrue 
+        \global\pstartnumRtrue
 %    \end{macrocode}
 % Increment \cs{l@dpscL} and \cs{l@dpscR} which here count
 % the numbers of left and right chunks.
@@ -4009,6 +4017,8 @@
       \@writelinesinparL
       \@writelinesinparR
       \check@pstarts
+      \addtocounter{pstartL}{1}
+      \addtocounter{pstartR}{1}
     \repeat
 %    \end{macrocode}
 % Having output all chunks, make sure all notes have been output,
@@ -4286,7 +4296,7 @@
 % \changes{v0.11}{2012/05/05}{Pstart number can be printed in side}
 %    \begin{macrocode}
           \checkpageR
-          \global\pstartnumtrue
+          \global\pstartnumRtrue
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage
               \do@lineR
