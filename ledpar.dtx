@@ -2267,13 +2267,15 @@
 % them to survive past the end of the paragraph.
 %
 % We have to have specific left and right \cs{pstart} when parallel processing;
-% among other things because of potential changes in the linewidth.
+% among other things because of potential changes in the linewidth. The \verb|old| counter are used to have the good reset of the pstart counters at the begining of the \cs{Pages} command.
 % 
 %    \begin{macrocode}
 
 \newcounter{pstartL}
+\newcounter{pstartLold}
 \renewcommand{\thepstartL}{{\bfseries\@arabic\c@pstartL}. }
 \newcounter{pstartR}
+\newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
 \newcommand*{\pstartL}{
@@ -2293,9 +2295,10 @@
   \fi
 %    \end{macrocode}
 % If this is the first \cs{pstart} in a numbered section, clear any inserts
-% and set \cs{ifpst@rtedL} to FALSE.
+% and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
 %    \begin{macrocode}
   \ifpst@rtedL\else
+  	\setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
     \global\let\next@insert=\empty
      \global\pst@rtedLtrue
@@ -2333,6 +2336,7 @@
     \pendR
   \fi
   \ifpst@rtedR\else
+  	\setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
     \global\let\next@insertR=\empty
     \global\pst@rtedRtrue
@@ -2483,6 +2487,7 @@
   \getline@numL
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
+  	\affixpstart@numL
     \affixline@num
     \l@dld@ta
     \add@inserts
@@ -2534,6 +2539,7 @@
   \getline@numR
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
+  	\affixpstart@numR
     \affixline@numR
     \l@dld@ta
     \add@insertsR
@@ -2831,7 +2837,91 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \subsection{Pstart number printing in side}
+% The printing of the pstart number is like in ledmac, with two differences :
+%\begin{itemize}
+%	\item Some commands have a version suffixed by R and L.
+% 	\item The \cs{affixpstart@num} and \cs{affixpstart@numR} commands are called in the \cs{Pages} command. Consequently, the \verb|pstartL| and \verb|pstartR| counters must be reset at the begining of this command.
+%\end{itemize}
+% \begin{macro}{\affixpstart@numL}
+% \begin{macro}{\affixpstart@numR}
+% \begin{macro}{\leftpstartnumR}
+% \begin{macro}{\rightpstartnumR}
+% \begin{macro}{\leftpstartnumL}
+% \begin{macro}{\rightpstartnumL}
+%\begin{macrocode}
+
+\newcommand*{\affixpstart@numL}{%
+\ifsidepstartnum
+\if@twocolumn
+     \if@firstcolumn
+       \gdef\l@dld@ta{\llap{{\leftpstartnumL}}}%
+     \else
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
+     \fi
+    \else
+      \@l@dtempcntb=\line@margin
+     \ifnum\@l@dtempcntb>\@ne
+       \advance\@l@dtempcntb \page@num
+     \fi
+     \ifodd\@l@dtempcntb
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
+     \else
+       \gdef\l@dld@ta{\llap{{\leftpstartnumL}}}%
+     \fi
+    \fi
+\fi
+}
+\newcommand*{\affixpstart@numR}{%
+\ifsidepstartnum
+\if@twocolumn
+     \if@firstcolumn
+       \gdef\l@dld@ta{\llap{{\leftpstartnumR}}}%
+     \else
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
+     \fi
+    \else
+      \@l@dtempcntb=\line@marginR
+     \ifnum\@l@dtempcntb>\@ne
+       \advance\@l@dtempcntb \page@numR
+     \fi
+     \ifodd\@l@dtempcntb
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
+     \else
+       \gdef\l@dld@ta{\llap{{\leftpstartnumR}}}%
+     \fi
+    \fi
+\fi
+}
+
+\newcommand*{\leftpstartnumL}{
+\ifpstartnum
+\thepstartL
+\kern\linenumsep\global\pstartnumfalse\fi
+}
+\newcommand*{\rightpstartnumL}{
+\ifpstartnum\kern\linenumsep
+\thepstartL
+\global\pstartnumfalse\fi
+}
+
+\newcommand*{\leftpstartnumR}{
+\ifpstartnum
+\thepstartR
+\kern\linenumsep\global\pstartnumfalse\fi
+}
+\newcommand*{\rightpstartnumR}{
+\ifpstartnum\kern\linenumsep
+\thepstartR
+\global\pstartnumfalse\fi
+}
+% \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Add insertions to the vertical list}
 %
 % \begin{macro}{\inserts@listR}
@@ -4056,6 +4146,8 @@
 %
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
   \typeout{}
   \typeout{*************************** PAGES ***************************}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4141,11 +4233,13 @@
 % See if there is more that can be done for the left page and set up the 
 % left language.
 % \changes{v0.2}{2004/12/20}{Added \cs{l@duselanguage} to \cs{Pages}}
+% \changes{v0.11}{2012/05/05}{Pstart number can be printed in side}
 %    \begin{macrocode}
           \checkpageL
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
 {            \loop\ifl@dsamepage
+			 
 %    \end{macrocode}
 % Process the next (left) text line, adding it to the page.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
@@ -4162,6 +4256,7 @@
 % Perhaps we have to move to the next (left) box. Check if we have got all
 % we can onto the page. If not, repeat for the next line.
 %    \begin{macrocode}
+			
               \get@nextboxL
               \checkpageL
             \repeat
@@ -4188,8 +4283,10 @@
 %    \end{macrocode}
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
+% \changes{v0.11}{2012/05/05}{Pstart number can be printed in side}
 %    \begin{macrocode}
           \checkpageR
+          \global\pstartnumtrue
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage
               \do@lineR
@@ -4539,6 +4636,8 @@
 % lines needed, and move onto the next box (by incrementing \cs{l@dpscL}).
 %    \begin{macrocode}
         \writtenlinesLfalse
+        \addtocounter{pstartL}{1}
+        \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
                          {\the\@donetotallinesL}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
@@ -4562,6 +4661,8 @@
       \fi
       \ifnum\l@dnumpstartsR>\l@dpscR
         \writtenlinesRfalse
+        \addtocounter{pstartR}{1}
+        \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
                          {\the\@donetotallinesR}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
