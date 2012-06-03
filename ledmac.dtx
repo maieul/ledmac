@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9302}
+% \CheckSum{9324}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -803,10 +803,10 @@
 % \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
 % Line numbering can be disabled with  \cs{numberlinefalse}. It can be enabled again with \cs{numberlinetrue}.
 % \DescribeMacro{\lineation}
-% Lines can be numbered either by page or by section; you specify
+% Lines can be numbered either by page, by pstart or by section; you specify
 % this using the \cs{lineation}\marg{arg}
 % macro, where \meta{arg} is either
-% \texttt{page} or \texttt{section}. You may only use this command at places
+% \texttt{page}, \texttt{pstart} or \texttt{section}. You may only use this command at places
 % where numbering is not in effect; you can't change the lineation system
 % within a section. You can change it between sections: they don't all
 % have to use the same lineation system. 
@@ -3506,9 +3506,9 @@
 % \label{lineation}\relax
 %
 % \subsection{Choosing the system of lineation}
-%
+% \changes{v0.15}{2012/05/21}{Line numbering can be reset at each pstart}
 % Sometimes you want line numbers that start at $1$ at the top of each
-% page; other times you want line numbers that start at $1$ at the start
+% page; sometimes you want line numbers that start at $1$ at each \cs{pstart} ; other times you want line numbers that start at $1$ at the start
 % of each section and increase regardless of page breaks.
 % \Ledmac{} can do it either way, and you can switch from one to the
 % other within one work.
@@ -3516,15 +3516,25 @@
 % line references within each section. Here we will define
 % internal codes for these systems and the macros you use to select them.
 %
+% \begin{macro}{\ifbypstart@}
+% \begin{macro}{\bypstart@true}
+% \begin{macro}{\bypstart@false}
 % \begin{macro}{\ifbypage@}
 % \begin{macro}{\bypage@true}
 % \begin{macro}{\bypage@false}
-% The \cs{ifbypage@} flag specifies the current lineation
-% system: \verb"false" for line-of-section, \verb"true" for line-of-page.
+% The \cs{ifbypage@} and \cs{ifbypstart@} flag specifie the current lineation
+% system: \begin{itemize}
+% \item line-of-page : \verb|bypstart@ = false| and \verb|bypage@ = true|.
+% \item line-of-pstart : \verb|bypstart@ = true| and \verb|bypage@ = false|.
+% \end{itemize}
 % \Ledmac{} will use the line-of-section system unless instructed otherwise.
 %    \begin{macrocode}
 \newif\ifbypage@
+\newif\ifbypstart@
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3532,7 +3542,7 @@
 % \begin{macro}{\lineation}
 % \cs{lineation}\marg{word} is the macro you use to select the 
 % lineation system.
-% Its argument is a string: either \texttt{page} or \texttt{section}.
+% Its argument is a string: either \texttt{page} or \texttt{section} or \texttt{pstart}.
 %    \begin{macrocode}
 \newcommand*{\lineation}[1]{{%
   \ifnumbering
@@ -3541,12 +3551,20 @@
     \def\@tempa{#1}\def\@tempb{page}%
     \ifx\@tempa\@tempb
         \global\bypage@true
+        \global\bypstart@false
     \else
-       \def\@tempb{section}%
+       \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
            \global\bypage@false
+           \global\bypstart@true
        \else
-         \led@warn@BadLineation
+       	\def@tempb{section}
+       	\ifx\@tempa\@tempb
+           \global\bypage@false
+           \global\bypstart@false
+       	\else
+         	\led@warn@BadLineation
+        \fi
        \fi
     \fi
   \fi}}
@@ -5603,6 +5621,9 @@
 \newif\ifnumberpstart
 \numberpstartfalse
 \newcommand*{\pstart}{
+\ifbypstart@
+	\line@num \z@ \subline@num \z@
+\fi
 \managehangingsymbol
 \if@nobreak
 \let\@oldnobreak\@nobreaktrue
@@ -6317,8 +6338,8 @@
 % \begin{macro}{\affixpstart@num}
 % \begin{macro}{\pstartnum}
 % \begin{itemize}
-% 	\item The counter of pstart is upgrade in the \cs{pend} command. Consequently, the \cs{affixpstart@num} command has not to upgrade it.
-% 	\item To print the pstart number only at the begining of a pstart, and not in every line, a boolean test is made. The \cs{pstartnum} boolean is set to TRUE at every \cs{pend}. It's tried in the \cs{leftpstartnum} and \cs{rightstartnum} commands. After the try, it is set to FALSE.
+%  \item The counter of pstart is upgrade in the \cs{pend} command. Consequently, the \cs{affixpstart@num} command has not to upgrade it.
+%  \item To print the pstart number only at the begining of a pstart, and not in every line, a boolean test is made. The \cs{pstartnum} boolean is set to TRUE at every \cs{pend}. It's tried in the \cs{leftpstartnum} and \cs{rightstartnum} commands. After the try, it is set to FALSE.
 % \end{itemize}
 % \begin{macro}{\leftpstartnum}
 % \begin{macro}{\rightstartnum}
