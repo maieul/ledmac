@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{4727}
+% \CheckSum{4756}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -963,23 +963,33 @@
 % \label{lineation}\relax
 %
 % \subsection{Choosing the system of lineation}
-%
+%% \changes{v0.11}{2012/05/05}{Lineation can be by pstart (like in ledmac 0.14).}
 % Sometimes you want line numbers that start at $1$ at the top of each
-% page; other times you want line numbers that start at $1$ at the start
+% page; sometimes you want line numbers that start at $1$ at each \cs{pstart}; other times you want line numbers that start at $1$ at the start
 % of each section and increase regardless of page breaks.
 % \Ledpar{} lets you choose different schemes for the left and right texts.
 %
+% \begin{macro}{\ifbypstart@R}
+% \begin{macro}{\bypstart@Rtrue}
+% \begin{macro}{\bypstart@Rfalse}
 % \begin{macro}{\ifbypage@R}
 % \begin{macro}{\bypage@Rtrue}
 % \begin{macro}{\bypage@Rfalse}
-% The \cs{ifbypage@R} flag specifies the current lineation
-% system for right texts: \verb"false" for line-of-section, \verb"true" 
-% for line-of-page.
+% The \cs{ifbypage@R} and \cs{ifbypstart@R} flag specifie the current lineation
+% system: \begin{itemize}
+% \item line-of-page : \verb|bypstart@R = false| and \verb|bypage@R = true|.
+% \item line-of-pstart : \verb|bypstart@R = true| and \verb|bypage@R = false|.
+% \end{itemize}
 % \Ledpar{} will use the line-of-section system unless instructed otherwise.
 %    \begin{macrocode}
 \newif\ifbypage@R
+\newif\ifbypstart@R
   \bypage@Rfalse
+  \bypstart@Rfalse
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -987,25 +997,32 @@
 % \begin{macro}{\lineationR}
 % \cs{lineationR}\marg{word} is the macro used to select the 
 % lineation system for right texts.
-% Its argument is a string: either \texttt{page} or \texttt{section}.
+% Its argument is a string: either \texttt{page}, \texttt{pstart} or \texttt{section}.
 %    \begin{macrocode}
 \newcommand*{\lineationR}[1]{{%
-  \ifnumberingR
+  \ifnumbering
     \led@err@LineationInNumbered
   \else
     \def\@tempa{#1}\def\@tempb{page}%
     \ifx\@tempa\@tempb
         \global\bypage@Rtrue
+        \global\bypstart@Rfalse
     \else
-       \def\@tempb{section}%
+       \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
            \global\bypage@Rfalse
+           \global\bypstart@Rtrue
        \else
-         \led@warn@BadLineation
+       	\def@tempb{section}
+       	\ifx\@tempa\@tempb
+           \global\bypage@Rfalse
+           \global\bypstart@Rfalse
+       	\else
+         	\led@warn@BadLineation
+        \fi
        \fi
     \fi
   \fi}}
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2466,6 +2483,7 @@
 % \end{macro}
 %
 %
+% \changes{v0.11}{2012/05/05}{Change \cs{do@lineL} and \cs{do@lineR} to allow line numbering by pstart(like in ledmac 0.14).}
 % \begin{macro}{\do@lineL}
 % The \cs{do@lineL} macro is called to 
 % do all the processing for a single line of left text.
@@ -2567,7 +2585,6 @@
 % The \cs{getline@numR} macro
 % determines the page and line numbers for the right text line we're about to
 % send to the vertical list.
-% \changes{v0.11}{2012/05/05}{Change \cs{getline@numR} and \cs{getline@numL} to allow disable line numbering (like in ledmac 0.14).}
 %    \begin{macrocode}
 \newcommand*{\getline@numR}{%
 \ifnumberline
@@ -4611,6 +4628,7 @@
 %
 % \begin{macro}{\get@nextboxL}
 % \begin{macro}{\get@nextboxR}
+% \changes{v0.11}{2012/05/05}{Change \cs{get@nextboxL} and \cs{get@nextboxR} to allow disable line numbering (like in ledmac 0.14).}
 % If the current box is not empty (i.e., still contains some lines) 
 % nothing is done. Otherwise if and only if a synchronisation point is 
 % reached the next box is started.
@@ -4643,9 +4661,12 @@
       \ifnum\l@dnumpstartsL>\l@dpscL
 %    \end{macrocode}
 % There are still unprocessed boxes. Recalculate the maximum number of
-% lines needed, and move onto the next box (by incrementing \cs{l@dpscL}).
+% lines needed, and move onto the next box (by incrementing \cs{l@dpscL}). If needed, restart the line numbering.
 %    \begin{macrocode}
         \writtenlinesLfalse
+         \ifbypstart@
+            \line@num \z@ \subline@num \z@
+          \fi
         \addtocounter{pstartL}{1}
         \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
@@ -4671,6 +4692,9 @@
       \fi
       \ifnum\l@dnumpstartsR>\l@dpscR
         \writtenlinesRfalse
+        \ifbypstart@R
+           \line@numR \z@ \subline@numR \z@
+        \fi
         \addtocounter{pstartR}{1}
         \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
