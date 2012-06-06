@@ -5629,8 +5629,7 @@
     \else 
         \setline{0}
     \fi 
-\fi 
-\managehangingsymbol
+\fi
 \if@nobreak
 \let\@oldnobreak\@nobreaktrue
 \else
@@ -6658,10 +6657,8 @@
 % If we're within a line-numbered paragraph, then, we tack this note onto
 % the \cs{inserts@list} list, and increment the deferred-page-bottom-note
 % counter.
-% \changes{v0.15}{2012/05/21}{Bug with \cs{hangingsymbol} and \cs{Afootnote} and similar commands fixed.}
 %    \begin{macrocode}
 \newcommand*{\Afootnote}[1]{%
-  \setcounter{hboxmodulo}{-1}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vAfootnote{A}%
                    {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
@@ -6686,7 +6683,6 @@
 % We need similar commands for the other footnote series.
 %    \begin{macrocode}
 \newcommand*{\Bfootnote}[1]{%
-  \setcounter{hboxmodulo}{-1}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vBfootnote{B}%
                    {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
@@ -6697,7 +6693,6 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Cfootnote}[1]{%
-  \setcounter{hboxmodulo}{-1}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vCfootnote{C}%
                    {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
@@ -6708,7 +6703,6 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Dfootnote}[1]{%
-  \setcounter{hboxmodulo}{-1}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vDfootnote{D}%
                    {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
@@ -6719,7 +6713,6 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Efootnote}[1]{%
-  \setcounter{hboxmodulo}{-1}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vEfootnote{E}%
                    {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
@@ -7903,7 +7896,6 @@
 %
 %    \begin{macrocode}
 \newcommand*{\threecolfootfmt}[3]{%
-  \addtocounter{hbox}{-3}%
   \normal@pars
   \hsize .3\hsize
   \parindent=0pt
@@ -8002,7 +7994,6 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootfmt}[3]{%
-  \addtocounter{hbox}{-3}%
   \normal@pars
   \hsize .45\hsize
   \parindent=0pt
@@ -9228,9 +9219,9 @@
 % user commands for left and right sidenotes. \verb?\ledsidenote?\marg{text}
 % is the command for a moveable sidenote.
 %    \begin{macrocode}
-\newcommand*{\ledleftnote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@dlsnote{#1}}}
-\newcommand*{\ledrightnote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@drsnote{#1}}}
-\newcommand*{\ledsidenote}[1]{\setcounter{hboxmodulo}{-1}\edtext{}{\l@dcsnote{#1}}}
+\newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
+\newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
+\newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}
 
 
 %    \end{macrocode}
@@ -10810,38 +10801,15 @@
 %\begin{verbatim}
 %\renewcommand{\hangingsymbol}{[\,}
 %\end{verbatim}
-% We use the fact that ledmac run with hbox. Every 3 hbox we insert this command. To know the number of hbox, we use the counter `hboxmodulo'
+% The \cs{ifinstanza} boolean is used to be sure that we are in a stanza part.
 %\begin{macro}{\hangingsymbol}
+%\begin{macro}{\ifinstanza}
 %\begin{macrocode}
 \newcommand*{\hangingsymbol}{}
-\newcounter{hbox}
-\newcounter{hboxmodulo}
-\newif\ifhangingsymbol
-\hangingsymbolfalse
 \newif\ifinstanza
 \instanzafalse
-\newcommand{\managehangingsymbol}{\ifinstanza%
-            \setcounter{hbox}{0}%
-            \setcounter{hboxmodulo}{0}%
-            \everyhbox{%
-\ifnum \value{hbox}>2%
-       \addtocounter{hboxmodulo}{1}%
-       \ifnum \value{hboxmodulo}=2
-               \ifhangingsymbol%
-                       \hangingsymbol%
-                       \hangingsymbolfalse%
-               \else%
-                       \hangingsymboltrue%
-               \fi%
-               \setcounter{hboxmodulo}{0}%
-       \fi%
-\else%
-\addtocounter{hbox}{1}%
-\fi%
-}
-\fi}
-
 %\end{macrocode}
+%\end{macro}
 %\end{macro}
 % \begin{macro}{\ampersand}
 % Within a stanza the \verb?\&? macro is going to be usurped. We need an
