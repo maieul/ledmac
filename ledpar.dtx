@@ -2510,9 +2510,10 @@
     \add@inserts
     \affixside@note
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{\inserthangingsymbolL\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }}%
+  \prevline@num=\line@num%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
   \global\advance\@donetotallinesL\@ne
@@ -2561,9 +2562,10 @@
     \add@insertsR
     \affixside@noteR
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@lineR{\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@lineR{\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }}%
+  \prevline@numR=\line@numR%
   \add@penaltiesR
   \global\advance\@donereallinesR\@ne
   \global\advance\@donetotallinesR\@ne
@@ -3073,7 +3075,6 @@
 % If we're within a line-numbered paragraph, then, we tack this note onto
 % the \cs{inserts@list} list, and increment the deferred-page-bottom-note
 % counter.
-% \changes{v0.11}{2012/05/05}{Bug with \cs{hangingsymbol} and \cs{Afootnote} and similar commands fixed.}
 %    \begin{macrocode}
 \renewcommand*{\Afootnote}[1]{%
   \ifnumberedpar@
@@ -3571,8 +3572,19 @@
 %
 
 % \section{Verse}
-%
-%
+%\changes{v0.11}{2012/05/05}{New management of hangingsymbol insertion, preventing undesirable insertions}
+% Like in ledmac, the insertion of hangingsymbol is base on a control of the change of line's numbers. But we need different macros for left and right side.
+%\begin{macro}{\prevline@numR}
+%\begin{macro}{\inserthangingsymbolL}
+%\begin{macro}{\inserthangingsymbolR}
+%\begin{macrocode}
+\newcount\prevline@numR
+\newcommand{\inserthangingsymbolL}{\ifinstanzaL\ifnum\line@num=\prevline@num\hfill\hangingsymbol\fi\fi}
+\newcommand{\inserthangingsymbolR}{\ifinstanzaR\ifnum\line@numR=\prevline@numR\hfill\hangingsymbol\fi\fi}
+%\end{macrocode}
+%\end{macro}
+%\end{macro}
+%\end{macro}
 % Before we can define the main stanza macros we need to be able to save 
 % and reset
 % the category code for \&. To save the current value we use
