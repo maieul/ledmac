@@ -1580,7 +1580,7 @@
 % \end{verbatim}
 % \end{PW}
 %\begin{PW}
-%It's possible to insert a symbol on each line of verse's hanging, as in French typography for `]'.  To insert in ledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code :
+%It's possible to insert a symbol on each line of verse's hanging, as in French typography for `['.  To insert in ledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code :
 %\begin{verbatim}
 %\renewcommand{\hangingsymbol}{[\,}
 %\end{verbatim}
@@ -5797,11 +5797,15 @@
   \getline@num
   \affixline@num
   \affixpstart@num
-  \hb@xt@ \linewidth{\l@dld@ta\add@inserts\affixside@note
+  \hb@xt@ \linewidth{\inserthangingsymbol\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
-  }}
+  }}%
+%\end{macrocode}
+% The \cs{prevline@num} counter is used to check the insertion of hanging symbol.
+%\begin{macrocode}
+  \prevline@num=\line@num%
   \add@penalties}
 
 %    \end{macrocode}
@@ -10797,7 +10801,7 @@
 %
 % \begin{PW}
 % The macro \cmd{\hangingsymbol} is used to insert a symbol on each hanging of verses.
-%For example,  in french typographie the symbol is `]'. We obtain it by the next code:
+%For example,  in french typographie the symbol is `['. We obtain it by the next code:
 %\begin{verbatim}
 %\renewcommand{\hangingsymbol}{[\,}
 %\end{verbatim}
@@ -10808,6 +10812,16 @@
 \newcommand*{\hangingsymbol}{}
 \newif\ifinstanza
 \instanzafalse
+%\end{macrocode}
+%\end{macro}
+%\end{macro}
+%\changes{v0.15}{2012/05/21}{New management of hangingsymbol insertion, preventing undesirable insertions}
+%\begin{macro}{\inserthangingymbol}
+%\begin{macro}{\prevline@num}
+% After each insertion of true line, the value of \cs{line@num} counter is put into the \cs{prevline@num} counter. When we change verse, the \cs{line@num} is not equal to the \cs{prevline@num}. But if a verse is in two ore more lines, the secund line (and next) have the same number than the first line of the verse. Consequently, the \cs{line@num} is equal to the \cs{prevline@num}. This property is used by the \cs{inserthangingsymbol} command to insert the hanging symbol at each verse's hanging.
+%\begin{macrocode}
+\newcount\prevline@num
+\newcommand{\inserthangingsymbol}{\ifinstanza\ifnum\line@num=\prevline@num\hfill\hangingsymbol\fi\fi}
 %\end{macrocode}
 %\end{macro}
 %\end{macro}
