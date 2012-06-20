@@ -50,7 +50,7 @@
 %
 % \fi
 %
-% \CheckSum{9308}
+% \CheckSum{9324}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -139,6 +139,7 @@
 % \def\fileversion{v0.13.1} \def\filedate{2011/11/18}
 % \def\fileversion{v0.14} \def\filedate{2012/04/04}
 % \def\fileversion{v0.15} \def\filedate{2012/06/11}
+% \def\fileversion{v0.16} \def\filedate{2012/06/20}
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
 % \changes{v0.2.1}{2003/09/13}{Bug fixes and match with mempatch v1.8}
@@ -2978,7 +2979,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledmac}[2012/06/11 v0.15 LaTeX port of EDMAC]
+\ProvidesPackage{ledmac}[2012/06/20 v0.16 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -5429,10 +5430,10 @@
 %
 % \begin{macro}{\ifnumberline}
 % The \cs{ifnumberline} option can be set to FALSE to disable line numbering.
-% \begin{macrocode}
+%  \begin{macrocode}
 \newif\ifnumberline
 \numberlinetrue
-% \end{macrocode}
+%  \end{macrocode}
 % \end{macro}
 % \begin{macro}{\set@line}
 % The \cs{set@line} macro
@@ -7390,7 +7391,11 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \changes{v0.16}{2012/06/20}{\cs{parafootftmsep} command is printed between each paragraphed footnote}
+% You can redefine the \cs{parafootftmsep} command to print a separator between each paragraphed footnote (of the same page). A usual separator is double pipe. To have it, you can do :
+% \begin{verbatim}
+% \renewcommand{parafootftmsep}{$||$\enspace}
+% \end{verbatim}
 % \begin{macro}{\footfudgefiddle}
 % \begin{PW}
 % For paragraphed footnotes \TeX{} has to estimate the amount of space
@@ -7686,6 +7691,7 @@
 % text of the footnote.
 %    \begin{macrocode}
 \newcommand*{\parafootfmt}[3]{%
+  \insertparafootftmsep%
   \ledsetnormalparstuff
   {\notenumfont\printlines#1|}\enspace
   {\select@lemmafont#1|#2}\rbracket\enskip
@@ -7694,6 +7700,7 @@
 % Note that in the above definition, the penalty of $-10$
 % encourages a line break between notes, so that notes have a
 % slight tendency to begin on new lines.
+% The \cs{insertparafootftmsep} command is used to insert the \cs{parafootftmsep} between each note in the \emph{same} page.
 % \end{macro}
 %
 % \begin{macro}{\para@footgroup}
@@ -7753,6 +7760,27 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsubsection{Insertion of footnotes separator}
+% \begin{macro}{\parafootftmsep}
+% The \cs{parafootftmsep} macro is insert between each paragraphed footnote. The default value is empty, but the user can redefine it via \cs{renewcommand}.
+%    \begin{macrocode}
+\newcommand{\parafootftmsep}{}
+%    \end{macrocode}
+% \end{macro}
+% The \cs{insertparafootftmsep} must be called at the begining of \cs{parafootftm} and like commands. It tries if the page number was changed since the previous note. If not, it calls \cs{parafootftmsep} command.
+% \begin{macro}{\prevpage@num}
+% \begin{macro}{\insertparafootftmsep}
+%    \begin{macrocode}
+\newcount\prevpage@num
+\newcommand{\insertparafootftmsep}{%
+    \ifnum\prevpage@num=\page@num%
+        \parafootftmsep%
+    \fi%
+    \global\prevpage@num=\page@num%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -8596,7 +8624,7 @@
 %\begin{macro}{\advancelabel@refs}
 %\begin{macro}{\labelrefsparseline}
 %\begin{macro}{\labelrefsparsesubline}
-% \begin{macrocode}
+%  \begin{macrocode}
 % In case which \cs{edlabel} is the first in a paragraph, we have a problem, because  line's number changes only at first horizontal box  of the paragraph. And so, we need test in \cs{edlabel} if we are at the top of paragraph, with \cs{ifvmode}. If true, we need advance of on unity text that we write in \verb|.aux| file. We do it with \cs{advancelabel@refs} command.
 \newcommand{\advancelabel@refs}{%
 	\newcount\line%
@@ -10034,6 +10062,7 @@
 % \cs{parafootfmtX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\parafootfmtX}[2]{%
+  \insertparafootftmsep
   \ledsetnormalparstuff
   {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
     #2\penalty-10}}
@@ -10164,7 +10193,7 @@
 %
 %    Don't forget to initialise the series.
 %
-% \begin{macrocode}
+%  \begin{macrocode}
 \footnormalX{A}
 \footnormalX{B}
 \footnormalX{C}
