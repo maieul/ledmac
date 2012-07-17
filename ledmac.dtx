@@ -5048,6 +5048,7 @@
   \l@dskipnumberfalse
 \newcommand*{\skipnumbering}{\skipnumbering@reg}
 \newcommand*{\skipnumbering@reg}{%
+  \l@nohangingsymbolfalse%
   \write\linenum@out{\string\n@num}%
   \advanceline{-1}}
 
@@ -10846,13 +10847,26 @@
 % \end{macro}
 % \end{macro}
 %\changes{v0.15}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
+% \begin{macro}{\ifl@nohangingsymbol}
 % \begin{macro}{\inserthangingymbol}
 % \begin{macro}{\prevline@num}
 % After each insertion of true line, the value of \cs{line@num} counter is put into the \cs{prevline@num} counter. When we change verse, the \cs{line@num} is not equal to the \cs{prevline@num}. But if a verse is in two ore more lines, the second line (and next) has the same number as the first line of the verse. Consequently, the \cs{line@num} is equal to the \cs{prevline@num}. This property is used by the \cs{inserthangingsymbol} command to insert the hanging symbol at each verse's hanging.
+% The boolean \cs{l@nohangingsymbol} can be set to TRUE when decrement the page counter, like in \cs{skipnumbering}. It prevent hangingsymbol insertion. It it set to FALSE after the test.
 %    \begin{macrocode}
+\newif\ifl@nohangingsymbol
+\l@nohangingsymbolfalse
 \newcount\prevline@num
-\newcommand{\inserthangingsymbol}{\ifinstanza\ifnum\line@num=\prevline@num\hfill\hangingsymbol\fi\fi}
+\newcommand{\inserthangingsymbol}{%
+\ifl@nohangingsymbol%
+    \l@nohangingsymbolfalse%
+\else%
+\ifinstanza%
+    \ifnum\line@num=\prevline@num%
+        \hfill\hangingsymbol%
+    \fi%
+\fi\fi}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\ampersand}
