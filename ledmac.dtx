@@ -7373,6 +7373,7 @@
 % (\texttt{A}--\texttt{E}) denoting the series of notes to be paragraphed.
 %    \begin{macrocode}
 \newcommand*{\footparagraph}[1]{%
+  \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
   \expandafter\let\csname v#1footnote\endcsname=\para@vfootnote
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
@@ -7542,6 +7543,7 @@
 %
 %    \begin{macrocode}
 \newcommand*{\para@vfootnote}[2]{%
+  \def\insertparafootftmsep{\insertparafootftmsepseries{#1}}
   \insert\csname #1footins\endcsname
   \bgroup
     \notefontsetup
@@ -7767,16 +7769,15 @@
 \newcommand{\parafootftmsep}{}
 %    \end{macrocode}
 % \end{macro}
-%The command \cs{insertparafootftmsep} must be called at the begining of \cs{parafootftm} (and like commands).  \cs{insertparafootftmsep} checks to see if the page number has changed since the previous note. If not,  \cs{insertparafootftmsep} calls \cs{parafootftmsep}.
+%The command \cs{insertparafootftmsep} must be called at the begining of \cs{parafootftm} (and like commands).  By default, is value is \cs{\insertparafootftmsepseries}\marg{series}. \cs{insertparafootftmsepseries} checks to see if the page number has changed since the previous note of the serie. If not,  \cs{insertparafootftmsep} calls \cs{parafootftmsep}.
 % \begin{macro}{\prevpage@num} 
 % \begin{macro}{\insertparafootftmsep}
 %    \begin{macrocode}
-\newcount\prevpage@num
-\newcommand{\insertparafootftmsep}{%
-    \ifnum\prevpage@num=\page@num%
-        \parafootftmsep%
-    \fi%
-    \global\prevpage@num=\page@num%
+\newcommand{\insertparafootftmsepseries}[1]{%
+   \expandafter\ifnum\csname prevpage#1@num\endcsname=\page@num%
+      \parafootftmsep%
+   \fi%
+   \global\csname prevpage#1@num\endcsname=\page@num%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -9983,6 +9984,7 @@
 % \cs{footparagraphX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footparagraphX}[1]{%
+  \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
@@ -10044,6 +10046,7 @@
     \penalty0
   \egroup}
 \newcommand*{\mppara@vfootnoteX}[2]{%
+  \def\insertparafootftmsep{\insertparafootftmsepseries{#1}}
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \notefontsetup
