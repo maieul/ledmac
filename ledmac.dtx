@@ -8081,7 +8081,8 @@
 % \end{PW}
 %
 %
-% \subsection{Displaying options}
+% \subsection{Displaying}
+% \subsubsection{Options}
 % The \cs{numberonlyfistinline}\oarg{series} is used to print line number only in the first time. It set to true the \cs{ifnumberonlyfirstinline@series} toogle.
 % \begin{macro}{\numberonlyfirstinline}
 % \begin{macrocode}
@@ -8103,6 +8104,26 @@
 		\providetoggle{ifnumberonlyfirstinline@#1}
 		\toggletrue{ifnumberonlyfirstinline@#1}
 	}
+}
+%  \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Line number printing}
+% \begin{macro}{printlinefootnote}
+% The \cs{\printlinefootnote} macro is called in each \cs{<type>footfmt} command. It print or not the line number, depending previous options. His first argument is the information about lines, his secund is the series of footnote.
+%  \begin{macrocode}
+\newcommand{\printlinefootnote}[2]{%
+	{\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
+		{\ifcsdef{prevline#2}{%Be sure the \prevline exists.
+			\ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
+				{\symplinenum}%
+				{\notenumfont\printlines#1|}}%
+			{\notenumfont\printlines#1|}%
+	}%
+		{\notenumfont\printlines#1|}%
+	}%
+	\enspace%
+	\csnumgdef{prevline#2}{\line@num}%
 }
 %  \end{macrocode}
 % \end{macro}
