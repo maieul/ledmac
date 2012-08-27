@@ -8143,16 +8143,19 @@
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. It print or not the line number, depending previous options. His first argument is the information about lines, his secund is the series of footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
-      {\ifcsdef{prevline#2}{%Be sure the \prevline exists.
-         \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
-            {\symplinenum}%
-            {\notenumfont\printlines#1|}}%
+   \iftoggle{ifnonumberinfootnote@#2}{}%Try if the line number must printed (by default, yes)
+   {%
+      {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
+         {\ifcsdef{prevline#2}{%Be sure the \prevline exists.
+            \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
+               {\symplinenum}%
+               {\notenumfont\printlines#1|}}%
+            {\notenumfont\printlines#1|}%
+      }%
          {\notenumfont\printlines#1|}%
+      }%
+      \csnumgdef{prevline#2}{\line@num}%
    }%
-      {\notenumfont\printlines#1|}%
-   }%
-   \csnumgdef{prevline#2}{\line@num}%
 }
 %    \end{macrocode}
 % \end{macro}
