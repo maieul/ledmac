@@ -1187,9 +1187,12 @@
 %
 % \DescribeMacro{\afterlemmaseparator}
 % You can add some space between separator and note, by using \cs{afterlemmaseparator}\oarg{series}\marg{length}. If you write a relative length (for example \verb|0.5em|, which is the default value), it will be relative to the footnote font. If your lemma separator is empty, this space won't be printed.
+%
 % \DescribeMacro{\afternote}
 % You can add some space after note, by using \cs{afternote}\oarg{series}\marg{length}. If you write a relative length (for example \verb|0.5em|, which is the default value), it will be relative to the footnote font. The default value is \verb|1em plus.4em minus.4em|, which is a stretchable length.
 %
+% \DescribeMacro{\parafootsep}
+% For paragraphed footnotes (see below), you can choice the separator between each not by \cs{parafootsep}\oarg{series}\marg{length}. A common separator is double pipe ($||$). So you can set by \cs{parafootsep}\verb+$||$+.
 % \subsection{Alternate footnote formatting}
 % If you just launch into \Ledmac{} using the commands outlined
 % above, you will get a standard layout for your text and notes.  You
@@ -7426,14 +7429,8 @@
   \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
   \count\csname mp#1footins\endcsname=1000
 }
-
 %    \end{macrocode}
 % \end{macro}
-% \changes{v0.16}{2012/06/21}{\cs{parafootftmsep} command is printed between each paragraphed footnote}
-% You can redefine the \cs{parafootftmsep} command to print a separator between each paragraphed footnote (on the same page). A usual separator is a double pipe ($\|$). To add double-pipe separators:
-% \begin{verbatim}
-% \renewcommand{\parafootftmsep}{\thinspace$||$\enspace}
-% \end{verbatim}
 % \begin{macro}{\footfudgefiddle}
 % \begin{PW}
 % For paragraphed footnotes \TeX{} has to estimate the amount of space
@@ -7672,7 +7669,7 @@
 % text of the footnote, and the fourth is the series (optional, for ascendant compatibility).
 %    \begin{macrocode}
 \newcommandx*{\parafootfmt}[4][4=Z]{%
-  \insertparafootftmsep{#4}%
+  \insertparafootsep{#4}%
   \ledsetnormalparstuff%
   \printlinefootnote{#1}{#4}%
   {\select@lemmafont#1|#2}%
@@ -7685,7 +7682,7 @@
 % Note that in the above definition, the penalty of $-10$
 % encourages a line break between notes, so that notes have a
 % slight tendency to begin on new lines.
-% The \cs{insertparafootftmsep} command is used to insert the \cs{parafootftmsep} between each note in the \emph{same} page.
+% The \cs{insertparafootsep} command is used to insert the \cs{parafootsep@series} between each note in the \emph{same} page.
 % \end{macro}
 %
 % \begin{macro}{\para@footgroup}
@@ -7746,24 +7743,18 @@
 % \end{macro}
 %
 % \subsubsection{Insertion of footnotes separator}
-% \begin{macro}{\parafootftmsep}
-% The \cs{parafootftmsep} macro is inserted between each paragraphed footnote. The default value is empty, but the user can redefine it via \cs{renewcommand}.
-%    \begin{macrocode}
-\newcommand{\parafootftmsep}{}
-%    \end{macrocode}
-% \end{macro}
-%The command \cs{insertparafootftmsep}\marg{series} must be called at the begining of \cs{parafootftm} (and like commands). 
+%The command \cs{insertparafootsep}\marg{series} must be called at the begining of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
-% \begin{macro}{\insertparafootftmsep}
+% \begin{macro}{\insertparafootsep}
 %    \begin{macrocode}
-\newcommand{\insertparafootftmsep}[1]{%
+\newcommand{\insertparafootsep}[1]{%
    \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
         {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
       {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-         {\ifcsempty{symplinenum}{\parafootftmsep}{}}%
-         {\parafootftmsep}%
+         {\ifcsempty{symplinenum}{\csuse{parafootsep@#1}}{}}%
+         {\csuse{parafootsep@#1}}%
       }%
-      {\parafootftmsep}%
+      {\csuse{parafootsep@#1}}%
    }%
    {}%
    \global\csname prevpage#1@num\endcsname=\page@num%
@@ -8299,7 +8290,7 @@
 % \end{macro}
 % \begin{macro}{\interparanoteglue}
 % \begin{macro}{\ipn@skip}
-% The \cs{ipn@skip} skip and \cs{interparanoteglue} command are kept for ascendant compatibilty, but should not be used anymore.
+% The \cs{ipn@skip} skip and \cs{interparanoteglue} command are kept for ascendant compatibility, but should not be used anymore.
 %    \begin{macrocode}
 \newskip\ipn@skip
 \newcommand*{\interparanoteglue}[1]{%
@@ -8307,6 +8298,39 @@
 \interparanoteglue{1em plus.4em minus.4em}
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\parafootftmsep}
+% The \cs{parafootftmsep} macro is kept for ascendant compatibility. It's default value of \cs{parafootsep@series}.
+%    \begin{macrocode}
+\newcommand{\parafootftmsep}{}
+%    \end{macrocode}
+% \end{macro}
+%
+% The \cs{parafootsep} is used for separator of notes in paragraphed footnotes.
+% \begin{macro}{\parafootsep}
+%   \begin{macrocode}
+\def\parafootsep@A{\parafootftmsep}
+\def\parafootsep@B{\parafootftmsep}
+\def\parafootsep@C{\parafootftmsep}
+\def\parafootsep@D{\parafootftmsep}
+\def\parafootsep@E{\parafootftmsep}
+\def\parafootsep@Z{\parafootftmsep}
+\newcommandx*{\parafootsep}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{parafootsep@A}{#2}%
+            \csdef{parafootsep@B}{#2}%
+            \csdef{parafootsep@C}{#2}%
+            \csdef{parafootsep@D}{#2}%
+            \csdef{parafootsep@E}{#2}%
+            \csdef{parafootsep@Z}{#2}% 
+        }%
+        {%
+            \csdef{parafootsep@#1}{#2}%
+        }%
+}
+%   \end{macrocode}
 % \end{macro}
 % \subsubsection{Line number printing}
 % \begin{macro}{\printlinefootnote}
@@ -10335,7 +10359,7 @@
 % \cs{parafootfmtX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\parafootfmtX}[2]{%
-  \insertparafootftmsep{#1}%
+  \insertparafootsep{#1}%
   \ledsetnormalparstuff
   {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
     #2\penalty-10}}
