@@ -1165,9 +1165,11 @@
 % \subsection{Displaying options}
 % Since version XXX, some commands can be used to change displaying.
 % \DescribeMacro{\numberonlyfirstinline}
-% By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1, i.e one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. The optional argument can be use to precise in which series it's applied.
+% By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1, i.e one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. The optional argument can be used to precise in which series it's applied.
 % \DescribeMacro{\nonumberinfootnote}
-% If you don't want to have line number in footnote, you can use \cs{\nonumberinfootnote}\oarg{series}. The optional argument can be use to precise in which series it's applied.
+% If you don't want to have line number in footnote, you can use \cs{nonumberinfootnote}\oarg{series}. The optional argument can be used to precise in which series it's applied.
+% \DescribeMacro{\lemmaseparator}
+% By default, lemma separator in footnote is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{series}\oarg{lemmaseparator} to change it. The optional argument can be used to precise ine which series it's applied.
 % \subsection{Alternate footnote formatting}
 % If you just launch into \Ledmac{} using the commands outlined
 % above, you will get a standard layout for your text and notes.  You
@@ -6934,8 +6936,8 @@
   \parindent \z@ \parfillskip \z@ \@plus 1fil}
 \newcommandx*{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for ascendant compatibility
   \ledsetnormalparstuff%
-  \printlinefootnote{#1}{#4}\strut\enspace%
-      {\select@lemmafont#1|#2}\rbracket\enskip#3\strut\par}
+  \printlinefootnote{#1|}{#4}\strut\enspace%
+      {\select@lemmafont#1|#2}\csuse{lemmaseparator@#4}\enskip#3\strut\par}
 
 %    \end{macrocode}
 % \end{macro}
@@ -7554,7 +7556,6 @@
 %
 %    \begin{macrocode}
 \newcommand*{\para@vfootnote}[2]{%
-  \def\insertparafootftmsep{\insertparafootftmsepseries{#1}}%
   \insert\csname #1footins\endcsname
   \bgroup
     \notefontsetup
@@ -7704,10 +7705,10 @@
 % text of the footnote, and the fourth is the series (optional, for ascendant compatibility).
 %    \begin{macrocode}
 \newcommandx*{\parafootfmt}[4][4=Z]{%
-  \insertparafootftmsep%
+  \insertparafootftmsep{#4}%
   \ledsetnormalparstuff%
   \printlinefootnote{#1}{#4}\enspace%
-  {\select@lemmafont#1|#2}\rbracket\enskip
+  {\select@lemmafont#1|#2}\csuse{lemmaseparator@#4}\enskip
   #3\penalty-10 }
 %    \end{macrocode}
 % Note that in the above definition, the penalty of $-10$
@@ -7780,16 +7781,16 @@
 \newcommand{\parafootftmsep}{}
 %    \end{macrocode}
 % \end{macro}
-%The command \cs{insertparafootftmsep} must be called at the begining of \cs{parafootftm} (and like commands).  By default, its value is \cs{insertparafootftmsepseries}\marg{series}. \cs{insertparafootftmsepseries} checks to see if the page number has changed since the previous note of the serie. If not,  \cs{insertparafootftmsep} calls \cs{parafootftmsep}.
+%The command \cs{insertparafootftmsep}\marg{series} must be called at the begining of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
 % \begin{macro}{\insertparafootftmsep}
 %    \begin{macrocode}
-\newcommand{\insertparafootftmsepseries}[1]{%
+\newcommand{\insertparafootftmsep}[1]{%
    \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
         {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
       {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-         {\ifcsempty{symplinenum}{\parafootftmsep}{}}
-         {\parafootftmsep}
+         {\ifcsempty{symplinenum}{\parafootftmsep}{}}%
+         {\parafootftmsep}%
       }%
       {\parafootftmsep}%
    }%
@@ -7952,7 +7953,7 @@
   \raggedright
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}\enspace
-  {\select@lemmafont#1|#2}\rbracket\enskip
+  {\select@lemmafont#1|#2}\csuse{lemmaseparator@#4}\enskip
   #3\strut\par\allowbreak}
 %    \end{macrocode}
 % \end{macro}
@@ -8050,7 +8051,7 @@
   \raggedright
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}\enspace
-  {\select@lemmafont#1|#2}\rbracket\enskip
+  {\select@lemmafont#1|#2}\csuse{lemmaseparator@#4}\enskip
   #3\strut\par\allowbreak}
 %    \end{macrocode}
 %    \begin{macrocode}
@@ -8156,6 +8157,32 @@
       }%
       \csnumgdef{prevline#2}{\line@num}%
    }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\lemmaseparator}
+% The \cs{lemmaseparator}\oarg{series}\marg{series} is used to change lemma sep
+%    \begin{macrocode}
+\let\lemmaseparator@A\rbracket
+\let\lemmaseparator@B\rbracket
+\let\lemmaseparator@C\rbracket
+\let\lemmaseparator@D\rbracket
+\let\lemmaseparator@E\rbracket
+\let\lemmaseparator@E\rbracket
+\let\lemmaseparator@Z\rbracket
+\newcommandx*{\lemmaseparator}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is 
+        {%
+            \csdef{lemmaseparator@A}{#2}%
+            \csdef{lemmaseparator@B}{#2}%
+            \csdef{lemmaseparator@C}{#2}%
+            \csdef{lemmaseparator@D}{#2}%
+            \csdef{lemmaseparator@E}{#2}%
+            \csdef{lemmaseparator@Z}{#2}%
+        }%
+        {%
+            \csdef{lemmaseparator@#1}{#2}%
+        }%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10134,7 +10161,6 @@
     \penalty0
   \egroup}
 \newcommand*{\mppara@vfootnoteX}[2]{%
-  \def\insertparafootftmsep{\insertparafootftmsepseries{#1}}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \notefontsetup
@@ -10155,7 +10181,7 @@
 % \cs{parafootfmtX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\parafootfmtX}[2]{%
-  \insertparafootftmsep
+  \insertparafootftmsep{#1}%
   \ledsetnormalparstuff
   {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
     #2\penalty-10}}
