@@ -6951,7 +6951,7 @@
   \parindent \z@ \parfillskip \z@ \@plus 1fil}
 \newcommandx*{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for ascendant compatibility
   \ledsetnormalparstuff%
-  \strut{\printlinefootnote{#1}{#4}}\enspace%
+  \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
   \ifcsempty{lemmaseparator@#4}%
     {}%
@@ -7727,7 +7727,7 @@
 \newcommandx*{\parafootfmt}[4][4=Z]{%
   \insertparafootftmsep%
   \ledsetnormalparstuff%
-  \printlinefootnote{#1}{#4}\enspace%
+  \printlinefootnote{#1}{#4}%
   {\select@lemmafont#1|#2}%
   \ifcsempty{lemmaseparator@#4}%
     {}%
@@ -7976,7 +7976,7 @@
   \tolerance=5000
   \raggedright
   \leavevmode
-  \strut{\printlinefootnote{#1}{#4}}\enspace
+  \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
   \ifcsempty{lemmaseparator@#4}%
     {}%
@@ -8078,7 +8078,7 @@
   \tolerance=5000
   \raggedright
   \leavevmode
-  \strut{\printlinefootnote{#1}{#4}}\enspace
+  \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
   \ifcsempty{lemmaseparator@#4}%
     {}%
@@ -8304,16 +8304,27 @@
    \iftoggle{ifnonumberinfootnote@#2}{}%Try if the line number must printed (by default, yes)
    {%
       {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
-         {\ifcsdef{prevline#2}{%Be sure the \prevline exists.
+         {%
+         \ifcsdef{prevline#2}%
+            {%Be sure the \prevline exists.
             \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
-               {\symplinenum}%
-               {\notenumfont\printlines#1|}}%
-            {\notenumfont\printlines#1|}%
+               {%
+               \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\symplinenum\hspace{\csuse{afternumberinfootnote@#2}}%
+               }%
+               {%
+                \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                }%
+            }%
+            {%
+            \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+            }%
       }%
-         {\notenumfont\printlines#1|}%
+      {%
+      \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
       }%
       \csnumgdef{prevline#2}{\line@num}%
-   }%
+         }%
+  }%
 }
 %    \end{macrocode}
 % \end{macro}
