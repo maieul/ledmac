@@ -7658,63 +7658,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\interparanoteglue}
-% \begin{macro}{\ipn@skip}
-% \phantomsection
-% \label{interparanoteglue}\relax
-% Close observers will notice that we snuck some glue called
-% \cs{ipn@skip} onto the end of the hbox produced by \cs{unvxh} in the
-% above macro.
-%
-% We want to be able to have some glue between our paragraphed
-% footnotes. But since we are initially setting our notes in
-% internal vertical mode, as little paragraphs, any paragraph-final
-% glue will get discarded.  Since \cs{unvxh} is already busy fiddling
-% with glue and penalties at the end of these paragraphs, we take
-% advantage of the opportunity to provide our inter-note spacing.
-%
-% We collect the value of the inter-parafootnote glue value as the
-% parameter of a macro called---wait for it---\cs{interparanoteglue}.
-% We put this value into the value of a glue register
-% \cs{ipn@skip} (inter-para-note-skip) making sure first to set the
-% current font to the value normally used in footnotes so that the value of an
-% \verb"em" will be taken from the right font.
-%    \begin{macrocode}
-\newskip\ipn@skip
-\newcommand*{\interparanoteglue}[1]{%
-             {\notefontsetup\global\ipn@skip=#1 \relax}}
-\interparanoteglue{1em plus.4em minus.4em}
-
-%    \end{macrocode}
-% There is a point to be careful about regarding the
-% \cs{interparanoteglue}.  Remember that in \cs{para@vfootnote} we do
-% some measurements on the footnote box, and use the resulting size
-% to make an estimate of how much the note will contribute to the
-% height of our final footnote paragraph.  This information is used
-% by the output routine to allocate the right amount of vertical
-% space on the page for the notes (\thetexbook, pp.\,398--399).
-%
-% The length of the footnote includes the natural size of the glue
-% specified by \cs{interparanoteglue}, but not its stretch or shrink
-% components, since at this point the note has no need to stretch
-% or shrink. Later, when the paragraph is actually composed by
-% \cs{parafootgroup} in the output routine, \TeX\ will almost
-% certainly do some stretching and shrinking of this glue in order
-% to make the paragraph look nice. Probably the stretching and
-% shrinking over the whole paragraph will cancel each other out.
-% But if not, the actual vertical size of the paragraph may not
-% match the size the output routine had been told to expect, and
-% you may get an overfull/underfull \cs{vbox} message from the output
-% routine.  To minimize the risk of this, you can do two things:
-% keep the \verb"plus" and \verb"minus" components of \cs{interparanoteglue}
-% small compared with its natural glue, and keep them the same as
-% each other.  As a general precaution, keep the size and
-% flexibility of the \verb"\skip\footins" glue on the high side too:
-% because the reckoning is approximate, footnote blocks may be up
-% to a line bigger or smaller than the output routine allows for,
-% so keep some flexible space between the text and the notes.
-% \end{macro}
-% \end{macro}
 %
 %
 % \begin{macro}{\parafootfmt}
@@ -8297,6 +8240,70 @@
         }%
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\afternote}
+% The \cs{afternote}\oarg{series}\marg{length} is used to change length after note.
+%
+% There is a point to be careful about regarding the
+% \cs{afternote@series} commands.  Remember that in \cs{para@vfootnote} we do
+% some measurements on the footnote box, and use the resulting size
+% to make an estimate of how much the note will contribute to the
+% height of our final footnote paragraph.  This information is used
+% by the output routine to allocate the right amount of vertical
+% space on the page for the notes (\thetexbook, pp.\,398--399).
+%
+% The length of the footnote includes the natural size of the glue
+% specified by \cs{afternote@series}, but not its stretch or shrink
+% components, since at this point the note has no need to stretch
+% or shrink. Later, when the paragraph is actually composed by
+% \cs{parafootgroup} in the output routine, \TeX\ will almost
+% certainly do some stretching and shrinking of this glue in order
+% to make the paragraph look nice. Probably the stretching and
+% shrinking over the whole paragraph will cancel each other out.
+% But if not, the actual vertical size of the paragraph may not
+% match the size the output routine had been told to expect, and
+% you may get an overfull/underfull \cs{vbox} message from the output
+% routine.  To minimize the risk of this, you can do two things:
+% keep the \verb"plus" and \verb"minus" components of \cs{interparanoteglue}
+% small compared with its natural glue, and keep them the same as
+% each other.  As a general precaution, keep the size and
+% flexibility of the \verb"\skip\footins" glue on the high side too:
+% because the reckoning is approximate, footnote blocks may be up
+% to a line bigger or smaller than the output routine allows for,
+% so keep some flexible space between the text and the notes.
+%    \begin{macrocode}
+\def\afternote@A{1em plus.4em minus.4em}
+\def\afternote@B{1em plus.4em minus.4em}
+\def\afternote@C{1em plus.4em minus.4em}
+\def\afternote@D{1em plus.4em minus.4em}
+\def\afternote@E{1em plus.4em minus.4em}
+\def\afternote@Z{1em plus.4em minus.4em}
+\newcommandx*{\afternote}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{afternote@A}{#2}%
+            \csdef{afternote@B}{#2}%
+            \csdef{afternote@C}{#2}%
+            \csdef{afternote@D}{#2}%
+            \csdef{afternote@E}{#2}%
+            \csdef{afternote@Z}{#2}% 
+        }%
+        {%
+            \csdef{afternote@#1}{#2}%
+        }%
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\interparanoteglue}
+% \begin{macro}{\ipn@skip}
+% The \cs{ipn@skip} skip and \cs{interparanoteglue} command are kept for ascendant compatibilty, but should not be used anymore.
+%    \begin{macrocode}
+\newskip\ipn@skip
+\newcommand*{\interparanoteglue}[1]{%
+             {\notefontsetup\global\ipn@skip=#1 \relax}}
+\interparanoteglue{1em plus.4em minus.4em}
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \subsubsection{Line number printing}
 % \begin{macro}{\printlinefootnote}
