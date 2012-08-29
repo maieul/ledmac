@@ -3337,7 +3337,6 @@
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \l@dend@stuff
   \setcounter{pstart}{1}
-  \firstpstarttrue
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -5517,7 +5516,6 @@
 % \begin{macro}{\numberpstarttrue}
 % \begin{macro}{\numberpstartfalse}
 % \begin{macro}{thepstart}
-% \begin{macro}{\firstpstart}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -5540,16 +5538,8 @@
 \newcounter{pstart}
 \renewcommand{\thepstart}{{\bfseries\@arabic\c@pstart}. }
 \newif\ifnumberpstart
-\newif\iffirstpstart
-\firstpstarttrue
 \numberpstartfalse
 \newcommand*{\pstart}{
-\ifbypstart@\iffirstpstart
-    \firstpstartfalse
-    \else 
-        \setline{0}
-    \fi 
-\fi
 \if@nobreak
 \let\@oldnobreak\@nobreaktrue
 \else
@@ -5570,7 +5560,6 @@
   \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\ifsidepstartnum\else\thepstart\fi\fi\fi\fi
   \numberedpar@true}
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5598,6 +5587,13 @@
   \l@dzeropenalties
   \endgraf\global\num@lines=\prevgraf\egroup
   \global\par@line=0
+%    \end{macrocode}
+% We check if lineation is by pstart : in this case, we reset line number.
+%    \begin{macrocode}
+  \ifbypstart@
+    \global\line@num=0
+    \global\subline@num=0
+  \fi
   \loop\ifvbox\raw@text
      \do@line
   \repeat
