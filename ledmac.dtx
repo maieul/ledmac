@@ -1170,6 +1170,10 @@
 % \DescribeMacro{\numberonlyfirstinline}
 % By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1, i.e one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. 
 %
+% \DescribeMacro{\symlinenum}
+%
+% You can use \cs{symlinenum}\oarg{series}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{series}. From the secund lemme of the same line, the symbol will be used instead of line number. 
+
 % \DescribeMacro{\nonumberinfootnote}
 % If you don't want to have line number in footnote, you can use \cs{nonumberinfootnote}\oarg{series}. 
 %
@@ -2328,69 +2332,9 @@
 % \end{PW}
 %
 % \begin{PW}
-% \DescribeMacro{\ledplinenumtrue}
-% \DescribeMacro{\ledplinenumfalse}
-% \DescribeMacro{\symplinenum}
-% Following the declaration \cs{ledplinenumtrue} critical footnotes will be
-% marked with their line number. After \cs{ledplinenumfalse} the footnotes
-% will be marked by \cs{symplinenum}, whose default definition is \\
-% \verb?\newcommand*{\symplinenum}{}?
 %
 % \subsection{Hints}
 %
-%     By doing a little work it is possible, for example,
-% to set things up so that a particular footnote series only prints
-% the linenumber for the first footnote on a 
-% line.\footnote{This was requested by Dirk-Jan Dekker\index{Dekker, Dirk-Jan}
-% (\texttt{djdekker@let.ru.nl}).} You may wish to skip
-% the following but if not read it in conjunction with the code definitions
-% from section~\ref{sec:nfootformat}. Suppose that we only want this to 
-% apply to the \texttt{B} series
-% of normal footnotes. To accomplish this goal we have to modify the definition
-% of \cs{normalvfootnote} as follows:
-% 
-% \begin{verbatim}
-% \makeatletter
-% \newcommand*{\previous@B@number}{-1}
-% \newcommand*{\previous@page}{-1}
-% \renewcommand*{\normalvfootnote}[2]{
-%   \insert\csname #1footins\endcsname\bgroup
-%   \notefontsetup
-%   \footsplitskips
-%   \spaceskip=\z@skip \xspaceskip=\z@skip
-%   \l@dparsefootspec #2\ledplinenumtrue%            % NEW FROM HERE
-%   \ifnum\@nameuse{previous@#1@number} = \l@dparsedstartline\relax
-%     \ledplinenumfalse
-%   \fi
-%   \ifnum\previous@page=\l@dparsedstartpage\relax
-%   \else \ledplinenumtrue \fi
-%   \ifnum\l@dparsedstartline=\l@dparsedendline\relax
-%   \else \ledplinenumtrue \fi
-%   \expandafter\xdef\csname previous@#1@number\endcsname{\l@dparsedstartline}%
-%   \xdef\previous@page{\l@dparsedstartpage}%        % TO HERE
-%   \csname #1footfmt\endcsname #2\egroup}
-% \footnormal{B}
-% \makeatother
-% \end{verbatim}
-% The additional code uses \cs{l@dparsefootspec} to get the footnote's line 
-% number as \cs{l@dparsedstartline} and the page number as
-% \cs{l@dparsedstartpage}. It then sets \cs{ledplinenum} according
-% to whether or not \cs{l@dparsedstartline} is the same as the 
-% previous (\cs{previous@B@number}) number. If the page number has changed
-% then the line number must be printed. If the starting line number
-% is not the same as the ending line number then the line number
-% must be printed. After \cs{ledplinenum}
-% has been set the two previous values are updated to the current
-% line and page numbers.
-%
-%     After the redefinition of \cs{normalvfootnote} the \texttt{B} 
-% series has to be
-% respecified as normal for the changes to take effect. The \texttt{A} series
-% will still be in the traditional style of printing every line number. 
-% To eliminate duplicate printing from the normal \texttt{A} series, you
-% simply need to define \cs{previous@A@number} and respecify the series.
-%
-%    Similar techniques can be used for the other footnote styles.
 %
 % \changes{v0.3}{2004/02/14}{Two more Dekker examples}
 %    Dirk-Jan Dekker\index{Dekker, Dirk-Jan} felt that there was too much
@@ -7053,21 +6997,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\ifledplinenum}
-% \begin{macro}{\symplinenum}
-% \begin{PW}
-% Sometimes it could be useful not to print the line number, or give
-% it a symbolic value (perhaps if there are several notes from the same line).
-% \end{PW}
-% \changes{v0.2.2}{2003/11/04}{Added \cs{symplinenum}}
-%    \begin{macrocode}
-\newif\ifledplinenum
-  \ledplinenumtrue
-\newcommand*{\symplinenum}{}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\l@dparsefootspec}
 % \begin{macro}{\l@dp@rsefootspec}
@@ -7197,6 +7126,7 @@
 %    \begin{macrocode}
   \ifl@d@pnum #1\fullstop\fi
 %    \end{macrocode}
+%
 % \begin{PW}
 % The other thing is whether to print the real starting line number or a 
 % symbolic value. 
@@ -7211,10 +7141,6 @@
   \ifl@d@elin \linenumrep{#5}\fi
   \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
 \endgroup}
-
-%    \end{macrocode}
-% \end{macro}
-%
 % \begin{macro}{\normalfootstart}
 % \phantomsection\label{normalvalues}\relax
 % \cs{normalfootstart}
@@ -8090,6 +8016,40 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifledplinenum}
+% \begin{macro}{\symplinenum}
+% \begin{PW}
+% \cs{ifledplinenum} and \cs{symplinenum} are kept for ascendant compatibility. Should'nt be use anymore.
+% \end{PW}
+%    \begin{macrocode}
+\newif\ifledplinenum
+  \ledplinenumtrue
+\newcommand*{\symplinenum}{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\symlinnum}
+\def\symlinnum@A{\symplinenum}
+\def\symlinnum@B{\symplinenum}
+\def\symlinnum@C{\symplinenum}
+\def\symlinnum@D{\symplinenum}
+\def\symlinnum@E{\symplinenum}
+\def\symlinnum@Z{\symplinenum}
+\newcommandx{\symlinenum}[2][1]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+    {%
+        \csdef{symlinnum@A}{#2}%
+        \csdef{symlinnum@B}{#2}%
+        \csdef{symlinnum@C}{#2}%
+        \csdef{symlinnum@D}{#2}%
+        \csdef{symlinnum@E}{#2}%
+        \csdef{symlinnum@Z}{#2}%
+    }%
+    {%
+        \csdef{symlinnum@#1}{#2}%
+    }
+}
+% \end{macro}
 %  \begin{macro}{\nonumberinfootnote}
 % \cs{nonumberinfootnote}\oarg{series} is used to disable line number printing if footnotes. It sets to true the \cs{nonumberinfootnote@series} toogle.
 %    \begin{macrocode}
@@ -8354,7 +8314,7 @@
             {%Be sure the \prevline exists.
             \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
                {%
-               \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\symplinenum\hspace{\csuse{afternumberinfootnote@#2}}%
+               \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\csuse{symline@#2}\hspace{\csuse{afternumberinfootnote@#2}}%
                }%
                {%
                 \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
