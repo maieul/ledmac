@@ -1171,9 +1171,8 @@
 % By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1, i.e one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. 
 %
 % \DescribeMacro{\symlinenum}
+% You can use \cs{symlinenum}\oarg{series}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{series}. From the secund lemme of the same line, the symbol will be used instead of line number. 
 %
-% You can use \cs{symlinenum}\oarg{series}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{series}. From the secund lemma of the same line, the symbol will be used instead of line number. 
-
 % \DescribeMacro{\nonumberinfootnote}
 % If you don't want to have line number in footnote, you can use \cs{nonumberinfootnote}\oarg{series}. 
 %
@@ -1182,7 +1181,13 @@
 %
 % \DescribeMacro{\afternumberinfootnote}
 % You can add some space after line number in footnote with \cs{beforenumberinfootnote}\oarg{series}\marg{length}.If you write a relative length (for example \verb|0.5em|), it will be relative to the footnote font. If the line number is not printed, the space is not too.
- 
+%
+% \DescribeMacro{\beforesymlinenum} 
+% You can add some space before line symbol in footnote, with \cs{beforesymlinenum}\oarg{series}\marg{length}. Default value is value set by \cs{beforenumberinfootnote}.
+
+% \DescribeMacro{\aftersymlinenum} 
+% You can add some space before line symbol in footnote, with \cs{aftersymlinenum}\oarg{series}\marg{length}. Default value is value set by \cs{afternumberinfootnote}.
+%
 % \DescribeMacro{\lemmaseparator}
 % By default,  in footnote, separator between lemma and note is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{series}\marg{lemmaseparator} to change it. The optional argument can be used to precise ine which series it's applied. Note that there is no breakable space between lemma and separator, but \textbf{not} between separator and lemma.
 %
@@ -8074,6 +8079,54 @@
 }
 %    \end{macrocode}
 %  \end{macro}
+% \begin{macro}{\beforesymlinenum} is used to change space before line symbol.
+%   \begin{macrocode}
+\def\beforesymlinenum@A{\beforenumberinfootnote@A}
+\def\beforesymlinenum@B{\beforenumberinfootnote@B}
+\def\beforesymlinenum@C{\beforenumberinfootnote@C}
+\def\beforesymlinenum@D{\beforenumberinfootnote@D}
+\def\beforesymlinenum@E{\beforenumberinfootnote@E}
+\def\beforesymlinenum@Z{\beforenumberinfootnote@Z}
+\newcommandx*{\beforesymlinenum}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{beforesymlinenum@A}{#2}%
+            \csdef{beforesymlinenum@B}{#2}%
+            \csdef{beforesymlinenum@C}{#2}%
+            \csdef{beforesymlinenum@D}{#2}%
+            \csdef{beforesymlinenum@E}{#2}%
+            \csdef{beforesymlinenum@Z}{#2}%
+        }%
+        {%
+            \csdef{beforesymlinenum@#1}{#2}%
+        }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\aftersymlinenum} is used to change space after line symbol.
+%   \begin{macrocode}
+\def\aftersymlinenum@A{\afternumberinfootnote@A}
+\def\aftersymlinenum@B{\afternumberinfootnote@B}
+\def\aftersymlinenum@C{\afternumberinfootnote@C}
+\def\aftersymlinenum@D{\afternumberinfootnote@D}
+\def\aftersymlinenum@E{\afternumberinfootnote@E}
+\def\aftersymlinenum@Z{\afternumberinfootnote@Z}
+\newcommandx*{\aftersymlinenum}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{aftersymlinenum@A}{#2}%
+            \csdef{aftersymlinenum@B}{#2}%
+            \csdef{aftersymlinenum@C}{#2}%
+            \csdef{aftersymlinenum@D}{#2}%
+            \csdef{aftersymlinenum@E}{#2}%
+            \csdef{aftersymlinenum@Z}{#2}%
+        }%
+        {%
+            \csdef{aftersymlinenum@#1}{#2}%
+        }%
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\lemmaseparator}
 % The \cs{lemmaseparator}\oarg{series}\marg{lemma} is used to change lemma separator.
 %    \begin{macrocode}
@@ -8265,7 +8318,7 @@
             {%Be sure the \prevline exists.
             \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
                {%
-               \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{afternumberinfootnote@#2}}%
+               \hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}%
                }%
                {%
                 \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
