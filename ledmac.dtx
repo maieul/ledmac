@@ -1188,6 +1188,9 @@
 % \DescribeMacro{\aftersymlinenum} 
 % You can add some space before line symbol in footnote, with \cs{aftersymlinenum}\oarg{series}\marg{length}. Default value is value set by \cs{afternumberinfootnote}.
 %
+% \DescribeMacro{\inplaceofnumber}
+% If no number or symbolic line number is printed, you can add a space, with \cs{inplaceofnumber}\oarg{series}\marg{length}. Default value is 1~em. 
+%
 % \DescribeMacro{\lemmaseparator}
 % By default,  in footnote, separator between lemma and note is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{series}\marg{lemmaseparator} to change it. The optional argument can be used to precise ine which series it's applied. Note that there is no breakable space between lemma and separator, but \textbf{not} between separator and lemma.
 %
@@ -8054,7 +8057,7 @@
 }
 %    \end{macrocode}
 %  \end{macro}
-%  \begin{macro}{\beforenumberinfootnote}
+%  \begin{macro}{\afternumberinfootnote}
 % \cs{afternumberinfootnote}\oarg{series} is used to print space after line number printing in footnotes.
 %    \begin{macrocode}
 \def\afternumberinfootnote@A{0.5em}
@@ -8079,7 +8082,8 @@
 }
 %    \end{macrocode}
 %  \end{macro}
-% \begin{macro}{\beforesymlinenum} is used to change space before line symbol.
+% \begin{macro}{\beforesymlinenum} 
+% \cs{beforesymlinenum} is used to change space before line symbol.
 %   \begin{macrocode}
 \def\beforesymlinenum@A{\beforenumberinfootnote@A}
 \def\beforesymlinenum@B{\beforenumberinfootnote@B}
@@ -8103,7 +8107,8 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\aftersymlinenum} is used to change space after line symbol.
+% \begin{macro}{\aftersymlinenum} 
+% \cs{aftersymlinenum} is used to change space after line symbol.
 %   \begin{macrocode}
 \def\aftersymlinenum@A{\afternumberinfootnote@A}
 \def\aftersymlinenum@B{\afternumberinfootnote@B}
@@ -8123,6 +8128,31 @@
         }%
         {%
             \csdef{aftersymlinenum@#1}{#2}%
+        }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\inplaceofnumber} 
+% \cs{inplaceofnumber} is used to define glue which is printed where no number or symbol is printed.
+%   \begin{macrocode}
+\def\inplaceofnumber@A{1em}
+\def\inplaceofnumber@B{1em}
+\def\inplaceofnumber@C{1em}
+\def\inplaceofnumber@D{1em}
+\def\inplaceofnumber@E{1em}
+\def\inplaceofnumber@Z{1em}
+\newcommandx*{\inplaceofnumber}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{inplaceofnumber@A}{#2}%
+            \csdef{inplaceofnumber@B}{#2}%
+            \csdef{inplaceofnumber@C}{#2}%
+            \csdef{inplaceofnumber@D}{#2}%
+            \csdef{inplaceofnumber@E}{#2}%
+            \csdef{inplaceofnumber@Z}{#2}%
+        }%
+        {%
+            \csdef{inplaceofnumber@#1}{#2}%
         }%
 }
 %    \end{macrocode}
@@ -8310,7 +8340,10 @@
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. It print or not the line number, depending previous options. His first argument is the information about lines, his secund is the series of footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \iftoggle{ifnonumberinfootnote@#2}{}%Try if the line number must printed (by default, yes)
+   \iftoggle{ifnonumberinfootnote@#2}%Try if the line number must printed (by default, yes)
+   {%
+   \hspace{\csuse{inplaceofnumber@#2}}%
+   }%
    {%
       {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
          {%
@@ -8318,7 +8351,11 @@
             {%Be sure the \prevline exists.
             \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
                {%
-               \hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}%
+               \ifcsstring{symlinenum@#2}{}% Try if a symbol is define
+                {%
+                    \hspace{\csuse{inplaceofnumber@#2}}%
+                }%
+                {\hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
                }%
                {%
                 \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
