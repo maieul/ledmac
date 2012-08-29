@@ -1165,7 +1165,7 @@
 %
 % \subsection{Displaying options}
 % \changes{v0.18}{2012/08/29}{New generic commands to customize footnote displaying.}
-% Since version 0.18, some commands can be used to change displaying. All can have a optional argument, which is the letter of the series which option is applied.
+% Since version 0.18, some commands can be used to change displaying. All but one can have a optional argument, which is the letter of the series which option is applied.
 %
 % When a length is used, it can be stretchable : \verb|b minus a minus c|. The final length |m| is calculate by \LaTeX to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to footnote fontsize. 
 %
@@ -1177,6 +1177,9 @@
 %
 % \DescribeMacro{\nonumberinfootnote}
 % If you don't want to have line number in footnote, you can use \cs{nonumberinfootnote}\oarg{series}. 
+%
+% \DescribeMacro{\nonumberthisnote}
+% You can use \cs{nonumberthisnote} \emph{before} a note to disable line number printing for a precise note.
 %
 % \DescribeMacro{\beforenumberinfootnote}
 % You can add some space before line number in footnote with \cs{beforenumberinfootnote}\oarg{series}\marg{length}. If the line number is not printed, the space is not too. Default value is 0~pt.
@@ -2365,36 +2368,6 @@
 %    #3\penalty-10}
 % \end{verbatim}
 %
-%
-%    Dirk-Jan Dekker\index{Dekker, Dirk-Jan} 
-% suggested\footnote{Private communication, 17 February 2004.} the following 
-% \verb?\killnumber? macro if you want to occasionaly kill a number. \\
-% \verb?\newcommand*{\killnumber}{\linenum{|-1|||-1||}}? \\
-% Then insert \\
-% \verb?\ifnum#2=-1 \ledplinenumfalse\fi? \\
-% near the start of the definition of \verb?\printlines? so it reads
-% \begin{verbatim}
-% \def\printlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
-%   \ifnum#2=-1 \ledplinenumfalse\fi%      %% NEW
-%   \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
-%   ...
-% \end{verbatim}
-% It is used like this: \\
-% \verb?\edtext{critical}{\killnumber\Afootnote{criticism}}? \\
-% The \verb?\killnumber? command will kill the line number for the one
-% note, unlike \verb?\killnumbers? which kills numbers for subsequent notes.
-%
-%
-% ^^A 
-% ^^A From D-J D email 17 Feb 04:
-% ^^A In preamble \verb?\newcommand*{\killnumber}{\linenum{|-1|||-1||}}?
-% ^^A Into \verb?\def\printlines#1|#2|#3|#4|#5|#6|#7|?
-% ^^A   \verb?\ifnum#2=-1 \ledplinenumfalse \fi
-% ^^A  Use it as
-% ^^A \verb?\edtext{critical}{\killnumber\Afootnote{criticism}}?
-% ^^A Which kills the number for the one footnote only (taking effect
-% ^^A immediately, not delayed like \killnumbers)
-% ^^A 
 %
 %
 %    At least one user has wanted a big space between the text and footnotes
@@ -8012,7 +7985,7 @@
 %   \end{macrocode}
 % \end{macro}
 %  \begin{macro}{\nonumberinfootnote}
-% \cs{nonumberinfootnote}\oarg{series} is used to disable line number printing if footnotes. It sets to true the \cs{nonumberinfootnote@series} toogle.
+% \cs{nonumberinfootnote}\oarg{series} is used to disable line number printing in footnotes. It sets to true the \cs{nonumberinfootnote@series} toogle.
 %    \begin{macrocode}
 \newtoggle{ifnonumberinfootnote@A}
 \newtoggle{ifnonumberinfootnote@B}
@@ -8035,6 +8008,13 @@
 %    \end{macrocode}
 %  \end{macro}
 %  \begin{macro}{\beforenumberinfootnote}
+%  \begin{macro}{\nonumberthisnote}
+% \cs{nonumberthisnote} is used to disable line number printing in a particular footnote. It sets to true the \cs{nonumberthisnote@} toogle.
+%    \begin{macrocode}
+\newtoggle{nonumberthisnote@}
+\newcommand{\nonumberthisnote}{\toggletrue{nonumberthisnote@}}
+%    \end{macrocode}
+%  \end{macro}
 % \cs{beforenumberinfootnote}\oarg{series}\marg{length} is used to print space before line number printing in footnotes.
 %    \begin{macrocode}
 \def\beforenumberinfootnote@A{0pt}
@@ -8342,37 +8322,45 @@
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. It print or not the line number, depending previous options. Its first argument is the information about lines, its secund is the series of footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \iftoggle{ifnonumberinfootnote@#2}%Try if the line number must printed (by default, yes)
-   {%
+   \iftoggle{nonumberthisnote@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{inplaceofnumber@#2}}%
+   \togglefalse{nonumberthisnote@}%
    }%
    {%
-      {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
-         {%
-         \ifcsdef{prevline#2}%
-            {%Be sure the \prevline exists.
-            \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
-               {%
-               \ifcsstring{symlinenum@#2}{}% Try if a symbol is define
-                {%
-                    \hspace{\csuse{inplaceofnumber@#2}}%
-                }%
-                {\hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
-               }%
-               {%
-                \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
-                }%
-            }%
-            {%
-            \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
-            }%
-      }%
-      {%
-      \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
-      }%
-      \csnumgdef{prevline#2}{\line@num}%
-         }%
-  }%
+       {%
+           \iftoggle{ifnonumberinfootnote@#2}%Try if the line number must printed (by default, yes)
+           {%
+           \hspace{\csuse{inplaceofnumber@#2}}%
+           }%
+           {%
+              {\iftoggle{ifnumberonlyfirstinline@#2}% If  for this series the line number must be printed only in the first time.
+                 {%
+                 \ifcsdef{prevline#2}%
+                    {%Be sure the \prevline exists.
+                    \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
+                       {%
+                       \ifcsstring{symlinenum@#2}{}% Try if a symbol is define
+                        {%
+                            \hspace{\csuse{inplaceofnumber@#2}}%
+                        }%
+                        {\hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
+                       }%
+                       {%
+                        \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                        }%
+                    }%
+                    {%
+                    \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                    }%
+              }%
+              {%
+              \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+              }%
+              \csnumgdef{prevline#2}{\line@num}%
+                 }%
+        }%
+     }%
+   }%
 }
 %    \end{macrocode}
 % \end{macro}
