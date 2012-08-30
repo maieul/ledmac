@@ -5588,14 +5588,15 @@
   \endgraf\global\num@lines=\prevgraf\egroup
   \global\par@line=0
 %    \end{macrocode}
-% We check if lineation is by pstart : in this case, we reset line number.
+% We check if lineation is by pstart : in this case, we reset line number, but only in the secund line of the pstart, to prevent some trouble. We can't reset line number at the begining of  \cs{pstart} \cs{setline} is parsed at the end of previous \cs{pend}, and so, we must do it at the end of first line of pstart.
 %    \begin{macrocode}
-  \ifbypstart@
-    \global\line@num=0
-    \global\subline@num=0
-  \fi
+  \csnumdef{pstartline}{0}
   \loop\ifvbox\raw@text
-     \do@line
+    \csnumdef{pstartline}{\pstartline+1}%
+    \do@line
+    \ifbypstart@%
+     \ifnumequal{\pstartline}{1}{\setline{1}}{}%
+    \fi   
   \repeat
 %    \end{macrocode}
 % Deal with any leftover notes, and then end the group that was begun
