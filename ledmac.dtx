@@ -1075,12 +1075,13 @@
 % layers of notes in the belief that this will be adequate for
 % the most demanding editions.  But it is not hard to add further
 % layers of notes should they be required.
-% A optional argument can be add. His value is a comma separated list of options. The options are :
+% A optional argument can be add before the texte of footnote. His value is a comma separated list of options. The options are :
 % \begin{itemize}
 % \item \verb|nonum| to disable line numbering for this note.
 % \item \verb|nosep| to disable lemma separator for this note. 
 % \end{itemize}
 %
+% Exemple : \cs{Afootnote}\verb|[nonum]{texte}|.
 % \DescribeMacro{\Aendnote}
 % \DescribeMacro{\Bendnote}
 % \DescribeMacro{\Cendnote}
@@ -5224,7 +5225,6 @@
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode
   \begingroup
-    \no@expands
     \xdef\@tag{\protect#1}%
     \set@line
     \global\insert@count=0
@@ -6475,10 +6475,12 @@
 % the \cs{inserts@list} list, and increment the deferred-page-bottom-note
 % counter.
 %    \begin{macrocode}
-\newcommand*{\Afootnote}[1]{%
+\newcommand*{\Afootnote}[2][\relax]{%
+  \forcsvlist{\listadd\options}{#1}% Made a list of options 
+  \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote}}\to\inserts@list}{}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vAfootnote{A}%
-                   {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
+                   {{\l@d@nums}{\@tag}{#2}}}\to\inserts@list
     \global\advance\insert@count \@ne
 %    \end{macrocode}
 %
@@ -6488,8 +6490,10 @@
 % limitation of \Ledmac.
 %    \begin{macrocode}
   \else
-    \vAfootnote{A}{{0|0|0|0|0|0|0}{}{#1}}%
-  \fi\ignorespaces}
+    \vAfootnote{A}{{0|0|0|0|0|0|0}{}{#2}}%
+  \fi%
+  \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote}}\to\inserts@list%
+  \ignorespaces}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6499,43 +6503,56 @@
 % \begin{macro}{\Efootnote}
 % We need similar commands for the other footnote series.
 %    \begin{macrocode}
-\newcommand*{\Bfootnote}[1]{%
+\newcommand*{\Bfootnote}[2][\relax]{%
+  \forcsvlist{\listadd\options}{#1}% Made a list of options 
+  \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote}}\to\inserts@list}{}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vBfootnote{B}%
-                   {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
+                   {{\l@d@nums}{\@tag}{#2}}}\to\inserts@list
     \global\advance\insert@count \@ne
   \else
-    \vBfootnote{B}{{0|0|0|0|0|0|0}{}{#1}}%
-  \fi\ignorespaces}
+    \vBfootnote{B}{{0|0|0|0|0|0|0}{}{#2}}%
+  \fi%
+  \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote}}\to\inserts@list%
+  \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\Cfootnote}[1]{%
+\newcommand*{\Cfootnote}[2][\relax]{%
+  \forcsvlist{\listadd\options}{#1}% Made a list of options 
+  \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote}}\to\inserts@list}{}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vCfootnote{C}%
-                   {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
+                   {{\l@d@nums}{\@tag}{#2}}}\to\inserts@list
     \global\advance\insert@count \@ne
   \else
-    \vCfootnote{C}{{0|0|0|0|0|0|0}{}{#1}}%
+    \vCfootnote{C}{{0|0|0|0|0|0|0}{}{#2}}%
+  \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote}}\to\inserts@list%
   \fi\ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\Dfootnote}[1]{%
+\newcommand*{\Dfootnote}[2][\relax]{%
+  \forcsvlist{\listadd\options}{#1}% Made a list of options 
+  \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote}}\to\inserts@list}{}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vDfootnote{D}%
-                   {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
+                   {{\l@d@nums}{\@tag}{#2}}}\to\inserts@list
     \global\advance\insert@count \@ne
   \else
-    \vDfootnote{D}{{0|0|0|0|0|0|0}{}{#1}}%
+    \vDfootnote{D}{{0|0|0|0|0|0|0}{}{#2}}%
+  \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote}}\to\inserts@list%
   \fi\ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\Efootnote}[1]{%
+\newcommand*{\Efootnote}[2][\relax]{%
+  \forcsvlist{\listadd\options}{#1}% Made a list of options 
+  \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote}}\to\inserts@list}{}
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vEfootnote{E}%
-                   {{\l@d@nums}{\@tag}{#1}}}\to\inserts@list
+                   {{\l@d@nums}{\@tag}{#2}}}\to\inserts@list
     \global\advance\insert@count \@ne
   \else
-    \vEfootnote{E}{{0|0|0|0|0|0|0}{}{#1}}%
+    \vEfootnote{E}{{0|0|0|0|0|0|0}{}{#2}}%
+  \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote}}\to\inserts@list%
   \fi\ignorespaces}
 
 %    \end{macrocode}
@@ -7901,14 +7918,12 @@
 }
 %    \end{macrocode}
 %  \end{macro}
-%  \begin{macro}{\beforenumberinfootnote}
 %  \begin{macro}{\nonumberthisnote}
-% \cs{nonumberthisnote} is used to disable line number printing in a particular footnote. It sets to true the \cs{nonumberthisnote@} toggle.
+% \cs{nonumberthisnote} toggle is used to disable line number printing in a particular footnote.
 %    \begin{macrocode}
-\newtoggle{nonumberthisnote@}
-\newcommand{\nonumberthisnote}{\global\toggletrue{nonumberthisnote@}}
+\newtoggle{nonumberthisnote}
 %    \end{macrocode}
-%  \end{macro}
+% \end{macro}
 % \cs{beforenumberinfootnote}\oarg{series}\marg{length} is used to add glue before line number printing in footnotes.
 %    \begin{macrocode}
 \def\beforenumberinfootnote@A{0pt}
@@ -8216,9 +8231,8 @@
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. It prints or not the line number, depending previous options. Its first argument is the information about lines, its secund is the series of footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \iftoggle{nonumberthisnote@}{%Try if the line number must printed for this specific not (by default, yes)
+   \iftoggle{nonumberthisnote}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{inplaceofnumber@#2}}%
-   \global\togglefalse{nonumberthisnote@}%
    }%
    {%
        {%
@@ -13924,7 +13938,6 @@ Ottonis\edtext{}{\Afootnote{p.\ 130~D}} comitis et civitatis
 
 \renewcommand{\edtext}[2]{\leavevmode
   \begingroup
-    \no@expands
     \xdef\@tag{#1}%
     \set@line
     \global\insert@count=0
