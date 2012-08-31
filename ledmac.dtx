@@ -1267,6 +1267,9 @@
 % \DescribeMacro{\nolemmaseparator}
 % You can suppress lemma separator, using \cs{nolemmaseparator}\oarg{series}, which is only a alias of \cs{lemmaseparator}\oarg{series}\verb|{}|.
 %
+% \DescribeMacro{inplaceoflemmaseparator}
+% If no lemma separator is printed, you can add a space, with \cs{inplaceoflemmaseparator}\oarg{series}\marg{length}. Default value is 1~em. 
+%
 % \DescribeMacro{\afternote}
 % You can add some space after note, by using \cs{afternote}\oarg{series}\marg{length}. The default value is \verb|1em plus.4em minus.4em|.
 %
@@ -6765,8 +6768,8 @@
   \ledsetnormalparstuff%
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
-  \iftoggle{nolemmaseparatorthisnote@}{}{\ifcsempty{lemmaseparator@#4}%
-    {}%
+  \iftoggle{nolemmaseparatorthisnote@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
   }}%
   #3\strut\par}
@@ -7454,8 +7457,8 @@
   \ledsetnormalparstuff%
   \printlinefootnote{#1}{#4}%
   {\select@lemmafont#1|#2}%
-  \iftoggle{nolemmaseparatorthisnote@}{}{\ifcsempty{lemmaseparator@#4}%
-    {}%
+  \iftoggle{nolemmaseparatorthisnote@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
   }}%
   #3\penalty-10 }
@@ -7697,8 +7700,8 @@
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
-  \iftoggle{nolemmaseparatorthisnote@}{}{\ifcsempty{lemmaseparator@#4}%
-    {}%
+  \iftoggle{nolemmaseparatorthisnote@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
   }}%
   #3\strut\par\allowbreak}
@@ -7799,8 +7802,8 @@
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
-  \iftoggle{nolemmaseparatorthisnote@}{}{\ifcsempty{lemmaseparator@#4}%
-    {}%
+  \iftoggle{nolemmaseparatorthisnote@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
   }}%
   #3\strut\par\allowbreak}
@@ -8144,6 +8147,31 @@
 %   \begin{macrocode}
 \newcommandx*{\nolemmaseparator}[1][1]{\lemmaseparator[#1]{}}
 %   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\inplaceofnumber} 
+% \cs{inplaceoflemmaseparator}\oarg{series}\marg{value} is used to define glue which is printed where no lemma separator is printed.
+%   \begin{macrocode}
+\def\inplaceoflemmaseparator@A{1em}
+\def\inplaceoflemmaseparator@B{1em}
+\def\inplaceoflemmaseparator@C{1em}
+\def\inplaceoflemmaseparator@D{1em}
+\def\inplaceoflemmaseparator@E{1em}
+\def\inplaceoflemmaseparator@Z{1em}
+\newcommandx*{\inplaceoflemmaseparator}[2][1,usedefault]{%
+    \ifstrequal{#1}{}% If arg 1 is empty
+        {%
+            \csdef{inplaceoflemmaseparator@A}{#2}%
+            \csdef{inplaceoflemmaseparator@B}{#2}%
+            \csdef{inplaceoflemmaseparator@C}{#2}%
+            \csdef{inplaceoflemmaseparator@D}{#2}%
+            \csdef{inplaceoflemmaseparator@E}{#2}%
+            \csdef{inplaceoflemmaseparator@Z}{#2}%
+        }%
+        {%
+            \csdef{inplaceoflemmaseparator@#1}{#2}%
+        }%
+}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\afternote}
 % The \cs{afternote}\oarg{series}\marg{length} is used to change length after note.
