@@ -1,0 +1,195 @@
+% !TEX encoding = UTF-8
+% !TEX program = xelatex
+% !TEX spellcheck = it_IT
+%---------------------------------------------------------------------------------------
+% PACKAGES
+%---------------------------------------------------------------------------------------
+\documentclass[11pt,a4paper]{book}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage[protrusion=true]{microtype}
+
+\usepackage{emptypage}
+
+\usepackage{fancyhdr}
+\usepackage{titlesec,itnumpar}
+\usepackage{tikz}
+
+\usepackage{ledmac}
+
+\hbadness=10000 %non stampa mess. Underfull hbox 
+\vbadness=10000 %non stampa mess. Underfull vbox 
+
+%-----------------------------------------------------------------------
+% FONT DEFINITION
+%-----------------------------------------------------------------------
+\usepackage[libertine={Ligatures=TeX,Numbers=OldStyle}]{libertineotf}
+\setmonofont{CMU Typewriter Text}
+
+%Per scrivere i caratteri ⌈ e ⌉, assenti nel Linux Libertine, con il font Doc
+\usepackage{newunicodechar}
+    \newunicodechar{⌈}{{\ceilfont ⌈}} 
+    \newunicodechar{⌉}{{\ceilfont ⌉}} 
+    \newfontfamily{\ceilfont}{Doc}
+
+%-----------------------------------------------------------------------
+% LANGUAGE DEFINITION (POLYGLOSSIA)
+%-----------------------------------------------------------------------
+\setmainlanguage[babelshorthands=true]{italian}
+\setotherlanguage{latin}
+\setotherlanguage[variant=polytonic]{greek}
+
+\XeTeXinputnormalization=1
+\newXeTeXintercharclass\combiningchar
+       \XeTeXcharclass"0301=\combiningchar 
+       \XeTeXinterchartoks 0 \combiningchar = {\penalty10000}
+
+%-----------------------------------------------------------------------
+% TITLES FORMAT (titlesec,itnumpar)
+%-----------------------------------------------------------------------
+\titleformat{\part}[display]
+    {\centering}%formatsetcount
+    {\normalfont{Pars \thepart}}%label
+    {30pt}%se
+    {\large\MakeUppercase}%before
+\titleformat{\chapter}
+    {\centering}%format
+    {}%label
+    {00pt}%sep
+    {\large\MakeUppercase}%before
+\titleformat{\section}
+    {\itshape}
+    {\normalfont\thesection.}
+    {.5em}
+    {}
+\titleformat{\subsection}
+    {\itshape}
+    {\normalfont\thesubsection.}
+    {.5em}
+    {}
+\titlespacing*{\chapter}{0pt}{50pt}{40pt} %default chapter spacing
+\titlespacing*{\section}{0pt}{30pt}{10pt}
+\titlespacing*{\subsection}{0pt}{30pt}{10pt}
+    \renewcommand{\thepart}{\normalfont\Roman{part}}
+    \renewcommand{\thechapter}{}
+    \renewcommand{\thesection}{\arabic{section}}
+    \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+
+%% STILE PAGINE
+\assignpagestyle{\part}{empty}
+\assignpagestyle{\chapter}{empty}
+
+%-----------------------------------------------------------------------
+% HEADERS AND FOOTERS CUSTOMIZATION (fancyhdr)
+%-----------------------------------------------------------------------
+\fancyhf{}% azzera le definizioni preesistenti
+\pagestyle{fancy}
+    \renewcommand{\chaptermark}[1]{\markboth{#1}{#1}}
+    \renewcommand{\sectionmark}[1]{\markright{\thesection.\ #1}}
+    \fancyfoot{}
+    \setlength{\headheight}{14.5pt}
+    \fancyhead[LE,RO]{\footnotesize\hspace{0.5cm}\thepage\hspace{0.5cm}}
+    \fancyhead[LO]{\hspace{0.5cm}\footnotesize\itshape\nouppercase{\rightmark}}
+    \fancyhead[RE]{\footnotesize\itshape\nouppercase{\leftmark}\hspace{0.5cm}}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%----------------------------------------------------------------------%
+%-------------INIZIO EDIZIONE CRITICA (LEDMAC)-------------------------%
+%----------------------------------------------------------------------%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\lineation{page}                %% numerazione per pagina
+\linenummargin{inner}   %% Margine dei numeri di linea
+\sidenotemargin{outer}  %% Margine dei marginalia
+
+\renewcommand*{\notenumfont}{\footnotesize}     %%Font numeri linea note
+\newcommand*{\notetextfont}{\footnotesize}      %%Font testo apparato
+\renewcommand*{\ledlsnotefontsetup}{\raggedleft\it\footnotesize}        % left
+\renewcommand*{\ledrsnotefontsetup}{\raggedright\it\footnotesize}   % right
+
+\let\paralleli=\Afootnote
+\let\testimonia=\Bfootnote
+\let\lectiones=\Cfootnote
+
+\nonumberinfootnote[A]
+\nolemmaseparator[A]
+
+\nonumberinfootnote[B]
+\nolemmaseparator[B]
+
+\numberonlyfirstinline[C]
+
+\let\super=\textsuperscript %   \super per apici
+
+%%% SPAZIO LIBERO SOPRA LE RIGHE SEPARATRICI
+\addtolength{\skip\Afootins}{2em plus.4em minus.4em}
+
+% SPAZIO BIANCO FRA TESTO ED APPARATO (def. = 5mm)
+\setlength{\skip\Afootins}{2em plus.4em minus.4em}
+
+% SPAZIO BIANCO FRA NOTE D'APPARATO
+\afternote[A]{1em plus.4em minus.4em}
+\afternote[B]{1em plus.4em minus.4em}
+\afternote[C]{1em plus.4em minus.4em}
+
+%-----------------------------------------------------------------------
+% PER NUMERAZIONE SCOLII (alt. a enumitem)
+%-----------------------------------------------------------------------
+\makeatletter
+    \renewcommand{\thepstart}{{\makebox[2mm][r]{\bf\@arabic\c@pstart}}\hspace{3mm}}
+\makeatother
+
+\footparagraph{A}
+\footparagraph{B}
+\footparagraph{C}
+
+%---------------------------------------------------------------------------------------
+\usepackage{hyperref}
+    \hypersetup{pdftitle=Scholia in Platonem,
+        pdfauthor=Domenico Cufalo,
+        pdfsubject=Tesi di Dottorato,
+        pdfkeywords=Cufalo Scholia Plato
+        }
+
+%% DEFINIZIONE NEWPARA
+\newcounter{para}[chapter]\setcounter{para}{0}
+    \newcommand{\newpara}{%
+    \refstepcounter{para}%
+    \noindent\llap{\thepstart}}
+    \newcommand{\oldpara}[1]{%
+    \noindent\llap{\ref{#1}}}
+
+%% PER CONFLITTO SETCOUNTER~HYPERREF
+\newcounter{introchapter}
+\renewcommand{\theintrochapter}{\alph{introchapter}}
+
+\appto\frontmatter{\let\ORIGINALtheHsection\theHsection
+  \let\ORIGINALchapter\chapter
+  \renewcommand{\chapter}{\stepcounter{introchapter}\ORIGINALchapter}
+  \renewcommand{\theHsection}{\theintrochapter.\arabic{section}}%
+  \renewcommand{\thesection}{\arabic{section}}%
+  }
+
+\begin{document}
+
+\chapter{In Clitophontem}
+
+\begin{greek}[variant=polytonic]
+\beginnumbering
+\numberpstarttrue
+
+        \pstart\newpara\label{itm:Clit1}\textit{Number 1}] testo.\pend
+
+    \pstart\newpara\label{itm:Clit2}\edtext{}{\nonumberthisnote\testimonia{{\textbf{\ref{itm:Clit2}}}\enspace nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota nota}}\textit{Number 2}] \edtext{testo}{\lectiones{apparato}} testo testo testo testo testo testo testo testo.\pend
+
+    \pstart\newpara\label{itm:Clit3}\edtext{}{\nonumberthisnote\paralleli{{\textbf{\ref{itm:Clit3}}}\enspace cf. n. \ref{itm:Clit2}}}\textit{Number 3}] testo testo testo testo testo testo testo testo testo testo testo testo testo testo \edtext{testo}{\nonumberthisnote\lectiones{note without line number}} testo testo testo testo testo.\pend
+
+    \pstart\newpara\label{itm:Clit4}\textit{Number 4}] testo testo testo testo testo testo testo testo testo testo testo testo testo testo testo testo testo testo testo.\pend
+
+\numberpstartfalse
+\endnumbering
+\end{greek}
+\end{document}
