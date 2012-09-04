@@ -6473,6 +6473,24 @@
 %
 % \subsection{Outer-level footnote commands}
 % \changes{v0.18.1}{2012/09/02}{Options nonum and nosep in \cs{Xfootnote}.}
+% \begin{macro}{\footnoteoptions@}
+% The \cs{footnoteoption@}\oarg{side}\marg{options}\marg{value} change the value of on options of Xfootnote, to switch between true and false.
+%    \begin{macro}
+\newcommandx*{\footnoteoptions@}[3][1=L,usedefault]{%
+   \renewcommand{\do}[1]{%
+      \ifstrequal{#1}{L}{% In Leftside
+         \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@list% Switch toogle, in all case
+         \global\advance\insert@count \@ne % Increment the left insert counter.
+      }%
+      {%
+          \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@listR% Switch toogle, in all case
+          \global\advance\insert@countR \@ne % Increment the right insert counter insert.
+      }%
+   }%
+   \docsvlist{#2}% Parsing all options
+}
+%    \end{macro}
+% \end{macro}
 % \begin{macro}{\Afootnote}
 % The outer-level footnote commands will look familiar: they're
 % just called \cs{Afootnote}, \cs{Bfootnote}, etc., instead of
@@ -6486,9 +6504,7 @@
 %    \begin{macrocode}
 \newcommand*{\Afootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vAfootnote{A}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
@@ -6503,8 +6519,7 @@
   \else
     \vAfootnote{A}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 % \end{macro}
@@ -6517,9 +6532,7 @@
 %    \begin{macrocode}
 \newcommand*{\Bfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vBfootnote{B}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
@@ -6527,16 +6540,13 @@
   \else
     \vBfootnote{B}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Cfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vCfootnote{C}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
@@ -6544,16 +6554,13 @@
   \else
     \vCfootnote{C}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Dfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vDfootnote{D}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
@@ -6561,16 +6568,13 @@
   \else
     \vDfootnote{D}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\Efootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\vEfootnote{E}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
@@ -6578,8 +6582,7 @@
   \else
     \vEfootnote{E}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -6620,9 +6623,7 @@
 %    \begin{macrocode}
 \newcommand*{\mpAfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\mpvAfootnote{A}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
@@ -6630,16 +6631,13 @@
   \else
     \mpvAfootnote{A}{{0|0|0|0|0|0|0}{}{#1}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\mpBfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\mpvBfootnote{B}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
@@ -6647,16 +6645,13 @@
   \else
     \mpvBfootnote{B}{{0|0|0|0|0|0|0}{}{#1}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\mpCfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\mpvCfootnote{C}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
@@ -6664,16 +6659,13 @@
   \else
     \mpvCfootnote{C}{{0|0|0|0|0|0|0}{}{#1}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\mpDfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\mpvDfootnote{D}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
@@ -6681,16 +6673,13 @@
   \else
     \mpvDfootnote{D}{{0|0|0|0|0|0|0}{}{#1}}%
   \fi%
-   \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+ \footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\mpEfootnote}[2][\relax]{%
   \newcommand{\content}{#2}%
-  \forcsvlist{\listadd\options}{#1}% Made a list of options 
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\toggletrue{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{true}%
   \ifnumberedpar@
     \xright@appenditem{\noexpand\mpvEfootnote{E}%
                    {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
@@ -6698,8 +6687,7 @@
   \else
     \mpvEfootnote{E}{{0|0|0|0|0|0|0}{}{#1}}%
   \fi%
-  \ifinlist{nonum}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosum@}}\to\inserts@list}{}%
-  \ifinlist{nosep}{\options}{\global\advance\insert@count \@ne\xright@appenditem{\global\noexpand\togglefalse{nosep@}}\to\inserts@list}{}%
+\footnoteoptions@{#1}{false}%
   \ignorespaces}
 %    \end{macrocode}
 % \end{macro}
@@ -7980,14 +7968,14 @@
 }
 %    \end{macrocode}
 %  \end{macro}
-%  \begin{macro}{\nosum@}
-% \cs{nosum@} toggle is used to disable line number printing in a particular footnote.
+%  \begin{macro}{\nonum@}
+% \cs{nonum@} toggle is used to disable line number printing in a particular footnote.
 %    \begin{macrocode}
-\newtoggle{nosum@}
+\newtoggle{nonum@}
 %    \end{macrocode}
 % \end{macro}
 %  \begin{macro}{\nosep@}
-% \cs{nosum@} toggle is used to disable lemma separator in a particular footnote.
+% \cs{nonum@} toggle is used to disable lemma separator in a particular footnote.
 %    \begin{macrocode}
 \newtoggle{nosep@}
 %    \end{macrocode}
@@ -8325,7 +8313,7 @@
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. It prints or not the line number, depending previous options. Its first argument is the information about lines, its secund is the series of footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \iftoggle{nosum@}{%Try if the line number must printed for this specific not (by default, yes)
+   \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{inplaceofnumber@#2}}%
    }%
    {%
