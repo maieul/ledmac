@@ -7661,6 +7661,703 @@
 % \end{PW}
 %
 %
+% % \section{Familiar footnotes}
+%
+% \begin{PW}
+%
+%    The original \edmac{} provided the five series of critical footnotes,
+% and LaTeX provides a single numbered footnote. The \Ledmac{} package
+% uses the \edmac{} mechanism to provide a few series of numbered footnotes.
+% 
+%    First, though, the \Lpack{footmisc} package has an option whereby
+% two or more consecutive \cs{footnote}s have their marks separated
+% by commas. This seems such a useful ability that it is provided
+% automatically by \Ledmac. 
+%
+% \begin{macro}{\multiplefootnotemarker}
+% \begin{macro}{\multfootsep}
+% These macros may have been defined by the \Lclass{memoir} class,
+% are provided by the \Lpack{footmisc} package and perhaps
+% by other footnote packages.
+%    \begin{macrocode}
+\providecommand*{\multiplefootnotemarker}{3sp}
+\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\m@mmf@prepare}
+% A pair of self-cancelling kerns. This may have been defined in the 
+% \Lclass{memoir} class.
+%    \begin{macrocode}
+\providecommand*{\m@mmf@prepare}{%
+  \kern-\multiplefootnotemarker
+  \kern\multiplefootnotemarker\relax}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\m@mmf@check}
+% This may have been defined in the \Lclass{memoir} class. If it recognises
+% the last kern as \cs{multiplefootnotemarker} it typesets \cs{multfootsep}.
+%    \begin{macrocode}
+\providecommand*{\m@mmf@check}{%
+  \ifdim\lastkern=\multiplefootnotemarker\relax
+    \edef\@x@sf{\the\spacefactor}%
+    \unkern
+    \multfootsep
+    \spacefactor\@x@sf\relax
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% We have to modify \verb?\@footnotetext? and \verb?\@footnotemark?. However,
+% if \Lclass{memoir} is used the modifications have already been made.
+% \changes{v0.4.1}{2004/03/25}{Only change \cs{@footnotetext} and
+%                             \cs{@footnotemark} if memoir not used}
+%    \begin{macrocode}
+\@ifclassloaded{memoir}{}{%
+%    \end{macrocode}
+% \begin{macro}{\@footnotetext}
+% Add \cs{m@mmf@prepare} at the end of \cs{@footnotetext}.
+%    \begin{macrocode}
+\let\l@dold@footnotetext\@footnotetext
+\renewcommand{\@footnotetext}[1]{%
+  \l@dold@footnotetext{#1}%
+  \m@mmf@prepare}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@footnotemark}
+% Modify \cs{@footnotemark} to cater for adjacent \cs{footnote}s.
+%    \begin{macrocode}
+\renewcommand*{\@footnotemark}{%
+  \leavevmode
+  \ifhmode
+    \edef\@x@sf{\the\spacefactor}%
+    \m@mmf@check
+    \nobreak
+  \fi
+  \@makefnmark
+  \m@mmf@prepare
+  \ifhmode\spacefactor\@x@sf\fi
+  \relax}
+%    \end{macrocode}
+% \end{macro}
+% Finished the modifications for the non-memoir case.
+%    \begin{macrocode}
+}
+
+%    \end{macrocode}
+%
+% \begin{macro}{\l@doldold@footnotetext}
+% \begin{macro}{\@footnotetext}
+% In order to enable the regular \verb?\footnote?s in numbered text
+% we have to play around with its \verb?\@footnotetext?, using
+% different forms for when in numbered or regular text.
+% \changes{v0.5}{2004/04/03}{Enabled regular \cs{footnote} in numbered text}
+%    \begin{macrocode}
+\let\l@doldold@footnotetext\@footnotetext
+\renewcommand{\@footnotetext}[1]{%
+  \ifnumberedpar@
+    \edtext{}{\l@dbfnote{#1}}%
+  \else
+    \l@doldold@footnotetext{#1}%
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\l@dbfnote}
+% \begin{macro}{\vl@dbfnote}
+% \verb?\l@dbfnote? adds the footnote to the insert list, and
+% \verb?\vl@dbfnote? calls the original \verb?\@footnotetext?.
+% \changes{v0.6}{2004/11/23}{Changed \cs{l@dbfnote} and \cs{vl@dbfnote} as
+% originals could give incorrect markers in the footnotes}
+%    \begin{macrocode}
+\newcommand{\l@dbfnote}[1]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vl@dbfnote{{#1}}{\@thefnmark}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+\newcommand{\vl@dbfnote}[2]{%
+  \def\@thefnmark{#2}%
+  \l@doldold@footnotetext{#1}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+%
+%
+%
+%
+% \subsection{Footnote formats}
+%
+% Some of the code for the various formats is remarkably similar to that
+% in section~\ref{sec:nfootformat}.
+%
+% The following macros generally set things up for the `standard' footnote
+% format.
+%
+% \begin{macro}{\prebodyfootmark}
+% \begin{macro}{\postbodyfootmark}
+% Two convenience macros for use by \cs{...@footnotemark...} macros.
+%    \begin{macrocode}
+\newcommand*{\prebodyfootmark}{%
+  \leavevmode
+  \ifhmode
+    \edef\@x@sf{\the\spacefactor}%
+    \m@mmf@check
+    \nobreak
+  \fi}
+\newcommand{\postbodyfootmark}{%
+  \m@mmf@prepare
+  \ifhmode\spacefactor\@x@sf\fi\relax}
+    
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% 
+%
+% \begin{macro}{\normal@footnotemarkX}
+% \cs{normal@footnotemarkX}\marg{series} sets up the typesetting of the
+% marker at the point where the footnote is called for. 
+%    \begin{macrocode}
+\newcommand*{\normal@footnotemarkX}[1]{%
+  \prebodyfootmark
+  \@nameuse{bodyfootmark#1}%
+  \postbodyfootmark}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalbodyfootmarkX}
+% The \cs{normalbodyfootmarkX}\marg{series} \emph{really} typesets the 
+% in-text marker. The style is the normal superscript.
+%    \begin{macrocode}
+\newcommand*{\normalbodyfootmarkX}[1]{%
+  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmark#1}}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalvfootnoteX}
+% \cs{normalvfootnoteX}\marg{series}\marg{text} does the \cs{insert} for
+% the \meta{series} and calls the series' \cs{footfmt...} to format the
+% \meta{text}.
+%    \begin{macrocode}
+\newcommand*{\normalvfootnoteX}[2]{%
+  \insert\@nameuse{footins#1}\bgroup
+    \notefontsetup
+    \footsplitskips
+    \spaceskip=\z@skip \xspaceskip=\z@skip
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\mpnormalvfootnoteX}
+% The minipage version.
+%    \begin{macrocode}
+\newcommand*{\mpnormalvfootnoteX}[2]{%
+  \global\setbox\@nameuse{mpfootins#1}\vbox{%
+    \unvbox\@nameuse{mpfootins#1}
+    \notefontsetup
+    \hsize\columnwidth
+    \@parboxrestore
+    \color@begingroup
+    \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootfmtX}
+% \cs{normalfootfmtX}\marg{series}\marg{text} typesets the footnote text,
+% prepended by the marker.
+%    \begin{macrocode}
+\newcommand*{\normalfootfmtX}[2]{%
+  \ledsetnormalparstuff
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootfootmarkX}
+% \cs{normalfootfootmarkX}\marg{series} is called by \cs{normalfootfmtX}
+% to typeset the footnote marker in the footer before the footnote text. 
+%    \begin{macrocode}
+\newcommand*{\normalfootfootmarkX}[1]{%
+  \textsuperscript{\@nameuse{@thefnmark#1}}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootstartX}
+% \cs{normalfootstartX}\marg{series} is the \meta{series} footnote 
+% starting macro used in the output routine.
+%    \begin{macrocode}
+\newcommand*{\normalfootstartX}[1]{%
+  \vskip\skip\@nameuse{footins#1}%
+  \leftskip=\z@
+  \rightskip=\z@
+  \@nameuse{footnoterule#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootnoteruleX}
+% The rule drawn before the footnote series group.
+%    \begin{macrocode}
+\let\normalfootnoteruleX=\footnoterule
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootgroupX}
+% \cs{normalfootgroupX}\marg{series} sends the contents of the \meta{series}
+% insert box to the output page without alteration.
+%    \begin{macrocode}
+\newcommand*{\normalfootgroupX}[1]{%
+  \unvbox\@nameuse{footins#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\mpnormalfootgroupX}
+% The minipage version.
+%    \begin{macrocode}
+\newcommand*{\mpnormalfootgroupX}[1]{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \unvbox\@nameuse{mpfootins#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\normalbfnoteX}
+% \changes{v0.7}{2005/02/18}{Removed extraneous space from \cs{normalbfnoteX}}
+%    \begin{macrocode}
+\newcommand{\normalbfnoteX}[2]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\vbfnoteX}
+%    \begin{macrocode}
+\newcommand{\vbfnoteX}[3]{%
+  \@namedef{@thefnmark#1}{#3}%
+  \@nameuse{regvfootnote#1}{#1}{#2}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\vnumfootnoteX}
+% \changes{v0.7}{2005/02/18}{Removed extraneous space from \cs{vnumfootnoteX}}
+%    \begin{macrocode}
+\newcommand{\vnumfootnoteX}[2]{%
+  \ifnumberedpar@
+    \edtext{}{\normalbfnoteX{#1}{#2}}%
+  \else
+    \@nameuse{regvfootnote#1}{#1}{#2}%
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+%
+%
+% \begin{macro}{\footnormalX}
+% \cs{footnormalX}\marg{series} initialises the settings for
+% the \meta{series} footnotes. This should always be called for
+% each series.
+%    \begin{macrocode}
+\newcommand*{\footnormalX}[1]{%
+  \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
+  \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
+  \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
+  \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
+  \expandafter\let\csname vfootnote#1\endcsname=\vnumfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\normalfootfmtX
+  \@namedef{footfootmark#1}{\normalfootfootmarkX{#1}}
+  \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
+  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
+  \count\csname footins#1\endcsname=1000
+  \dimen\csname footins#1\endcsname=\ledfootinsdim
+  \skip\csname footins#1\endcsname=1.2em \@plus .6em \@minus .6em
+%    \end{macrocode}
+% Aditions for minipages.
+%    \begin{macrocode}
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
+  \count\csname mpfootins#1\endcsname=1000
+%  \dimen\csname mpfootins#1\endcsname=0.8\vsize
+  \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
+  \skip\csname mpfootins#1\endcsname=1.2em \@plus .6em \@minus .6em
+}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Two column footnotes}
+%
+%    The following macros set footnotes in two columns. It is assumed
+% that the length of each footnote is less than the column width.
+% 
+% \begin{macro}{\foottwocoolX}
+% \cs{foottwocolX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\foottwocolX}[1]{%
+  \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
+  \twocolfootsetupX{#1}
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
+  \mptwocolfootsetupX{#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\twocolfootsetupX}
+% \begin{macro}{\mptwocolfootsetupX}
+%  \cs{twocolfootsetupX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\twocolfootsetupX}[1]{%
+  \count\csname footins#1\endcsname 500
+  \multiply\dimen\csname footins#1\endcsname by \tw@}
+\newcommand*{\mptwocolfootsetupX}[1]{%
+  \count\csname mpfootins#1\endcsname 500
+  \multiply\dimen\csname mpfootins#1\endcsname by \tw@}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\twocolvfootnoteX}
+% \cs{twocolvfootnoteX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\twocolvfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname\bgroup
+    \notefontsetup
+    \footsplitskips
+    \spaceskip=\z@skip \xspaceskip=\z@skip
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\twocolfootfmtX}
+%  \cs{twocolfootfmtX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\twocolfootfmtX}[2]{%
+  \normal@pars
+  \hsize .45\hsize
+  \parindent=\z@ 
+%%%  \parfillskip=0pt \@plus 1fil
+  \tolerance=5000\relax
+  \raggedright
+  \leavevmode
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}\allowbreak}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\twocolfootgroupX}
+% \begin{macro}{\mptwocolfootgroupX}
+% \cs{twocolfootgroupX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\twocolfootgroupX}[1]{{\notefontsetup
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
+\newcommand*{\mptwocolfootgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Three column footnotes}
+%
+%    The following macros set footnotes in three columns. It is assumed
+% that the length of each footnote is less than the column width.
+% 
+%
+% \begin{macro}{\footthreecolX}
+% \cs{footthreecolX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\footthreecolX}[1]{%
+  \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
+  \threecolfootsetupX{#1}
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
+  \mpthreecolfootsetupX{#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\threecolfootsetupX}
+% \begin{macro}{\mpthreecolfootsetupX}
+% \cs{threecolfootsetupX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\threecolfootsetupX}[1]{%
+  \count\csname footins#1\endcsname 333
+  \multiply\dimen\csname footins#1\endcsname by \thr@@}
+\newcommand*{\mpthreecolfootsetupX}[1]{%
+  \count\csname mpfootins#1\endcsname 333
+  \multiply\dimen\csname mpfootins#1\endcsname by \thr@@}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\threecolvfootnoteX}
+% \cs{threecolvfootnoteX}\marg{series}\marg{text}
+%    \begin{macrocode}
+\newcommand*{\threecolvfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname\bgroup
+    \notefontsetup
+    \footsplitskips
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\threecolfootfmtX}
+% \cs{threecolfootfmtX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\threecolfootfmtX}[2]{%
+  \normal@pars
+  \hsize .3\hsize
+  \parindent=\z@ 
+%%%  \parfillskip=0pt \@plus 1fil
+  \tolerance=5000\relax
+  \raggedright
+  \leavevmode
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}\allowbreak}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\threecolfootgroupX}
+% \begin{macro}{\mpthreecolfootgroupX}
+% \cs{threecolfootgroupX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\threecolfootgroupX}[1]{{\notefontsetup
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
+\newcommand*{\mpthreecolfootgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Paragraphed footnotes}
+%
+%    The following macros set footnotes as one paragraph.
+% 
+% \begin{macro}{\footparagraphX}
+% \cs{footparagraphX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\footparagraphX}[1]{%
+  \expandafter\newcount\csname prevpage#1@num\endcsname
+  \expandafter\let\csname footstart#1\endcsname=\parafootstartX
+  \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\para@footgroupX
+  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
+  \count\csname footins#1\endcsname=1000
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
+  \count\csname mpfootins#1\endcsname=1000
+  \para@footsetupX{#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\para@footsetupX}
+% \cs{para@footsetupX}\marg{series}
+% \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetupX}}
+%    \begin{macrocode}
+\newcommand*{\para@footsetupX}[1]{{\notefontsetup
+  \dimen0=\baselineskip
+  \multiply\dimen0 by 1024
+  \divide\dimen0 by \hsize \multiply\dimen0 by \footfudgefiddle\relax
+  \expandafter
+  \xdef\csname footfudgefactor#1\endcsname{%
+    \expandafter\strip@pt\dimen0 }}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\parafootstartX}
+% \cs{parafootstartX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\parafootstartX}[1]{%
+  \vskip\skip\@nameuse{footins#1}%
+  \leftskip=\z@
+  \rightskip=\z@
+  \parindent=\z@
+  \vskip\skip\@nameuse{footins#1}%
+  \@nameuse{footnoterule#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\para@vfootnoteX}
+% \begin{macro}{\mppara@vfootnoteX}
+% \cs{para@vfootnoteX}\marg{series}\marg{text}
+%    \begin{macrocode}
+\newcommand*{\para@vfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname
+  \bgroup
+    \notefontsetup
+    \footsplitskips
+    \setbox0=\vbox{\hsize=\maxdimen
+      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
+    \setbox0=\hbox{\unvxh0[#1]}%
+    \dp0=\z@
+    \ht0=\csname footfudgefactor#1\endcsname\wd0
+    \box0
+    \penalty0
+  \egroup}
+\newcommand*{\mppara@vfootnoteX}[2]{%
+  \global\setbox\@nameuse{mpfootins#1}\vbox{%
+    \unvbox\@nameuse{mpfootins#1}
+    \notefontsetup
+    \footsplitskips
+    \setbox0=\vbox{\hsize=\maxdimen
+      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
+    \setbox0=\hbox{\unvxh0[#1]}%
+    \dp0=\z@
+    \ht0=\csname footfudgefactor#1\endcsname\wd0
+    \box0
+    \penalty0}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\parafootfmtX}
+% \cs{parafootfmtX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\parafootfmtX}[2]{%
+  \insertparafootsep{#1}%
+  \ledsetnormalparstuff
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\penalty-10}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\para@footgroupX}
+% \begin{macro}{\mppara@footgroupX}
+% \cs{para@footgroupX}\marg{series}
+%    \begin{macrocode}
+\newcommand*{\para@footgroupX}[1]{%
+  \unvbox\csname footins#1\endcsname
+  \makehboxofhboxes
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \notefontsetup
+  \noindent\unhbox0\par}
+\newcommand*{\mppara@footgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \unvbox\csname mpfootins#1\endcsname
+  \makehboxofhboxes
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \notefontsetup
+  \noindent\unhbox0\par}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \subsection{Other series footnotes}
+%
+
+%
+%
+%
+% \begin{macro}{\doxtrafeeti}
+% \begin{macro}{\doreinxtrafeeti}
+% We have to add all the new kinds of familiar footnotes to the output
+% routine. These are the class 1 feet\index{class 1 feet}.
+%    \begin{macrocode}
+\newcommand*{\doxtrafeeti}{%
+  \setbox\@outputbox \vbox{%
+    \unvbox\@outputbox
+    \ifvoid\footinsA\else\footstartA{A}\footgroupA{A}\fi
+    \ifvoid\footinsB\else\footstartB{B}\footgroupB{B}\fi
+    \ifvoid\footinsC\else\footstartC{C}\footgroupC{C}\fi
+  }}
+
+\newcommand{\doreinxtrafeeti}{%
+  \ifvoid\footinsA\else\insert\footinsA{\unvbox\footinsA}\fi
+  \ifvoid\footinsB\else\insert\footinsB{\unvbox\footinsB}\fi
+  \ifvoid\footinsC\else\insert\footinsC{\unvbox\footinsC}\fi
+  }
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\addfootinsX}
+% Make life just a little easier for those who want additional series
+% of class 1\index{class 1 feet} footnotes.
+% \changes{v0.4.1}{2003/03/06}{Added minpage setup to \cs{addfootinsX}}
+%    \begin{macrocode}
+\newcommand*{\addfootinsX}[1]{%
+  \footnormalX{#1}%
+  \g@addto@macro{\doxtrafeeti}{%
+    \setbox\@outputbox \vbox{%
+      \unvbox\@outputbox
+      \ifvoid\@nameuse{footins#1}\else
+        \@nameuse{footstart#1}{#1}\@nameuse{footgroup#1}{#1}\fi}}%
+  \g@addto@macro{\doreinxtrafeeti}{%
+    \ifvoid\@nameuse{footins#1}\else
+      \insert\@nameuse{footins#1}{\unvbox\@nameuse{footins#1}}\fi}%
+  \g@addto@macro{\l@dfambeginmini}{%
+    \expandafter\expandafter\expandafter\let\expandafter\expandafter
+      \csname footnote#1\endcsname \csname mpfootnote#1\endcsname}%
+  \g@addto@macro{\l@dfamendmini}{%
+    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1}{#1}\fi}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \end{PW}
 % \subsection{Generate commands}%Should be moved after
 % \begin{command}{\series}
 % \cs{series}\cs{series} creates one ore more newseries
@@ -7704,7 +8401,7 @@
 	    \csgdef{afternote@#1}{1em plus.4em minus.4em}%
 	    \csgdef{parafootsep@#1}{\parafootftmsep}
 %    \end{macrocode}
-% 2) Create #1footnote series
+% 2) Create #1footnote series (for critical apparatus)
 % \begin{macrocode}
 		\global\expandafter\newcommand\expandafter *\csname #1footnote\endcsname[2][]{%
 			\newcommand{\content}{##2}%
@@ -7738,7 +8435,25 @@
 % \begin{macrocode}
 		\footnormal{#1}
 % \end{macrocode}
-% 5) Stock in \@series
+% 5) The familiar footnotes (\cs{footnoteX}), NOT for critical apparatus
+% \cs{footnoteX} is the outer level.
+%    \begin{macrocode}
+	\global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+	  \stepcounter{footnote#1}%
+	  \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+	  \csuse{@footnotemark#1}
+	  \csuse{vfootnote#1}{#1}{##1}\m@mmf@prepare}
+%     \end{macrocode}
+% The counters.
+%  \begin{macrocode}
+	\newcounter{footnote#1}
+  	\global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+%   \end{macrocode}
+% Don't forget to initialize series
+%    \begin{macrocode}
+	\footnormalX{#1}
+%    \end{macrocode}
+% 6) Stock in \@series
 % \begin{macrocode}
     	\listxadd{\@series}{#1}
 	}
@@ -9279,848 +9994,6 @@
 %
 % \end{PW}
 %
-% \section{Familiar footnotes}
-%
-% \begin{PW}
-%
-%    The original \edmac{} provided the five series of critical footnotes,
-% and LaTeX provides a single numbered footnote. The \Ledmac{} package
-% uses the \edmac{} mechanism to provide a few series of numbered footnotes.
-% 
-%    First, though, the \Lpack{footmisc} package has an option whereby
-% two or more consecutive \cs{footnote}s have their marks separated
-% by commas. This seems such a useful ability that it is provided
-% automatically by \Ledmac. 
-%
-% \begin{macro}{\multiplefootnotemarker}
-% \begin{macro}{\multfootsep}
-% These macros may have been defined by the \Lclass{memoir} class,
-% are provided by the \Lpack{footmisc} package and perhaps
-% by other footnote packages.
-%    \begin{macrocode}
-\providecommand*{\multiplefootnotemarker}{3sp}
-\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\m@mmf@prepare}
-% A pair of self-cancelling kerns. This may have been defined in the 
-% \Lclass{memoir} class.
-%    \begin{macrocode}
-\providecommand*{\m@mmf@prepare}{%
-  \kern-\multiplefootnotemarker
-  \kern\multiplefootnotemarker\relax}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\m@mmf@check}
-% This may have been defined in the \Lclass{memoir} class. If it recognises
-% the last kern as \cs{multiplefootnotemarker} it typesets \cs{multfootsep}.
-%    \begin{macrocode}
-\providecommand*{\m@mmf@check}{%
-  \ifdim\lastkern=\multiplefootnotemarker\relax
-    \edef\@x@sf{\the\spacefactor}%
-    \unkern
-    \multfootsep
-    \spacefactor\@x@sf\relax
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% We have to modify \verb?\@footnotetext? and \verb?\@footnotemark?. However,
-% if \Lclass{memoir} is used the modifications have already been made.
-% \changes{v0.4.1}{2004/03/25}{Only change \cs{@footnotetext} and
-%                             \cs{@footnotemark} if memoir not used}
-%    \begin{macrocode}
-\@ifclassloaded{memoir}{}{%
-%    \end{macrocode}
-% \begin{macro}{\@footnotetext}
-% Add \cs{m@mmf@prepare} at the end of \cs{@footnotetext}.
-%    \begin{macrocode}
-\let\l@dold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
-  \l@dold@footnotetext{#1}%
-  \m@mmf@prepare}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@footnotemark}
-% Modify \cs{@footnotemark} to cater for adjacent \cs{footnote}s.
-%    \begin{macrocode}
-\renewcommand*{\@footnotemark}{%
-  \leavevmode
-  \ifhmode
-    \edef\@x@sf{\the\spacefactor}%
-    \m@mmf@check
-    \nobreak
-  \fi
-  \@makefnmark
-  \m@mmf@prepare
-  \ifhmode\spacefactor\@x@sf\fi
-  \relax}
-%    \end{macrocode}
-% \end{macro}
-% Finished the modifications for the non-memoir case.
-%    \begin{macrocode}
-}
-
-%    \end{macrocode}
-%
-% \begin{macro}{\l@doldold@footnotetext}
-% \begin{macro}{\@footnotetext}
-% In order to enable the regular \verb?\footnote?s in numbered text
-% we have to play around with its \verb?\@footnotetext?, using
-% different forms for when in numbered or regular text.
-% \changes{v0.5}{2004/04/03}{Enabled regular \cs{footnote} in numbered text}
-%    \begin{macrocode}
-\let\l@doldold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
-  \ifnumberedpar@
-    \edtext{}{\l@dbfnote{#1}}%
-  \else
-    \l@doldold@footnotetext{#1}%
-  \fi}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@dbfnote}
-% \begin{macro}{\vl@dbfnote}
-% \verb?\l@dbfnote? adds the footnote to the insert list, and
-% \verb?\vl@dbfnote? calls the original \verb?\@footnotetext?.
-% \changes{v0.6}{2004/11/23}{Changed \cs{l@dbfnote} and \cs{vl@dbfnote} as
-% originals could give incorrect markers in the footnotes}
-%    \begin{macrocode}
-\newcommand{\l@dbfnote}[1]{%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dbfnote{{#1}}{\@thefnmark}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces}
-\newcommand{\vl@dbfnote}[2]{%
-  \def\@thefnmark{#2}%
-  \l@doldold@footnotetext{#1}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%    Now we can get on with providing the extra series of numbered
-% footnotes. The general naming convention is to add an uppercase letter,
-% denoting the series, at the end of macro names (the \edmac{} series
-% have an uppercase letter at the start of macro names).
-% 
-%    First we'll give all the code for the \texttt{A} series, then the
-% much more limited code for defining additional series.
-%
-% \subsection{The \texttt{A} series footnotes}
-%
-% \begin{macro}{\footnoteA}
-% \cs{footnoteA}\marg{text} is the user level command.
-% \changes{v0.6}{2004/11/23}{Modified \cs{footnoteA} and friends to 
-%         include \cs{@thefnmarkA} etc}
-%    \begin{macrocode}
-\newcommand{\footnoteA}[1]{%
-  \stepcounter{footnoteA}%
-  \protected@xdef\@thefnmarkA{\thefootnoteA}%
-  \@footnotemarkA
-  \vfootnoteA{A}{#1}\m@mmf@prepare}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\c@footnoteA}
-% \begin{macro}{\thefootnoteA}
-% The \texttt{A} series counter.
-%    \begin{macrocode}
-\newcounter{footnoteA}
-  \renewcommand{\thefootnoteA}{\arabic{footnoteA}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-%
-% \begin{macro}{\footfootmarkA}
-% This macro typesets the \texttt{A} series marker at the start of 
-% the footnote text (where it appears at the foot of the page).
-%    \begin{macrocode}
-\newcommand*{\footfootmarkA}{\textsuperscript{\thefootnoteA}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\mpfootnoteA}
-%  The extras for minipages.
-% \changes{v0.4}{2004/02/29}{Familiar footnotes extended for minipages}
-%    \begin{macrocode}
-\newcommand{\mpfootnoteA}[1]{%
-  \stepcounter{footnoteA}%
-  \protected@xdef\@thefnmarkA{\thefootnoteA}%
-  \@footnotemarkA
-  \mpvfootnoteA{A}{#1}\m@mmf@prepare}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% We have to specify the default footnote style for the \texttt{A} series.
-% This is done later.
-%
-%    That completes the specific macros that have to be specified for
-% the \texttt{A} series. Similar ones are required for any other series.
-%
-% \subsection{Footnote formats}
-%
-% Some of the code for the various formats is remarkably similar to that
-% in section~\ref{sec:nfootformat}.
-%
-% The following macros generally set things up for the `standard' footnote
-% format.
-%
-% \begin{macro}{\prebodyfootmark}
-% \begin{macro}{\postbodyfootmark}
-% Two convenience macros for use by \cs{...@footnotemark...} macros.
-%    \begin{macrocode}
-\newcommand*{\prebodyfootmark}{%
-  \leavevmode
-  \ifhmode
-    \edef\@x@sf{\the\spacefactor}%
-    \m@mmf@check
-    \nobreak
-  \fi}
-\newcommand{\postbodyfootmark}{%
-  \m@mmf@prepare
-  \ifhmode\spacefactor\@x@sf\fi\relax}
-    
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% 
-%
-% \begin{macro}{\normal@footnotemarkX}
-% \cs{normal@footnotemarkX}\marg{series} sets up the typesetting of the
-% marker at the point where the footnote is called for. 
-%    \begin{macrocode}
-\newcommand*{\normal@footnotemarkX}[1]{%
-  \prebodyfootmark
-  \@nameuse{bodyfootmark#1}%
-  \postbodyfootmark}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalbodyfootmarkX}
-% The \cs{normalbodyfootmarkX}\marg{series} \emph{really} typesets the 
-% in-text marker. The style is the normal superscript.
-%    \begin{macrocode}
-\newcommand*{\normalbodyfootmarkX}[1]{%
-  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmark#1}}}}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalvfootnoteX}
-% \cs{normalvfootnoteX}\marg{series}\marg{text} does the \cs{insert} for
-% the \meta{series} and calls the series' \cs{footfmt...} to format the
-% \meta{text}.
-%    \begin{macrocode}
-\newcommand*{\normalvfootnoteX}[2]{%
-  \insert\@nameuse{footins#1}\bgroup
-    \notefontsetup
-    \footsplitskips
-    \spaceskip=\z@skip \xspaceskip=\z@skip
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\mpnormalvfootnoteX}
-% The minipage version.
-%    \begin{macrocode}
-\newcommand*{\mpnormalvfootnoteX}[2]{%
-  \global\setbox\@nameuse{mpfootins#1}\vbox{%
-    \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
-    \hsize\columnwidth
-    \@parboxrestore
-    \color@begingroup
-    \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalfootfmtX}
-% \cs{normalfootfmtX}\marg{series}\marg{text} typesets the footnote text,
-% prepended by the marker.
-%    \begin{macrocode}
-\newcommand*{\normalfootfmtX}[2]{%
-  \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalfootfootmarkX}
-% \cs{normalfootfootmarkX}\marg{series} is called by \cs{normalfootfmtX}
-% to typeset the footnote marker in the footer before the footnote text. 
-%    \begin{macrocode}
-\newcommand*{\normalfootfootmarkX}[1]{%
-  \textsuperscript{\@nameuse{@thefnmark#1}}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalfootstartX}
-% \cs{normalfootstartX}\marg{series} is the \meta{series} footnote 
-% starting macro used in the output routine.
-%    \begin{macrocode}
-\newcommand*{\normalfootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
-  \leftskip=\z@
-  \rightskip=\z@
-  \@nameuse{footnoterule#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalfootnoteruleX}
-% The rule drawn before the footnote series group.
-%    \begin{macrocode}
-\let\normalfootnoteruleX=\footnoterule
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\normalfootgroupX}
-% \cs{normalfootgroupX}\marg{series} sends the contents of the \meta{series}
-% insert box to the output page without alteration.
-%    \begin{macrocode}
-\newcommand*{\normalfootgroupX}[1]{%
-  \unvbox\@nameuse{footins#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\mpnormalfootgroupX}
-% The minipage version.
-%    \begin{macrocode}
-\newcommand*{\mpnormalfootgroupX}[1]{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \unvbox\@nameuse{mpfootins#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\normalbfnoteX}
-% \changes{v0.7}{2005/02/18}{Removed extraneous space from \cs{normalbfnoteX}}
-%    \begin{macrocode}
-\newcommand{\normalbfnoteX}[2]{%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\vbfnoteX}
-%    \begin{macrocode}
-\newcommand{\vbfnoteX}[3]{%
-  \@namedef{@thefnmark#1}{#3}%
-  \@nameuse{regvfootnote#1}{#1}{#2}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\vnumfootnoteX}
-% \changes{v0.7}{2005/02/18}{Removed extraneous space from \cs{vnumfootnoteX}}
-%    \begin{macrocode}
-\newcommand{\vnumfootnoteX}[2]{%
-  \ifnumberedpar@
-    \edtext{}{\normalbfnoteX{#1}{#2}}%
-  \else
-    \@nameuse{regvfootnote#1}{#1}{#2}%
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-%
-% \begin{macro}{\footnormalX}
-% \cs{footnormalX}\marg{series} initialises the settings for
-% the \meta{series} footnotes. This should always be called for
-% each series.
-%    \begin{macrocode}
-\newcommand*{\footnormalX}[1]{%
-  \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
-  \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
-  \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
-  \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
-  \expandafter\let\csname vfootnote#1\endcsname=\vnumfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\normalfootfmtX
-  \@namedef{footfootmark#1}{\normalfootfootmarkX{#1}}
-  \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
-  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
-  \count\csname footins#1\endcsname=1000
-  \dimen\csname footins#1\endcsname=\ledfootinsdim
-  \skip\csname footins#1\endcsname=1.2em \@plus .6em \@minus .6em
-%    \end{macrocode}
-% Aditions for minipages.
-%    \begin{macrocode}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
-  \count\csname mpfootins#1\endcsname=1000
-%  \dimen\csname mpfootins#1\endcsname=0.8\vsize
-  \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
-  \skip\csname mpfootins#1\endcsname=1.2em \@plus .6em \@minus .6em
-}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \subsubsection{Two column footnotes}
-%
-%    The following macros set footnotes in two columns. It is assumed
-% that the length of each footnote is less than the column width.
-% 
-% \begin{macro}{\foottwocoolX}
-% \cs{foottwocolX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\foottwocolX}[1]{%
-  \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
-  \twocolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
-  \mptwocolfootsetupX{#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\twocolfootsetupX}
-% \begin{macro}{\mptwocolfootsetupX}
-%  \cs{twocolfootsetupX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\twocolfootsetupX}[1]{%
-  \count\csname footins#1\endcsname 500
-  \multiply\dimen\csname footins#1\endcsname by \tw@}
-\newcommand*{\mptwocolfootsetupX}[1]{%
-  \count\csname mpfootins#1\endcsname 500
-  \multiply\dimen\csname mpfootins#1\endcsname by \tw@}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\twocolvfootnoteX}
-% \cs{twocolvfootnoteX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\twocolvfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
-    \footsplitskips
-    \spaceskip=\z@skip \xspaceskip=\z@skip
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\twocolfootfmtX}
-%  \cs{twocolfootfmtX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\twocolfootfmtX}[2]{%
-  \normal@pars
-  \hsize .45\hsize
-  \parindent=\z@ 
-%%%  \parfillskip=0pt \@plus 1fil
-  \tolerance=5000\relax
-  \raggedright
-  \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}\allowbreak}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\twocolfootgroupX}
-% \begin{macro}{\mptwocolfootgroupX}
-% \cs{twocolfootgroupX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\twocolfootgroupX}[1]{{\notefontsetup
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
-\newcommand*{\mptwocolfootgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \subsubsection{Three column footnotes}
-%
-%    The following macros set footnotes in three columns. It is assumed
-% that the length of each footnote is less than the column width.
-% 
-%
-% \begin{macro}{\footthreecolX}
-% \cs{footthreecolX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\footthreecolX}[1]{%
-  \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
-  \threecolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
-  \mpthreecolfootsetupX{#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\threecolfootsetupX}
-% \begin{macro}{\mpthreecolfootsetupX}
-% \cs{threecolfootsetupX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\threecolfootsetupX}[1]{%
-  \count\csname footins#1\endcsname 333
-  \multiply\dimen\csname footins#1\endcsname by \thr@@}
-\newcommand*{\mpthreecolfootsetupX}[1]{%
-  \count\csname mpfootins#1\endcsname 333
-  \multiply\dimen\csname mpfootins#1\endcsname by \thr@@}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\threecolvfootnoteX}
-% \cs{threecolvfootnoteX}\marg{series}\marg{text}
-%    \begin{macrocode}
-\newcommand*{\threecolvfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
-    \footsplitskips
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\threecolfootfmtX}
-% \cs{threecolfootfmtX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\threecolfootfmtX}[2]{%
-  \normal@pars
-  \hsize .3\hsize
-  \parindent=\z@ 
-%%%  \parfillskip=0pt \@plus 1fil
-  \tolerance=5000\relax
-  \raggedright
-  \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}\allowbreak}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\threecolfootgroupX}
-% \begin{macro}{\mpthreecolfootgroupX}
-% \cs{threecolfootgroupX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\threecolfootgroupX}[1]{{\notefontsetup
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
-\newcommand*{\mpthreecolfootgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \subsubsection{Paragraphed footnotes}
-%
-%    The following macros set footnotes as one paragraph.
-% 
-% \begin{macro}{\footparagraphX}
-% \cs{footparagraphX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\footparagraphX}[1]{%
-  \expandafter\newcount\csname prevpage#1@num\endcsname
-  \expandafter\let\csname footstart#1\endcsname=\parafootstartX
-  \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\para@footgroupX
-  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
-  \count\csname footins#1\endcsname=1000
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
-  \count\csname mpfootins#1\endcsname=1000
-  \para@footsetupX{#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\para@footsetupX}
-% \cs{para@footsetupX}\marg{series}
-% \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetupX}}
-%    \begin{macrocode}
-\newcommand*{\para@footsetupX}[1]{{\notefontsetup
-  \dimen0=\baselineskip
-  \multiply\dimen0 by 1024
-  \divide\dimen0 by \hsize \multiply\dimen0 by \footfudgefiddle\relax
-  \expandafter
-  \xdef\csname footfudgefactor#1\endcsname{%
-    \expandafter\strip@pt\dimen0 }}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\parafootstartX}
-% \cs{parafootstartX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\parafootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
-  \leftskip=\z@
-  \rightskip=\z@
-  \parindent=\z@
-  \vskip\skip\@nameuse{footins#1}%
-  \@nameuse{footnoterule#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\para@vfootnoteX}
-% \begin{macro}{\mppara@vfootnoteX}
-% \cs{para@vfootnoteX}\marg{series}\marg{text}
-%    \begin{macrocode}
-\newcommand*{\para@vfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname
-  \bgroup
-    \notefontsetup
-    \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
-    \setbox0=\hbox{\unvxh0[#1]}%
-    \dp0=\z@
-    \ht0=\csname footfudgefactor#1\endcsname\wd0
-    \box0
-    \penalty0
-  \egroup}
-\newcommand*{\mppara@vfootnoteX}[2]{%
-  \global\setbox\@nameuse{mpfootins#1}\vbox{%
-    \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
-    \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
-    \setbox0=\hbox{\unvxh0[#1]}%
-    \dp0=\z@
-    \ht0=\csname footfudgefactor#1\endcsname\wd0
-    \box0
-    \penalty0}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\parafootfmtX}
-% \cs{parafootfmtX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\parafootfmtX}[2]{%
-  \insertparafootsep{#1}%
-  \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\penalty-10}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\para@footgroupX}
-% \begin{macro}{\mppara@footgroupX}
-% \cs{para@footgroupX}\marg{series}
-%    \begin{macrocode}
-\newcommand*{\para@footgroupX}[1]{%
-  \unvbox\csname footins#1\endcsname
-  \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
-  \noindent\unhbox0\par}
-\newcommand*{\mppara@footgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \unvbox\csname mpfootins#1\endcsname
-  \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
-  \noindent\unhbox0\par}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-% \subsection{Other series footnotes}
-%
-%    Other series, such as \texttt{B}, are provided here.
-%
-% \begin{macro}{\footnoteB}
-% \cs{footnoteB}\marg{text} is the user command for a series \texttt{B}
-% footnote.
-%    \begin{macrocode}
-\newcommand{\footnoteB}[1]{%
-  \stepcounter{footnoteB}%
-  \protected@xdef\@thefnmarkB{\thefootnoteB}%
-  \@footnotemarkB
-  \vfootnoteB{B}{#1}\m@mmf@prepare}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\c@footnoteB}
-% \begin{macro}{\thefootnoteB}
-%    \begin{macrocode}
-\newcounter{footnoteB}
-  \renewcommand{\thefootnoteB}{\arabic{footnoteB}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-%
-% \begin{macro}{\mpfootnoteB}
-%  The extras for minipages.
-% \changes{v0.4}{2004/02/29}{Familiar footnotes extended for minipages}
-%    \begin{macrocode}
-\newcommand{\mpfootnoteB}[1]{%
-  \stepcounter{footnoteB}%
-  \protected@xdef\@thefnmarkB{\thefootnoteB}%
-  \@footnotemarkB
-  \mpvfootnoteB{B}{#1}\m@mmf@prepare}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\footnoteC}
-% \cs{footnoteC}\marg{text} is the user command for a series \texttt{C}
-% footnote.
-%    \begin{macrocode}
-\newcommand{\footnoteC}[1]{%
-  \stepcounter{footnoteC}%
-  \protected@xdef\@thefnmarkC{\thefootnoteC}%
-  \@footnotemarkC
-  \vfootnoteC{C}{#1}\m@mmf@prepare}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\c@footnoteC}
-% \begin{macro}{\thefootnoteC}
-%    \begin{macrocode}
-\newcounter{footnoteC}
-  \renewcommand{\thefootnoteC}{\arabic{footnoteC}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\mpfootnoteC}
-%  The extras for minipages.
-% \changes{v0.4}{2004/02/29}{Familiar footnotes extended for minipages}
-%    \begin{macrocode}
-\newcommand{\mpfootnoteC}[1]{%
-  \stepcounter{footnoteC}%
-  \protected@xdef\@thefnmarkC{\thefootnoteC}%
-  \@footnotemarkC
-  \mpvfootnoteC{C}{#1}\m@mmf@prepare}
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-%    Don't forget to initialise the series.
-%
-%  \begin{macrocode}
-\footnormalX{A}
-\footnormalX{B}
-\footnormalX{C}
-
-%    \end{macrocode}
-%
-% \begin{macro}{\doxtrafeeti}
-% \begin{macro}{\doreinxtrafeeti}
-% We have to add all the new kinds of familiar footnotes to the output
-% routine. These are the class 1 feet\index{class 1 feet}.
-%    \begin{macrocode}
-\newcommand*{\doxtrafeeti}{%
-  \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox
-    \ifvoid\footinsA\else\footstartA{A}\footgroupA{A}\fi
-    \ifvoid\footinsB\else\footstartB{B}\footgroupB{B}\fi
-    \ifvoid\footinsC\else\footstartC{C}\footgroupC{C}\fi
-  }}
-
-\newcommand{\doreinxtrafeeti}{%
-  \ifvoid\footinsA\else\insert\footinsA{\unvbox\footinsA}\fi
-  \ifvoid\footinsB\else\insert\footinsB{\unvbox\footinsB}\fi
-  \ifvoid\footinsC\else\insert\footinsC{\unvbox\footinsC}\fi
-  }
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\addfootinsX}
-% Make life just a little easier for those who want additional series
-% of class 1\index{class 1 feet} footnotes.
-% \changes{v0.4.1}{2003/03/06}{Added minpage setup to \cs{addfootinsX}}
-%    \begin{macrocode}
-\newcommand*{\addfootinsX}[1]{%
-  \footnormalX{#1}%
-  \g@addto@macro{\doxtrafeeti}{%
-    \setbox\@outputbox \vbox{%
-      \unvbox\@outputbox
-      \ifvoid\@nameuse{footins#1}\else
-        \@nameuse{footstart#1}{#1}\@nameuse{footgroup#1}{#1}\fi}}%
-  \g@addto@macro{\doreinxtrafeeti}{%
-    \ifvoid\@nameuse{footins#1}\else
-      \insert\@nameuse{footins#1}{\unvbox\@nameuse{footins#1}}\fi}%
-  \g@addto@macro{\l@dfambeginmini}{%
-    \expandafter\expandafter\expandafter\let\expandafter\expandafter
-      \csname footnote#1\endcsname \csname mpfootnote#1\endcsname}%
-  \g@addto@macro{\l@dfamendmini}{%
-    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1}{#1}\fi}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \end{PW}
 %
 % \begin{PW}
 % \section{Minipages and such}
@@ -10173,18 +10046,14 @@
 % \begin{macro}{\l@dfambeginmini}
 % \begin{macro}{\l@dfamendmini}
 % These handle the initiation and closure of familiar footnotes in a
-% minipage environment. They can be extended to cater for additional
-% series.
+% minipage environment. 
 %    \begin{macrocode}
 \newcommand*{\l@dfambeginmini}{%
-  \let\footnoteA=\mpfootnoteA%
-  \let\footnoteB=\mpfootnoteB%
-  \let\footnoteC=\mpfootnoteC}
+   \renewcommand{\do}[1]{\csletcs{vfootnote##1}{mpvfootnote##1}}%
+   \dolistloop{\@series}}
 \newcommand*{\l@dfamendmini}{%
-  \ifvoid\mpfootinsA\else\mpfootgroupA{A}\fi%
-  \ifvoid\mpfootinsB\else\mpfootgroupB{B}\fi%
-  \ifvoid\mpfootinsC\else\mpfootgroupC{C}\fi}
-
+  \renewcommand{\do}[1]{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
+  \dolistloop{\@series}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}

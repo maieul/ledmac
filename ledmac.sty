@@ -1535,6 +1535,351 @@
   \expandafter
   \rigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
 
+\providecommand*{\multiplefootnotemarker}{3sp}
+\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}
+
+\providecommand*{\m@mmf@prepare}{%
+  \kern-\multiplefootnotemarker
+  \kern\multiplefootnotemarker\relax}
+\providecommand*{\m@mmf@check}{%
+  \ifdim\lastkern=\multiplefootnotemarker\relax
+    \edef\@x@sf{\the\spacefactor}%
+    \unkern
+    \multfootsep
+    \spacefactor\@x@sf\relax
+  \fi}
+
+\@ifclassloaded{memoir}{}{%
+\let\l@dold@footnotetext\@footnotetext
+\renewcommand{\@footnotetext}[1]{%
+  \l@dold@footnotetext{#1}%
+  \m@mmf@prepare}
+\renewcommand*{\@footnotemark}{%
+  \leavevmode
+  \ifhmode
+    \edef\@x@sf{\the\spacefactor}%
+    \m@mmf@check
+    \nobreak
+  \fi
+  \@makefnmark
+  \m@mmf@prepare
+  \ifhmode\spacefactor\@x@sf\fi
+  \relax}
+}
+
+\let\l@doldold@footnotetext\@footnotetext
+\renewcommand{\@footnotetext}[1]{%
+  \ifnumberedpar@
+    \edtext{}{\l@dbfnote{#1}}%
+  \else
+    \l@doldold@footnotetext{#1}%
+  \fi}
+\newcommand{\l@dbfnote}[1]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vl@dbfnote{{#1}}{\@thefnmark}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+\newcommand{\vl@dbfnote}[2]{%
+  \def\@thefnmark{#2}%
+  \l@doldold@footnotetext{#1}}
+
+\newcommand*{\prebodyfootmark}{%
+  \leavevmode
+  \ifhmode
+    \edef\@x@sf{\the\spacefactor}%
+    \m@mmf@check
+    \nobreak
+  \fi}
+\newcommand{\postbodyfootmark}{%
+  \m@mmf@prepare
+  \ifhmode\spacefactor\@x@sf\fi\relax}
+
+\newcommand*{\normal@footnotemarkX}[1]{%
+  \prebodyfootmark
+  \@nameuse{bodyfootmark#1}%
+  \postbodyfootmark}
+
+\newcommand*{\normalbodyfootmarkX}[1]{%
+  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmark#1}}}}
+\newcommand*{\normalvfootnoteX}[2]{%
+  \insert\@nameuse{footins#1}\bgroup
+    \notefontsetup
+    \footsplitskips
+    \spaceskip=\z@skip \xspaceskip=\z@skip
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+\newcommand*{\mpnormalvfootnoteX}[2]{%
+  \global\setbox\@nameuse{mpfootins#1}\vbox{%
+    \unvbox\@nameuse{mpfootins#1}
+    \notefontsetup
+    \hsize\columnwidth
+    \@parboxrestore
+    \color@begingroup
+    \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}}
+
+\newcommand*{\normalfootfmtX}[2]{%
+  \ledsetnormalparstuff
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}}
+
+\newcommand*{\normalfootfootmarkX}[1]{%
+  \textsuperscript{\@nameuse{@thefnmark#1}}}
+
+\newcommand*{\normalfootstartX}[1]{%
+  \vskip\skip\@nameuse{footins#1}%
+  \leftskip=\z@
+  \rightskip=\z@
+  \@nameuse{footnoterule#1}}
+
+\let\normalfootnoteruleX=\footnoterule
+
+\newcommand*{\normalfootgroupX}[1]{%
+  \unvbox\@nameuse{footins#1}}
+
+\newcommand*{\mpnormalfootgroupX}[1]{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \unvbox\@nameuse{mpfootins#1}}
+
+\newcommand{\normalbfnoteX}[2]{%
+  \ifnumberedpar@
+    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
+                       \to\inserts@list
+    \global\advance\insert@count \@ne
+  \fi\ignorespaces}
+
+\newcommand{\vbfnoteX}[3]{%
+  \@namedef{@thefnmark#1}{#3}%
+  \@nameuse{regvfootnote#1}{#1}{#2}}
+
+\newcommand{\vnumfootnoteX}[2]{%
+  \ifnumberedpar@
+    \edtext{}{\normalbfnoteX{#1}{#2}}%
+  \else
+    \@nameuse{regvfootnote#1}{#1}{#2}%
+  \fi}
+
+\newcommand*{\footnormalX}[1]{%
+  \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
+  \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
+  \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
+  \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
+  \expandafter\let\csname vfootnote#1\endcsname=\vnumfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\normalfootfmtX
+  \@namedef{footfootmark#1}{\normalfootfootmarkX{#1}}
+  \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
+  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
+  \count\csname footins#1\endcsname=1000
+  \dimen\csname footins#1\endcsname=\ledfootinsdim
+  \skip\csname footins#1\endcsname=1.2em \@plus .6em \@minus .6em
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
+  \count\csname mpfootins#1\endcsname=1000
+  \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
+  \skip\csname mpfootins#1\endcsname=1.2em \@plus .6em \@minus .6em
+}
+
+\newcommand*{\foottwocolX}[1]{%
+  \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
+  \twocolfootsetupX{#1}
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
+  \mptwocolfootsetupX{#1}}
+
+\newcommand*{\twocolfootsetupX}[1]{%
+  \count\csname footins#1\endcsname 500
+  \multiply\dimen\csname footins#1\endcsname by \tw@}
+\newcommand*{\mptwocolfootsetupX}[1]{%
+  \count\csname mpfootins#1\endcsname 500
+  \multiply\dimen\csname mpfootins#1\endcsname by \tw@}
+
+\newcommand*{\twocolvfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname\bgroup
+    \notefontsetup
+    \footsplitskips
+    \spaceskip=\z@skip \xspaceskip=\z@skip
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+\newcommand*{\twocolfootfmtX}[2]{%
+  \normal@pars
+  \hsize .45\hsize
+  \parindent=\z@
+%%%  \parfillskip=0pt \@plus 1fil
+  \tolerance=5000\relax
+  \raggedright
+  \leavevmode
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}\allowbreak}
+
+\newcommand*{\twocolfootgroupX}[1]{{\notefontsetup
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
+\newcommand*{\mptwocolfootgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
+
+\newcommand*{\footthreecolX}[1]{%
+  \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
+  \threecolfootsetupX{#1}
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
+  \mpthreecolfootsetupX{#1}}
+
+\newcommand*{\threecolfootsetupX}[1]{%
+  \count\csname footins#1\endcsname 333
+  \multiply\dimen\csname footins#1\endcsname by \thr@@}
+\newcommand*{\mpthreecolfootsetupX}[1]{%
+  \count\csname mpfootins#1\endcsname 333
+  \multiply\dimen\csname mpfootins#1\endcsname by \thr@@}
+
+\newcommand*{\threecolvfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname\bgroup
+    \notefontsetup
+    \footsplitskips
+    \@nameuse{footfmt#1}{#1}{#2}\egroup}
+
+\newcommand*{\threecolfootfmtX}[2]{%
+  \normal@pars
+  \hsize .3\hsize
+  \parindent=\z@
+%%%  \parfillskip=0pt \@plus 1fil
+  \tolerance=5000\relax
+  \raggedright
+  \leavevmode
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\strut\par}\allowbreak}
+
+\newcommand*{\threecolfootgroupX}[1]{{\notefontsetup
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
+\newcommand*{\mpthreecolfootgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
+
+\newcommand*{\footparagraphX}[1]{%
+  \expandafter\newcount\csname prevpage#1@num\endcsname
+  \expandafter\let\csname footstart#1\endcsname=\parafootstartX
+  \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
+  \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
+  \expandafter\let\csname footgroup#1\endcsname=\para@footgroupX
+  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
+  \count\csname footins#1\endcsname=1000
+  \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
+  \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
+  \count\csname mpfootins#1\endcsname=1000
+  \para@footsetupX{#1}}
+
+\newcommand*{\para@footsetupX}[1]{{\notefontsetup
+  \dimen0=\baselineskip
+  \multiply\dimen0 by 1024
+  \divide\dimen0 by \hsize \multiply\dimen0 by \footfudgefiddle\relax
+  \expandafter
+  \xdef\csname footfudgefactor#1\endcsname{%
+    \expandafter\strip@pt\dimen0 }}}
+
+\newcommand*{\parafootstartX}[1]{%
+  \vskip\skip\@nameuse{footins#1}%
+  \leftskip=\z@
+  \rightskip=\z@
+  \parindent=\z@
+  \vskip\skip\@nameuse{footins#1}%
+  \@nameuse{footnoterule#1}}
+
+\newcommand*{\para@vfootnoteX}[2]{%
+  \insert\csname footins#1\endcsname
+  \bgroup
+    \notefontsetup
+    \footsplitskips
+    \setbox0=\vbox{\hsize=\maxdimen
+      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
+    \setbox0=\hbox{\unvxh0[#1]}%
+    \dp0=\z@
+    \ht0=\csname footfudgefactor#1\endcsname\wd0
+    \box0
+    \penalty0
+  \egroup}
+\newcommand*{\mppara@vfootnoteX}[2]{%
+  \global\setbox\@nameuse{mpfootins#1}\vbox{%
+    \unvbox\@nameuse{mpfootins#1}
+    \notefontsetup
+    \footsplitskips
+    \setbox0=\vbox{\hsize=\maxdimen
+      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
+    \setbox0=\hbox{\unvxh0[#1]}%
+    \dp0=\z@
+    \ht0=\csname footfudgefactor#1\endcsname\wd0
+    \box0
+    \penalty0}}
+
+\newcommand*{\parafootfmtX}[2]{%
+  \insertparafootsep{#1}%
+  \ledsetnormalparstuff
+  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+    #2\penalty-10}}
+
+\newcommand*{\para@footgroupX}[1]{%
+  \unvbox\csname footins#1\endcsname
+  \makehboxofhboxes
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \notefontsetup
+  \noindent\unhbox0\par}
+\newcommand*{\mppara@footgroupX}[1]{{%
+  \vskip\skip\@nameuse{mpfootins#1}
+  \normalcolor
+  \@nameuse{footnoterule#1}
+  \unvbox\csname mpfootins#1\endcsname
+  \makehboxofhboxes
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \notefontsetup
+  \noindent\unhbox0\par}}
+
+
+\newcommand*{\doxtrafeeti}{%
+  \setbox\@outputbox \vbox{%
+    \unvbox\@outputbox
+    \ifvoid\footinsA\else\footstartA{A}\footgroupA{A}\fi
+    \ifvoid\footinsB\else\footstartB{B}\footgroupB{B}\fi
+    \ifvoid\footinsC\else\footstartC{C}\footgroupC{C}\fi
+  }}
+
+\newcommand{\doreinxtrafeeti}{%
+  \ifvoid\footinsA\else\insert\footinsA{\unvbox\footinsA}\fi
+  \ifvoid\footinsB\else\insert\footinsB{\unvbox\footinsB}\fi
+  \ifvoid\footinsC\else\insert\footinsC{\unvbox\footinsC}\fi
+  }
+
+\newcommand*{\addfootinsX}[1]{%
+  \footnormalX{#1}%
+  \g@addto@macro{\doxtrafeeti}{%
+    \setbox\@outputbox \vbox{%
+      \unvbox\@outputbox
+      \ifvoid\@nameuse{footins#1}\else
+        \@nameuse{footstart#1}{#1}\@nameuse{footgroup#1}{#1}\fi}}%
+  \g@addto@macro{\doreinxtrafeeti}{%
+    \ifvoid\@nameuse{footins#1}\else
+      \insert\@nameuse{footins#1}{\unvbox\@nameuse{footins#1}}\fi}%
+  \g@addto@macro{\l@dfambeginmini}{%
+    \expandafter\expandafter\expandafter\let\expandafter\expandafter
+      \csname footnote#1\endcsname \csname mpfootnote#1\endcsname}%
+  \g@addto@macro{\l@dfamendmini}{%
+    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1}{#1}\fi}%
+}
 \newcommand{\newseries}[1]{%
 \renewcommand{\do}[1]{\newseries@{##1}}%
 \docsvlist{#1}
@@ -1581,6 +1926,14 @@
      \expandafter\newinsert\csname #1footins\endcsname
      \expandafter\newinsert\csname mp#1footins\endcsname
 \footnormal{#1}
+\global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+  \stepcounter{footnote#1}%
+  \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+  \csuse{@footnotemark#1}
+  \csuse{vfootnote#1}{#1}{##1}\m@mmf@prepare}
+\newcounter{footnote#1}
+   \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+\footnormalX{#1}
      \listxadd{\@series}{#1}
 }
 }% End of \newseries
@@ -2156,400 +2509,6 @@
     \fi
   \fi}
 
-\providecommand*{\multiplefootnotemarker}{3sp}
-\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}
-
-\providecommand*{\m@mmf@prepare}{%
-  \kern-\multiplefootnotemarker
-  \kern\multiplefootnotemarker\relax}
-\providecommand*{\m@mmf@check}{%
-  \ifdim\lastkern=\multiplefootnotemarker\relax
-    \edef\@x@sf{\the\spacefactor}%
-    \unkern
-    \multfootsep
-    \spacefactor\@x@sf\relax
-  \fi}
-
-\@ifclassloaded{memoir}{}{%
-\let\l@dold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
-  \l@dold@footnotetext{#1}%
-  \m@mmf@prepare}
-\renewcommand*{\@footnotemark}{%
-  \leavevmode
-  \ifhmode
-    \edef\@x@sf{\the\spacefactor}%
-    \m@mmf@check
-    \nobreak
-  \fi
-  \@makefnmark
-  \m@mmf@prepare
-  \ifhmode\spacefactor\@x@sf\fi
-  \relax}
-}
-
-\let\l@doldold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
-  \ifnumberedpar@
-    \edtext{}{\l@dbfnote{#1}}%
-  \else
-    \l@doldold@footnotetext{#1}%
-  \fi}
-\newcommand{\l@dbfnote}[1]{%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dbfnote{{#1}}{\@thefnmark}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces}
-\newcommand{\vl@dbfnote}[2]{%
-  \def\@thefnmark{#2}%
-  \l@doldold@footnotetext{#1}}
-
-\newcommand{\footnoteA}[1]{%
-  \stepcounter{footnoteA}%
-  \protected@xdef\@thefnmarkA{\thefootnoteA}%
-  \@footnotemarkA
-  \vfootnoteA{A}{#1}\m@mmf@prepare}
-
-\newcounter{footnoteA}
-  \renewcommand{\thefootnoteA}{\arabic{footnoteA}}
-
-\newcommand*{\footfootmarkA}{\textsuperscript{\thefootnoteA}}
-
-\newcommand{\mpfootnoteA}[1]{%
-  \stepcounter{footnoteA}%
-  \protected@xdef\@thefnmarkA{\thefootnoteA}%
-  \@footnotemarkA
-  \mpvfootnoteA{A}{#1}\m@mmf@prepare}
-
-\newcommand*{\prebodyfootmark}{%
-  \leavevmode
-  \ifhmode
-    \edef\@x@sf{\the\spacefactor}%
-    \m@mmf@check
-    \nobreak
-  \fi}
-\newcommand{\postbodyfootmark}{%
-  \m@mmf@prepare
-  \ifhmode\spacefactor\@x@sf\fi\relax}
-
-\newcommand*{\normal@footnotemarkX}[1]{%
-  \prebodyfootmark
-  \@nameuse{bodyfootmark#1}%
-  \postbodyfootmark}
-
-\newcommand*{\normalbodyfootmarkX}[1]{%
-  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmark#1}}}}
-\newcommand*{\normalvfootnoteX}[2]{%
-  \insert\@nameuse{footins#1}\bgroup
-    \notefontsetup
-    \footsplitskips
-    \spaceskip=\z@skip \xspaceskip=\z@skip
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-\newcommand*{\mpnormalvfootnoteX}[2]{%
-  \global\setbox\@nameuse{mpfootins#1}\vbox{%
-    \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
-    \hsize\columnwidth
-    \@parboxrestore
-    \color@begingroup
-    \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}}
-
-\newcommand*{\normalfootfmtX}[2]{%
-  \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}}
-
-\newcommand*{\normalfootfootmarkX}[1]{%
-  \textsuperscript{\@nameuse{@thefnmark#1}}}
-
-\newcommand*{\normalfootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
-  \leftskip=\z@
-  \rightskip=\z@
-  \@nameuse{footnoterule#1}}
-
-\let\normalfootnoteruleX=\footnoterule
-
-\newcommand*{\normalfootgroupX}[1]{%
-  \unvbox\@nameuse{footins#1}}
-
-\newcommand*{\mpnormalfootgroupX}[1]{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \unvbox\@nameuse{mpfootins#1}}
-
-\newcommand{\normalbfnoteX}[2]{%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces}
-
-\newcommand{\vbfnoteX}[3]{%
-  \@namedef{@thefnmark#1}{#3}%
-  \@nameuse{regvfootnote#1}{#1}{#2}}
-
-\newcommand{\vnumfootnoteX}[2]{%
-  \ifnumberedpar@
-    \edtext{}{\normalbfnoteX{#1}{#2}}%
-  \else
-    \@nameuse{regvfootnote#1}{#1}{#2}%
-  \fi}
-
-\newcommand*{\footnormalX}[1]{%
-  \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
-  \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
-  \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
-  \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
-  \expandafter\let\csname vfootnote#1\endcsname=\vnumfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\normalfootfmtX
-  \@namedef{footfootmark#1}{\normalfootfootmarkX{#1}}
-  \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
-  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
-  \count\csname footins#1\endcsname=1000
-  \dimen\csname footins#1\endcsname=\ledfootinsdim
-  \skip\csname footins#1\endcsname=1.2em \@plus .6em \@minus .6em
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
-  \count\csname mpfootins#1\endcsname=1000
-  \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
-  \skip\csname mpfootins#1\endcsname=1.2em \@plus .6em \@minus .6em
-}
-
-\newcommand*{\foottwocolX}[1]{%
-  \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
-  \twocolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
-  \mptwocolfootsetupX{#1}}
-
-\newcommand*{\twocolfootsetupX}[1]{%
-  \count\csname footins#1\endcsname 500
-  \multiply\dimen\csname footins#1\endcsname by \tw@}
-\newcommand*{\mptwocolfootsetupX}[1]{%
-  \count\csname mpfootins#1\endcsname 500
-  \multiply\dimen\csname mpfootins#1\endcsname by \tw@}
-
-\newcommand*{\twocolvfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
-    \footsplitskips
-    \spaceskip=\z@skip \xspaceskip=\z@skip
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-\newcommand*{\twocolfootfmtX}[2]{%
-  \normal@pars
-  \hsize .45\hsize
-  \parindent=\z@
-%%%  \parfillskip=0pt \@plus 1fil
-  \tolerance=5000\relax
-  \raggedright
-  \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}\allowbreak}
-
-\newcommand*{\twocolfootgroupX}[1]{{\notefontsetup
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
-\newcommand*{\mptwocolfootgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
-
-\newcommand*{\footthreecolX}[1]{%
-  \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
-  \threecolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
-  \mpthreecolfootsetupX{#1}}
-
-\newcommand*{\threecolfootsetupX}[1]{%
-  \count\csname footins#1\endcsname 333
-  \multiply\dimen\csname footins#1\endcsname by \thr@@}
-\newcommand*{\mpthreecolfootsetupX}[1]{%
-  \count\csname mpfootins#1\endcsname 333
-  \multiply\dimen\csname mpfootins#1\endcsname by \thr@@}
-
-\newcommand*{\threecolvfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
-    \footsplitskips
-    \@nameuse{footfmt#1}{#1}{#2}\egroup}
-
-\newcommand*{\threecolfootfmtX}[2]{%
-  \normal@pars
-  \hsize .3\hsize
-  \parindent=\z@
-%%%  \parfillskip=0pt \@plus 1fil
-  \tolerance=5000\relax
-  \raggedright
-  \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\strut\par}\allowbreak}
-
-\newcommand*{\threecolfootgroupX}[1]{{\notefontsetup
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
-\newcommand*{\mpthreecolfootgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
-
-\newcommand*{\footparagraphX}[1]{%
-  \expandafter\newcount\csname prevpage#1@num\endcsname
-  \expandafter\let\csname footstart#1\endcsname=\parafootstartX
-  \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
-  \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
-  \expandafter\let\csname footgroup#1\endcsname=\para@footgroupX
-  \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
-  \count\csname footins#1\endcsname=1000
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
-  \count\csname mpfootins#1\endcsname=1000
-  \para@footsetupX{#1}}
-
-\newcommand*{\para@footsetupX}[1]{{\notefontsetup
-  \dimen0=\baselineskip
-  \multiply\dimen0 by 1024
-  \divide\dimen0 by \hsize \multiply\dimen0 by \footfudgefiddle\relax
-  \expandafter
-  \xdef\csname footfudgefactor#1\endcsname{%
-    \expandafter\strip@pt\dimen0 }}}
-
-\newcommand*{\parafootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
-  \leftskip=\z@
-  \rightskip=\z@
-  \parindent=\z@
-  \vskip\skip\@nameuse{footins#1}%
-  \@nameuse{footnoterule#1}}
-
-\newcommand*{\para@vfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname
-  \bgroup
-    \notefontsetup
-    \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
-    \setbox0=\hbox{\unvxh0[#1]}%
-    \dp0=\z@
-    \ht0=\csname footfudgefactor#1\endcsname\wd0
-    \box0
-    \penalty0
-  \egroup}
-\newcommand*{\mppara@vfootnoteX}[2]{%
-  \global\setbox\@nameuse{mpfootins#1}\vbox{%
-    \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
-    \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
-    \setbox0=\hbox{\unvxh0[#1]}%
-    \dp0=\z@
-    \ht0=\csname footfudgefactor#1\endcsname\wd0
-    \box0
-    \penalty0}}
-
-\newcommand*{\parafootfmtX}[2]{%
-  \insertparafootsep{#1}%
-  \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
-    #2\penalty-10}}
-
-\newcommand*{\para@footgroupX}[1]{%
-  \unvbox\csname footins#1\endcsname
-  \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
-  \noindent\unhbox0\par}
-\newcommand*{\mppara@footgroupX}[1]{{%
-  \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
-  \unvbox\csname mpfootins#1\endcsname
-  \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
-  \noindent\unhbox0\par}}
-
-\newcommand{\footnoteB}[1]{%
-  \stepcounter{footnoteB}%
-  \protected@xdef\@thefnmarkB{\thefootnoteB}%
-  \@footnotemarkB
-  \vfootnoteB{B}{#1}\m@mmf@prepare}
-
-\newcounter{footnoteB}
-  \renewcommand{\thefootnoteB}{\arabic{footnoteB}}
-
-\newcommand{\mpfootnoteB}[1]{%
-  \stepcounter{footnoteB}%
-  \protected@xdef\@thefnmarkB{\thefootnoteB}%
-  \@footnotemarkB
-  \mpvfootnoteB{B}{#1}\m@mmf@prepare}
-
-\newcommand{\footnoteC}[1]{%
-  \stepcounter{footnoteC}%
-  \protected@xdef\@thefnmarkC{\thefootnoteC}%
-  \@footnotemarkC
-  \vfootnoteC{C}{#1}\m@mmf@prepare}
-\newcounter{footnoteC}
-  \renewcommand{\thefootnoteC}{\arabic{footnoteC}}
-
-\newcommand{\mpfootnoteC}[1]{%
-  \stepcounter{footnoteC}%
-  \protected@xdef\@thefnmarkC{\thefootnoteC}%
-  \@footnotemarkC
-  \mpvfootnoteC{C}{#1}\m@mmf@prepare}
-
-\footnormalX{A}
-\footnormalX{B}
-\footnormalX{C}
-
-\newcommand*{\doxtrafeeti}{%
-  \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox
-    \ifvoid\footinsA\else\footstartA{A}\footgroupA{A}\fi
-    \ifvoid\footinsB\else\footstartB{B}\footgroupB{B}\fi
-    \ifvoid\footinsC\else\footstartC{C}\footgroupC{C}\fi
-  }}
-
-\newcommand{\doreinxtrafeeti}{%
-  \ifvoid\footinsA\else\insert\footinsA{\unvbox\footinsA}\fi
-  \ifvoid\footinsB\else\insert\footinsB{\unvbox\footinsB}\fi
-  \ifvoid\footinsC\else\insert\footinsC{\unvbox\footinsC}\fi
-  }
-
-\newcommand*{\addfootinsX}[1]{%
-  \footnormalX{#1}%
-  \g@addto@macro{\doxtrafeeti}{%
-    \setbox\@outputbox \vbox{%
-      \unvbox\@outputbox
-      \ifvoid\@nameuse{footins#1}\else
-        \@nameuse{footstart#1}{#1}\@nameuse{footgroup#1}{#1}\fi}}%
-  \g@addto@macro{\doreinxtrafeeti}{%
-    \ifvoid\@nameuse{footins#1}\else
-      \insert\@nameuse{footins#1}{\unvbox\@nameuse{footins#1}}\fi}%
-  \g@addto@macro{\l@dfambeginmini}{%
-    \expandafter\expandafter\expandafter\let\expandafter\expandafter
-      \csname footnote#1\endcsname \csname mpfootnote#1\endcsname}%
-  \g@addto@macro{\l@dfamendmini}{%
-    \ifvoid\@nameuse{mpfootins#1}\else\@nameuse{mpfootgroup#1}{#1}\fi}%
-}
 \newcommand*{\l@dfeetbeginmini}{\l@dedbeginmini\l@dfambeginmini}
 \newcommand*{\l@dfeetendmini}{\l@dedendmini\l@dfamendmini}
 
@@ -2570,14 +2529,11 @@
   }
 
 \newcommand*{\l@dfambeginmini}{%
-  \let\footnoteA=\mpfootnoteA%
-  \let\footnoteB=\mpfootnoteB%
-  \let\footnoteC=\mpfootnoteC}
+   \renewcommand{\do}[1]{\csletcs{vfootnote##1}{mpvfootnote##1}}%
+   \dolistloop{\@series}}
 \newcommand*{\l@dfamendmini}{%
-  \ifvoid\mpfootinsA\else\mpfootgroupA{A}\fi%
-  \ifvoid\mpfootinsB\else\mpfootgroupB{B}\fi%
-  \ifvoid\mpfootinsC\else\mpfootgroupC{C}\fi}
-
+  \renewcommand{\do}[1]{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
+  \dolistloop{\@series}}
 \def\@iiiminipage#1#2[#3]#4{%
   \leavevmode
   \@pboxswfalse
