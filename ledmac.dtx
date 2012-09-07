@@ -8453,6 +8453,30 @@
 %    \begin{macrocode}
 	\footnormalX{#1}
 %    \end{macrocode}
+% 7) The endnote
+% The \cs{Xendnote} macro functions to
+% write one endnote to the \file{.end} file. We change
+% \cs{newlinechar} so that in the file every space becomes the
+% start of a new line; this generally ensures that a long note doesn't
+% exceed restrictions on the length of lines in files.
+% \begin{macrocode}
+ \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
+                \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
+                {\ifnumberedpar@\l@d@nums\fi}%
+               {\ifnumberedpar@\csexpandonce{@tag}\fi}{##1}}}\ignorespaces}
+% \end{macrocode}
+% \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
+% \verb"footfmt" commands above, and they take the same arguments.
+% When we process this file, we'll want to pick out the notes of one
+% series and ignore all the rest. To do that, we equate the \verb"end"
+% command for the series we want to \cs{endprint}, and leave the
+% rest equated to \cs{@gobblethree}, which just skips over its three
+% arguments.\footnote{Christophe Hebeisen (\texttt{christophe.hebeisen@a3.epfl.ch})
+% emailed on 2003/11/05 to say he had found that \cs{@gobblethree} was also
+% defined in the amsfonts package.}
+% \begin{macrocode}
+	\global\csletcs{#1end}{@gobblethree}
+%\end{macrocode}
 % 6) Stock in \@series
 % \begin{macrocode}
     	\listxadd{\@series}{#1}
@@ -9520,72 +9544,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\Aendnote}
-% \begin{macro}{\Bendnote}
-% \begin{macro}{\Cendnote}
-% \begin{macro}{\Dendnote}
-% \begin{macro}{\Eendnote}
-% The following five macros each function to
-% write one endnote to the \file{.end} file. Like the footnotes, these
-% endnotes come in five series, \texttt{A} through \texttt{E}. We change
-% \cs{newlinechar} so that in the file every space becomes the
-% start of a new line; this generally ensures that a long note doesn't
-% exceed restrictions on the length of lines in files.
-%    \begin{macrocode}
-\newcommand*{\Aendnote}[1]{{\newlinechar='40
-       \immediate\write\l@d@end{\string\Aend%
-                {\ifnumberedpar@\l@d@nums\fi}%
-                {\ifnumberedpar@\@tag\fi}{#1}}}\ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Bendnote}[1]{{\newlinechar='40
-       \immediate\write\l@d@end{\string\Bend%
-                {\ifnumberedpar@\l@d@nums\fi}%
-                {\ifnumberedpar@\@tag\fi}{#1}}}\ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Cendnote}[1]{{\newlinechar='40
-       \immediate\write\l@d@end{\string\Cend%
-                {\ifnumberedpar@\l@d@nums\fi}%
-                {\ifnumberedpar@\@tag\fi}{#1}}}\ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Dendnote}[1]{{\newlinechar='40
-       \immediate\write\l@d@end{\string\Dend%
-                {\ifnumberedpar@\l@d@nums\fi}%
-                {\ifnumberedpar@\@tag\fi}{#1}}}\ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Eendnote}[1]{{\newlinechar='40
-       \immediate\write\l@d@end{\string\Eend%
-                {\ifnumberedpar@\l@d@nums\fi}%
-                {\ifnumberedpar@\@tag\fi}{#1}}}\ignorespaces}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\Aend}
-% \begin{macro}{\Bend}
-% \begin{macro}{\Cend}
-% \begin{macro}{\Dend}
-% \begin{macro}{\Eend}
 % \begin{macro}{\endprint}
 % \begin{macro}{\@gobblethree}
 % \begin{macro}{\l@d@section}
-% \cs{Aendnote} and the like write commands called \cs{Aend} and
-% so on to the endnote file; these are analogous to the various
-% \verb"footfmt" commands above, and they take the same arguments.
-% When we process this file, we'll want to pick out the notes of one
-% series and ignore all the rest. To do that, we equate the \verb"end"
-% command for the series we want to \cs{endprint}, and leave the
-% rest equated to \cs{@gobblethree}, which just skips over its three
-% arguments.\footnote{Christophe Hebeisen (\texttt{christophe.hebeisen@a3.epfl.ch})
-% emailed on 2003/11/05 to say he had found that \cs{@gobblethree} was also
-% defined in the amsfonts package.} The \cs{endprint} here is nearly identical in its
+% The \cs{endprint} here is nearly identical in its
 % functioning to \cs{normalfootfmt}.
 %
 % The endnote file also contains \cs{l@d@section} commands, which
@@ -9598,19 +9560,10 @@
 \def\endprint#1#2#3{{\notefontsetup{\notenumfont\printendlines#1|}%
       \enspace{\select@lemmafont#1|#2}\enskip#3\par}}
 \providecommand*{\@gobblethree}[3]{}
-\let\Aend=\@gobblethree
-\let\Bend=\@gobblethree
-\let\Cend=\@gobblethree
-\let\Dend=\@gobblethree
-\let\Eend=\@gobblethree
+
 \let\l@d@section=\@gobble
 
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
