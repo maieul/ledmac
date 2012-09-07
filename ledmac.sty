@@ -21,53 +21,6 @@
 %%   This work has the LPPL maintenance status "maintained".
 %% 
 %%   This work consists of the files listed in the README file.
-
-\newcommand{\newfootnoteseries}[1]{
-     \expandafter\newinsert\csname mpfootins#1\endcsname
-    \expandafter\newinsert\csname footins#1\endcsname
-    \expandafter\newinsert\csname #1footins\endcsname
-    \expandafter\newinsert\csname mp#1footins\endcsname
-    \footnormal{#1}
-     \global\expandafter\newcommand\csname #1footnote\endcsname[2][\relax]{%
-          \forcsvlist{\listadd\options}{##1}% Made a list of options
-          \ifinlist{nonum}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nonumberthisnote@}}\to\inserts@list}{}%
-          \ifinlist{nosep}{\options}{\xright@appenditem{\global\noexpand\toggletrue{nolemmaseparatorthisnote@}}\to\inserts@list}{}%
-           \ifnumberedpar@
-                \xright@appenditem{\noexpand\csuse{v#1footnote}{#1}%
-                   {{\l@d@nums}{\@tag}{##2}}}\to\inserts@list
-                   \global\advance\insert@count \@ne
-           \else
-               \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##2}}%
-      \fi%
-          \xright@appenditem{\global\noexpand\togglefalse{nolemmaseparatorthisnote@}}\to\inserts@list%
-          \xright@appenditem{\global\noexpand\togglefalse{nonumberthisnote@}}\to\inserts@list%
-      \ignorespaces}
-
-    \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
-                \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-                {\ifnumberedpar@\l@d@nums\fi}%
-               {\ifnumberedpar@\@tag\fi}{##1}}}\ignorespaces}
-
-  \global\expandafter\newcommand\expandafter*\csname mp#1footnote\endcsname[1]{%
-      \ifnumberedpar@
-        \xright@appenditem{\noexpand\csuse{mpv#1footnote}{#1}%
-                   {{\l@d@nums}{\@tag}{##1}}}\to\inserts@list
-        \global\advance\insert@count \@ne
-      \else
-        \csuse{mpv#1footnote}{E}{{0|0|0|0|0|0|0}{}{##1}}%
-      \fi\ignorespaces}
-  \newcounter{footnote#1}
-
-  \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
-  \global\expandafter\newcommand\expandafter*\csname footfootmark#1\endcsname{\textsuperscript{\csuse{thefootnote#1}}}
-  \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
-      \global\stepcounter{footnote#1}%
-      \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-      \csuse{@footnotemark#1}%
-      \csuse{vfootnote#1}{#1}{##1}\m@mmf@prepare}
-  \footnormalX{#1}
-}
-
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{ledmac}[2012/09/05 v0.18.2 LaTeX port of EDMAC]
 
@@ -1727,13 +1680,22 @@
   \expandafter
   \rigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
 
-\newtoggle{numberonlyfirstinline@A}
-\newtoggle{numberonlyfirstinline@B}
-\newtoggle{numberonlyfirstinline@C}
-\newtoggle{numberonlyfirstinline@D}
-\newtoggle{numberonlyfirstinline@E}
-\newtoggle{numberonlyfirstinline@Z}
-
+\newcommand{\newseries}[1]{
+    \newtoggle{numberonlyfirstinline@#1}%
+    \csgdef{symlinenum@#1}{\symplinenum}%
+    \newtoggle{nonumberinfootnote@#1}%
+    \csgdef{beforenumberinfootnote@#1}{0pt}%
+    \csgdef{afternumberinfootnote@#1}{0.5em}%
+    \csgdef{beforesymlinenum@#1}{\csuse{beforenumberinfootnote@#1}}%
+    \csgdef{aftersymlinenum@#1}{\csuse{afternumberinfootnote@#1}}%
+    \csgdef{inplaceofnumber@#1}{1em}%
+    \global\cslet{lemmaseparator@#1}{\rbracket}%
+    \csgdef{beforelemmaseparator@#1}{0em}%
+    \csgdef{afterlemmaseparator@#1}{0.5em}%
+    \csgdef{inplaceoflemmaseparator@#1}{1em}%
+    \csgdef{afternote@#1}{1em plus.4em minus.4em}%
+    \csgdef{parafootsep@#1}{\parafootftmsep}%
+}% End of \newseries
 \newcommandx{\numberonlyfirstinline}[2][1,2={true}]{%
    \ifstrempty{#1}{
       \settoggle{numberonlyfirstinline@A}{#2}
@@ -1749,12 +1711,6 @@
 \newif\ifledplinenum
   \ledplinenumtrue
 \newcommand*{\symplinenum}{}
-\def\symlinenum@A{\symplinenum}
-\def\symlinenum@B{\symplinenum}
-\def\symlinenum@C{\symplinenum}
-\def\symlinenum@D{\symplinenum}
-\def\symlinenum@E{\symplinenum}
-\def\symlinenum@Z{\symplinenum}
 \newcommandx{\symlinenum}[2][1]{%
     \ifstrequal{#1}{}% If arg 1 is empty
     {%
@@ -1769,12 +1725,6 @@
         \csdef{symlinenum@#1}{#2}%
     }
 }
-\newtoggle{nonumberinfootnote@A}
-\newtoggle{nonumberinfootnote@B}
-\newtoggle{nonumberinfootnote@C}
-\newtoggle{nonumberinfootnote@D}
-\newtoggle{nonumberinfootnote@E}
-\newtoggle{nonumberinfootnote@Z}
 \newcommandx{\nonumberinfootnote}[2][1,2={true}]{%
    \ifstrempty{#1}{
       \settoggle{nonumberinfootnote@A}{#2}
@@ -1789,12 +1739,6 @@
 }
 \newtoggle{nonum@}
 \newtoggle{nosep@}
-\def\beforenumberinfootnote@A{0pt}
-\def\beforenumberinfootnote@B{0pt}
-\def\beforenumberinfootnote@C{0pt}
-\def\beforenumberinfootnote@D{0pt}
-\def\beforenumberinfootnote@E{0pt}
-\def\beforenumberinfootnote@Z{0pt}
 \newcommandx*{\beforenumberinfootnote}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1809,12 +1753,6 @@
             \csdef{beforenumberinfootnote@#1}{#2}%
         }%
 }
-\def\afternumberinfootnote@A{0.5em}
-\def\afternumberinfootnote@B{0.5em}
-\def\afternumberinfootnote@C{0.5em}
-\def\afternumberinfootnote@D{0.5em}
-\def\afternumberinfootnote@E{0.5em}
-\def\afternumberinfootnote@Z{0.5em}
 \newcommandx*{\afternumberinfootnote}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1829,12 +1767,6 @@
             \csdef{afternumberinfootnote@#1}{#2}%
         }%
 }
-\def\beforesymlinenum@A{\beforenumberinfootnote@A}
-\def\beforesymlinenum@B{\beforenumberinfootnote@B}
-\def\beforesymlinenum@C{\beforenumberinfootnote@C}
-\def\beforesymlinenum@D{\beforenumberinfootnote@D}
-\def\beforesymlinenum@E{\beforenumberinfootnote@E}
-\def\beforesymlinenum@Z{\beforenumberinfootnote@Z}
 \newcommandx*{\beforesymlinenum}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1849,12 +1781,6 @@
             \csdef{beforesymlinenum@#1}{#2}%
         }%
 }
-\def\aftersymlinenum@A{\afternumberinfootnote@A}
-\def\aftersymlinenum@B{\afternumberinfootnote@B}
-\def\aftersymlinenum@C{\afternumberinfootnote@C}
-\def\aftersymlinenum@D{\afternumberinfootnote@D}
-\def\aftersymlinenum@E{\afternumberinfootnote@E}
-\def\aftersymlinenum@Z{\afternumberinfootnote@Z}
 \newcommandx*{\aftersymlinenum}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1869,12 +1795,6 @@
             \csdef{aftersymlinenum@#1}{#2}%
         }%
 }
-\def\inplaceofnumber@A{1em}
-\def\inplaceofnumber@B{1em}
-\def\inplaceofnumber@C{1em}
-\def\inplaceofnumber@D{1em}
-\def\inplaceofnumber@E{1em}
-\def\inplaceofnumber@Z{1em}
 \newcommandx*{\inplaceofnumber}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1889,13 +1809,6 @@
             \csdef{inplaceofnumber@#1}{#2}%
         }%
 }
-\let\lemmaseparator@A\rbracket
-\let\lemmaseparator@B\rbracket
-\let\lemmaseparator@C\rbracket
-\let\lemmaseparator@D\rbracket
-\let\lemmaseparator@E\rbracket
-\let\lemmaseparator@E\rbracket
-\let\lemmaseparator@Z\rbracket
 \newcommandx*{\lemmaseparator}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1910,12 +1823,6 @@
             \csdef{lemmaseparator@#1}{#2}%
         }%
 }
-\def\beforelemmaseparator@A{0em}
-\def\beforelemmaseparator@B{0em}
-\def\beforelemmaseparator@C{0em}
-\def\beforelemmaseparator@D{0em}
-\def\beforelemmaseparator@E{0em}
-\def\beforelemmaseparator@Z{0em}
 \newcommandx*{\beforelemmaseparator}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1930,12 +1837,6 @@
             \csdef{beforelemmaseparator@#1}{#2}%
         }%
 }
-\def\afterlemmaseparator@A{0.5em}
-\def\afterlemmaseparator@B{0.5em}
-\def\afterlemmaseparator@C{0.5em}
-\def\afterlemmaseparator@D{0.5em}
-\def\afterlemmaseparator@E{0.5em}
-\def\afterlemmaseparator@Z{0.5em}
 \newcommandx*{\afterlemmaseparator}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1951,12 +1852,6 @@
         }%
 }
 \newcommandx*{\nolemmaseparator}[1][1]{\lemmaseparator[#1]{}}
-\def\inplaceoflemmaseparator@A{1em}
-\def\inplaceoflemmaseparator@B{1em}
-\def\inplaceoflemmaseparator@C{1em}
-\def\inplaceoflemmaseparator@D{1em}
-\def\inplaceoflemmaseparator@E{1em}
-\def\inplaceoflemmaseparator@Z{1em}
 \newcommandx*{\inplaceoflemmaseparator}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1971,12 +1866,6 @@
             \csdef{inplaceoflemmaseparator@#1}{#2}%
         }%
 }
-\def\afternote@A{1em plus.4em minus.4em}
-\def\afternote@B{1em plus.4em minus.4em}
-\def\afternote@C{1em plus.4em minus.4em}
-\def\afternote@D{1em plus.4em minus.4em}
-\def\afternote@E{1em plus.4em minus.4em}
-\def\afternote@Z{1em plus.4em minus.4em}
 \newcommandx*{\afternote}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
@@ -1996,12 +1885,6 @@
              {\notefontsetup\global\ipn@skip=#1 \relax}}
 \interparanoteglue{1em plus.4em minus.4em}
 \newcommand{\parafootftmsep}{}
-\def\parafootsep@A{\parafootftmsep}
-\def\parafootsep@B{\parafootftmsep}
-\def\parafootsep@C{\parafootftmsep}
-\def\parafootsep@D{\parafootftmsep}
-\def\parafootsep@E{\parafootftmsep}
-\def\parafootsep@Z{\parafootftmsep}
 \newcommandx*{\parafootsep}[2][1,usedefault]{%
     \ifstrequal{#1}{}% If arg 1 is empty
         {%
