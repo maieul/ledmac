@@ -6495,109 +6495,6 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\Afootnote}
-% The outer-level footnote commands will look familiar: they're
-% just called \cs{Afootnote}, \cs{Bfootnote}, etc., instead of
-% plain \cs{footnote}. What they do, however, is quite different,
-% since they have to operate in conjunction with \cs{critext} when
-% numbering is in effect.
-%
-% If we're within a line-numbered paragraph, then, we tack this note onto
-% the \cs{inserts@list} list, and increment the deferred-page-bottom-note
-% counter.
-%    \begin{macrocode}
-\newcommand*{\Afootnote}[2][]{%
-  \newcommand{\content}{#2}%
-   \footnoteoptions@{#1}{true}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vAfootnote{A}%
-                   {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
-    \global\advance\insert@count \@ne
-%    \end{macrocode}
-%
-% Within free text, there's no need to put off making the insertion
-% for this note. No line numbers are available, so this isn't generally
-% that useful; but you might want to use it to get around some
-% limitation of \Ledmac.
-%    \begin{macrocode}
-  \else
-    \vAfootnote{A}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
-  \fi%
-\footnoteoptions@{#1}{false}%
-  \ignorespaces}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\Bfootnote}
-% \begin{macro}{\Cfootnote}
-% \begin{macro}{\Dfootnote}
-% \begin{macro}{\Efootnote}
-% We need similar commands for the other footnote series.
-%    \begin{macrocode}
-\newcommand*{\Bfootnote}[2][]{%
-  \newcommand{\content}{#2}%
-   \footnoteoptions@{#1}{true}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vBfootnote{B}%
-                   {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
-    \global\advance\insert@count \@ne%
-    \footnoteoptions@{#1}{false}%
-  \else
-    \vBfootnote{B}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
-  \fi%
-\footnoteoptions@{#1}{false}%
-  \ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Cfootnote}[2][]{%
-  \newcommand{\content}{#2}%
-  \footnoteoptions@{#1}{true}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vCfootnote{C}%
-                   {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
-    \global\advance\insert@count \@ne%
-    \footnoteoptions@{#1}{false}%
-  \else
-    \vCfootnote{C}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
-  \fi%
-\footnoteoptions@{#1}{false}%
-  \ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Dfootnote}[2][]{%
-  \newcommand{\content}{#2}%
-   \footnoteoptions@{#1}{true}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vDfootnote{D}%
-                   {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
-    \global\advance\insert@count \@ne%
-    \footnoteoptions@{#1}{false}%
-  \else
-    \vDfootnote{D}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
-  \fi%
-\footnoteoptions@{#1}{false}%
-  \ignorespaces}
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand*{\Efootnote}[2][]{%
-  \newcommand{\content}{#2}%
-   \footnoteoptions@{#1}{true}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vEfootnote{E}%
-                   {{\l@d@nums}{\csexpandonce{@tag}}{{\csexpandonce{content}}}}}\to\inserts@list
-    \global\advance\insert@count \@ne%
-    \footnoteoptions@{#1}{false}%
-  \else
-    \vEfootnote{E}{{0|0|0|0|0|0|0}{}{{\csexpandonce{content}}}}%
-  \fi%
-\footnoteoptions@{#1}{false}%
-  \ignorespaces}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 %
 % \begin{PW}
 % \begin{macro}{\mpAfootins}
@@ -7937,7 +7834,29 @@
 	    \csgdef{afternote@#1}{1em plus.4em minus.4em}%
 	    \csgdef{parafootsep@#1}{\parafootftmsep}
 %    \end{macrocode}
-% 2) Stock in \@series
+% 2) Create #1footnote series
+% \begin{macrocode}
+		\global\expandafter\newcommand\expandafter *\csname #1footnote\endcsname[2][]{%
+			\newcommand{\content}{##2}%
+			  \ifnumberedpar@
+			    \ifledRcol%
+			      \footnoteoptions@[R]{##1}{true}%
+			      \xright@appenditem{\noexpand\vBfootnote{1}%
+			                     {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@listR
+			        \footnoteoptions@[R]{##1}{false}%
+			       \global\advance\insert@countR \@ne%
+			    \else%
+			       \footnoteoptions@{##1}{true}%
+			      \xright@appenditem{\noexpand\vBfootnote{#1}%
+			                     {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
+			      \global\advance\insert@count \@ne%
+			      \footnoteoptions@{##1}{false}%
+			    \fi
+			  \else
+			    \vBfootnote{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+			  \fi\ignorespaces}
+% \end{macrocode}
+% 3) Stock in \@series
 % \begin{macrocode}
     	\listxadd{\@series}{#1}
 	}
