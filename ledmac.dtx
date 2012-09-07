@@ -1234,7 +1234,7 @@
 % \label{displayoptions}
 % \changes{v0.18}{2012/08/30}{New generic commands to customize footnote display.}
 % \changes{v0.18.1}{2012/09/02}{\cs{nosum} deleted.}
-% Since version 0.18, some commands can be used to change display of footnote. All can have a optional argument, which is the letter of the series which option is applied.
+% Since version 0.18, some commands can be used to change display of footnote. All can have a optional argument, which is the letter of the series, or a list of letters separated by comma, which option is applied.
 %
 % When a length is used, it can be stretchable : \verb|a minus b minus c|. The final length |m| is calculated by \LaTeX to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to fontsize of the footnote. 
 %
@@ -7937,22 +7937,41 @@
 % \end{command}
 % \subsection{Display}
 % \subsubsection{Options}
+% \begin{command}{\settoggle@series} 
+% \cs{settoggle@series}\cs{series}{toggle}{value} is a generic command to switch one toggle for one series.
+% \begin{macrocode}
+\newcommand{\settoggle@series}[3]{%
+	\renewcommand{\do}[1]{\settoggle{#2@##1}{#3}}
+	\ifstrempty{#1}{%
+      		\dolistloop{\@series}%
+   	}%
+	{%
+      		\docsvlist{#1}%
+   	}%
+}
+% \end{macrocode}
+% \end{command}
+% \begin{command}{\setcommand@series} 
+% \cs{setcommand@series}\cs{series}{command}{value} is a generic command to change one command for one series.
+% \begin{macrocode}
+\newcommand{\setcommand@series}[3]{%
+	\renewcommand{\do}[1]{\csgdef{#2@##1}{#3}}
+	\ifstrempty{#1}{%
+      		\dolistloop{\@series}%
+	}%
+	{%
+      		\docsvlist{#1}%
+	}%
+}%
+% \end{macrocode}
+% \end{command}
 % \changes{v0.18}{2012/08/30}{New generic commands to customize footnote display.}
 % \cs{numberonlyfistinline}\oarg{series}\oarg{position} is used to print line number only in the first time. It set to true the \cs{ifnumberonlyfirstinline@series} toggle.
 % \begin{macro}{\numberonlyfirstinline}
 %  \begin{macrocode}
 \newcommandx{\numberonlyfirstinline}[2][1,2={true}]{%
-   \ifstrempty{#1}{
-      \settoggle{numberonlyfirstinline@A}{#2}
-      \settoggle{numberonlyfirstinline@B}{#2}
-      \settoggle{numberonlyfirstinline@C}{#2}
-      \settoggle{numberonlyfirstinline@D}{#2}
-      \settoggle{numberonlyfirstinline@E}{#2}
-   }
-   {
-      \settoggle{numberonlyfirstinline@#1}{#2}
-   }
-}
+ 	\settoggle@series{#1}{numberonlyfirstinline}{#2}
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\ifledplinenum}
@@ -7971,18 +7990,7 @@
 % \cs{symlinenum} is used to print a symbol in place of line number, in conjonction with \cs{numberonlyfirstinline}.
 %   \begin{macrocode}
 \newcommandx{\symlinenum}[2][1]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-    {%
-        \csdef{symlinenum@A}{#2}%
-        \csdef{symlinenum@B}{#2}%
-        \csdef{symlinenum@C}{#2}%
-        \csdef{symlinenum@D}{#2}%
-        \csdef{symlinenum@E}{#2}%
-        \csdef{symlinenum@Z}{#2}%
-    }%
-    {%
-        \csdef{symlinenum@#1}{#2}%
-    }
+    \setcommand@series{#1}{symlinenum}{#2}%
 }
 %   \end{macrocode}
 % \end{macro}
@@ -7990,16 +7998,7 @@
 % \cs{nonumberinfootnote}\oarg{series}\oarg{position} is used to disable line number printing in footnotes. It sets to true the \cs{nonumberinfootnote@series} toggle.
 %    \begin{macrocode}
 \newcommandx{\nonumberinfootnote}[2][1,2={true}]{%
-   \ifstrempty{#1}{
-      \settoggle{nonumberinfootnote@A}{#2}
-      \settoggle{nonumberinfootnote@B}{#2}
-      \settoggle{nonumberinfootnote@C}{#2}
-      \settoggle{nonumberinfootnote@D}{#2}
-      \settoggle{nonumberinfootnote@E}{#2}
-   }
-   {
-      \settoggle{nonumberinfootnote@#1}{#2}
-   }
+      \settoggle@series{#1}{nonumberinfootnote}{#2}%
 }
 %    \end{macrocode}
 %  \end{macro}
@@ -8019,18 +8018,7 @@
 % \cs{beforenumberinfootnote}\oarg{series}\marg{length} is used to add glue before line number printing in footnotes.
 %    \begin{macrocode}
 \newcommandx*{\beforenumberinfootnote}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{beforenumberinfootnote@A}{#2}%
-            \csdef{beforenumberinfootnote@B}{#2}%
-            \csdef{beforenumberinfootnote@C}{#2}%
-            \csdef{beforenumberinfootnote@D}{#2}%
-            \csdef{beforenumberinfootnote@E}{#2}%
-            \csdef{beforenumberinfootnote@Z}{#2}%
-        }%
-        {%
-            \csdef{beforenumberinfootnote@#1}{#2}%
-        }%
+	\setcommand@series{#1}{beforenumberinfootnote}{#2}%
 }
 %    \end{macrocode}
 %  \end{macro}
@@ -8038,18 +8026,7 @@
 % \cs{afternumberinfootnote}\oarg{series}\marg{length} is used add glue after line number in footnotes.
 %    \begin{macrocode}
 \newcommandx*{\afternumberinfootnote}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{afternumberinfootnote@A}{#2}%
-            \csdef{afternumberinfootnote@B}{#2}%
-            \csdef{afternumberinfootnote@C}{#2}%
-            \csdef{afternumberinfootnote@D}{#2}%
-            \csdef{afternumberinfootnote@E}{#2}%
-            \csdef{afternumberinfootnote@Z}{#2}%
-        }%
-        {%
-            \csdef{afternumberinfootnote@#1}{#2}%
-        }%
+	\setcommand@series{#1}{afternumberinfootnote}{#2}%
 }
 %    \end{macrocode}
 %  \end{macro}
@@ -8057,18 +8034,7 @@
 % \cs{beforesymlinenum}\oarg{series}\marg{length} is used to add glue before line symbol.
 %   \begin{macrocode}
 \newcommandx*{\beforesymlinenum}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{beforesymlinenum@A}{#2}%
-            \csdef{beforesymlinenum@B}{#2}%
-            \csdef{beforesymlinenum@C}{#2}%
-            \csdef{beforesymlinenum@D}{#2}%
-            \csdef{beforesymlinenum@E}{#2}%
-            \csdef{beforesymlinenum@Z}{#2}%
-        }%
-        {%
-            \csdef{beforesymlinenum@#1}{#2}%
-        }%
+    \setcommand@series{#1}{beforesymlinenum}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8076,18 +8042,7 @@
 % \cs{aftersymlinenum}\oarg{series}\marg{length} is used to add glue after line symbol.
 %   \begin{macrocode}
 \newcommandx*{\aftersymlinenum}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{aftersymlinenum@A}{#2}%
-            \csdef{aftersymlinenum@B}{#2}%
-            \csdef{aftersymlinenum@C}{#2}%
-            \csdef{aftersymlinenum@D}{#2}%
-            \csdef{aftersymlinenum@E}{#2}%
-            \csdef{aftersymlinenum@Z}{#2}%
-        }%
-        {%
-            \csdef{aftersymlinenum@#1}{#2}%
-        }%
+    \setcommand@series{#1}{aftersymlinenum}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8095,18 +8050,7 @@
 % \cs{inplaceofnumber}\oarg{series}\marg{value} is used to define glue which is printed where no number or symbol is printed.
 %   \begin{macrocode}
 \newcommandx*{\inplaceofnumber}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{inplaceofnumber@A}{#2}%
-            \csdef{inplaceofnumber@B}{#2}%
-            \csdef{inplaceofnumber@C}{#2}%
-            \csdef{inplaceofnumber@D}{#2}%
-            \csdef{inplaceofnumber@E}{#2}%
-            \csdef{inplaceofnumber@Z}{#2}%
-        }%
-        {%
-            \csdef{inplaceofnumber@#1}{#2}%
-        }%
+   \setcommand@series{#1}{inplaceofnumber}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8114,18 +8058,7 @@
 % The \cs{lemmaseparator}\oarg{series}\marg{lemma} is used to change lemma separator.
 %    \begin{macrocode}
 \newcommandx*{\lemmaseparator}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{lemmaseparator@A}{#2}%
-            \csdef{lemmaseparator@B}{#2}%
-            \csdef{lemmaseparator@C}{#2}%
-            \csdef{lemmaseparator@D}{#2}%
-            \csdef{lemmaseparator@E}{#2}%
-            \csdef{lemmaseparator@Z}{#2}%
-        }%
-        {%
-            \csdef{lemmaseparator@#1}{#2}%
-        }%
+    \setcommand@series{#1}{lemmaseparator}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8133,36 +8066,14 @@
 % The \cs{beforelemmaseparator}\oarg{series}\marg{length} is used to change glue between lemma and separator.
 %    \begin{macrocode}
 \newcommandx*{\beforelemmaseparator}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{beforelemmaseparator@A}{#2}%
-            \csdef{beforelemmaseparator@B}{#2}%
-            \csdef{beforelemmaseparator@C}{#2}%
-            \csdef{beforelemmaseparator@D}{#2}%
-            \csdef{beforelemmaseparator@E}{#2}%
-            \csdef{beforelemmaseparator@Z}{#2}% 
-        }%
-        {%
-            \csdef{beforelemmaseparator@#1}{#2}%
-        }%
+    \setcommand@series{#1}{beforelemmaseparator}{#2}%
 }
 %    \end{macrocode}
 % \begin{macro}{\afterlemmaseparator}
 % The \cs{afterlemmaseparator}\oarg{series}\marg{length} is used to change glue between lemma separator and note.
 %    \begin{macrocode}
 \newcommandx*{\afterlemmaseparator}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{afterlemmaseparator@A}{#2}%
-            \csdef{afterlemmaseparator@B}{#2}%
-            \csdef{afterlemmaseparator@C}{#2}%
-            \csdef{afterlemmaseparator@D}{#2}%
-            \csdef{afterlemmaseparator@E}{#2}%
-            \csdef{afterlemmaseparator@Z}{#2}% 
-        }%
-        {%
-            \csdef{afterlemmaseparator@#1}{#2}%
-        }%
+    \setcommand@series{#1}{afterlemmaseparator}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8176,65 +8087,15 @@
 % \cs{inplaceoflemmaseparator}\oarg{series}\marg{value} is used to define glue which is printed where no lemma separator is printed.
 %   \begin{macrocode}
 \newcommandx*{\inplaceoflemmaseparator}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{inplaceoflemmaseparator@A}{#2}%
-            \csdef{inplaceoflemmaseparator@B}{#2}%
-            \csdef{inplaceoflemmaseparator@C}{#2}%
-            \csdef{inplaceoflemmaseparator@D}{#2}%
-            \csdef{inplaceoflemmaseparator@E}{#2}%
-            \csdef{inplaceoflemmaseparator@Z}{#2}%
-        }%
-        {%
-            \csdef{inplaceoflemmaseparator@#1}{#2}%
-        }%
+    \setcommand@series{#1}{inplaceoflemmaseparator}{#2}%
 }
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\afternote}
 % The \cs{afternote}\oarg{series}\marg{length} is used to change length after note.
-%
-% There is a point to be careful about regarding the
-% \cs{afternote@series} commands.  Remember that in \cs{para@vfootnote} we do
-% some measurements on the footnote box, and use the resulting size
-% to make an estimate of how much the note will contribute to the
-% height of our final footnote paragraph.  This information is used
-% by the output routine to allocate the right amount of vertical
-% space on the page for the notes (\thetexbook, pp.\,398--399).
-%
-% The length of the footnote includes the natural size of the glue
-% specified by \cs{afternote@series}, but not its stretch or shrink
-% components, since at this point the note has no need to stretch
-% or shrink. Later, when the paragraph is actually composed by
-% \cs{parafootgroup} in the output routine, \TeX\ will almost
-% certainly do some stretching and shrinking of this glue in order
-% to make the paragraph look nice. Probably the stretching and
-% shrinking over the whole paragraph will cancel each other out.
-% But if not, the actual vertical size of the paragraph may not
-% match the size the output routine had been told to expect, and
-% you may get an overfull/underfull \cs{vbox} message from the output
-% routine.  To minimize the risk of this, you can do two things:
-% keep the \verb"plus" and \verb"minus" components of \cs{interparanoteglue}
-% small compared with its natural glue, and keep them the same as
-% each other.  As a general precaution, keep the size and
-% flexibility of the \verb"\skip\footins" glue on the high side too:
-% because the reckoning is approximate, footnote blocks may be up
-% to a line bigger or smaller than the output routine allows for,
-% so keep some flexible space between the text and the notes.
 %    \begin{macrocode}
 \newcommandx*{\afternote}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{afternote@A}{#2}%
-            \csdef{afternote@B}{#2}%
-            \csdef{afternote@C}{#2}%
-            \csdef{afternote@D}{#2}%
-            \csdef{afternote@E}{#2}%
-            \csdef{afternote@Z}{#2}% 
-        }%
-        {%
-            \csdef{afternote@#1}{#2}%
-        }%
+    \setcommand@series{#1}{afternote}{#2}%
 }
 %   \end{macrocode}
 % \end{macro}
@@ -8261,18 +8122,7 @@
 % The \cs{parafootsep}\oarg{series}\marg{sep} is used for separator of notes in paragraphed footnotes.
 %   \begin{macrocode}
 \newcommandx*{\parafootsep}[2][1,usedefault]{%
-    \ifstrequal{#1}{}% If arg 1 is empty
-        {%
-            \csdef{parafootsep@A}{#2}%
-            \csdef{parafootsep@B}{#2}%
-            \csdef{parafootsep@C}{#2}%
-            \csdef{parafootsep@D}{#2}%
-            \csdef{parafootsep@E}{#2}%
-            \csdef{parafootsep@Z}{#2}% 
-        }%
-        {%
-            \csdef{parafootsep@#1}{#2}%
-        }%
+    \setcommand@series{#1}{parafootsep}{#2}%
 }
 %   \end{macrocode}
 % \end{macro}
