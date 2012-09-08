@@ -8477,6 +8477,8 @@
 % \begin{macrocode}
 	\global\csletcs{#1end}{@gobblethree}
 %\end{macrocode}
+% 8) We need to be able to modify \Ledmac's footnote macros and restore their
+	\global\csletcs{#1@@footnote}{#1footnote}
 % 6) Stock in \@series
 % \begin{macrocode}
     	\listxadd{\@series}{#1}
@@ -8996,11 +8998,8 @@
 % within \cs{@reinserts}. The implementation may well have to change.
 %    \begin{macrocode}
 \newcommand*{\doreinxtrafeetii}{%
-  \ifvoid\Afootins\else\insert\Afootins{\unvbox\Afootins}\fi
-  \ifvoid\Bfootins\else\insert\Bfootins{\unvbox\Bfootins}\fi
-  \ifvoid\Cfootins\else\insert\Cfootins{\unvbox\Cfootins}\fi
-  \ifvoid\Dfootins\else\insert\Dfootins{\unvbox\Dfootins}\fi
-  \ifvoid\Efootins\else\insert\Efootins{\unvbox\Efootins}\fi
+  \renewcommand{\do}[1]{\ifvoid\csuse{##1footins}\else\insert\csuse{##1ootins}{\unvbox\csuse{##1footins}}\fi}
+  \dolistloop{\@series}
 }
 
 %    \end{macrocode}
@@ -10986,26 +10985,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\A@@footnote}
-% \begin{macro}{\B@@footnote}
-% \begin{macro}{\C@@footnote}
-% \begin{macro}{\D@@footnote}
-% \begin{macro}{\E@@footnote}
-% We need to be able to modify \Ledmac's footnote macros and restore their
-% original definitions. There are five of these.
-%    \begin{macrocode}
-\let\A@@footnote=\Afootnote
-\let\B@@footnote=\Bfootnote
-\let\C@@footnote=\Cfootnote
-\let\D@@footnote=\Dfootnote
-\let\E@@footnote=\Efootnote
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
 % \begin{macro}{\@line@@num}
 % Macro supporting restoration of |\linenum|.
 %    \begin{macrocode}
@@ -11149,19 +11128,13 @@
 %    \begin{macrocode}
 \newcommand{\l@dmodforcritext}{%
   \let\critext\relax%
-  \let\Afootnote\l@dgobbledarg% 
-  \let\Bfootnote\l@dgobbledarg%
-  \let\Cfootnote\l@dgobbledarg%
-  \let\Dfootnote\l@dgobbledarg%
-  \let\Efootnote\l@dgobbledarg%
+  \renewcommand{\do}[1]{\global\csletcs{##1footnote}{l@dgobbledarg}}
+  \dolistloop{\@series}%
   \let\edindex\nulledindex%
   \let\linenum\@gobble}
 \newcommand{\l@drestoreforcritext}{%
-  \def\Afootnote##1##2/{\A@@footnote{##1}{##2}}%
-  \def\Bfootnote##1##2/{\B@@footnote{##1}{##2}}%
-  \def\Cfootnote##1##2/{\C@@footnote{##1}{##2}}%
-  \def\Dfootnote##1##2/{\D@@footnote{##1}{##2}}%
-  \def\Efootnote##1##2/{\E@@footnote{##1}{##2}}%
+  \renewcommand{\do}[1]{\csdef{##1footnote}##1##2/{\csuse{##1@@footnote}{##1}{##2}}}
+  \dolistloop{\@series}%
   \let\edindex\xedindex}
 
 %    \end{macrocode}
@@ -11174,21 +11147,14 @@
 %    \begin{macrocode}
 \newcommand{\l@dmodforedtext}{%
   \let\edtext\relax
-  \let\Afootnote\l@dgobblearg
-  \let\Bfootnote\l@dgobblearg
-  \let\Cfootnote\l@dgobblearg
-  \let\Dfootnote\l@dgobblearg
-  \let\Efootnote\l@dgobblearg
+  \renewcommand{\do}[1]{\global\csletcs{##1footnote}{l@dgobblearg}}
+  \dolistloop{\@series}%
   \let\edindex\nulledindex
   \let\linenum\@gobble}
 \newcommand{\l@drestoreforedtext}{%
-  \def\Afootnote##1{\A@@footnote{##1}}%
-  \def\Bfootnote##1{\B@@footnote{##1}}%
-  \def\Cfootnote##1{\C@@footnote{##1}}%
-  \def\Dfootnote##1{\D@@footnote{##1}}%
-  \def\Efootnote##1{\E@@footnote{##1}}%
+  \renewcommand{\do}[1]{\csgdef{##1footnote}##1{\csuse{##1@@footnote}{##1}}}
+  \dolistloop{\@series}%
   \let\edindex\xedindex}
-
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -11262,11 +11228,8 @@
   \let\critext\xcritext
   \let\edtext\xedtext
   \let\edindex\xedindex
-  \let\Afootnote\A@@footnote
-  \let\Bfootnote\B@@footnote
-  \let\Cfootnote\C@@footnote
-  \let\Dfootnote\D@@footnote
-  \let\Efootnote\E@@footnote
+  \renewcommand{\do}[1]{\global\csletcs{##1footnote}{##1@@footnote}}
+  \dolistloop{\@series}%
   \let\linenum\@line@@num
   \hilfsskip=\l@dcolwidth%
   \advance\hilfsskip by -\wd\hilfsbox
