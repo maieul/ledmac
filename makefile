@@ -1,8 +1,7 @@
 PACKAGE = *.dtx \
 		  *.ins \
-		  ledmac.pdf \
-		  ledarab.pdf \
-		  ledpar.pdf \
+		  ledmac1.pdf \
+		  ledpar1.pdf \
 		  *eps \
 		  README \
 		  Makefile
@@ -12,7 +11,7 @@ PACKAGE = *.dtx \
 .PHONY: all dist clean
 
 
-all: ledmac.sty ledmac.pdf ledpar.sty ledpar.pdf ledarab.sty ledarab.pdf dist
+all: ledmac1.sty ledmac1.pdf ledpar1.sty ledpar1.pdf dist
 
 doc: *.pdf
 
@@ -30,10 +29,10 @@ doc: *.pdf
 
 
 dist: $(PACKAGE)
-	@$(RM) ../ledmac.zip
-	zip ../ledmac.zip $(PACKAGE)
+	@$(RM) ../ledmac1.zip
+	zip ../ledmac1.zip $(PACKAGE)
 	
 
 clean:
-	@$(RM) *.aux *.log *.out *.toc *tex *.pdf ledmac.sty ledarab.sty ledpar.sty afoot.sty *ind *ilg  *lof *idx *glo *gls ../ledmac.zip
+	@$(RM) *.aux *.log *.out *.toc *tex *.pdf ledmac1.sty ledarab1.sty ledpar1.sty afoot.sty *ind *ilg  *lof *idx *glo *gls ../ledmac1.zip
 
