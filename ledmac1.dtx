@@ -9004,19 +9004,18 @@
 %Hence, we need to test \cs{edlabel} if it occurs at the start of a paragraph.  To do so, we use \cs{ifvmode}. If the test is true, we must advance by one unit the amount of text we write into the \verb].aux] file. 
 %We do so using \cs[advancelabel@refs} command.  
 \newcommand{\advancelabel@refs}{%
-   \newcount\line%
-   \ledmac@warning{\label@refs}
-   \line=\expandafter\labelrefsparseline\label@refs%
-   \advance\line by 1%
-   \ifsublines@%
-      \newcount\subline%
-      \subline=\labelrefsparsesubline\label@refs%
-      \advance\subline by 1%
-      \def\label@refs{\the\line|\the\subline}%
-   \else%
-      \def\label@refs{\the\line|0}%
-   \fi%
-   }
+    \newcounter{line}%
+    \setcounter{line}{\expandafter\labelrefsparseline\label@refs}%
+    \stepcounter{line}%
+    \ifsublines@%
+        \newcounter{subline}%
+        \setcounter{subline}{\expandafter\labelrefsparsesubline\label@refs}%
+        \stepcounter{subline}{1}%
+    \def\label@refs{\theline|\thesubline}%
+    \else%
+        \def\label@refs{\theline|0}%
+\fi%
+}
 \def\labelrefsparseline#1|#2{#1}
 \def\labelrefsparsesubline#1|#2{#2}
 %    \end{macrocode}
