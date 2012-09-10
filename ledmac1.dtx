@@ -1195,6 +1195,18 @@
 %
 % When a length is used, it can be stretchable : \verb|a minus b minus c|. The final length |m| is calculated by \LaTeX{} to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to fontsize of the footnote. 
 %
+% \DescribeMacro{\Xnotefontsize}
+% \cs{Xnotefontsize}\oarg{series}\marg{length} is used to define font size of critical footnotes of the series. Default value is \cs{footnotesize}.
+% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+%
+% \DescribeMacro{\notefontsizeX}
+% \cs{notefontsizeX}\oarg{series}\marg{length} is used to define font size of critical footnotes of the series. Default value is \cs{footnotesize}.
+% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+%
+% \DescribeMacro{\Xendnotefontsize}
+% \cs{Xendnotefontsize}\oarg{series}\marg{length} is used to define font size of end critical footnotes of the series. Default value is \cs{footnotesize}.
+% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+%
 % \DescribeMacro{\numberonlyfirstinline}
 % By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1,one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. To cancel it, use \cs{numberonlyfirstinline}\oarg{series}\oarg{false} (\verb|<series>| can be empty).
 %
@@ -1271,17 +1283,9 @@
 % are intended for manipulation by the user: 
 % \cs{endashchar}, 
 % \cs{fullstop},
-% \cs{notefontsetup}, 
 % \cs{notenumfont},
 % \cs{numlabfont}, and 
 % \cs{rbracket}. 
-%
-% \DescribeMacro{\notefontsetup}
-% \phantomsection\label{notefonts}\relax
-% The \cs{notefontsetup} macro defines the standard size of the
-% fonts for all your footnotes;  \Ledmac{} initially defines
-% this as: \\
-% \verb"\newcommand*{\notefontsetup}{\footnotesize}" 
 %
 % \DescribeMacro{\notenumfont}
 % The \cs{notenumfont} macro specifies the font used for the line
@@ -1311,7 +1315,6 @@
 % Here are some examples of how you might redefine some of the font
 % macros.
 % \begin{verbatim}
-%   \renewcommand*{\notefontsetup}{\small}
 %   \renewcommand*{\notenumfont}{\sffamily}
 % \end{verbatim}
 % These commands select \cs{small} fonts for the notes, and choose a 
@@ -6170,27 +6173,8 @@
 % different forms: it is common to reduce the size,
 % for example, without otherwise changing the fonts used.
 %
-% \begin{PW}I have deleted all Plain Font-related code and just keept
-%    the code for NFSS font handling.\end{PW}
 %
-% \begin{macro}{\notefontsetup}
-% The font setup defined in \cs{notefontsetup} defines the standard
-% fonts for the text of the footnotes.  Parts of the footnote, such
-% as the line number references and the lemma, are enclosed in
-% groups, with their own font macros, so a note in plain roman can
-% still have line numbers in bold, say, and the lemma in the same
-% font encoding, family, series, and shape
-% of font as in the main text. Typically this definition should
-% specify only a size.
 %
-% \begin{PW}
-%  The original font for \cs{notefontsetup} effectively maps to LaTeX 
-%  \cs{footnotesize} for a 10pt document.
-% \end{PW}
-%
-%    \begin{macrocode}
-\newcommand*{\notefontsetup}{\footnotesize}
-%    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\notenumfont}
@@ -6285,7 +6269,7 @@
 %    \begin{macrocode}
 \newcommand*{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
-  \notefontsetup
+  \csuse{Xnotefontsize@#1}
   \footsplitskips
   \spaceskip=\z@skip \xspaceskip=\z@skip
   \csname #1footfmt\endcsname #2[#1]\egroup}
@@ -6316,7 +6300,7 @@
 \newcommand*{\mpnormalvfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}
-    \notefontsetup
+    \csuse{Xnotefontsize@#1}
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -6811,7 +6795,7 @@
 % \end{PW}
 % \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetup}}
 %    \begin{macrocode}
-\newcommand*{\para@footsetup}[1]{{\notefontsetup
+\newcommand*{\para@footsetup}[1]{{\csuse{Xnotefontsize@#1}
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
@@ -6932,7 +6916,7 @@
 \newcommand*{\para@vfootnote}[2]{%
   \insert\csname #1footins\endcsname
   \bgroup
-    \notefontsetup
+    \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\csname #1footfmt\endcsname#2[#1]}%
@@ -6972,7 +6956,7 @@
 \newcommand*{\mppara@vfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}%
-    \notefontsetup
+    \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\color@begingroup\csname #1footfmt\endcsname #2[#1]\color@endgroup}%
@@ -7053,7 +7037,7 @@
   \unvbox\csname #1footins\endcsname 
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
+  \csuse{Xnotefontsize@#1}
   \noindent\unhbox0\par}
 
 %    \end{macrocode}
@@ -7070,7 +7054,7 @@
   \unvbox\csname mp#1footins\endcsname 
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
+  \csuse{Xnotefontsize@#1}
   \noindent\unhbox0\par}}
 
 %    \end{macrocode}
@@ -7241,7 +7225,7 @@
 %    \begin{macrocode}
 \newcommand*{\threecolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
-  \notefontsetup
+  \csuse{Xnotefontsize@#1}
   \footsplitskips
   \csname #1footfmt\endcsname #2[#1]\egroup}
 %    \end{macrocode}
@@ -7357,7 +7341,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
-  \notefontsetup
+  \csuse{Xnotefontsize@#1}
   \footsplitskips
   \csname #1footfmt\endcsname #2[#1]\egroup}
 %    \end{macrocode}
@@ -7378,7 +7362,7 @@
   #3\strut\par\allowbreak}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\twocolfootgroup}[1]{{\notefontsetup
+\newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}}
@@ -7603,7 +7587,7 @@
 %    \begin{macrocode}
 \newcommand*{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \footsplitskips
     \spaceskip=\z@skip \xspaceskip=\z@skip
     \@nameuse{footfmt#1}{#1}{#2}\egroup}
@@ -7617,7 +7601,7 @@
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -7803,7 +7787,7 @@
 %    \begin{macrocode}
 \newcommand*{\twocolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \footsplitskips
     \spaceskip=\z@skip \xspaceskip=\z@skip
     \@nameuse{footfmt#1}{#1}{#2}\egroup}
@@ -7832,7 +7816,7 @@
 % \begin{macro}{\mptwocolfootgroupX}
 % \cs{twocolfootgroupX}\marg{series}
 %    \begin{macrocode}
-\newcommand*{\twocolfootgroupX}[1]{{\notefontsetup
+\newcommand*{\twocolfootgroupX}[1]{{\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
@@ -7889,7 +7873,7 @@
 %    \begin{macrocode}
 \newcommand*{\threecolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \footsplitskips
     \@nameuse{footfmt#1}{#1}{#2}\egroup}
 
@@ -7917,7 +7901,7 @@
 % \begin{macro}{\mpthreecolfootgroupX}
 % \cs{threecolfootgroupX}\marg{series}
 %    \begin{macrocode}
-\newcommand*{\threecolfootgroupX}[1]{{\notefontsetup
+\newcommand*{\threecolfootgroupX}[1]{{\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
@@ -7960,7 +7944,7 @@
 % \cs{para@footsetupX}\marg{series}
 % \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetupX}}
 %    \begin{macrocode}
-\newcommand*{\para@footsetupX}[1]{{\notefontsetup
+\newcommand*{\para@footsetupX}[1]{{\csuse{notefontsizeX@#1}
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide\dimen0 by \hsize \multiply\dimen0 by \footfudgefiddle\relax
@@ -7992,7 +7976,7 @@
 \newcommand*{\para@vfootnoteX}[2]{%
   \insert\csname footins#1\endcsname
   \bgroup
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\@nameuse{footfmt#1}{#1}{#2}}%
@@ -8005,7 +7989,7 @@
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \notefontsetup
+    \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
@@ -8039,7 +8023,7 @@
   \unvbox\csname footins#1\endcsname
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
+  \csuse{notefontsizeX@#1}
   \noindent\unhbox0\par}
 \newcommand*{\mppara@footgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
@@ -8048,7 +8032,7 @@
   \unvbox\csname mpfootins#1\endcsname
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
-  \notefontsetup
+  \csuse{notefontsizeX@#1}
   \noindent\unhbox0\par}}
 
 %    \end{macrocode}
@@ -8135,6 +8119,9 @@
 %    \end{macrocode}
 % 1) : create all command to memorize display options.
 %    \begin{macrocode}
+    \csgdef{Xnotefontsize@#1}{\notefontsetup}%
+    \csgdef{notefontsizeX@#1}{\notefontsetup}%
+    \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
     \newtoggle{numberonlyfirstinline@#1}%
     \csgdef{symlinenum@#1}{\symplinenum}%
     \newtoggle{nonumberinfootnote@#1}%
@@ -8148,7 +8135,7 @@
     \csgdef{afterlemmaseparator@#1}{0.5em}%
     \csgdef{inplaceoflemmaseparator@#1}{1em}%
     \csgdef{afternote@#1}{1em plus.4em minus.4em}%
-    \csgdef{parafootsep@#1}{\parafootftmsep}
+    \csgdef{parafootsep@#1}{\parafootftmsep}%
 %    \end{macrocode}
 % 2) Create \#1footnote series (for critical apparatus)
 %    \begin{macrocode}
@@ -8220,7 +8207,7 @@
     \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
         \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
         {\ifnumberedpar@\l@d@nums\fi}%
-        {\ifnumberedpar@\csexpandonce{@tag}\fi}{##1}}}\ignorespaces%
+        {\ifnumberedpar@\csexpandonce{@tag}\fi}{##1}{#1}}}\ignorespaces%
         }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
@@ -8281,8 +8268,38 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\Xnotefontsize}
+% \cs{Xnotefontsize} is used to change fontsize of critical apparatus.
+%   \begin{macrocode}
+\newcommandx{\Xnotefontsize}[2][1]{
+	\setcommand@series{#1}{Xnotefontsize}{#2}%
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\notefontsizeX}
+% \cs{notefontsizeX} is used to change fontsize of familiar footnotes.
+%   \begin{macrocode}
+\newcommandx{\notefontsizeX}[2][1]{
+	\setcommand@series{#1}{notefontsizeX}{#2}%
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\Xendnotefontsize}
+% \cs{notefontsizeX} is used to change fontsize of critcial endnotes.
+%   \begin{macrocode}
+\newcommandx{\Xendnotefontsize}[2][1]{
+	\setcommand@series{#1}{Xendnotefontsize}{#2}%
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\notefontsetup}
+% \cs{notefontsetup} is kept for ascendant compatibility, but should not use anymore.
+%    \begin{macrocode}
+\newcommand*{\notefontsetup}{\footnotesize}
+%    \end{macrocode}
+% \end{macro}
 % \changes{v0.18}{2012/08/30}{New generic commands to customize footnote display.}
-% \cs{numberonlyfistinline}\oarg{series}\oarg{position} is used to print line number only in the first time. It set to true the \cs{ifnumberonlyfirstinline@series} toggle.
+% \cs{numberonlyfistinline}\oarg{series}\oarg{position} is used to print line number only in the first time. It sets to true the \cs{ifnumberonlyfirstinline@series} toggle.
 % \begin{macro}{\numberonlyfirstinline}
 %  \begin{macrocode}
 \newcommandx{\numberonlyfirstinline}[2][1,2={true}]{%
@@ -9314,7 +9331,7 @@
 % \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
 %  to avoid clash with the amsfonts package}
 %    \begin{macrocode}
-\def\endprint#1#2#3{{\notefontsetup{\notenumfont\printendlines#1|}%
+\def\endprint#1#2#3#4{{\csuse{Xendnotefontsize@#4}{\notenumfont\printendlines#1|}%
       \enspace{\select@lemmafont#1|#2}\enskip#3\par}}
 \providecommand*{\@gobblethree}[3]{}
 
