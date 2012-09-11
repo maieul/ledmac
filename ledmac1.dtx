@@ -1195,17 +1195,29 @@
 %
 % When a length is used, it can be stretchable : \verb|a minus b minus c|. The final length |m| is calculated by \LaTeX{} to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to fontsize of the footnote. 
 %
+% \DescribeMacro{Xnotenumfont}
+% \cs{Xnotenumfont}\oarg{series}\marg{command} is used to change font style for line number in critical footnotes.  
+% \meta{command} must be one (or more) switching command, like \cs{bfseries}.
+%
+% \DescribeMacro{Xendnotenumfont}
+% \cs{Xendnotenumfont}\oarg{series}\marg{command} is used to change font style for line number in critical footnotes. 
+% \meta{command} must be one (or more) switching command, like \cs{bfseries}.
+%
+% \DescribeMacro{notenumfontX}
+% \cs{notenumfontX}\oarg{series}\marg{command} is used to change font style for note number in familiar footnotes.  
+% \meta{command} must be one (or more) switching command, like \cs{bfseries}.
+%
 % \DescribeMacro{\Xnotefontsize}
 % \cs{Xnotefontsize}\oarg{series}\marg{command} is used to define font size of critical footnotes of the series. Default value is \cs{footnotesize}.
-% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+% The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
 %
 % \DescribeMacro{\notefontsizeX}
 % \cs{notefontsizeX}\oarg{series}\marg{command} is used to define font size of critical footnotes of the series. Default value is \cs{footnotesize}.
-% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+% The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
 %
 % \DescribeMacro{\Xendnotefontsize}
 % \cs{Xendnotefontsize}\oarg{series}\marg{length} is used to define font size of end critical footnotes of the series. Default value is \cs{footnotesize}.
-% The \meta{length} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+% The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
 %
 % \DescribeMacro{\numberonlyfirstinline}
 % By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1,one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. To cancel it, use \cs{numberonlyfirstinline}\oarg{series}\oarg{false} (\verb|<series>| can be empty).
@@ -1283,19 +1295,8 @@
 % are intended for manipulation by the user: 
 % \cs{endashchar}, 
 % \cs{fullstop},
-% \cs{notenumfont},
 % \cs{numlabfont}, and 
 % \cs{rbracket}. 
-%
-% \DescribeMacro{\notenumfont}
-% The \cs{notenumfont} macro specifies the font used for the line
-% numbers printed in notes. This will typically be a command like
-% \cs{bfseries}  that selects a  distinctive style for the
-% note numbers, but leaves the choice of a size up to
-% \cs{notefontsetup}.
-% \Ledmac{} initially defines: \\
-% \verb"\newcommand{\notenumfont}{\normalfont}" \\
-% thus using the main document font.
 %
 %
 % \DescribeMacro{\numlabfont}
@@ -1307,18 +1308,6 @@
 % You might wish to use a different font if, for example,
 % you preferred to have these line numbers printed using
 % old-style numerals.
-%
-% \PWcomment{Deleted subsections dealing with the NFSS and Plain 
-% font selection as only NFSS is used.}
-%
-%
-% Here are some examples of how you might redefine some of the font
-% macros.
-% \begin{verbatim}
-%   \renewcommand*{\notenumfont}{\sffamily}
-% \end{verbatim}
-% These commands select \cs{small} fonts for the notes, and choose a 
-% sans font for the line numbers within notes.
 %
 %
 %
@@ -6177,20 +6166,6 @@
 %
 % \end{macro}
 %
-% \begin{macro}{\notenumfont}
-% The line numbers will be printed using the font selected by
-% executing \cs{notenumfont}.
-%
-% \begin{PW}
-%    The original font for \cs{notenumfont} maps to LaTeX \cs{scriptsize}
-% for a 10pt document. However, the description in the user guide does
-% not seem to match the definition (the usage guide says that the
-% size is \cs{notefontsetup}).
-% \end{PW}
-%    \begin{macrocode}
-\newcommand*{\notenumfont}{\normalfont}
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\select@lemmafont}
 % \begin{macro}{\select@@lemmafont}
@@ -7616,7 +7591,7 @@
 %    \begin{macrocode}
 \newcommand*{\normalfootfmtX}[2]{%
   \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%\enspace
     #2\strut\par}}
 
 %    \end{macrocode}
@@ -7806,7 +7781,7 @@
   \tolerance=5000\relax
   \raggedright
   \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -7891,7 +7866,7 @@
   \tolerance=5000\relax
   \raggedright
   \leavevmode
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -8009,7 +7984,7 @@
 \newcommand*{\parafootfmtX}[2]{%
   \insertparafootsep{#1}%
   \ledsetnormalparstuff
-  {\notenumfont\@nameuse{footfootmark#1}\strut%\enspace
+  {\csuse{notenumfontX@#1}\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
     #2\penalty-10}}
 
 %    \end{macrocode}
@@ -8119,6 +8094,9 @@
 %    \end{macrocode}
 % 1) : create all command to memorize display options.
 %    \begin{macrocode}
+    \csgdef{Xnotenumfont@#1}{\notenumfont}%
+    \csgdef{Xendnotenumfont@#1}{\notenumfont}%
+    \csgdef{notenumfontX@#1}{\notenumfont}%
     \csgdef{Xnotefontsize@#1}{\notefontsetup}%
     \csgdef{notefontsizeX@#1}{\notefontsetup}%
     \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
@@ -8267,6 +8245,36 @@
               \docsvlist{#1}%
     }%
 }%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{Xnotenumfont}
+% \cs{Xnotenumfont} is used to change font of line number in critical footnotes.
+%    \begin{macrocode}
+\newcommandx*{\Xnotenumfont}[2][1]{
+    \setcommand@series{#1}{Xnotenumfont}{#2}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{Xendnotenumfont}
+% \cs{Xendnotenumfont} is used to change font of line number in critical endnotes.
+%    \begin{macrocode}
+\newcommandx*{\Xendnotenumfont}[2][1]{
+    \setcommand@series{#1}{Xendnotenumfont}{#2}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{notenumfontX}
+% \cs{notenumfontX} is used to change font of line number in familiar footnotes.
+%    \begin{macrocode}
+\newcommandx*{\notenumfontX}[2][1]{
+    \setcommand@series{#1}{notenumfontX}{#2}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\notenumfont}
+% \cs{\notnumefont} is kept for ascendant compatibility, should'nt be used anymore. 
+%    \begin{macrocode}
+\newcommand*{\notenumfont}{\normalfont}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\Xnotefontsize}
@@ -8485,18 +8493,18 @@
                         {%
                             \hspace{\csuse{inplaceofnumber@#2}}%
                         }%
-                        {\hspace{\csuse{beforesymlinenum@#2}}\notenumfont\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
+                        {\hspace{\csuse{beforesymlinenum@#2}}\csuse{Xnotenumfont@#2}\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
                        }%
                        {%
-                        \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                        \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
                     }%
                     {%
-                    \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                    \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
               }%
               {%
-              \hspace{\csuse{beforenumberinfootnote@#2}}\notenumfont\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+              \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
               }%
               \csnumgdef{prevline#2}{\line@num}%
                  }%
@@ -9332,7 +9340,7 @@
 % \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
 %  to avoid clash with the amsfonts package}
 %    \begin{macrocode}
-\def\endprint#1#2#3#4{{\csuse{Xendnotefontsize@#4}{\notenumfont\printendlines#1|}%
+\def\endprint#1#2#3#4{{\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
       \enspace{\select@lemmafont#1|#2}\enskip#3\par}}
 \providecommand*{\@gobblethree}[3]{}
 
