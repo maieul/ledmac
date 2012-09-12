@@ -1193,7 +1193,13 @@
 % \changes{v0.18.1}{2012/09/02}{\cs{nosum} deleted.}
 % Since version 0.18, some commands can be used to change display of footnote. All can have a optional argument, which is the letter of the series --- or a list of letters separated by comma --- which option is applied.
 %
-% When a length is used, it can be stretchable : \verb|a minus b minus c|. The final length |m| is calculated by \LaTeX{} to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to fontsize of the footnote. 
+% When a length is used, it can be stretchable : \verb|a minus b minus c|. The final length |m| is calculated by \LaTeX{} to have : $b-a \leq m \leq b+c$. If you use relative unity\footnote{Like \verb|em| which is the width of a M.}, it will be relative to fontsize of the footnote. Default value is 0~pt.
+%
+% \DescribeMacro{Xhangindent}
+% For critical notes NOT paragraphed you can define an indent which will applied in the secund line of notes, with \cs{Xhangindent}\oarg{series}\marg{series}. It can help to make distinction between new note and break in note. Default value is 0~pt.
+%
+% \DescribeMacro{hangindentX}
+% For  familiar notes NOT paragraphed you can define an indent which will applied in the secund line of notes, with \cs{Xhangindent}\oarg{series}\marg{series}. It can help to make distinction between new note and break in note.
 %
 % \DescribeMacro{\hsizetwocol}
 % \cs{\hsizetwocol}\oarg{series}\marg{length} is used to change width of column when critical notes are displaying in two columns. Defaut value is \verb+.45 \hsize+.
@@ -6320,6 +6326,7 @@
   \parindent \z@ \parfillskip \z@ \@plus 1fil}
 \newcommandx*{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for ascendant compatibility
   \ledsetnormalparstuff%
+  \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -7233,6 +7240,7 @@
   \parindent=0pt
   \tolerance=5000
   \raggedright
+  \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
@@ -7335,6 +7343,7 @@
   \parindent=0pt
   \tolerance=5000
   \raggedright
+  \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
   {\select@lemmafont#1|#2}%
@@ -7599,6 +7608,7 @@
 %    \begin{macrocode}
 \newcommand*{\normalfootfmtX}[2]{%
   \ledsetnormalparstuff
+  \hangindent=\csuse{hangindentX@#1}%
   {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%\enspace
     #2\strut\par}}
 
@@ -7783,6 +7793,7 @@
 %    \begin{macrocode}
 \newcommand*{\twocolfootfmtX}[2]{%
   \normal@pars
+  \hangindent=\csuse{hangindentX@#1}%
   \hsize \csuse{hsizetwocolX@#1}
   \parindent=\z@ 
 %%%  \parfillskip=0pt \@plus 1fil
@@ -7867,6 +7878,7 @@
 % \cs{threecolfootfmtX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\threecolfootfmtX}[2]{%
+  \hangindent=\csuse{hangindentX@#1}%
   \normal@pars
   \hsize \csuse{hsizethreecolX@#1}
   \parindent=\z@ 
@@ -8102,6 +8114,8 @@
 %    \end{macrocode}
 % 1) : create all command to memorize display options.
 %    \begin{macrocode}
+    \csgdef{Xhangindent@#1}{0pt}%
+    \csgdef{hangindentX@#1}{0pt}
     \csgdef{hsizetwocol@#1}{0.45 \hsize}%
     \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
     \csgdef{hsizethreecol@#1}{.3 \hsize}%
@@ -8268,6 +8282,10 @@
 \newcommand{\newhookcommand@series}[1]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][1]{\csuse{setcommand@series}{##1}{#1}{##2}}%
 }
+\newhookcommand@series{Xhangindent}
+
+\newhookcommand@series{hangindentX}
+
 \newhookcommand@series{hsizetwocol}
 
 \newhookcommand@series{hsizethreecol}
@@ -8309,6 +8327,7 @@
 \newhookcommand@series{inplaceoflemmaseparator}
 
 \newhookcommand@series{afternote}
+
 %     \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
