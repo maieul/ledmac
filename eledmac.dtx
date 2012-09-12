@@ -1237,6 +1237,11 @@
 % \cs{Xendnotefontsize}\oarg{series}\marg{length} is used to define font size of end critical footnotes of the series. Default value is \cs{footnotesize}.
 % The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
 %
+% \DescribeMacro{\boxlinenum}
+% It could be useful to put the line number inside a fixed box : the content of the note will be printed after this box. 
+% You can used \cs{boxlinenum}\oarg{series}\marg{length} to do that.
+% To disable again this feature, use \cs{boxlinenum} with length equal to 0~pt.
+%
 % \DescribeMacro{\numberonlyfirstinline}
 % By default, line number is printed everytime in notes. If you want to print it only the first time for a value (i.e one time for line 1,one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{series}. To cancel it, use \cs{numberonlyfirstinline}\oarg{series}\oarg{false} (\verb|<series>| can be empty).
 %
@@ -8126,6 +8131,7 @@
     \csgdef{Xnotefontsize@#1}{\notefontsetup}%
     \csgdef{notefontsizeX@#1}{\notefontsetup}%
     \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
+    \csgdef{boxlinenum@#1}{0pt}%
     \newtoggle{numberonlyfirstinline@#1}%
     \csgdef{symlinenum@#1}{\symplinenum}%
     \newtoggle{nonumberinfootnote@#1}%
@@ -8213,9 +8219,9 @@
 
     \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
         \newcommand{\content}{##1}%
-        	\immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-       	{\ifnumberedpar@\l@d@nums\fi}%
-        	{\ifnumberedpar@\csexpandonce{@tag}\fi}{\csexpandonce{content}}{#1}}}\ignorespaces%
+           \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
+          {\ifnumberedpar@\l@d@nums\fi}%
+           {\ifnumberedpar@\csexpandonce{@tag}\fi}{\csexpandonce{content}}{#1}}}\ignorespaces%
         }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
@@ -8305,6 +8311,8 @@
 \newhookcommand@series{notefontsizeX}
 
 \newhookcommand@series{Xendnotefontsize}
+
+\newhookcommand@series{boxlinenum}
 
 \newhookcommand@series{symlinenum}
 
@@ -8436,15 +8444,33 @@
                         {\hspace{\csuse{beforesymlinenum@#2}}\csuse{Xnotenumfont@#2}\csuse{symlinenum@#2}\hspace{\csuse{aftersymlinenum@#2}}}%
                        }%
                        {%
-                        \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                        \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
+                        \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+                            \printlines#1|}%
+                            {%
+                            \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                            }%
+                            \hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
                     }%
                     {%
-                    \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+                    \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
+                    \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+                        \printlines#1|}%
+                        {%
+                        \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                        }%
+                    \hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
               }%
               {%
-              \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}\printlines#1|\hspace{\csuse{afternumberinfootnote@#2}}%
+              \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
+              \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+                     \printlines#1|}%
+                     {%
+                     \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                     }%
+              \hspace{\csuse{afternumberinfootnote@#2}}%
               }%
               \csnumgdef{prevline#2}{\line@num}%
                  }%
