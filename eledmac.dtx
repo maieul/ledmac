@@ -7931,9 +7931,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Generate commands}%Should be moved after
+% \section{Generate series}%
+% In this section, X means the name of series (A, B etc.)
 % \begin{macro}{\series}
-% \cs{series}\cs{series} creates one ore more newseries
+% \cs{series}\cs{series} creates one ore more newseries. It's the public command, which just loops on private command \cs{newseries@}.
 %    \begin{macrocode}
 \newcommand{\newseries}[1]{%
     \renewcommand{\do}[1]{\newseries@{##1}}%
@@ -7942,22 +7943,22 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@series}
+% The \cs{series@} macro is an etoolbox list, which contains the name of all series.
 %  \begin{macrocode}
 \newcommand{\@series}{}
 %  \end{macrocode}
 % \end{macro}
-% \cs{series@} is a etoolbox list which is stocking the name of series.
 % The command \cs{newseries@}\cs{series} creates a new series of footnote.
 % \begin{macro}{\newseries@}
 %    \begin{macrocode}
 \newcommand{\newseries@}[1]{
 %    \end{macrocode}
-% Test if series is still existing
+% \subsection{Test if series is still existing}
 %    \begin{macrocode}
     \xifinlist{#1}{\@series}{\eledmac@warning{Series #1 is still existing !}}
     {%
 %    \end{macrocode}
-% 1) : create all command to memorize display options.
+% \subsubsection{Create all commands to memorize display options}
 %    \begin{macrocode}
     \csgdef{Xhangindent@#1}{0pt}%
     \csgdef{hangindentX@#1}{0pt}
@@ -7988,7 +7989,16 @@
     \csgdef{afternote@#1}{1em plus.4em minus.4em}%
     \csgdef{parafootsep@#1}{\parafootftmsep}%
 %    \end{macrocode}
-% 2) Create \#1footnote series (for critical apparatus)
+% \subsubsection{Create insert, needed to add notes in foot}
+% About insert, see the TeXBook of D. Knuth on chapter 15.
+%    \begin{macrocode}
+
+    \expandafter\newinsert\csname mpfootins#1\endcsname
+    \expandafter\newinsert\csname footins#1\endcsname
+    \expandafter\newinsert\csname #1footins\endcsname
+    \expandafter\newinsert\csname mp#1footins\endcsname
+%    \end{macrocode}
+% \subsubsection{Create command for critical apparatus, \cs{Xfootnote}}
 %    \begin{macrocode}
 
     \global\expandafter\newcommand\expandafter *\csname #1footnote\endcsname[2][]{%
@@ -8015,20 +8025,12 @@
         \endgroup
         }
 %    \end{macrocode}
-% 3) Create insert (see TeXBook chapter 15).
-%    \begin{macrocode}
-
-    \expandafter\newinsert\csname mpfootins#1\endcsname
-    \expandafter\newinsert\csname footins#1\endcsname
-    \expandafter\newinsert\csname #1footins\endcsname
-    \expandafter\newinsert\csname mp#1footins\endcsname
-%    \end{macrocode}
-% 4) Setting standard displaying.
+%Set standard display
 %    \begin{macrocode}
     \footnormal{#1}
 %    \end{macrocode}
-% 5) The familiar footnotes (\cs{footnoteX}), NOT for critical apparatus
-% \cs{footnoteX} is the outer level.
+%\subsection{Create tools for familiar footnotes (\cs{footnoteX})}
+% First, create the \cs{footnoteX} command.
 %    \begin{macrocode}
 
     \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
@@ -8050,7 +8052,7 @@
 %    \begin{macrocode}
     \footnormalX{#1}
 %    \end{macrocode}
-% 7) The endnote
+% \subsection{The endnotes}
 % The \cs{Xendnote} macro functions to
 % write one endnote to the \file{.end} file. We change
 % \cs{newlinechar} so that in the file every space becomes the
@@ -8078,10 +8080,10 @@
 
     \global\csletcs{#1end}{@gobblethree}
 %\end{macrocode}
-% 8) We need to be able to modify \Eledmac's footnote macros and restore their
+% We need to be able to modify \Eledmac's footnote macros and restore their
 
     \global\csletcs{#1@@footnote}{#1footnote}
-% 6) Stock in \@series
+% \cs{Stock series in \cs{@series}
 %    \begin{macrocode}
 
     \listxadd{\@series}{#1}
@@ -8089,7 +8091,7 @@
 }% End of \newseries
 %    \end{macrocode}
 % \end{macro}
-% So, now, we can init standards series (A,B,C,D,E,Z)
+% \subsection{Init standards series (A,B,C,D,E,Z)}
 %    \begin{macrocode}
 \newseries{A,B,C,D,E,Z}
 %    \end{macrocode}
