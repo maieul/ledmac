@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{7407}
+% \CheckSum{7410}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -143,6 +143,7 @@
 % \def\fileversion{v0.16} \def\filedate{2012/06/21}
 % \def\fileversion{v0.17} \def\filedate{2012/08/03}
 % \def\fileversion{v1.0}\def\filedate{2012/09/15}
+% \def\fileversion{v1.0.1}\def\filedate{2012/09/16}
 % \def\fileversion{v1.1}\def\filedate{2012/09/21}
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
@@ -948,6 +949,19 @@
 % number is unchanged and no line number will be printed.
 %
 %
+% \DescribeMacro{\resetprevline@}
+% Inside apparatus, at each note, the line number is memorized inside a macro called \cs{prevlineX}, where X is the letter of the current series.
+% This macro is used when the the user uses \cs{numberonlyfirstinline}.
+% This maco must be reset in the same time of the line number.
+% The \cs{resetprevline@} do this resetting for every series.
+% \begin{macro}{\resetprevline@}
+%    \begin{macrocode}
+\newcommand*{\resetprevline@}{%
+    \renewcommand{\do}[1]{\global\csundef{prevline##1}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
 % \section{The apparatus}
 % \subsection{Commands}
 % \DescribeMacro{\edtext}
@@ -1192,6 +1206,7 @@
 %
 % \subsubsection{Control line number printing}
 % \DescribeMacro{\numberonlyfirstinline}
+% \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
 % By default, the line number is printed in every note. If you want to print it only the first time for a value (i.e one time for line 1, one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{s}. Use \cs{numberonlyfirstinline}\oarg{s}\oarg{false} to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
 % \DescribeMacro{\symlinenum}
@@ -2545,7 +2560,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2012/09/15 v1.0 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2012/09/16 v1.0.1 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -2986,7 +3001,9 @@
   \global\sub@lock \z@
   \global\sublines@false
   \global\let\next@page@num=\relax
-  \global\let\sub@change=\relax}
+  \global\let\sub@change=\relax
+  \resetprevline@
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -5195,7 +5212,7 @@
     \csnumdef{pstartline}{\pstartline+1}%
     \do@line
     \ifbypstart@%
-     \ifnumequal{\pstartline}{1}{\setline{1}}{}%
+     \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
     \fi   
   \repeat
 %    \end{macrocode}
@@ -5478,6 +5495,7 @@
        \global\page@num=\next@action
        \ifbypage@
          \global\line@num=\z@ \global\subline@num=\z@
+         \resetprevline@
        \fi
 %    \end{macrocode}
 %
