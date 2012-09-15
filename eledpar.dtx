@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{3832}
+% \CheckSum{3836}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -135,6 +135,7 @@
 % \def\fileversion{v0.11}\def\filedate{2012/06/11}
 % \def\fileversion{v0.12}\def\filedate{2012/08/03}
 % \def\fileversion{v1.0}\def\filedate{2012/09/14}
+% \def\fileversion{v1.0.1}\def\filedate{2012/09/16}
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -150,9 +151,10 @@
 % \changes{v0.9.1}{2011/10/02}{The numbering of the pstarts restarts on each \cs{beginnumbering}.}
 % \changes{v0.9.2}{2011/11/08}{Debug : with \cs{Columns}, the hanging indentation now runs on the left columns and the hanging symbol is shown only when \cs{stanza} is used.}
 % \changes{v0.9.3}{2011/11/18}{\cs{thepstartL} and \cs{thepstartR}  use now \cs{bfseries} and not \cs{bf}, which is deprecated and makes conflicts with memoir class.}
-% \changes{v0.10}{2011/04/04}{\cs{edlabel} commands which start a paragraph are now put in the right place.}
-% \changes{v0.10}{2011/04/04}{\cs{edlabel} commands on the right side are now correctly indicated.}
-% \changes{v1.0}{2011/09/14}{Compatibility with eledmac. Change name to eledpar.}
+% \changes{v0.10}{2012/04/04}{\cs{edlabel} commands which start a paragraph are now put in the right place.}
+% \changes{v0.10}{2012/04/04}{\cs{edlabel} commands on the right side are now correctly indicated.}
+% \changes{v1.0}{2012/09/14}{Compatibility with eledmac. Change name to eledpar.}
+% \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -710,7 +712,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2012/09/14 v1.0 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2012/09/16 v1.0.1 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -3852,9 +3854,11 @@
       \check@pstarts
             \ifbypstart@
            \write\linenum@out{\string\@set[1]}
+           \resetprevline@
         \fi
        \ifbypstart@R
            \write\linenum@outR{\string\@set[1]}
+           \resetprevline@
         \fi
       \addtocounter{pstartL}{1}
       \addtocounter{pstartR}{1}
@@ -4484,6 +4488,7 @@
           \ifnum\value{pstartL}<\value{pstartLold}
           \else 
             \global\line@num=0
+            \resetprevline@
           \fi  
           \fi
         \addtocounter{pstartL}{1}
@@ -4515,6 +4520,7 @@
             \ifnum\value{pstartR}<\value{pstartRold}
             \else
                \global\line@numR=0
+               \resetprevline@
             \fi
         \fi
         \addtocounter{pstartR}{1}
