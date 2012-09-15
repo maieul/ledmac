@@ -9461,17 +9461,31 @@
 % This macro puts any moveable sidenote text into the left or right sidenote
 % box, depending on which margin it is meant to go in. It's a very much
 % stripped down version of \cs{affixlin@num}.
+%
+% Before do it, we concatenate all moveable sidenotes of the line, using \cs{sidenotesep} as separator.
+% It's the resultat that is put on the sidenote.
 %    \begin{macrocode}
 \newcommand*{\affixside@note}{%
+    \def\sidenotecontent@{}%
+    \numdef{\itemcount@}{0}%
+    \renewcommand{\do}[1]{%
+        \ifnumequal{\itemcount@}{0}%
+            {%
+            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
+            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            }%
+            \numdef{\itemcount@}{\itemcount@+1}
+    }
+%    \end{macrocode}
+% And not, the main part of the macro
+% \begin{macrocode}
   \gdef\@templ@d{}%
   \ifx\@templ@d\l@dcsnotetext \else
     \if@twocolumn
       \if@firstcolumn
-        \renewcommand{\do}[1]{\setl@dlp@rbox{##1}}%
-        \dolistloop{\l@dcsnotetext}%
+        \setl@dlp@rbox{##1}{\sidenotecontent@}%
       \else
-        \renewcommand{\do}[1]{\setl@drp@rbox{##1}}%
-        \dolistloop{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi
     \else
       \@l@dtempcntb=\sidenote@margin
@@ -9479,11 +9493,9 @@
         \advance\@l@dtempcntb by\page@num
       \fi
       \ifodd\@l@dtempcntb
-        \renewcommand{\do}[1]{\setl@drp@rbox{##1}}%
-        \dolistloop{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \else
-        \renewcommand{\do}[1]{\setl@dlp@rbox{##1}}%
-        \dolistloop{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \fi
     \fi
 \fi}
