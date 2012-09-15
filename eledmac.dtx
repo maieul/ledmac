@@ -946,6 +946,19 @@
 % number is unchanged and no line number will be printed.
 %
 %
+% \DescribeMacro{\resetprevline@}
+% Inside apparatus, at each note, the line number is memorized inside a macro called \cs{prevlineX}, where X is the letter of the current series.
+% This macro is used when the the user use \cs{numberonlyfirstinline}.
+% This maco must be reset in the same time of the line number.
+% The \cs{\resetprevline@} do this resetting for every series.
+% \begin{macro}{\resetprevline@}
+%    \begin{macrocode}
+\newcommand*{\resetprevline@}{%
+    \renewcommand{\do}[1]{\global\csundef{prevline##1}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
 % \section{The apparatus}
 %
 % \subsection{Commands}
@@ -2975,7 +2988,9 @@
   \global\sub@lock \z@
   \global\sublines@false
   \global\let\next@page@num=\relax
-  \global\let\sub@change=\relax}
+  \global\let\sub@change=\relax
+  \resetprevline@
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -5184,7 +5199,7 @@
     \csnumdef{pstartline}{\pstartline+1}%
     \do@line
     \ifbypstart@%
-     \ifnumequal{\pstartline}{1}{\setline{1}}{}%
+     \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
     \fi   
   \repeat
 %    \end{macrocode}
@@ -5467,6 +5482,7 @@
        \global\page@num=\next@action
        \ifbypage@
          \global\line@num=\z@ \global\subline@num=\z@
+         \resetprevline@
        \fi
 %    \end{macrocode}
 %
