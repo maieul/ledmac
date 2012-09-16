@@ -2954,7 +2954,7 @@
 % and variables in the two processing steps.
 % \changes{v0.7}{2005/02/24}{Added \cs{initnumbering@reg}}
 %    \begin{macrocode}
-\newcommandx*{\beginnumbering}[1][1]{%
+\newcommandx*{\beginnumbering}[2][1,2]{%
   \ifnumbering
     \led@err@NumberingStarted
     \endnumbering
@@ -2966,8 +2966,18 @@
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \l@dend@stuff
   \setcounter{pstart}{1}
+  \begingroup
   \renewcommand{\do}[1]{\cspreto{##1}{\leavevmode}}
   \docsvlist{#1}
+  \ifstrequal{#2}{chapter}{%
+        \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
+        \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+        \patchcmd{\@makechapterhead}{1\par}{1}{}{}
+        \pretocmd{\@makechapterhead}{\par}{}{}
+        \apptocmd{\@makechapterhead}{\par}{}{}
+        \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
+        \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+  }{}
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -3014,7 +3024,7 @@
   \else
     \led@err@NumberingNotStarted
   \fi
-  \autoparfalse}
+  \autoparfalse\endgroup}
 %    \end{macrocode}
 % \end{macro}
 %
