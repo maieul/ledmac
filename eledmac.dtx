@@ -2967,17 +2967,7 @@
   \l@dend@stuff
   \setcounter{pstart}{1}
   \begingroup
-  \renewcommand{\do}[1]{\cspreto{##1}{\leavevmode}}
-  \docsvlist{#1}
-  \ifstrequal{#2}{chapter}{%
-        \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
-        \patchcmd{\chapter}{\clearpage}{\relax}{}{}
-        \patchcmd{\@makechapterhead}{1\par}{1}{}{}
-        \pretocmd{\@makechapterhead}{\par}{}{}
-        \apptocmd{\@makechapterhead}{\par}{}{}
-        \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
-        \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-  }{}
+  \initnumbering@sectcmd{#1}{#2}
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -2997,6 +2987,28 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\initnumbering@sectcmd}
+% \cs{\initnumbering@sectcmd} change the sectionning commands inside numbered section.
+% The first argument is for command which not break pages.
+% The second argument is for the \cs{chapter} command of the book class.
+% Note that it's suppose user didn't change \cs{chapter}.
+% If he did, he should redefine \cs{\initnumbering@sectcmd}.
+%    \begin{macrocode}
+\newcommand{\initnumbering@sectcmd}[2]{
+    \renewcommand{\do}[1]{\cspreto{##1}{\leavevmode}}
+      \docsvlist{#1}
+      \ifstrequal{#2}{chapter}{%
+            \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
+            \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+            \patchcmd{\@makechapterhead}{1\par}{1}{}{}
+            \pretocmd{\@makechapterhead}{\par}{}{}
+            \apptocmd{\@makechapterhead}{\par}{}{}
+            \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
+            \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+      }{}
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\endnumbering}
 % \cs{endnumbering} must follow the last text for a numbered section.
 % It takes care of notifying you when changes have been noted in the
