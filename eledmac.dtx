@@ -8297,8 +8297,19 @@
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
+   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
+   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
+   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
+   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+   \iftoggle{numberonlyfirstintwolines@#2}{%
+       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
+       }%
+       {%
+       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
+       }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{inplaceofnumber@#2}}%
+   
    }%
    {%
        {%
@@ -8311,7 +8322,7 @@
                  {%
                  \ifcsdef{prevline#2}%
                     {%Be sure the \prevline exists.
-                    \ifnumequal{\csuse{prevline#2}}{\line@num}%Try it
+                    \ifcsequal{prevline#2}{lineinfo@}%Try it
                        {%
                        \ifcsempty{symlinenum@#2}% Try if a symbol is define
                         {%
@@ -8352,7 +8363,7 @@
                      }%
               \hspace{\csuse{afternumberinfootnote@#2}}%
               }%
-              \csnumgdef{prevline#2}{\line@num}%
+              \csxdef{prevline#2}{\lineinfo@}%
                  }%
         }%
      }%
