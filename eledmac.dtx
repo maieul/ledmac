@@ -1837,7 +1837,9 @@
 % \end{verbatim}
 % These can of course be changed to suit.
 %
-%
+% \DescribeMacro{\sidenotesep}
+% If you have two ore more sidenotes for the same liste, they are separated by a comma.
+% But if you want to change this separator, you can redefine the macro \cs{sidenotesep}.
 % \section{Familiar footnotes} \label{sec:desc:familiar}
 %
 %
@@ -5423,7 +5425,7 @@
 % \begin{macro}{\l@drd@ta}
 % \begin{macro}{\l@dcsnotetext}
 %  Nulls the \cs{...d@ta}, which may later hold line numbers.
-% Similarly for \cs{l@dcsnotetext} for the text of a sidenote.
+% Similarly for \cs{l@dcsnotetext} for the texts of sidenotes.
 % \changes{v0.7}{2005/02/18}{Added \cs{l@demptyd@ta}}
 %    \begin{macrocode}
 \newcommand*{\l@demptyd@ta}{%
@@ -9641,10 +9643,11 @@
 % \begin{macro}{\vl@drsnote}
 % \begin{macro}{\vl@dcsnote}
 % Put the left/right text into boxes, but just save the moveable text.
+% \cs{l@dcsnotetext} is a etoolbox list (comma separated)
 %    \begin{macrocode}
 \newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
 \newcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
-\newcommand*{\vl@dcsnote}[1]{\gdef\l@dcsnotetext{#1}}
+\newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9667,7 +9670,6 @@
    \else
      =\vbox to 0.70\baselineskip{\strut#1\vss}%
    \fi}}
-%%   \global\setbox\l@dlp@rbox=\vbox to\z@{#3\vss}}}% aligns on top line
 \newcommand*{\setl@drp@rbox}[1]{%
   {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
    \global\setbox\l@drp@rbox
@@ -9682,30 +9684,43 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\savel@dcsnote}
-% \begin{macro}{\l@dcsnotetext}
-% Save the moveable note text in \cs{l@dcsnotetext}.
-%    \begin{macrocode}
-\newcommand*{\savel@dcsnote}[3]{%
-  \gdef\l@dcsnotetext{#3}}
-
-%    \end{macrocode}
+% \begin{macro}{\sidenotesep}
+% Thismacro is used to separate sidenotes of the same line.
+%   \begin{macrocode}
+\newcommand{\sidenotesep}{, }
+%   \end{macrocode}
 % \end{macro}
-% \end{macro}
-%
 % \begin{macro}{\affixside@note}
 % This macro puts any moveable sidenote text into the left or right sidenote
 % box, depending on which margin it is meant to go in. It's a very much
 % stripped down version of \cs{affixlin@num}.
+%
+% Before do it, we concatenate all moveable sidenotes of the line, using \cs{sidenotesep} as separator.
+% It's the resultat that is put on the sidenote.
 %    \begin{macrocode}
 \newcommand*{\affixside@note}{%
+    \def\sidenotecontent@{}%
+    \numdef{\itemcount@}{0}%
+    \renewcommand{\do}[1]{%
+        \ifnumequal{\itemcount@}{0}%
+            {%
+            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
+            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            }%
+            \numdef{\itemcount@}{\itemcount@+1}%
+    }%
+    \dolistloop{\l@dcsnotetext}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num,}}{}
+%    \end{macrocode}
+% And not, the main part of the macro
+% \begin{macrocode}
   \gdef\@templ@d{}%
   \ifx\@templ@d\l@dcsnotetext \else
     \if@twocolumn
       \if@firstcolumn
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{##1}{\sidenotecontent@}%
       \else
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi
     \else
       \@l@dtempcntb=\sidenote@margin
@@ -9713,13 +9728,12 @@
         \advance\@l@dtempcntb by\page@num
       \fi
       \ifodd\@l@dtempcntb
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \else
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \fi
     \fi
-  \fi}
-
+\fi}
 %    \end{macrocode}
 % \end{macro}
 %
