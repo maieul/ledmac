@@ -3285,13 +3285,25 @@
 % The right text version of \cs{affixside@note}.
 %    \begin{macrocode}
 \newcommand*{\affixside@noteR}{%
+    \def\sidenotecontent@{}%
+    \numdef{\itemcount@}{0}%
+    \renewcommand{\do}[1]{%
+        \ifnumequal{\itemcount@}{0}%
+            {%
+            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
+            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            }%
+            \numdef{\itemcount@}{\itemcount@+1}%
+    }%
+    \dolistloop{\l@dcsnotetext}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR R p. \the\page@numR,}}{}
   \gdef\@templ@d{}%
   \ifx\@templ@d\l@dcsnotetext \else
     \if@twocolumn
       \if@firstcolumn
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \else
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi
     \else
       \@l@dtempcntb=\sidenote@marginR
@@ -3299,9 +3311,9 @@
         \advance\@l@dtempcntb by\page@num
       \fi
       \ifodd\@l@dtempcntb
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@t}%
       \else
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \fi
     \fi
   \fi}
