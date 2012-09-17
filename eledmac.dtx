@@ -1302,6 +1302,26 @@
 % \DescribeMacro{\parafootsep}
 % For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+$||$+.
 %
+%\subsubsection{Options for block of notes}
+% \changes{1.1}{2012/09/12}{New options for block of notes.}
+% \DescribeMacro{\beforeXnotes}
+% You can change the vertical space printed before the rule of the critical notes with \cs{beforeXnotes}\oarg{s}\marg{l}.
+% The default value is \verb|1.2em plus .6em minus .6em|.
+%
+%
+% \DescribeMacro{\beforenotesX}
+% You can change the vertical space printed before the rule of the familiar notes with \cs{beforenotesX}\oarg{s}\marg{l}.
+% The default value is \verb|1.2em plus .6em minus .6em|.
+%
+% \DescribeMacro{\preXnotes}
+% You can want the space before the first printed (in a page) series of crictical notes not to be the same as before other series.
+% You can do it with \cs{preXnotes}\marg{l}.
+% If you put again the length to 0~pt, you disable this feature.
+%
+% \DescribeMacro{\prenotesX}
+% You can want the space before the first printed (in a page) series of familiar notes not to be the same as before other series.
+% You can do it with \cs{prenotesX}\marg{l}.
+% If you put again the length to 0~pt, you disable this feature.
 %\subsection{Page layout}
 %    You should set up the page layout parameters, and in particular the
 % \cs{baselineskip} of the footnotes (this is done for you if you
@@ -6485,6 +6505,9 @@
 % spacing problems if what you add takes up a different amount of
 % space.
 %
+% But if the skip \verb|\preXnotes@| is greater than 0~pt,
+% it's used instead of \verb"\skip\footins" for the first printed series.
+%
 % The \cs{leftskip} and \cs{rightskip} values
 % are both zeroed here.\phantomsection\label{footskips}
 % Similarly, these skips are cancelled in the \verb"vfootnote" macros
@@ -6498,7 +6521,13 @@
 % the footnotes.  The footnotes continue to be of width \cs{hsize}.
 %    \begin{macrocode}
 \newcommand*{\normalfootstart}[1]{%
-  \vskip\skip\csname #1footins\endcsname
+    \ifdimequal{0pt}{\preXnotes@}{}%
+      {%
+      \iftoggle{preXnotes@}{%
+            \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+          {}%
+      }%
+  \vskip\skip\csname #1footins\endcsname%
   \leftskip0pt \rightskip0pt
   \csname #1footnoterule\endcsname}
 %    \end{macrocode}
@@ -6582,10 +6611,36 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\preXnotes@}
+% \begin{macro}{\preXnotes}
+% \changelog{v1.1}{2012/09/21}{New skip \cs{preXnotes@}}
+% If user redefines \cs{\preXnotes@}, via \cs{preXnotes} to a value greater than 0~pt,
+% this skip will be add before first series notes
+% instead of notes
+%    \begin{macrocode}
+\newtoggle{preXnotes@}
+\toggletrue{preXnotes@}
+\newcommand{\preXnotes@}{0pt}
+\newcommand*{\preXnotes}[1]{\renewcommand{\preXnotes@}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% The same, but for familiar footnotes.
+% \begin{macro}{\preXnotes}
+% \begin{macro}{\preXnotes@}
+%    \begin{macrocode}
+\newtoggle{prenotesX@}
+\toggletrue{prenotesX@}
+\newcommand{\prenotes@X}{0pt}
+\newcommand*{\prenotesX}[1]{\renewcommand{\prenotesX@}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % Now we set up the \cs{footnormal} macro itself.  It takes
 % one argument: the footnote series letter.
 %    \begin{macrocode}
 \newcommand*{\footnormal}[1]{%
+  \csgdef{series@display#1}{normal}
   \expandafter\let\csname #1footstart\endcsname=\normalfootstart
   \expandafter\let\csname v#1footnote\endcsname=\normalvfootnote
   \expandafter\let\csname #1footfmt\endcsname=\normalfootfmt
@@ -6594,7 +6649,7 @@
                                              \normalfootnoterule
   \count\csname #1footins\endcsname=1000
   \dimen\csname #1footins\endcsname=\ledfootinsdim
-  \skip\csname #1footins\endcsname=1.2em \@plus .6em \@minus .6em
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
 % normal setup as we can (so the notes will have a similar layout).
@@ -6604,7 +6659,7 @@
   \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
   \count\csname mp#1footins\endcsname=1000
   \dimen\csname mp#1footins\endcsname=\ledfootinsdim
-  \skip\csname mp#1footins\endcsname=1.2em \@plus .6em \@minus .6em
+  \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
 }
 
 %    \end{macrocode}
@@ -6647,6 +6702,7 @@
 % (\texttt{A}--\texttt{E}) denoting the series of notes to be paragraphed.
 %    \begin{macrocode}
 \newcommand*{\footparagraph}[1]{%
+  \csgdef{series@display#1}{paragraph}
   \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
   \expandafter\let\csname v#1footnote\endcsname=\para@vfootnote
@@ -6715,7 +6771,13 @@
 %    \begin{macrocode}
 \newcommand*{\parafootstart}[1]{%
   \rightskip=0pt \leftskip=0pt \parindent=0pt
-  \vskip\skip\csname #1footins\endcsname
+    \ifdimequal{0pt}{\preXnotes@}{}%
+      {%
+      \iftoggle{preXnotes@}{%
+           \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+          {}%
+      }%
+  \vskip\skip\csname #1footins\endcsname%
   \csname #1footnoterule\endcsname}
 %    \end{macrocode}
 % \end{macro}
@@ -7032,6 +7094,7 @@
 % \cs{hsize} has been set for the document.
 %    \begin{macrocode}
 \newcommand*{\footthreecol}[1]{%
+  \csgdef{series@display#1}{threecol}
   \expandafter\let\csname v#1footnote\endcsname=\threecolvfootnote
   \expandafter\let\csname #1footfmt\endcsname=\threecolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\threecolfootgroup
@@ -7185,6 +7248,7 @@
 % \cs{hsize} has been set for the document.
 %    \begin{macrocode}
 \newcommand*{\foottwocol}[1]{%
+  \csgdef{series@display#1}{twocol}
   \expandafter\let\csname v#1footnote\endcsname=\twocolvfootnote
   \expandafter\let\csname #1footfmt\endcsname=\twocolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\twocolfootgroup
@@ -7512,7 +7576,13 @@
 % starting macro used in the output routine.
 %    \begin{macrocode}
 \newcommand*{\normalfootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
+    \ifdimequal{0pt}{\prenotesX@}{}%
+      {%
+      \iftoggle{prenotesX@}{%
+           \togglefalse{prenotesX@} \skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+          {}%
+      }%
+  \vskip\skip\csname footins#1\endcsname%
   \leftskip=\z@
   \rightskip=\z@
   \@nameuse{footnoterule#1}}
@@ -7596,6 +7666,7 @@
 % each series.
 %    \begin{macrocode}
 \newcommand*{\footnormalX}[1]{%
+  \csgdef{series@displayX#1}{normalX}
   \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
   \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
   \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
@@ -7607,7 +7678,7 @@
   \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
   \count\csname footins#1\endcsname=1000
   \dimen\csname footins#1\endcsname=\ledfootinsdim
-  \skip\csname footins#1\endcsname=1.2em \@plus .6em \@minus .6em
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
 %    \end{macrocode}
 % Aditions for minipages.
 %    \begin{macrocode}
@@ -7616,7 +7687,7 @@
   \count\csname mpfootins#1\endcsname=1000
 %  \dimen\csname mpfootins#1\endcsname=0.8\vsize
   \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
-  \skip\csname mpfootins#1\endcsname=1.2em \@plus .6em \@minus .6em
+  \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
 }
 
 %    \end{macrocode}
@@ -7631,6 +7702,7 @@
 % \cs{foottwocolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\foottwocolX}[1]{%
+  \csgdef{series@displayX#1}{twocol}
   \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
@@ -7718,6 +7790,7 @@
 % \cs{footthreecolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footthreecolX}[1]{%
+  \csgdef{series@displayX#1}{threecol}
   \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
@@ -7802,6 +7875,7 @@
 % \cs{footparagraphX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footparagraphX}[1]{%
+  \csgdef{series@displayX#1}{paragraph}
   \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
@@ -7836,7 +7910,13 @@
 % \cs{parafootstartX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\parafootstartX}[1]{%
-  \vskip\skip\@nameuse{footins#1}%
+    \ifdimequal{0pt}{\prenotesX@}{}%
+      {%
+      \iftoggle{prenotesX@}{%
+            \togglefalse{prenotesX@}\skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+          {}%
+      }%
+  \vskip\skip\csname footins#1\endcsname%
   \leftskip=\z@
   \rightskip=\z@
   \parindent=\z@
@@ -8025,6 +8105,8 @@
     \csgdef{inplaceoflemmaseparator@#1}{1em}%
     \csgdef{afternote@#1}{1em plus.4em minus.4em}%
     \csgdef{parafootsep@#1}{\parafootftmsep}%
+    \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}
+    \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % Concerning inserts, see chapter 15 of the TeXBook by D. Knuth
@@ -8063,8 +8145,9 @@
         \endgroup
         }
 %    \end{macrocode}
-%Set standard display
+%Set standard display and remember the display.
 %    \begin{macrocode}
+    \csgdef{series@display#1}{}
     \footnormal{#1}
 %    \end{macrocode}
 %\subsubsection{Create tools for familiar footnotes (\cs{footnoteX})}
@@ -8088,6 +8171,7 @@
 %  \end{macrocode}
 % Don't forget to initialize series
 %    \begin{macrocode}
+    \csgdef{series@displayX#1}{}
     \footnormalX{#1}
 %    \end{macrocode}
 % \subsubsection{The endnotes}
@@ -8222,7 +8306,23 @@
 
 \newhookcommand@series{afternote}
 
+
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+%
+% \cs{newhookcommand@series@reload} do the same thing as \cs{newhookcommand@series} but the commands created by this macro also reload the series displaying (normal, paragraph, twocol)
+% \begin{macrocode}
+\newcommand{\newhookcommand@series@reload}[1]{%
+  \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
+  \csuse{setcommand@series}{##1}{#1}{##2}
+  \csuse{foot\csuse{series@display##1}}{##1}
+  }%
+}
+\newhookcommand@series@reload{beforeXnotes}
+
+\newhookcommand@series@reload{beforenotesX}
+% \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
 %\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
