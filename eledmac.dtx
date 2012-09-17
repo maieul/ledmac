@@ -8274,9 +8274,33 @@
 \newseries{A,B,C,D,E,Z}
 %    \end{macrocode}
 % \sububsection{Some tools}
+% \changes{1.1}{2012/09/21}{New tools to change order of series}
 % \begin{macro}{\firstseries}
 % \cs{seriesatbegin}\marg{s} change the order of series, to put the series \meta{s} at the begining of the list.
-
+% The series can be the result of a command.
+%   \begin{macrocode}
+\newcommand{\seriesatbegin}[1]{
+ 	\edef\series{#1}
+ 	\def\new{}
+ 	\listeadd{\new}{\series}
+	\renewcommand{\do}[1]{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
+	\dolistloop{\@series}
+	\xdef\@series{\new}
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\seriesatend}
+%  And \cs{seriesatend} move the series to the end of the list.
+% \begin{macrocode}
+\newcommand{\seriesatend}[1]{
+ 	\edef\series{#1}
+ 	\def\new{}
+	\renewcommand{\do}[1]{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
+	\dolistloop{\@series}
+	\listeadd{\new}{\series}
+	\xdef\@series{\new}
+}
+% \end{macrocode}
 % \end{macro}
 % \subsection{Display}
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
