@@ -2993,6 +2993,8 @@
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \l@dend@stuff
   \setcounter{pstart}{1}
+  \begingroup
+  \initnumbering@sectcmd
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -3012,6 +3014,52 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\ledsection}
+% \begin{macro}{\ledsubsection}
+% \begin{macro}{\ledsubsubsection}
+
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\initnumbering@sectcmd}
+% \cs{initnumbering@sectcmd} define sectionning commands inside numbered section.
+% Note that it's suppose user didn't change \cs{chapter}.
+% If he did, he should redefine \cs{initnumbering@sectcmd}.
+%    \begin{macrocode}
+\newcommand{\initnumbering@sectcmd}{
+    \newcommand{\ledsection}[2][]{%
+        \pend\vspace{3.5ex \@plus 1ex \@minus .2ex}%
+        \pstart%
+        \leavevmode\section[##1]{##2}~\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
+    \newcommand{\ledsubsection}[2][]{%
+        \pend\vspace{3.25ex \@plus 1ex \@minus .2ex}%
+        \pstart%
+        \leavevmode\subsection[##1]{##2}~\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
+    \newcommand{\ledsubsubsection}[2][]{%
+        \pend\vspace{3.25ex \@plus 1ex \@minus .2ex}%
+        \pstart%
+        \leavevmode\section[##1]{##2}~\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
+    \patchcmd{\@makechapterhead}{1\par}{1}{}{}
+    \pretocmd{\@makechapterhead}{\par}{}{}
+    \apptocmd{\@makechapterhead}{\par}{}{}
+    \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
+    \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+    \newcommand\ledchapter[2][]{~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
+    \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
+    \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
+    \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\endnumbering}
 % \cs{endnumbering} must follow the last text for a numbered section.
 % It takes care of notifying you when changes have been noted in the
@@ -3039,7 +3087,7 @@
   \else
     \led@err@NumberingNotStarted
   \fi
-  \autoparfalse}
+  \autoparfalse\endgroup}
 %    \end{macrocode}
 % \end{macro}
 %
