@@ -6514,13 +6514,13 @@
 % the footnotes.  The footnotes continue to be of width \cs{hsize}.
 %    \begin{macrocode}
 \newcommand*{\normalfootstart}[1]{%
-    \ifdimequal{0pt}{\preXnotes@}{%
-      \vskip\csuse{beforeXnotes@#1}}%
+    \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-          \togglefalse{preXnotes@}\vskip\preXnotes@}%
-          {\vskip\csuse{beforeXnotes@#1}}%
+            \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+          {}%
       }%
+  \vskip\skip\csname #1footins\endcsname%
   \leftskip0pt \rightskip0pt
   \csname #1footnoterule\endcsname}
 %    \end{macrocode}
@@ -6613,9 +6613,8 @@
 %    \begin{macrocode}
 \newtoggle{preXnotes@}
 \toggletrue{preXnotes@}
-\newskip\preXnotes@
-\preXnotes@=0pt
-\newcommand*{\preXnotes}[1]{\preXnotes@=#1}
+\newcommand{\preXnotes@}{0pt}
+\newcommand*{\preXnotes}[1]{\renewcommand{\preXnotes@}{#1}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -6625,9 +6624,8 @@
 %    \begin{macrocode}
 \newtoggle{prenotesX@}
 \toggletrue{prenotesX@}
-\newskip\prenotesX@
-\prenotesX@=0pt
-\newcommand*{\prenotesX}[1]{\prenotesX@=#1}
+\newcommand{\prenotes@X}{0pt}
+\newcommand*{\prenotesX}[1]{\renewcommand{\prenotesX@}{#1}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -6643,7 +6641,7 @@
                                              \normalfootnoterule
   \count\csname #1footins\endcsname=1000
   \dimen\csname #1footins\endcsname=\ledfootinsdim
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}% Kept for backward compatibilty, should'nt be use anymore
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
 % normal setup as we can (so the notes will have a similar layout).
@@ -6764,13 +6762,13 @@
 %    \begin{macrocode}
 \newcommand*{\parafootstart}[1]{%
   \rightskip=0pt \leftskip=0pt \parindent=0pt
-    \ifdimequal{0pt}{\preXnotes@}{%
-      \vskip\csuse{beforeXnotes@#1}}%
+    \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-          \togglefalse{preXnotes@}\vskip\preXnotes@}%
-          {\vskip\csuse{beforeXnotes@#1}}%
+           \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+          {}%
       }%
+  \vskip\skip\csname #1footins\endcsname%
   \csname #1footnoterule\endcsname}
 %    \end{macrocode}
 % \end{macro}
@@ -7567,13 +7565,13 @@
 % starting macro used in the output routine.
 %    \begin{macrocode}
 \newcommand*{\normalfootstartX}[1]{%
-   \ifdimequal{0pt}{\prenotesX@}{%
-      \vskip\csuse{beforenotesX@#1}}%
+    \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-          \togglefalse{prenotesX@}\vskip\prenotesX@}%
-          {\vskip\csuse{beforenotesX@#1}}%
+           \togglefalse{prenotesX@} \skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+          {}%
       }%
+  \vskip\skip\csname footins#1\endcsname%
   \leftskip=\z@
   \rightskip=\z@
   \@nameuse{footnoterule#1}}
@@ -7668,7 +7666,7 @@
   \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
   \count\csname footins#1\endcsname=1000
   \dimen\csname footins#1\endcsname=\ledfootinsdim
-  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%kept for ascendant compatibility
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
 %    \end{macrocode}
 % Aditions for minipages.
 %    \begin{macrocode}
@@ -7897,13 +7895,13 @@
 % \cs{parafootstartX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\parafootstartX}[1]{%
-    \ifdimequal{0pt}{\prenotesX@}{%
-      \vskip\csuse{beforenotesX@#1}}%
+    \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-          \togglefalse{prenotesX@}\vskip\prenotesX@}%
-          {\vskip\csuse{beforenotesX@#1}}%
+            \togglefalse{prenotesX@}\skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+          {}%
       }%
+  \vskip\skip\csname footins#1\endcsname%
   \leftskip=\z@
   \rightskip=\z@
   \parindent=\z@
