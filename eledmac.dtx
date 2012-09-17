@@ -1308,6 +1308,8 @@
 % You can change the vertical space printed before the rule of the critical notes with \cs{beforeXnotes}\oarg{s}\marg{l}.
 % The default value is \verb|1.2em plus .6em minus .6em|.
 %
+% \DescribeMacro{\txtbeforeXnotes}
+% You can add some text before  critical notes with \cs{textbeforeXnotes}\oarg{s}\marg{text}.
 %
 % \DescribeMacro{\beforenotesX}
 % You can change the vertical space printed before the rule of the familiar notes with \cs{beforenotesX}\oarg{s}\marg{l}.
@@ -6596,7 +6598,7 @@
 % contents of the footnote-insert box to the output page without
 % alteration.
 %    \begin{macrocode}
-\newcommand*{\normalfootgroup}[1]{\unvbox\csname #1footins\endcsname}
+\newcommand*{\normalfootgroup}[1]{{\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\unvbox\csname #1footins\endcsname}
 
 %    \end{macrocode}
 % \end{macro}
@@ -6609,7 +6611,8 @@
   \vskip\skip\@nameuse{mp#1footins}
   \normalcolor
   \@nameuse{#1footnoterule}
-  \unvbox\csname mp#1footins\endcsname}}
+ {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}
+ \unvbox\csname mp#1footins\endcsname}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -7033,7 +7036,7 @@
 \newcommand*{\para@footgroup}[1]{%
   \unvbox\csname #1footins\endcsname 
   \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
   \noindent\unhbox0\par}
 
@@ -7049,7 +7052,7 @@
   \@nameuse{#1footnoterule}%
   \unvbox\csname mp#1footins\endcsname 
   \makehboxofhboxes
-  \setbox0=\hbox{\unhbox0 \removehboxes}%
+  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
   \noindent\unhbox0\par}}
 
@@ -7268,6 +7271,7 @@
 % \cs{rigidbalance} directly, without any re-boxing.
 %    \begin{macrocode}
 \newcommand*{\threecolfootgroup}[1]{{\notefontsetup
+  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}}
@@ -7281,6 +7285,7 @@
   \vskip\skip\@nameuse{mp#1footins}
   \normalcolor
   \@nameuse{#1footnoterule}
+  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
@@ -7352,6 +7357,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
+   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}}
@@ -7375,6 +7381,7 @@
   \vskip\skip\@nameuse{mp#1footins}
   \normalcolor
   \@nameuse{#1footnoterule}
+   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
@@ -8155,6 +8162,7 @@
     \csgdef{parafootsep@#1}{\parafootftmsep}%
     \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}
     \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
+    \csgdef{txtbeforeXnotes@#1}{}
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % Concerning inserts, see chapter 15 of the TeXBook by D. Knuth
@@ -8265,6 +8273,35 @@
 %    \begin{macrocode}
 \newseries{A,B,C,D,E,Z}
 %    \end{macrocode}
+% \sububsection{Some tools}
+% \changes{1.1}{2012/09/21}{New tools to change order of series}
+% \begin{macro}{\firstseries}
+% \cs{seriesatbegin}\marg{s} change the order of series, to put the series \meta{s} at the begining of the list.
+% The series can be the result of a command.
+%   \begin{macrocode}
+\newcommand{\seriesatbegin}[1]{
+ 	\edef\series{#1}
+ 	\def\new{}
+ 	\listeadd{\new}{\series}
+	\renewcommand{\do}[1]{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
+	\dolistloop{\@series}
+	\xdef\@series{\new}
+}
+%   \end{macrocode}
+% \end{macro}
+% \begin{macro}{\seriesatend}
+%  And \cs{seriesatend} move the series to the end of the list.
+% \begin{macrocode}
+\newcommand{\seriesatend}[1]{
+ 	\edef\series{#1}
+ 	\def\new{}
+	\renewcommand{\do}[1]{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
+	\dolistloop{\@series}
+	\listeadd{\new}{\series}
+	\xdef\@series{\new}
+}
+% \end{macrocode}
+% \end{macro}
 % \subsection{Display}
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
 % \subsubsection{Options}
@@ -8354,6 +8391,7 @@
 
 \newhookcommand@series{afternote}
 
+\newhookcommand@series{txtbeforeXnotes}
 
 %    \end{macrocode}
 % \end{macro}
