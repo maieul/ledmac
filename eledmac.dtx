@@ -6597,12 +6597,12 @@
 %
 % \begin{macro}{\ledfootinsdim}
 % Have a constant value for the \verb?\dimen\footins?
-% \changes{v0.4.1}{2004/03/25}{Added \cs{ledfootinsdim}}
+% \changes{v1.1}{2012/09/21}{Deprecated \cs{ledfootinsdim}}
 %    \begin{macrocode}
-\newcommand*{\ledfootinsdim}{0.8\vsize}
-
+\newcommand*{\ledfootinsdim}{0.8\vsize} % kept for backward compatibility, should'nt be use anymore.
 %    \end{macrocode}
 % \end{macro}
+
 %
 % \begin{macro}{\preXnotes@}
 % \begin{macro}{\preXnotes}
@@ -6641,7 +6641,7 @@
   \expandafter\let\csname #1footnoterule\endcsname=%
                                              \normalfootnoterule
   \count\csname #1footins\endcsname=1000
-  \dimen\csname #1footins\endcsname=\ledfootinsdim
+  \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
   \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
@@ -6651,7 +6651,7 @@
   \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
   \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
   \count\csname mp#1footins\endcsname=1000
-  \dimen\csname mp#1footins\endcsname=\ledfootinsdim
+  \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
   \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
 }
 
@@ -7670,7 +7670,7 @@
   \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
   \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
   \count\csname footins#1\endcsname=1000
-  \dimen\csname footins#1\endcsname=\ledfootinsdim
+  \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
 %    \end{macrocode}
 % Aditions for minipages.
@@ -7678,8 +7678,7 @@
   \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
   \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
   \count\csname mpfootins#1\endcsname=1000
-%  \dimen\csname mpfootins#1\endcsname=0.8\vsize
-  \dimen\csname mpfootins#1\endcsname=\ledfootinsdim
+  \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
 }
 
@@ -8097,8 +8096,10 @@
     \csgdef{inplaceoflemmaseparator@#1}{1em}%
     \csgdef{afternote@#1}{1em plus.4em minus.4em}%
     \csgdef{parafootsep@#1}{\parafootftmsep}%
-    \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}
-    \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
+    \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}%
+    \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}%
+    \csgdef{maxhnotesX@#1}{\ledfootinsdim}%
+    \csgdef{maxhXnotes@#1}{\ledfootinsdim}
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % Concerning inserts, see chapter 15 of the TeXBook by D. Knuth
@@ -8314,6 +8315,10 @@
 \newhookcommand@series@reload{beforeXnotes}
 
 \newhookcommand@series@reload{beforenotesX}
+
+\newhookcommand@series@reload{maxhnotesX}
+
+\newhookcommand@series@reload{maxhXnotes}
 % \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
@@ -8338,7 +8343,7 @@
 \newif\ifledplinenum
   \ledplinenumtrue
 \newcommand*{\symplinenum}{}
-%    \end{macrocode}
+% \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
