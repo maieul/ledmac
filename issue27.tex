@@ -1,6 +1,6 @@
 \documentclass{article}
 \usepackage{etex}
-\usepackage{everypage}
+\usepackage{textcase}
 
 
 %\AddEverypageHook{\deplace}
@@ -12,8 +12,7 @@
 \makeatletter
 
 % On stocke la serie courante
-\newcounter{cseries}%[page]% Reset at each page
-\newcounter{oseries}
+\newcounter{cseries}
 \newseries{F} 	% We suppose they can have 6 section par page
 \setcounter{cseries}{0}
 \Alph{cseries}
@@ -23,17 +22,26 @@
 \def\deplace{
 	\seriesatend{\Alph{cseries}}}
 
+\def\beforeX#1#2{
+	\txtbeforeXnotes[\Alph{cseries}]{\bfseries\MakeTextUppercase{\romannumeral#1}~\underline{#2~$||$}\space}% On definit le texte à afficher avant les notes
+}
+
 
 \beginnumbering
 \let\oldsection\ledsection% Conserve l'ancienne définition de \ledsection
-\newcommand{\csection}[2][]{\stepcounter{cseries}\oldsection[#1]{#2\thecseries}	% On appel d'abord l'ancienne def
-	\ifnumequal{\thecseries}{4}{\setcounter{cseries}{1}}{}\deplace%			% On augmente le compteur
-	\txtbeforeXnotes[\Alph{cseries}]{\bfseries\underline{#2~$||$}\space}	% On definit le text à afficher avant les notes
+\newcommand{\csection}[2][]{\oldsection[#1]{#2}	% On appel d'abord l'ancienne def
+	\stepcounter{cseries}				% On augmente le compteur
+	\ifnumequal{\thecseries}{4}{\setcounter{cseries}{1}}{} % Si besoin, on reinitalise, si on depasse les 6 sections notes existantes
+	\deplace%						% On dit que la serie actuelle se place en fin
+	\makeatletter\csxdef{toto@\Alph{cseries}}{\thesection}
+	\edef\sect{\thesection}				% E = interpreté maintenant
+	\expandafter\beforeX\sect#2
 	\letcs{\note}{\Alph{cseries}footnote}		% On redefinit la commande note
-	\setcounter{oseries}{\thecseries}
 }
 \let\ledsection\csection
-\pstart~\skipnumbering \ledsection{A}
+\pstart~\skipnumbering 
+
+\ledsection{A}
 
 
 
