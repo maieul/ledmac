@@ -144,6 +144,7 @@
 % \def\fileversion{v0.17} \def\filedate{2012/08/03}
 % \def\fileversion{v1.0}\def\filedate{2012/09/15}
 % \def\fileversion{v1.0.1}\def\filedate{2012/09/16}
+% \def\fileversion{v1.1}\def\filedate{2012/09/21}
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
 % \changes{v0.2.1}{2003/09/13}{Bug fixes and match with mempatch v1.8}
@@ -177,7 +178,8 @@
 %\changes{v0.13}{2011/11/08}{New stanzaindentsrepetition counter  to repeat stanza indents every \emph{n} verses.}
 % \changes{v0.13.1}{2011/11/18}{\cs{thepstartL} and \cs{thepstartR}  use now \cs{bfseries} and not \cs{bf}, which is deprecated and makes conflicts with memoir class.}
 % \changes{v0.14}{2012/04/04}{Tweaked \cs{edlabel} to get correct line number if the command is first element of a paragraph.}
-% \changes{v1.0}{2012/09/15}{Some compatibility break with eledmac. Change of name: eledmac.}
+% \changes{v1.0}{2012/09/15}{Some compatibility break with eledmac. Change of name : eledmac.}
+% \changes{v1.1}{2012/09/21}{New package option : \verb+parapparatus+.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -948,7 +950,6 @@
 %
 %
 % \section{The apparatus}
-%
 % \subsection{Commands}
 % \DescribeMacro{\edtext}
 % Within numbered paragraphs, all footnotes and endnotes are generated
@@ -1057,6 +1058,12 @@
 % \cs{doendnotes} macro described below
 % (p.\,\pageref{doendnotes}) to call for their
 % output at the appropriate point in your document.
+%
+% By default, no paragraph can be made in notes of critical apparatus. 
+% You can allow it by adding the options \verb+parapparatus+ when loading the package :
+% \begin{verbatim}
+% \usepackage[parapparatus]{eledmac}
+% \end{verbatim}
 %
 % \DescribeMacro{\lemma}
 % \changes{v1.0}{2012/09/15}{\cs{lemma} can contain commands.}
@@ -2601,13 +2608,17 @@
 %
 %
 % \begin{macro}{\ifledfinal}
+% \begin{macro}{\ifparapparatus@}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % \changes{v0.4}{2004/02/29}{Added final/draft options}
 %    \begin{macrocode}
 \newif\ifledfinal
+\newif\ifparapparatus@
+\parapparatus@false
 \DeclareOption{final}{\ledfinaltrue}
 \DeclareOption{draft}{\ledfinalfalse}
+\DeclareOption{parapparatus}{\parapparatus@true}
 \ExecuteOptions{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
@@ -2620,7 +2631,7 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 % Loading package \emph{xargs} to declare commands with optional arguments. \emph{Etoolbox} is also used for more clear code, for example in dynamic command names (it could remplace \cs{csname} etc.)
 %  \begin{macrocode}
 \RequirePackage{xargs}
@@ -6258,7 +6269,7 @@
 % \cs{insert} for this note, calling on the \cs{footfmt} macro for
 % this note series to format the text of the note.
 %    \begin{macrocode}
-\newcommand*{\normalvfootnote}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
   \csuse{Xnotefontsize@#1}
   \footsplitskips
@@ -6285,7 +6296,7 @@
 % And a somewhat different version for minipages.
 % \changes{v0.4}{2004/02/29}{Added \cs{mpnormalvfootnote}}
 %    \begin{macrocode}
-\newcommand*{\mpnormalvfootnote}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}
     \csuse{Xnotefontsize@#1}
@@ -6322,7 +6333,7 @@
 \newcommand*{\ledsetnormalparstuff}{%
   \normal@pars
   \parindent \z@ \parfillskip \z@ \@plus 1fil}
-\newcommandx*{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
+\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
   \ledsetnormalparstuff%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
@@ -7228,7 +7239,7 @@
 % The arguments are 1)~the note series letter and 2)~the full text
 % of the note (including numbers, lemma and text).
 %    \begin{macrocode}
-\newcommand*{\threecolvfootnote}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
   \csuse{Xnotefontsize@#1}
   \footsplitskips
@@ -7249,7 +7260,7 @@
 % text of the \verb"-footnote" command 4) optional  (for backward compatibility): the series.
 %
 %    \begin{macrocode}
-\newcommandx*{\threecolfootfmt}[4][4=Z]{% 
+\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\threecolfootfmt}[4][4=Z]{% 
   \normal@pars
   \hsize \csuse{hsizethreecol@#4}
   \parindent=0pt
@@ -7345,13 +7356,13 @@
   \multiply\dimen\csname #1footins\endcsname \tw@}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
   \csuse{Xnotefontsize@#1}
   \footsplitskips
   \csname #1footfmt\endcsname #2[#1]\egroup}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommandx*{\twocolfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
+\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\twocolfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
   \normal@pars
   \hsize \csuse{hsizetwocol@#4}
   \parindent=0pt
@@ -8190,7 +8201,7 @@
 % Note the double \# in command: it's because command is made inside another command.
 %    \begin{macrocode}
 
-    \global\expandafter\newcommand\expandafter *\csname #1footnote\endcsname[2][]{%
+    \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
         \begingroup%
         \newcommand{\content}{##2}%
         \ifnumberedpar@
