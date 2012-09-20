@@ -2580,10 +2580,11 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% Loading package \emph{xargs} to declare commands with optional arguments. \emph{Etoolbox} is also used for more clear code, for example in dynamic command names (it could remplace \cs{csname} etc.)
+% Loading package \emph{xargs} to declare commands with optional arguments. \emph{Etoolbox} is also used for more clear code, for example in dynamic command names (it could remplace \cs{csname} etc.). \emph{suffix} to declare commands with starred version.
 %  \begin{macrocode}
 \RequirePackage{xargs}
 \RequirePackage{etoolbox}
+\RequirePackage{suffix}
 %    \end{macrocode}
 % \begin{macro}{\showlemma}
 % \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
@@ -2987,14 +2988,15 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\ledsection}
-% \begin{macro}{\ledsubsection}
-% \begin{macro}{\ledsubsubsection}
-
-% \end{macro}
-% \end{macro}
-% \end{macro}
 % \begin{macro}{\initnumbering@sectcmd}
+% \begin{macro}{\ledsection}
+% \begin{macro}{\ledsection*}
+% \begin{macro}{\ledsubsection}
+% \begin{macro}{\ledsubsection*}
+% \begin{macro}{\ledsubsubsection}
+% \begin{macro}{\ledsubsubsection*}
+% \begin{macro}{\ledchapter}
+% \begin{macro}{\ledchapter*}
 % \cs{initnumbering@sectcmd} define sectionning commands inside numbered section.
 % Note that it's suppose user didn't change \cs{chapter}.
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
@@ -3007,10 +3009,24 @@
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \pstart
     }
+    \WithSuffix\newcommand\ledsection*[1]{%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \pstart%
+        \leavevmode\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
     \newcommand{\ledsubsection}[2][]{%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
         \pstart%
         \leavevmode\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
+    \WithSuffix\newcommand\ledsubsection*[1]{%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \pstart%
+        \leavevmode\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \pstart
     }
@@ -3021,17 +3037,36 @@
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \pstart
     }
+    \WithSuffix\newcommand\ledsubsubsection*[1]{%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \pstart%
+        \leavevmode\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \pstart
+    }
+    \newcommand\ledchapter[2][]{~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
+    \WithSuffix\newcommand\ledchapter*[1]{~\pend\skipnumbering\pstart\chapter*{##1}\pend\pstart}
+    \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
+    \pretocmd{\@makeschapterhead}{\par}{}{}
+    \apptocmd{\@makeschapterhead}{\par}{}{}
+    \patchcmd{\@makeschapterhead}{\vskip 40\p@}{}{}{}
     \patchcmd{\@makechapterhead}{1\par}{1}{}{}
     \pretocmd{\@makechapterhead}{\par}{}{}
     \apptocmd{\@makechapterhead}{\par}{}{}
     \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
     \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-    \newcommand\ledchapter[2][]{~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
+    \apptocmd{\@schapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
     \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
     \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
     \patchcmd{\chapter}{\clearpage}{\relax}{}{}
 }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\endnumbering}
 % \cs{endnumbering} must follow the last text for a numbered section.
