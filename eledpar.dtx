@@ -155,6 +155,7 @@
 % \changes{v0.10}{2012/04/04}{\cs{edlabel} commands on the right side are now correctly indicated.}
 % \changes{v1.0}{2012/09/14}{Compatibility with eledmac. Change name to eledpar.}
 % \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
+% \changes{v1.1{2012/09/21}{\verb+Shiftedverses+ becomes \verb+shiftedpstarts+}.
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -715,14 +716,18 @@
 \ProvidesPackage{eledpar}[2012/09/16 v1.0.1 eledmac extension for parallel texts]
 
 %    \end{macrocode}
-%  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
-%
+%  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
+% The \cs{shiftedverses} is kept for backward compatibility.
+% \begin{macro}{\ifshiftedpstarts}
 %    \begin{macrocode}
-\newif\ifshiftedverses
-\shiftedversesfalse
-\DeclareOption{shiftedverses}{\shiftedversestrue}
+\newif\ifshiftedpstarts
+\let\shiftedversestrue\shiftedpstartstrue
+\let\shiftedversesfalse\shiftedpstartsfalse
+\DeclareOption{shiftedverses}{\shiftedpstartstrue}
+\DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
 \ProcessOptions
 %    \end{macrocode}
+% \end{macro}
 %  As noted above, much of the code is a duplication of the original
 % \Eledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
@@ -4110,7 +4115,7 @@
 %    \begin{macrocode}
               \do@lineL
               \advance\numpagelinesL \@ne
-              \ifshiftedverses
+              \ifshiftedpstarts
               		\ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
               \else
               		\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
@@ -4150,7 +4155,7 @@
 {            \loop\ifl@dsamepage
               \do@lineR
               \advance\numpagelinesR \@ne
-              \ifshiftedverses
+              \ifshiftedpstarts
               		\ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
               \else
               		\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
@@ -4431,7 +4436,7 @@
 % \cs{goalfraction}. \cs{ledthegoal} is calculated via \cs{check@goal}.
 %    \begin{macrocode}
 \newdimen\ledthegoal
-\ifshiftedverses
+\ifshiftedpstarts
        \newcommand*{\goalfraction}{0.95}
 \else
        \newcommand*{\goalfraction}{0.9}
