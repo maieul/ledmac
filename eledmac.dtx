@@ -777,7 +777,11 @@
 %\changes{v0.12}{2011/10/01}{Possibilty to number \cs{pstart}.}
 % It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. On each \cs{beginnumbering} the numbering restarts.
 % \changes{v0.15}{2012/06/11}{Possibilty to print \cs{pstart} number in side.}
+%
 % With the \cs{sidepstartnumtrue} command, the number of \cs{pstart} will be printed in side. In this case, the line number will be not printed.
+%
+% \changes{v1.1}{2012/09/21}{Add \cs{labelpstarttrue}.}
+% With the \cs{labelpstarttrue} command, a \cs{label} added just after  a \cs{pstart} will refer to the number of this pstart.
 % \subsection{Lineation commands}
 % \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
 % Line numbering can be disabled with  \cs{numberlinefalse}. It can be enabled again with \cs{numberlinetrue}.
@@ -5275,6 +5279,8 @@
 % \begin{macro}{\pstart}
 % \begin{macro}{\numberpstarttrue}
 % \begin{macro}{\numberpstartfalse}
+% \begin{macro}{\labelpstarttrue}
+% \begin{macro}{\labelpstartfalse}
 % \begin{macro}{thepstart}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
@@ -5299,6 +5305,8 @@
 \renewcommand{\thepstart}{{\bfseries\@arabic\c@pstart}. }
 \newif\ifnumberpstart
 \numberpstartfalse
+\newif\labelpstart
+\labelpstartfalse
 \newcommand*{\pstart}{
 \if@nobreak
 \let\@oldnobreak\@nobreaktrue
@@ -5318,8 +5326,13 @@
   \global\let\next@insert=\empty
   \begingroup\normal@pars
   \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\ifsidepstartnum\else\thepstart\fi\fi\fi\fi
-  \numberedpar@true}
+  \numberedpar@true
+  \iflabelpstart\protected@edef\@currentlabel
+       {\p@pstart\thepstart}\fi
+  }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
