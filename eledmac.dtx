@@ -6426,6 +6426,23 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\printpstart}
+% The \cs{printpstart} macro prints the pstart number for a note.
+%    \begin{macrocode}
+\newcommand{\printpstart}[0]{%
+	\ifl@dpairing%
+		\ifledRcol%
+			\thepstartR%
+		\else%
+			\thepstartL%
+		\fi%
+	\else%
+		\thepstart%
+	\fi%
+}
+%    \end{macrocode}
+% 
+% \end{macro}
 % The \cs{printlines} macro prints the line
 % numbers for a note---which, in the
 % general case, is a rather complicated task.
@@ -8597,9 +8614,13 @@
                        {%
                         \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
                         \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+                            \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
                             \printlines#1|}%
                             {%
-                            \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                            \hbox to \csuse{boxlinenum@#2}{%
+                              \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
+                            	\iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+			\hfill}%
                             }%
                             \hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
@@ -8607,9 +8628,13 @@
                     {%
                     \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
                     \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                        \printlines#1|}%
+                        \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
+                        \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}}%
                         {%
-                        \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                        \hbox to \csuse{boxlinenum@#2}{%
+                        	\iftoggle{pstartinfootnote@#2}{\printpstart}{}%
+                        	\iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+			\hfill}%
                         }%
                     \hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
@@ -8617,9 +8642,14 @@
               {%
               \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
               \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                     \printlines#1|}%
+                     \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
+                     \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+                     }%
                      {%
-                     \hbox to \csuse{boxlinenum@#2}{\printlines#1|\hfill}%
+                     \hbox to \csuse{boxlinenum@#2}{%
+                         \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
+                         \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+                         \hfill}%
                      }%
               \hspace{\csuse{afternumberinfootnote@#2}}%
               }%
