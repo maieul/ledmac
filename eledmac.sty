@@ -1325,14 +1325,8 @@
         }
 % End of \newseries
 
-\countdef\pageno=0 \pageno=1
-\newcommand*{\advancepageno}{\ifnum\pageno<\z@ \global\advance\pageno\m@ne
-  \else\global\advance\pageno\@ne\fi}
 
-\providecommand{\m@m@makecolfloats}{%
-  \xdef\@freelist{\@freelist\@midlist}%
-  \global \let \@midlist \@empty
-  \@combinefloats}
+
 \providecommand{\m@m@makecoltext}{%
   \ifvbox\@kludgeins
     \@makespecialcolbox
@@ -1344,11 +1338,10 @@
       \vskip -\dimen@
       \@textbottom}%
   \fi}
-\providecommand{\m@m@makecolintro}{}
+
 
 \gdef\l@d@makecol{%
   \l@ddofootinsert
-  \m@m@makecolfloats
   \m@m@makecoltext
   \global \maxdepth \@maxdepth}
 
@@ -1391,72 +1384,7 @@
   \ifvoid\Afootins\else\Afootins{\unvbox\Afootins\fi}
 }
 
-\gdef \l@d@reinserts{%
-  \ifvoid\footins\else\insert\footins{\unvbox\footins}\fi
-  \l@ddodoreinxtrafeet
-  \ifvbox\@kludgeins\insert\@kludgeins{\unvbox\@kludgeins}\fi
-}
 
-\@ifclassloaded{memoir}{%
-  \g@addto@macro{\m@mdoextrafeet}{\l@ddoxtrafeet}%
-  \g@addto@macro{\m@mdodoreinextrafeet}{\l@ddodoreinxtrafeet}%
-  }{%
-  \gdef\@makecol{\l@d@makecol}%
-  \gdef\@reinserts{\l@d@reinserts}%
-}
-
-
-\newif\if@led@nofoot
-\newcommand*{\@led@extranofeet}{}
-
-
-\newcommand*{\@led@testifnofoot}{%
-  \@led@nofoottrue
-  \ifvoid\footins\else\@led@nofootfalse\fi
-  \ifvoid\Afootins\else\@led@nofootfalse\fi%
-  \@led@extranofeet}
-
-\renewcommand{\@doclearpage}{%
-  \@led@testifnofoot
-  \if@led@nofoot
-    \setbox\@tempboxa\vsplit\@cclv to\z@ \unvbox\@tempboxa
-    \setbox\@tempboxa\box\@cclv
-    \xdef\@deferlist{\@toplist\@botlist\@deferlist}%
-    \global \let \@toplist \@empty
-    \global \let \@botlist \@empty
-    \global \@colroom \@colht
-    \ifx \@currlist\@empty
-    \else
-       \@latexerr{Float(s) lost}\@ehb
-       \global \let \@currlist \@empty
-    \fi
-    \@makefcolumn\@deferlist
-    \@whilesw\if@fcolmade \fi{\@opcol\@makefcolumn\@deferlist}%
-    \if@twocolumn
-      \if@firstcolumn
-        \xdef\@dbldeferlist{\@dbltoplist\@dbldeferlist}%
-        \global \let \@dbltoplist \@empty
-        \global \@colht \textheight
-        \begingroup
-           \@dblfloatplacement
-           \@makefcolumn\@dbldeferlist
-           \@whilesw\if@fcolmade \fi{\@outputpage
-                                     \@makefcolumn\@dbldeferlist}%
-        \endgroup
-      \else
-        \vbox{}\clearpage
-      \fi
-    \fi
-  \else
-    \setbox\@cclv\vbox{\box\@cclv\vfil}%
-    \l@d@makecol\@opcol
-    \clearpage
-  \fi}
-
-
-\list@create{\labelref@list}
-%% \newcommand*{\zz@@@}{000|000|000} % set three counters to zero in one go
-\newcommand*{\zz@@@}{000|000} % set two counters to zero in one go
 
 \newcommand*{\edlabel}[1]{\@bsphack
   \write\linenum@out{\string\@lab}%
