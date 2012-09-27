@@ -1384,44 +1384,21 @@
   \ifvoid\Afootins\else\Afootins{\unvbox\Afootins\fi}
 }
 
+  \gdef\@makecol{\l@d@makecol}%
+  \gdef\@reinserts{\l@d@reinserts}%
 
 
-\newcommand*{\edlabel}[1]{\@bsphack
-  \write\linenum@out{\string\@lab}%
-  \ifx\labelref@list\empty
-    \xdef\label@refs{\zz@@@}%
-  \else
-    \gl@p\labelref@list\to\label@refs
-  \ifvmode
-     \advancelabel@refs
-  \fi
-  \fi
-  \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|{#1}}%
-  \@esphack}
 
-\newcommand{\advancelabel@refs}{%
-    \newcounter{line}%
-    \setcounter{line}{\expandafter\labelrefsparseline\label@refs}%
-    \stepcounter{line}%
-    \ifsublines@%
-        \newcounter{subline}%
-        \setcounter{subline}{\expandafter\labelrefsparsesubline\label@refs}%
-        \stepcounter{subline}{1}%
-    \def\label@refs{\theline|\thesubline}%
-    \else%
-        \def\label@refs{\theline|0}%
-\fi%
-}
-\def\labelrefsparseline#1|#2{#1}
-\def\labelrefsparsesubline#1|#2{#2}
-\newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4{%
-  \expandafter\ifx\csname the@label#4\endcsname \relax\else
-    \led@warn@DuplicateLabel{#4}%
-  \fi
-  \expandafter\gdef\csname the@label#4\endcsname{#1|#2|#3}%
-  \ignorespaces}
+\newif\if@led@nofoot
+\newcommand*{\@led@extranofeet}{}
+
+
+\newcommand*{\@led@testifnofoot}{%
+  \@led@nofoottrue
+  \ifvoid\footins\else\@led@nofootfalse\fi
+  \ifvoid\Afootins\else\@led@nofootfalse\fi%
+  \@led@extranofeet}
+
 
 
 
@@ -1430,259 +1407,11 @@
 
 \let\l@d@section=\@gobble
 
-\newcommand*{\setprintendlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse
-  \ifnum#4=#1 \else
-    \l@d@pnumtrue
-    \l@d@dashtrue
-  \fi
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
-      \l@d@elintrue
-      \l@d@dashtrue
-  \fi
-  \l@d@ssubfalse
-  \ifnum#3=0 \else
-      \l@d@ssubtrue
-  \fi
-  \l@d@eslfalse
-  \ifnum#6=0 \else
-      \ifnum#6=#3
-         \ifl@d@elin \l@d@esltrue \else \l@d@eslfalse \fi
-      \else
-         \l@d@esltrue
-         \l@d@dashtrue
-      \fi
-  \fi}
-\def\printendlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
-  \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
-  \printnpnum{#1} \linenumrep{#2}%
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \endashchar\fi
-  \ifl@d@pnum \printnpnum{#4}\fi
-  \ifl@d@elin \linenumrep{#5}\fi
-  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
-\endgroup}
-
-\newcommand*{\printnpnum}[1]{p.#1) }
-
-\newcommand*{\doendnotes}[1]{\l@dend@close
-   \begingroup
-      \makeatletter
-      \expandafter\let\csname #1end\endcsname=\endprint
-      \input\jobname.end
-   \endgroup}
-\newcommand*{\noendnotes}{\global\let\l@dend@stuff=\relax
-                \global\chardef\l@d@end=16 }
-\let\l@dold@xympar\@xympar
-\renewcommand{\@xympar}{%
-  \ifnumberedpar@
-    \led@warn@NoMarginpars
-    \@esphack
-  \else
-    \l@dold@xympar
-  \fi}
-
-\newcount\sidenote@margin
-\newcommand*{\sidenotemargin}[1]{{%
-  \l@dgetsidenote@margin{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \global\sidenote@margin=\@l@dtempcntb
-  \fi}}
-\newcommand*{\l@dgetsidenote@margin}[1]{%
-  \def\@tempa{#1}\def\@tempb{left}%
-  \ifx\@tempa\@tempb
-    \@l@dtempcntb \z@
-  \else
-    \def\@tempb{right}%
-    \ifx\@tempa\@tempb
-      \@l@dtempcntb \@ne
-    \else
-      \def\@tempb{outer}%
-      \ifx\@tempa\@tempb
-        \@l@dtempcntb \tw@
-      \else
-        \def\@tempb{inner}%
-        \ifx\@tempa\@tempb
-          \@l@dtempcntb \thr@@
-        \else
-          \led@warn@BadSidenotemargin
-          \@l@dtempcntb \m@ne
-        \fi
-      \fi
-    \fi
-  \fi}
-\sidenotemargin{right}
-
-\newbox\l@dlp@rbox
-\newbox\l@drp@rbox
-
-\newdimen\ledlsnotewidth \ledlsnotewidth=\marginparwidth
-\newdimen\ledrsnotewidth \ledrsnotewidth=\marginparwidth
-\newdimen\ledlsnotesep \ledlsnotesep=\linenumsep
-\newdimen\ledrsnotesep \ledrsnotesep=\linenumsep
-\newcommand*{\ledlsnotefontsetup}{\raggedleft\footnotesize}
-\newcommand*{\ledrsnotefontsetup}{\raggedright\footnotesize}
-
-\newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
-\newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
-\newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}
-
-\newif\ifrightnoteup
-  \rightnoteuptrue
-\newcommand*{\l@dlsnote}[1]{%
-  \begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces\endgroup}
-\newcommand*{\l@drsnote}[1]{%
-  \begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces\endgroup}
-\newcommand*{\l@dcsnote}[1]{\begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
-  \fi\ignorespaces\endgroup}
-
-\newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
-\newcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
-\newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
-
-\newcommand*{\setl@dlp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledlsnotewidth\ledlsnotefontsetup
-   \global\setbox\l@dlp@rbox
-   \ifleftnoteup
-     =\vbox to\z@{\vss #1}%
-   \else
-     =\vbox to 0.70\baselineskip{\strut#1\vss}%
-   \fi}}
-\newcommand*{\setl@drp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
-   \global\setbox\l@drp@rbox
-   \ifrightnoteup
-     =\vbox to\z@{\vss#1}%
-   \else
-     =\vbox to0.7\baselineskip{\strut#1\vss}%
-   \fi}}
-\newif\ifleftnoteup
-  \leftnoteuptrue
-\newcommand{\sidenotesep}{, }
-\newcommand*{\affixside@note}{%
-    \def\sidenotecontent@{}%
-    \numdef{\itemcount@}{0}%
-    \renewcommand{\do}[1]{%
-        \ifnumequal{\itemcount@}{0}%
-            {%
-            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
-            {\appto\sidenotecontent@{\sidenotesep ##1}%
-            }%
-            \numdef{\itemcount@}{\itemcount@+1}%
-    }%
-    \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num,}}{}
-  \gdef\@templ@d{}%
-  \ifx\@templ@d\l@dcsnotetext \else
-    \if@twocolumn
-      \if@firstcolumn
-        \setl@dlp@rbox{##1}{\sidenotecontent@}%
-      \else
-        \setl@drp@rbox{\sidenotecontent@}%
-      \fi
-    \else
-      \@l@dtempcntb=\sidenote@margin
-      \ifnum\@l@dtempcntb>\@ne
-        \advance\@l@dtempcntb by\page@num
-      \fi
-      \ifodd\@l@dtempcntb
-        \setl@drp@rbox{\sidenotecontent@}%
-      \else
-        \setl@dlp@rbox{\sidenotecontent@}%
-      \fi
-    \fi
-\fi}
 
 
 
 
-\newcommand{\pagelinesep}{-}
-\newcommand{\edindexlab}{$&}
-\newcounter{labidx}
-\setcounter{labidx}{0}
 
-\newcommand{\doedindexlabel}{\stepcounter{labidx}%
-  \edlabel{\edindexlab\thelabidx}}
-
-\newcommand{\thepageline}{%
-  \thepage\pagelinesep\lineref{\edindexlab\thelabidx}}
-
-\@ifclassloaded{memoir}{%
-  \g@addto@macro{\makememindexhook}{%
-    \def\edindex{\@bsphack%
-      \@ifnextchar [{\l@d@index}{\l@d@index[\jobname]}}}
-  \newcommand{\edindex}[2][\jobname]{\@bsphack\@esphack}
-  \def\l@d@index[#1]{%
-    \@ifundefined{#1@idxfile}%
-    {\ifreportnoidxfile
-       \led@warn@NoIndexFile{#1}%
-     \fi
-     \begingroup
-     \@sanitize
-     \@nowrindex}%
-    {\def\@idxfile{#1}%
-     \doedindexlabel
-     \begingroup
-     \@sanitize
-     \l@d@wrindexm@m}}
-  \newcommand{\l@d@wrindexm@m}[1]{\l@d@@wrindexhyp#1||\\}
-  \def\l@d@@wrindexhyp#1|#2|#3\\{%
-    \ifshowindexmark\@showidx{#1}\fi
-    \ifx\\#2\\%
-      \protected@write\@auxout{}%
-        {\string\@@wrindexm@m{\@idxfile}{#1|hyperpage}{\thepageline}}%
-    \else
-      \def\Hy@temp@A{#2}%
-      \ifx\Hy@temp@A\HyInd@ParenLeft
-        \protected@write\@auxout{}%
-          {\string\@@wrindexm@m{\@idxfile}{#1|#2hyperpage}{\thepageline}}%
-      \else
-        \protected@write\@auxout{}%
-          {\string\@@wrindexm@m{\@idxfile}{#1|#2}{\thepageline}}%
-      \fi
-    \fi
-    \endgroup
-    \@esphack}
-}{%
-  \g@addto@macro{\makeindex}{%
-    \def\edindex{\@bsphack
-    \doedindexlabel
-    \begingroup
-    \@sanitize
-    \@wredindex}}
-  \newcommand{\edindex}[1]{\@bsphack\@esphack}
-  \newcommand{\@wredindex}[1]{%
-    \protected@write\@indexfile{}%
-      {\string\indexentry{#1}{\thepageline}}%
-  \endgroup
-  \@esphack}
-}
-
-\AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
-  \def\l@d@@wrindexhyp#1||\\{%
-    \ifshowindexmark\@showidx{#1}\fi
-    \protected@write\@auxout{}%
-      {\string\@@wrindexm@m{\@idxfile}{#1}{\thepageline}}%
-    \endgroup
-    \@esphack}}}
 
 \newtoks\@emptytoks
 
