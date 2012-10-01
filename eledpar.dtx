@@ -31,7 +31,7 @@
              ]{hyperref}
 \usepackage[utf8]{inputenc}
 \providecommand{\phantomsection}{} % just in case hyperref is not used
-\usepackage{graphicx}
+\usepackage{graphicx,eledmac,eledpar}
 \makeatletter
   \@mparswitchfalse
 \makeatother
@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{3836}
+% \CheckSum{3882}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -116,26 +116,24 @@
 % \DoNotIndex{\ ,\to}
 %
 % \newcommand{\dtxfilename}{\texttt{eledpar.dtx}}
-% \def\fileversion{v0.1} \def\filedate{2004/12/10}
-% \def\fileversion{v0.2} \def\filedate{2005/01/01}
-% \def\fileversion{v0.3} \def\filedate{2005/03/24}
-% \def\fileversion{v0.3a} \def\filedate{2005/03/30}
-% \def\fileversion{v0.3b} \def\filedate{2005/04/08}
-% \def\fileversion{v0.3c} \def\filedate{2011/06/16}
-% \def\fileversion{v0.4} \def\filedate{2011/08/03}
-% \def\fileversion{v0.5} \def\filedate{2011/08/21}
-% \def\fileversion{v0.6} \def\filedate{2011/08/22}
-% \def\fileversion{v0.7} \def\filedate{2011/08/31}
-% \def\fileversion{v0.8} \def\filedate{2011/09/16}
-% \def\fileversion{v0.9}\def\filedate{2011/10/01}
-% \def\fileversion{v0.9.1}\def\filedate{2011/10/02}
-% \def\fileversion{v0.9.2}\def\filedate{2011/11/08}
-% \def\fileversion{v0.9.3}\def\filedate{2011/11/18}
-% \def\fileversion{v0.10}\def\filedate{2012/04/04}
-% \def\fileversion{v0.11}\def\filedate{2012/06/11}
-% \def\fileversion{v0.12}\def\filedate{2012/08/03}
-% \def\fileversion{v1.0}\def\filedate{2012/09/14}
-% \def\fileversion{v1.0.1}\def\filedate{2012/09/16}
+% \GetFileInfo{eledpar.sty}
+% ^^A Have the changes in the right order : see http://tex.stackexchange.com/a/74113/7712 
+%\makeatletter
+%  \let\org@changes@\changes@
+%    \def\my@changes v#1.#2#3\@nil{%
+%      \org@changes@{v#1.\six@digits{#2}#3=v#1.#2#3}%
+%    }%
+%    \newcommand*{\six@digits}[1]{%
+%      \ifnum#1<100000 0\fi
+%      \ifnum#1<10000 0\fi
+%      \ifnum#1<1000 0\fi
+%      \ifnum#1<100 0\fi
+%      \two@digits{#1}%
+%    }%
+%    \renewcommand*{\changes@}[1]{%
+%      \my@changes#1\@nil
+%    }%
+%\makeatother
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -155,6 +153,7 @@
 % \changes{v0.10}{2012/04/04}{\cs{edlabel} commands on the right side are now correctly indicated.}
 % \changes{v1.0}{2012/09/14}{Compatibility with eledmac. Change name to eledpar.}
 % \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
+% \changes{v1.1}{2012/09/25}{Shiftedverses becomes shiftedpstarts.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -499,7 +498,13 @@
 % come at different positions --- if one chunk is shorter than the other
 % then blank lines are output on the shorter side until the end of the longer
 % chunk is reached. 
-% 
+%
+% However, sometime if the left pstarts are much greater than right pstarts,
+% or \emph{vice-versa},
+% you can decide to shift the pstarts on the left and right side.
+% That means the start of pstarts are not aligned horizontally on the page,
+% the shift is offset at the end of each double pages.
+% To enable this function, load eledpar with the option \verb+shiftedpstarts+.
 % \section{Numbering text lines and paragraphs}
 %
 % \DescribeMacro{\beginnumbering}
@@ -712,17 +717,21 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2012/09/16 v1.0.1 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2012/10/01 v1.1.1 eledmac extension for parallel texts]
 
 %    \end{macrocode}
-%  With the option `shiftedverses' a long verse one the left side (or in the right side) don't make a blank on the corresponding verse, but the blank is put on the bottom of the page. Consequently, the verses on the parallel pages are shifted, but the shifted stop at every end of pages.
-%
+%  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
+% The \cs{shiftedverses} is kept for backward compatibility.
+% \begin{macro}{\ifshiftedpstarts}
 %    \begin{macrocode}
-\newif\ifshiftedverses
-\shiftedversesfalse
-\DeclareOption{shiftedverses}{\shiftedversestrue}
+\newif\ifshiftedpstarts
+\let\shiftedversestrue\shiftedpstartstrue
+\let\shiftedversesfalse\shiftedpstartsfalse
+\DeclareOption{shiftedverses}{\shiftedpstartstrue}
+\DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
 \ProcessOptions
 %    \end{macrocode}
+% \end{macro}
 %  As noted above, much of the code is a duplication of the original
 % \Eledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
@@ -1021,12 +1030,12 @@
            \global\bypage@Rfalse
            \global\bypstart@Rtrue
        \else
-       	\def@tempb{section}
-       	\ifx\@tempa\@tempb
+           \def@tempb{section}
+           \ifx\@tempa\@tempb
            \global\bypage@Rfalse
            \global\bypstart@Rfalse
-       	\else
-         	\led@warn@BadLineation
+           \else
+             \led@warn@BadLineation
         \fi
        \fi
     \fi
@@ -2280,6 +2289,8 @@
 %
 % \begin{macro}{\pstartL}
 % \begin{macro}{\pstartR}
+% changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
+% changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} of bug introduced by 1.1.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2305,11 +2316,11 @@
 
 \newcommand*{\pstartL}{
 \if@nobreak
-	\let\@oldnobreak\@nobreaktrue
+    \let\@oldnobreak\@nobreaktrue
 \else
-	\let\@oldnobreak\@nobreakfalse
+    \let\@oldnobreak\@nobreakfalse
 \fi
-	\@nobreaktrue
+    \@nobreaktrue
   \ifnumbering \else
     \led@err@PstartNotNumbered
     \beginnumbering
@@ -2323,7 +2334,7 @@
 % and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
 %    \begin{macrocode}
   \ifpst@rtedL\else
-  	\setcounter{pstartLold}{\value{pstartL}}%
+      \setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
     \global\let\next@insert=\empty
      \global\pst@rtedLtrue
@@ -2341,17 +2352,20 @@
   \fi
   \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartL\fi\fi\fi%
                      \hsize=\Lcolwidth
-  \numberedpar@true}
+  \numberedpar@true
+  \iflabelpstart\protected@edef\@currentlabel
+       {\p@pstartL\thepstartL}\fi
+  }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
 \newcommand*{\pstartR}{
 \if@nobreak
-	\let\@oldnobreak\@nobreaktrue
+    \let\@oldnobreak\@nobreaktrue
 \else
-	\let\@oldnobreak\@nobreakfalse
+    \let\@oldnobreak\@nobreakfalse
 \fi
-	\@nobreaktrue
+    \@nobreaktrue
   \ifnumberingR \else
     \led@err@PstartNotNumbered
     \beginnumberingR
@@ -2361,7 +2375,7 @@
     \pendR
   \fi
   \ifpst@rtedR\else
-  	\setcounter{pstartRold}{\value{pstartR}}%
+      \setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
     \global\let\next@insertR=\empty
     \global\pst@rtedRtrue
@@ -2374,7 +2388,10 @@
   \fi
   \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartR\fi\fi\fi%
                      \hsize=\Rcolwidth
-  \numberedpar@true}
+  \numberedpar@true
+   \iflabelpstart\protected@edef\@currentlabel
+       {\p@pstartR\thepstartR}\fi
+  }
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2408,9 +2425,9 @@
   \endgroup
   \ignorespaces
   \@oldnobreak
-	\ifnumberpstart
-	\addtocounter{pstartL}{1}
-	\fi}
+    \ifnumberpstart
+    \addtocounter{pstartL}{1}
+    \fi}
 
 %    \end{macrocode}
 % \end{macro}
@@ -2431,9 +2448,9 @@
   \endgroup
   \ignorespaces
   \@oldnobreak
-	\ifnumberpstart
-	\addtocounter{pstartR}{1}
-	\fi	
+    \ifnumberpstart
+    \addtocounter{pstartR}{1}
+    \fi    
 }
 
 %    \end{macrocode}
@@ -2513,7 +2530,7 @@
 \ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
-  	\affixpstart@numL
+      \affixpstart@numL
     \affixline@num
     \l@dld@ta
     \add@inserts
@@ -2565,7 +2582,7 @@
 \ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
-  	\affixpstart@numR
+      \affixpstart@numR
     \affixline@numR
     \l@dld@ta
     \add@insertsR
@@ -2612,7 +2629,7 @@
 \fi
 }
 \newcommand*{\getline@numL}{%
-	\global\advance\absline@num \@ne
+    \global\advance\absline@num \@ne
   \do@actions
   \do@ballast
 \ifnumberline
@@ -3144,7 +3161,7 @@
       \gl@p\labelref@listR\to\label@refs
     \fi
     \ifvmode
-    	\advancelabel@refs
+        \advancelabel@refs
     \fi
     \protected@write\@auxout{}%
       {\string\l@dmake@labelsR\space\thepage|\label@refs|{#1}}%
@@ -3156,7 +3173,7 @@
       \gl@p\labelref@list\to\label@refs
     \fi
     \ifvmode
-    	\advancelabel@refs
+        \advancelabel@refs
     \fi
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|{#1}}%
@@ -3285,13 +3302,25 @@
 % The right text version of \cs{affixside@note}.
 %    \begin{macrocode}
 \newcommand*{\affixside@noteR}{%
+    \def\sidenotecontent@{}%
+    \numdef{\itemcount@}{0}%
+    \renewcommand{\do}[1]{%
+        \ifnumequal{\itemcount@}{0}%
+            {%
+            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
+            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            }%
+            \numdef{\itemcount@}{\itemcount@+1}%
+    }%
+    \dolistloop{\l@dcsnotetext}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR R p. \the\page@numR,}}{}
   \gdef\@templ@d{}%
   \ifx\@templ@d\l@dcsnotetext \else
     \if@twocolumn
       \if@firstcolumn
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \else
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi
     \else
       \@l@dtempcntb=\sidenote@marginR
@@ -3299,9 +3328,9 @@
         \advance\@l@dtempcntb by\page@num
       \fi
       \ifodd\@l@dtempcntb
-        \setl@drp@rbox{\l@dcsnotetext}%
+        \setl@drp@rbox{\sidenotecontent@t}%
       \else
-        \setl@dlp@rbox{\l@dcsnotetext}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \fi
     \fi
   \fi}
@@ -3365,15 +3394,15 @@
 \newif\ifinserthangingsymbolR
 \newcommand{\inserthangingsymbolL}{%
 \ifinserthangingsymbol%
-	\ifinstanzaL%
-		\hfill\hangingsymbol%
-	\fi%
+    \ifinstanzaL%
+        \hfill\hangingsymbol%
+    \fi%
 \fi}
 \newcommand{\inserthangingsymbolR}{%
 \ifinserthangingsymbolR%
-	\ifinstanzaR%
-		\hfill\hangingsymbol%
-	\fi%
+    \ifinstanzaR%
+        \hfill\hangingsymbol%
+    \fi%
 \fi}
 %    \end{macrocode}
 % \end{macro}
@@ -3385,22 +3414,22 @@
 %    \begin{macrocode}
 \newcommand{\correcthangingL}{%
 \ifl@dpaging\else%
-	\ifinstanzaL%
-		\ifinserthangingsymbol%
-			\hskip \@ifundefined{sza@0@}{0}{\expandafter%
-           		\noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-		\fi%
-	\fi%
+    \ifinstanzaL%
+        \ifinserthangingsymbol%
+            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
+        \fi%
+    \fi%
 \fi}
 
 \newcommand{\correcthangingR}{%
 \ifl@dpaging\else%
-	\ifinstanzaR%
-		\ifinserthangingsymbolR%
-			\hskip \@ifundefined{sza@0@}{0}{\expandafter%
-           		\noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-		\fi%
-	\fi%
+    \ifinstanzaR%
+        \ifinserthangingsymbolR%
+            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
+        \fi%
+    \fi%
 \fi}
 %    \end{macrocode}
 % \end{macro}
@@ -4091,23 +4120,23 @@
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
 {            \loop\ifl@dsamepage
-			 
+             
 %    \end{macrocode}
 % Process the next (left) text line, adding it to the page.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
               \do@lineL
               \advance\numpagelinesL \@ne
-              \ifshiftedverses
-              		\ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+              \ifshiftedpstarts
+                      \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
               \else
-              		\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
+                      \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
 % we can onto the page. If not, repeat for the next line.
 %    \begin{macrocode}
-			
+            
               \get@nextboxL
               \checkpageL
             \repeat
@@ -4138,10 +4167,10 @@
 {            \loop\ifl@dsamepage
               \do@lineR
               \advance\numpagelinesR \@ne
-              \ifshiftedverses
-              		\ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+              \ifshiftedpstarts
+                      \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
               \else
-              		\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+                      \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR
               \checkpageR
@@ -4419,7 +4448,7 @@
 % \cs{goalfraction}. \cs{ledthegoal} is calculated via \cs{check@goal}.
 %    \begin{macrocode}
 \newdimen\ledthegoal
-\ifshiftedverses
+\ifshiftedpstarts
        \newcommand*{\goalfraction}{0.95}
 \else
        \newcommand*{\goalfraction}{0.9}
