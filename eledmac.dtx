@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{7910}
+% \CheckSum{7909}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -152,7 +152,7 @@
 % \changes{v0.7}{2005/02/18}{Tidying up for eledpar and ledarab packages}
 % \changes{v0.7}{2005/02/18}{Replaced all \cs{interAfootnotelinepenalty}, etc.,
 %                         by just \cs{interfootnotelinepenalty}}
-% \changes{v0.7}{2005/03/02}{ledmac having been available for 2 years,
+% \changes{v0.7}{2005/03/02}{eledmac having been available for 2 years,
 %                         deleted the commented out original edmac texts}
 % \changes{v0.7}{2011/06/17}{Ma\"ieul Rouquette new maintainer}
 % \changes{v0.8}{2011/17/06}{Bug on endnotes fixed: in a // text, all endnotes will print and be placed at the ends of columns (!)}
@@ -2630,7 +2630,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2012/10/06 v1.1.2 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2012/09/25 v1.1 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -6787,6 +6787,7 @@
 % \begin{macro}{\preXnotes@}
 % \begin{macro}{\preXnotes}
 % \changes{v1.1}{2012/09/25}{New skip \cs{preXnotes@}}
+% \changes{v1.2}{2012/10/08}{Debug in familiar footnotes (but introduced by v1.1).}
 % If user redefines \cs{preXnotes@}, via \cs{preXnotes} to a value greater than 0~pt,
 % this skip will be added before first series notes
 % instead of the notes skip.
@@ -6804,7 +6805,7 @@
 %    \begin{macrocode}
 \newtoggle{prenotesX@}
 \toggletrue{prenotesX@}
-\newcommand{\prenotes@X}{0pt}
+\newcommand{\prenotesX@}{0pt}
 \newcommand*{\prenotesX}[1]{\renewcommand{\prenotesX@}{#1}}
 %    \end{macrocode}
 % \end{macro}
@@ -9036,14 +9037,13 @@
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
 %    \end{macrocode}
-% \changes{v1.1.1}{2012/10/03}{Debug of eledmac with the memoir class.}
 % If the \Lclass{memoir} class is loaded we hook into its modified 
 % \verb?\@doclearpage?.
 %    \begin{macro}{\@mem@extranofeet}
 %    \begin{macrocode}
 \g@addto@macro{\@mem@extranofeet}{%
-  \renewcommand{\do}[1]{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
-  \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
+  \renewcommand{\do}[1]{\ifvoid\cuse{##1footins}\else\@mem@nofootfalse\fi%
+  \ifvoid\csuse{footins##1}\else\@mem@nofootfalse\fi%
   }
   \dolistloop{\@series}%
   \@led@extranofeet}
@@ -9850,7 +9850,6 @@
 %   \end{macrocode}
 % \end{macro}
 % \begin{macro}{\affixside@note}
-% \changes{v1.1.2}{2012/10/06}{Remove spurious space between line number and line content}
 % This macro puts any moveable sidenote text into the left or right sidenote
 % box, depending on which margin it is meant to go in. It's a very much
 % stripped down version of \cs{affixlin@num}.
@@ -9870,29 +9869,29 @@
             \numdef{\itemcount@}{\itemcount@+1}%
     }%
     \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num,}}{}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num,}}{}
 %    \end{macrocode}
 % And now, the main part of the macro
 % \begin{macrocode}
   \gdef\@templ@d{}%
-  \ifx\@templ@d\l@dcsnotetext \else%
-    \if@twocolumn%
-      \if@firstcolumn%
+  \ifx\@templ@d\l@dcsnotetext \else
+    \if@twocolumn
+      \if@firstcolumn
         \setl@dlp@rbox{##1}{\sidenotecontent@}%
-      \else%
+      \else
         \setl@drp@rbox{\sidenotecontent@}%
-      \fi%
-    \else%
-      \@l@dtempcntb=\sidenote@margin%
-      \ifnum\@l@dtempcntb>\@ne%
-        \advance\@l@dtempcntb by\page@num%
-      \fi%
-      \ifodd\@l@dtempcntb%
+      \fi
+    \else
+      \@l@dtempcntb=\sidenote@margin
+      \ifnum\@l@dtempcntb>\@ne
+        \advance\@l@dtempcntb by\page@num
+      \fi
+      \ifodd\@l@dtempcntb
         \setl@drp@rbox{\sidenotecontent@}%
-      \else%
+      \else
         \setl@dlp@rbox{\sidenotecontent@}%
-      \fi%
-    \fi%x
+      \fi
+    \fi
 \fi}
 %    \end{macrocode}
 % \end{macro}
