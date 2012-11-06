@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{7988}
+% \CheckSum{8012}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -2646,7 +2646,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2012/11/01 v1.3 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2012/11/07 v1.4 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    In general there is the following modifications to the original
@@ -5167,7 +5167,10 @@
 % within the expansion of \verb"#2" above, or in \cs{aftergroup}
 % commands within that expansion.
 %    \begin{macrocode}
-    \flag@start
+   \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@start}%
+       {\if@RTL\flag@end\else\flag@start\fi% be careful on the direction of writing with polyglossia
+       }
   \endgroup
   \showlemma{#1}%
 %    \end{macrocode}
@@ -5184,11 +5187,16 @@
     \x@lemma
     \global\let\x@lemma=\relax
   \fi
-  \flag@end}
+  \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@end}%
+       {\if@RTL\flag@start\else\flag@end\fi% be careful on the direction of writing with polyglossia
+       }
+  }
 %    \end{macrocode}
 % \end{macro}
 %
 % \changes{v0.4}{2004/02/29}{Added \cs{showlemma} to \cs{edtext} (and \cs{critext})}
+% \changes{v1.4}{2012/11/07}{Compatibility of \cs{edtext} (and \cs{critext} with the right to left direction (with Polyglossia).}
 % \begin{macro}{\edtext}
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode
@@ -5197,7 +5205,10 @@
     \set@line
     \global\insert@count=0
     \ignorespaces #2\relax
-    \flag@start
+    \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@start}%
+       {\if@RTL\flag@end\else\flag@start\fi% be careful on the direction of writing with polyglossia
+       }
   \endgroup
   \showlemma{#1}%
   \ifx\end@lemmas\empty \else
@@ -5205,7 +5216,11 @@
     \x@lemma
     \global\let\x@lemma=\relax
   \fi
-  \flag@end}
+  \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@end}%
+       {\if@RTL\flag@start\else\flag@end\fi% be careful on the direction of writing with polyglossia
+       }
+  }
 
 %    \end{macrocode}
 % \end{macro}
