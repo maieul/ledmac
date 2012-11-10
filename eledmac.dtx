@@ -6609,11 +6609,19 @@
 % 
 % With polyglossia, each critical note has a \cs{footnote@lang} which shows the language of the lemma, 
 % and which can be used to switch the bracket from right to left.
-% \changes{v1.4}{2012/11/07}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia).}
+% \changes{v1.4}{2012/11/07}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia or LuaTeX).}
 %    \begin{macrocode}
 \def\endashchar{\textnormal{--}}
 \newcommand*{\fullstop}{\textnormal{.}}
-\newcommand*{\rbracket}{\textnormal{\csuse{text\csuse{footnote@lang}}{\thinspace]}}}
+\newcommand*{\rbracket}{\textnormal{%
+	\csuse{text\csuse{footnote@lang}}{%
+			\ifluatex%
+			\ifdefstring{\footnote@luatextextdir}{TRT}{\thinspace[}{\thinspace]}%
+				\else%
+			\thinspace]%
+			\fi}%
+	}%
+}
 
 %    \end{macrocode}
 % \end{macro}
