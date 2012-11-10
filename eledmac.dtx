@@ -6420,6 +6420,54 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\footnotelang@lua}
+% \cs{footnotelang@lua} is call to remember the information about the language of a lemma when LuaLaTeX is used.
+% \begin{macrocode}
+\newcommandx*{\footnotelang@lua}[1][1=L,usedefault]{
+	\ifstrequal{#1}{L}{%
+	\xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@list%Know the dir of lemma
+    \global\advance\insert@count \@ne
+    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@list%Know the dir of lemma
+    \global\advance\insert@count \@ne		
+	}%
+	{%
+	\xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@listR%Know the dir of lemma
+    \global\advance\insert@countR \@ne
+    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@listR%Know the dir of lemma
+    \global\advance\insert@countR \@ne
+	}%
+}
+% \end{macrocode}
+% \end{macro}
+% \begin{macro}{\footnotelang@poly}
+% \begin{macrocode}
+% \cs{footnotelang@poly} is call to remember the information about the language of a lemma when Polyglossia is used.
+\newcommandx*{\footnotelang@poly}[1][1=L,usedefault]{
+	\ifstrequal{#1}{L}{%
+    \if@RTL
+        \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@list%Know the language of lemma
+        \global\advance\insert@count \@ne
+    \else
+         \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@list%Know the language of lemma  
+         \global\advance\insert@count \@ne
+    \fi	
+    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@listR%Know the language of lemma
+    \global\advance\insert@count \@ne
+	}%
+	{%
+    \if@RTL
+        \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@listR%Know the language of lemma
+        \global\advance\insert@countR \@ne
+    \else
+         \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@listR%Know the language of lemma  
+         \global\advance\insert@countR \@ne
+    \fi
+    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@list%Know the language of lemma
+    \global\advance\insert@count \@ne
+	}%
+}
+% \end{macrocode}
+% \end{macro}
 % \subsection{Normal footnote formatting} \label{sec:nfootformat}
 %
 % The processing of each note is done
@@ -8425,22 +8473,11 @@
         \ifnumberedpar@
             \ifledRcol%
             	\ifluatex%
-	   			    \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@listR%Know the dir of lemma
-                     \global\advance\insert@countR \@ne
-                     \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@listR%Know the dir of lemma
-                     \global\advance\insert@countR \@ne
-				\fi%
+	   			\footnotelang@lua[R]    
+		    \fi%
             	\@ifundefined{xpg@main@language}{}%if polyglossia
-	    		        {%
-			        \if@RTL
-			        	    \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@listR%Know the language of lemma
-                		    \global\advance\insert@countR \@ne
-		            \else
-		                 \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@listR%Know the language of lemma  
-		                 \global\advance\insert@countR \@ne
-		            \fi
-			        }
-	   			\xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@listR%Know the language of lemma
+	    		        {\footnotelang@poly[R]}
+	   			
                 \global\advance\insert@countR \@ne
                 \footnoteoptions@[R]{##1}{true}%
                 \xright@appenditem{\noexpand\csuse{v#1footnote}{#1}%
@@ -8449,23 +8486,10 @@
                 \global\advance\insert@countR \@ne%
             \else%
                  \ifluatex%
-	   			    \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@list%Know the dir of lemma
-                     \global\advance\insert@count \@ne
-                     \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@list%Know the dir of lemma
-                     \global\advance\insert@count \@ne
+	   			    \footnotelang@lua
 				\fi%
             	\@ifundefined{xpg@main@language}{}%if polyglossia
-	    		        {%
-			        \if@RTL
-			        	    \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@list%Know the language of lemma
-                		    \global\advance\insert@count \@ne
-		            \else
-		                 \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@list%Know the language of lemma  
-		                 \global\advance\insert@count \@ne
-		            \fi
-			        }
-                \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@list%Know the language of lemma
-                \global\advance\insert@count \@ne
+	    		        {\footnotelang@poly}
                 \footnoteoptions@{##1}{true}%
                 \xright@appenditem{\noexpand\csuse{v#1footnote}{#1}%
                 {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
