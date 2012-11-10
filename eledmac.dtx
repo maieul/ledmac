@@ -1456,7 +1456,8 @@
 % footnotes, instead of explicit punctuation.
 %  We also define an \cs{rbracket} macro for the
 % right square bracket printed at the end of the lemma in many
-% styles of textual notes (including \Eledmac's standard style).
+% styles of textual notes (including \Eledmac's standard style). 
+% With polylgossia, when the lemma is RTL, the bracket is automatically switch to a left bracket.
 %
 %
 %
@@ -6547,10 +6548,14 @@
 % \cs{printlines}.  The right bracket macro is the same again;
 % it crops up in \cs{normalfootfmt} and the other footnote
 % macros for controlling the format of the footnotes.
+% 
+% With polyglossia, each critical note has a \cs{footnote@lang} which shows the language of the lemma, 
+% and which can be used to switch the bracket from right to left.
+% \changes{v1.4}{2012/11/07}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia).}
 %    \begin{macrocode}
 \def\endashchar{\textnormal{--}}
 \newcommand*{\fullstop}{\textnormal{.}}
-\newcommand*{\rbracket}{\textnormal{\thinspace]}}
+\newcommand*{\rbracket}{\textnormal{\csuse{text\csuse{footnote@lang}}{\thinspace]}}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -8401,6 +8406,7 @@
 %    \end{macrocode}
 % \subsubsection{Create command for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
+% \changes{v1.4}{2012/11/07}{Remember the language of the lemma to have a correct direction of the separator in footnote.}
 %    \begin{macrocode}
 
     \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
@@ -8408,12 +8414,16 @@
         \newcommand{\content}{##2}%
         \ifnumberedpar@
             \ifledRcol%
+            	   \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@listR%Know the language of lemma
+                \global\advance\insert@countR \@ne
                 \footnoteoptions@[R]{##1}{true}%
                 \xright@appenditem{\noexpand\csuse{v#1footnote}{#1}%
                 {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@listR
                 \footnoteoptions@[R]{##1}{false}%
                 \global\advance\insert@countR \@ne%
             \else%
+                \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@list%Know the language of lemma
+                \global\advance\insert@count \@ne
                 \footnoteoptions@{##1}{true}%
                 \xright@appenditem{\noexpand\csuse{v#1footnote}{#1}%
                 {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
