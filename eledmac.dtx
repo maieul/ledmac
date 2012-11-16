@@ -9390,22 +9390,23 @@
 %\begin{macro}{\advancelabel@refs}
 %\begin{macro}{\labelrefsparseline}
 %\begin{macro}{\labelrefsparsesubline}
-%  \begin{macrocode}
+% \changes{v1.4.1}{2012/11/16}{Fix bug with \cs{edlabel}.}
 %In cases where \cs{edlabel} is the first element in a paragraph, we have a problem with line counts, because line counts change only at the first horizontal box of the paragraph. 
 %Hence, we need to test \cs{edlabel} if it occurs at the start of a paragraph.  To do so, we use \cs{ifvmode}. If the test is true, we must advance by one unit the amount of text we write into the \verb].aux] file. 
 %We do so using \cs[advancelabel@refs} command.  
+%    \begin{macrocode}
+\newcounter{line}%
+\newcounter{subline}%
 \newcommand{\advancelabel@refs}{%
-    \newcounter{line}%
     \setcounter{line}{\expandafter\labelrefsparseline\label@refs}%
     \stepcounter{line}%
     \ifsublines@%
-        \newcounter{subline}%
         \setcounter{subline}{\expandafter\labelrefsparsesubline\label@refs}%
         \stepcounter{subline}{1}%
-    \def\label@refs{\theline|\thesubline}%
+        \def\label@refs{\theline|\thesubline}%
     \else%
         \def\label@refs{\theline|0}%
-\fi%
+    \fi%
 }
 \def\labelrefsparseline#1|#2{#1}
 \def\labelrefsparsesubline#1|#2{#2}
