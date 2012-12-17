@@ -1236,6 +1236,10 @@
 % \DescribeMacro{\afternumberinfootnote}
 % With \cs{afternumberinfootnote}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0.5~em.
 %
+%\DescribeMacro{\nonbreakableafternumber}.
+%
+% By default, the space defined by \cs{afternumberinfootnote} is breakeable. With \cs{afternumberinfootnote}\oarg{s} it becomes non breakable. Use \cs{afternumberinfootnote}\oarg{s}\oarg{false} to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
+%
 % \DescribeMacro{\beforesymlinenum} 
 % With \cs{beforesymlinenum}\oarg{s}\marg{l} you can add some space before the line symbol in a footnote. The default value is value set by \cs{beforenumberinfootnote}.
 % 
@@ -8465,6 +8469,7 @@
     \newtoggle{nonumberinfootnote@#1}%
     \csgdef{beforenumberinfootnote@#1}{0pt}%
     \csgdef{afternumberinfootnote@#1}{0.5em}%
+    \newtoggle{nonbreakableafternumber@#1}%
     \csgdef{beforesymlinenum@#1}{\csuse{beforenumberinfootnote@#1}}%
     \csgdef{aftersymlinenum@#1}{\csuse{afternumberinfootnote@#1}}%
     \csgdef{inplaceofnumber@#1}{1em}%
@@ -8760,6 +8765,7 @@
 \newhooktoggle@series{nonumberinfootnote}
 \newhooktoggle@series{pstartinfootnote}
 \newhooktoggle@series{onlypstartinfootnote}
+\newhooktoggle@series{nonbreakableafternumber}
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{Old commands, kept for backward compatibility}
@@ -8871,7 +8877,7 @@
                                 \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
                       \hfill}%
                             }%
-                            \hspace{\csuse{afternumberinfootnote@#2}}%
+                            \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
                     }%
                     {%
@@ -8885,7 +8891,7 @@
                             \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
                         \hfill}%
                         }%
-                    \hspace{\csuse{afternumberinfootnote@#2}}%
+                    \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
               }%
               {%
@@ -8900,7 +8906,7 @@
                          \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
                          \hfill}%
                      }%
-              \hspace{\csuse{afternumberinfootnote@#2}}%
+              \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
               }%
               \csxdef{prevline#2}{\lineinfo@}%
                  }%
