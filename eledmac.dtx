@@ -3098,6 +3098,14 @@
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \l@dend@stuff
   \setcounter{pstart}{1}
+%   \end{macrocode}
+% The next lines are used to read the columns switching for file \verb|.c<number>|. See p.~\pageref{columns}.
+%   \begin{macrocode}
+  \@old@firstcolumntrue
+  \newread\@columni
+  \openin\@columni=\jobname.c\the\section@num\relax
+  {\catcode`|=3 \endlinechar=-1\global\read\@columni to \@columnc}
+  \closein\@columni
   \begingroup
   \initnumbering@sectcmd
 }
@@ -3292,6 +3300,13 @@
   \else
     \led@err@NumberingNotStarted
   \fi
+%    \end{macrocode}
+% The next line are use to have the correct disposition of line number when we are in two columns (see p.~\pageref{columns}).
+%    \begin{macrocode}
+  \newwrite\@columnf
+  \openout\@columnf=\jobname.c\extensionchars\the\section@num
+  \write\@columnf{\@column}
+  \closeout\@columnf
   \autoparfalse\endgroup}
 %    \end{macrocode}
 % \end{macro}
@@ -5919,7 +5934,29 @@
 % counter \cs{@l@dtempcntb} for comparison.
 %
 %
+%
+% \label{columns} For LaTeX, we have to consider the two column displaying. 
+% But as the \cs{if@firstcolumn} is switching only after the secund line of a column, we have to use a two run system.
+% \begin{itemize}
+% \item In the first run, we remember the absolute line numbers where the column switches from left to right, or vice-versa.
+% \item At the end of the numbered section, we write these numbers in a file.
+% \item At the begining of the secund run, we read these lines numbers.
+% \item At each line, we try the column number, to determine the position of the line number.
 % First, the case when we're within a sub-line range.
+% \end{itemize}
+% So now, just prepare the tools: one liste and two boolean tests.
+% \begin{macro}{\if@old@firstcolumn}
+% \begin{macro}{\if@real@firstcolumn}
+% \begin{macro}{\@column}
+%    \begin{macrocode}
+\newif\if@old@firstcolumn
+\newif\if@real@firstcolumn
+\@real@firstcolumntrue
+\gdef\@column{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \changes{v0.5.1}{2004/04/10}{Changed \cs{affixline@num} to cater for sidenotes}
 % \changes{v0.7}{2005/02/22}{Added skipnumering to \cs{affixline@num}}
 %    \begin{macrocode}
@@ -6014,6 +6051,9 @@
 % I think we need to put the numbers at the outside of the column ---
 % the left of the first column and the right of the second. Do the twocolumn
 % stuff before going on with the original code.
+%
+% As explained above (p.~\pageref{columns}), we have to make two runs to have the correct numbering
+%
 % \begin{macro}{\l@dld@ta}
 % \begin{macro}{\l@drd@ta}
 % A left line number is stored in \cs{l@dld@ta} and a right one in
@@ -6022,14 +6062,23 @@
 %    \begin{macrocode}
  \if@twocolumn
     \if@firstcolumn
-      \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+      \if@old@firstcolumn\else\numdef{\@col}{\absline@num-2}\listxadd{\@column}{\@col}\fi
+      \@old@firstcolumntrue
     \else
-      \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+      \if@old@firstcolumn\numdef{\@col}{\absline@num-2}\listxadd{\@column}{\@col}\fi
+      \@old@firstcolumnfalse
     \fi
- \else
+    \xifinlist{\the\absline@num}{\@columnc}%
+    {\if@real@firstcolumn\@real@firstcolumnfalse\else\@real@firstcolumntrue\fi}{}%
+    \if@real@firstcolumn%
+    	\gdef\l@dld@ta{\llap{{\leftlinenum}}}
+	\else
+		\gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+	\fi
 %    \end{macrocode}
 % Continuing the original code \ldots
 %    \begin{macrocode}
+   \else
     \@l@dtempcntb=\line@margin
     \ifnum\@l@dtempcntb>\@ne
       \advance\@l@dtempcntb \page@num
