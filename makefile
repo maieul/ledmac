@@ -16,7 +16,7 @@ doc: *.pdf
 
 
 %.sty: %.ins %.dtx 
-	rm -f $*.sty led*tex
+	rm -f $*.sty $*tex
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx 
