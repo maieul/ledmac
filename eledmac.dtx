@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8255}
+% \CheckSum{8244}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1961,7 +1961,7 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% If the \Lclass{memoir} class or the \Lpack{imakeidx} package is used then the macro takes an optional
+% If the \Lclass{memoir} class is used then the macro takes an optional
 % argument, which is the name of a raw index file. For example
 % |\edindex[line]{item}| will use |line.idx| as the raw file instead of
 % |\jobname.idx|.
@@ -2665,7 +2665,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2013/06/07 v1.4.7 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2013/06/22 v1.5 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    In general there is the following modifications to the original
@@ -2780,13 +2780,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\ifl@imakeidx}
-% Define a flag for if the \Lpack{imakeidx} package has been used.
-%    \begin{macrocode}
-\newif\ifl@imakeidx
-\@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{\l@imakeidxfalse}
-%    \end{macrocode} 
-% \end{macro}
 % \subsection{Messages}
 %
 % All the messages are grouped here as macros. This saves TeX's memory
@@ -10452,15 +10445,16 @@
 %
 % \begin{macro}{\makeindex}
 % \begin{macro}{\edindex}
+% \changes{v1.5}{2013/04/22}{Compatibility with \Lpack{imakeidx} package, and possibility to use multiple index with \cs{edindex}.}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing.
 %    \begin{macrocode}
-  \pretocmd{\makeindex}{%
+  \g@addto@macro{\makeindex}{%
     \def\edindex{\@bsphack
     \doedindexlabel
     \begingroup
     \@sanitize
-    \@wredindex}}{}{}
+    \@wredindex}}
   \newcommand{\edindex}[1]{\@bsphack\@esphack}
 %    \end{macrocode}
 % \end{macro}
@@ -10469,14 +10463,9 @@
 % \begin{macro}{\@wredindex}
 % Write the index information to the \file{idx} file.
 %    \begin{macrocode}
-  \newcommandx{\@wredindex}[2][1=\jobname,usedefault]{%#1 = the index name, #2 = the text
-    \ifl@imakeidx%
-     \imki@wrindexentry{#1}{#2}{\thepageline}%
-    \else%
+  \newcommand{\@wredindex}[1]{%
     \protected@write\@indexfile{}%
-      {\string\indexentry{#2}{\thepageline}
-      }%
-     \fi%
+      {\string\indexentry{#1}{\thepageline}}%
   \endgroup
   \@esphack}
 %    \end{macrocode}
