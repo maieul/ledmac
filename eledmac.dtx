@@ -1242,7 +1242,7 @@
 % With \cs{afternumberinfootnote}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0.5~em.
 %
 %\DescribeMacro{\nonbreakableafternumber}\changes{v1.4.3}{2012/12/18}{Add \cs{nonbreakableafternumber}.}
-%By default, the space defined by \cs{afternumberinfootnote} is breakeable. With \cs{afternumberinfootnote}\oarg{s} it becomes non breakable. Use \cs{afternumberinfootnote}\oarg{s}\oarg{false} to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
+%By default, the space defined by \cs{afternumberinfootnote} is breakable. With \cs{afternumberinfootnote}\oarg{s} it becomes non breakable. Use \cs{afternumberinfootnote}\oarg{s}\oarg{false} to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
 % \DescribeMacro{\beforesymlinenum} 
 % With \cs{beforesymlinenum}\oarg{s}\marg{l} you can add some space before the line symbol in a footnote. The default value is value set by \cs{beforenumberinfootnote}.
@@ -1569,7 +1569,7 @@
 %\setstanzaindents{0,1,0,1,0,1,0,1,0,1,0}
 % \end{verbatim}
 %
-%If you don't use the  \verb+stanzaindentsrepetition+ counter,make sure you have at least one more numerical
+%If you don't use the  \verb+stanzaindentsrepetition+ counter, make sure you have at least one more numerical
 % entry in \verb+\setstanzavalues+ than the number of lines in the stanza.
 % The macros make no restriction on the number of lines in a stanza.
 % Stanza indentation values (and penalty values) obey \TeX's grouping
@@ -1869,8 +1869,8 @@
 %
 % \DescribeMacro{\rightnoteupfalse}
 % \DescribeMacro{\leftnoteupfalse}
-% By defaut, left and right sidenotes have their \emph{end} at the line they are called. 
-% If you want they to have their \emph{start} at the line they are called, use \cs{leftnoteupfalse} (for left note) and/or \cs{rightnoteupfalse} (for right note).
+% By default, Sidenotes are placed to align with the last line of the note to which it refers. 
+% If you want they to be placed to align with the first line of the note to which it refers, use \cs{leftnoteupfalse} (for left note) and/or \cs{rightnoteupfalse} (for right note).
 %
 % \DescribeMacro{\ledlsnotesep}
 % \DescribeMacro{\ledrsnotesep}
@@ -1961,11 +1961,17 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% If the \Lclass{memoir} class is used then the macro takes an optional
+% If the \Lclass{memoir} class or the \Lpack{imakeidx} package is used then the macro takes an optional
 % argument, which is the name of a raw index file. For example
 % |\edindex[line]{item}| will use |line.idx| as the raw file instead of
 % |\jobname.idx|.
 %
+% But be careful with the order of package loading and index declaration. You must use this order:
+% \begin{enumerate}
+% 	\item Load \Lpack{imakeidx}.
+% 	\item Load \Lpack{eledmac}.
+%   \item Declare the index with the macro \cs{makeindex} of \Lpack{imakeidx}.
+% \end{enumerate}
 % \DescribeMacro{\pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
 % where the default definition is |\newcommand{\pagelinesep}{-}| so that
@@ -2665,10 +2671,10 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2013/06/07 v1.4.7 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2013/06/22 v1.5 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
-%    In general there is the following modifications to the original
+%    Generally, these are the modifications to the original.
 % \edmac{} code:
 % \begin{itemize}
 % \item Replace as many \cs{def}'s by \cs{newcommand}'s as possible
@@ -2780,6 +2786,13 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\ifl@imakeidx}
+% Define a flag for if the \Lpack{imakeidx} package has been used.
+%    \begin{macrocode}
+\newif\ifl@imakeidx
+\@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{\l@imakeidxfalse}
+%    \end{macrocode} 
+% \end{macro}
 % \subsection{Messages}
 %
 % All the messages are grouped here as macros. This saves TeX's memory
@@ -3149,7 +3162,7 @@
 % \changes{v1.4.7}{2012/06/07}{Compatibility of sectionning commands with \cs{autopar}.}
 % \cs{initnumbering@sectcmd} defines sectioning commands inside numbered section.
 % It also defines quotation environment. 
-% Note that it's suppose user didn't change \cs{chapter}.
+% Note: this supposes that the user didn't change \cs{chapter}.
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
 %    \begin{macrocode}
 \newcommand{\initnumbering@sectcmd}{
@@ -5642,7 +5655,7 @@
   \fi
   \affixline@num
   \affixpstart@num
-  \hb@xt@ \linewidth{\inserthangingsymbol\l@dld@ta\add@inserts\affixside@note
+  \hb@xt@ \linewidth{\do@insidelinehook\inserthangingsymbol\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
@@ -5652,11 +5665,16 @@
 % \end{macro}
 %
 % \begin{macro}{\do@linehook}
-% A hook into \cs{do@line}.
+% \begin{macro}{\do@insidelinehook}
+% Two hooks into \cs{do@line}. The first is called at the begining of \cs{do@line}, the secund is called in the line box.
+% The secund can, for example, have a \cs{markboth} command inside, the first can't.
 % \changes{v0.7}{2005/02/18}{Added \cs{do@linehook} for use in \cs{do@line}}
+% \changes{v1.5}{2013/06/22}{Added \cs{do@insidelinehook} for use in \cs{do@line}}
 %    \begin{macrocode}
 \newcommand*{\do@linehook}{}
+\newcommand*{\do@insidelinehook}{}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\l@demptyd@ta}
@@ -7714,9 +7732,9 @@
 % % \section{Familiar footnotes}
 %
 % \subsection{Generality}
-%    The original \edmac{} provided the five series of critical footnotes,
+%    The original \edmac{} provided provided users with five series of critical footnotes (\Afootnote \Bfootnote  \Cfootnote \Dfootnote \Efootnote),
 % and LaTeX provides a single numbered footnote. The \Eledmac{} package
-% uses the \edmac{} mechanism to provide a few series of numbered footnotes.
+% uses the \edmac{} mechanism to provide five series of numbered footnotes.
 % 
 %    First, though, the \Lpack{footmisc} package has an option whereby
 % two or more consecutive \cs{footnote}s have their marks separated
@@ -7824,7 +7842,7 @@
 % \verb?\vl@dbfnote? calls the original \verb?\@footnotetext?.
 % \changes{v0.6}{2004/11/23}{Changed \cs{l@dbfnote} and \cs{vl@dbfnote} as
 % originals could give incorrect markers in the footnotes}
-% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with eledmac when theses footnotes contain any commands.}
+% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
@@ -10376,6 +10394,7 @@
 %
 % \begin{macro}{\makeindex}
 % \begin{macro}{\edindex}
+% \changes{v1.5}{2013/06/22}{Compatibility with \Lpack{imakeidx} package, and possibility to use multiple index with \cs{edindex}.}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing. In this case |\edindex| has an optional 
 % argument. We use the hook provided in \Lpack{memoir} v1.61.
@@ -10448,12 +10467,12 @@
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing.
 %    \begin{macrocode}
-  \g@addto@macro{\makeindex}{%
+  \pretocmd{\makeindex}{%
     \def\edindex{\@bsphack
     \doedindexlabel
     \begingroup
     \@sanitize
-    \@wredindex}}
+    \@wredindex}}{}{}
   \newcommand{\edindex}[1]{\@bsphack\@esphack}
 %    \end{macrocode}
 % \end{macro}
@@ -10462,9 +10481,14 @@
 % \begin{macro}{\@wredindex}
 % Write the index information to the \file{idx} file.
 %    \begin{macrocode}
-  \newcommand{\@wredindex}[1]{%
+  \newcommandx{\@wredindex}[2][1=\jobname,usedefault]{%#1 = the index name, #2 = the text
+    \ifl@imakeidx%
+     \imki@wrindexentry{#1}{#2}{\thepageline}%
+    \else%
     \protected@write\@indexfile{}%
-      {\string\indexentry{#1}{\thepageline}}%
+      {\string\indexentry{#2}{\thepageline}
+      }%
+     \fi%
   \endgroup
   \@esphack}
 %    \end{macrocode}
