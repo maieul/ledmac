@@ -10469,16 +10469,37 @@
   \def\l@d@@wrindexhyp#1|#2|#3\\{%
     \ifshowindexmark\@showidx{#1}\fi
     \ifx\\#2\\%
-      \protected@write\@auxout{}%
-        {\string\@@wrindexm@m{\@idxfile}{#1|hyperpage}{\thepageline}}%
+       \if@edindex@fornote@%
+          \protected@write\@auxout{}%
+           {\string\@@wrindexm@m{\@idxfile}{#1|(|hyperpage}{\thestartpageline}}%
+          \protected@write\@auxout{}%
+           {\string\@@wrindexm@m{\@idxfile}{#1|)|hyperpage}{\theendpageline}}%
+       \else%
+          \protected@write\@auxout{}%
+           {\string\@@wrindexm@m{\@idxfile}{#1|hyperpage}{\thepageline}}%
+       \f%
     \else
       \def\Hy@temp@A{#2}%
       \ifx\Hy@temp@A\HyInd@ParenLeft
-        \protected@write\@auxout{}%
-          {\string\@@wrindexm@m{\@idxfile}{#1|#2hyperpage}{\thepageline}}%
+        \if@edindex@fornote@%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2(|hyperpage}{\thestartpageline}}%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2)|hyperpage}{\theendpageline}}%           
+        \else%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2hyperpage}{\thepageline}}%
+        \fi%
       \else
-        \protected@write\@auxout{}%
-          {\string\@@wrindexm@m{\@idxfile}{#1|#2}{\thepageline}}%
+        \if@edindex@fornote@%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2|(}{\thestartpageline}}%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2|)}{\theendpageline}}%  
+        \else%
+          \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|#2}{\thepageline}}%
+        \fi%
       \fi
     \fi
     \endgroup
@@ -10514,11 +10535,25 @@
 %    \begin{macrocode}
   \newcommandx{\@wredindex}[2][1=\jobname,usedefault]{%#1 = the index name, #2 = the text
     \ifl@imakeidx%
-     \imki@wrindexentry{#1}{#2}{\thepageline}%
+      \if@edindex@fornote@%
+        \imki@wrindexentry{#1}{#2|(}{\thestartpageline}%
+        \imki@wrindexentry{#1}{#2|)}{\theendpageline}%
+      \else%
+        \imki@wrindexentry{#1}{#2}{\thepageline}%
+      \fi%
     \else%
-    \protected@write\@indexfile{}%
-      {\string\indexentry{#2}{\thepageline}
-      }%
+      \if@edindex@fornote@%
+        \protected@write\@indexfile{}%
+          {\string\indexentry{#2|(}{\thestartpageline}
+          }%
+        \protected@write\@indexfile{}%
+          {\string\indexentry{#2|)}{\theendpageline}
+          }%
+      \else%
+        \protected@write\@indexfile{}%
+          {\string\indexentry{#2}{\thepageline}
+          }%
+      \fi%
      \fi%
   \endgroup
   \@esphack}
@@ -10538,8 +10573,15 @@
 \AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
   \def\l@d@@wrindexhyp#1||\\{%
     \ifshowindexmark\@showidx{#1}\fi
-    \protected@write\@auxout{}%
-      {\string\@@wrindexm@m{\@idxfile}{#1}{\thepageline}}%
+      \if@edindex@fornote@%
+         \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|(}{\thestartpageline}}%
+         \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1|)}{\theendpageline}}%
+      \else%
+         \protected@write\@auxout{}%
+            {\string\@@wrindexm@m{\@idxfile}{#1}{\thepageline}}%
+      \fi%
     \endgroup
     \@esphack}}}
 
