@@ -10417,15 +10417,18 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\get@index@command}
+% This macro is used to analyse if a text to be indexed have a command after an \verb+|+. 
+%     \begin{macrocode}
+\def\get@index@command#1|#2{\gdef\@index@command{#2}\gdef\@index@txt{#1}}
+% \end{macro}
+%     \end{macrocode}
 % \begin{macro}{\ledinnote}
 % \begin{macro}{\ledinnotehyperpage}
 % These macros are used to precise that an index reference point to a note.
 %    \begin{macrocode}
-\def\get@index@command#1|{\gdef\@index@command{#1}}
 \newcommand{\ledinnote}[2]{\csuse{#1}{#2\emph{n}}}
 \newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\hyperpage{#2}\emph{n}}}
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %    The \Lpack{memoir} class provides more flexible indexing than the
@@ -10586,20 +10589,21 @@
 % to clutter up the index with hyperreffing things.
 %    \begin{macrocode}
 \AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
-  \def\l@d@@wrindexhyp#1|#2|\\{%
+  \def\l@d@@wrindexhyp#1||\\{%
     \ifshowindexmark\@showidx{#1}\fi
-    \IfSubStr[1]{#2}{|}{\get@index@command#2}{\get@index@command#2|}%
+    \IfSubStr[1]{#1}{|}{\get@index@command#1}{\get@index@command#1|}%
       \if@edindex@fornote@%
          \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnote{\@index@command}}{\thestartpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}}%
          \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnote{\@index@command}}{\theendpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}}%
       \else%
          \protected@write\@auxout{}%
             {\string\@@wrindexm@m{\@idxfile}{#1}{\thepageline}}%
       \fi%
     \endgroup
     \@esphack}}}
+
 
 %    \end{macrocode}
 % \end{macro}
