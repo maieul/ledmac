@@ -3420,15 +3420,28 @@
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.3}{2005/02/04}{Removed extraneous spaces from \cs{normalbfnoteX}}
 % \changes{v1.3.5}{2013/07/10}{Allows one to redefine \cs{thefootnoteX} with \c{alph} when some packages are loaded.}
+% \changes{v1.4.1}{2013/08/14}{Fix bug with normal familiar footnotes when mixing RTL and LTR text.}
 %    \begin{macrocode}
 \renewcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
     \ifledRcol%
+      \ifluatex
+          \footnotelang@lua[R]%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+		{}%
+		{\footnotelang@poly[R]}%      
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
+      \ifluatex
+          \footnotelang@lua%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+		{}%
+		{\footnotelang@poly}%    
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@list
