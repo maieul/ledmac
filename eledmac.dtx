@@ -1558,10 +1558,11 @@
 % two units, with 3 units of hanging indentation in case a stanza line is too
 % long to fit on one print line. 
 %
+% \subsection{Repeating stanza indents}
 %\changes{v0.13}{2011/11/08}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
-% Since version 0.13, if the indentation is repeated every \emph{n} verses of the stanza, you can define only the \emph{n} first indentations, and say they are repeated, defining the value of  the \verb+stanzaindentsrepetition+ counter  at \emph{n}. For example:
+% \label{stanzaindentsrepetition}Since version 0.13, if the indentation is repeated every \emph{n} verses of the stanza, you can define only the \emph{n} first indentations, and say they are repeated, defining the value of  the \verb+stanzaindentsrepetition+ counter  at \emph{n}. For example:
 %\begin{verbatim}
-%\setstanzaindents{0,1,0}
+%\setstanzaindents{5,1,0}
 %\setcounter{stanzaindentsrepetition}{2}
 % \end{verbatim}
 %
@@ -1569,6 +1570,8 @@
 %\begin{verbatim}
 %\setstanzaindents{0,1,0,1,0,1,0,1,0,1,0}
 % \end{verbatim}
+%
+% \textbf{Be careful: the feature change in eledmac 1.5.1. See \ref{change151} p.~\pageref{change151}.}
 %
 %If you don't use the  \verb+stanzaindentsrepetition+ counter, make sure you have at least one more numerical
 % entry in \verb+\setstanzavalues+ than the number of lines in the stanza.
@@ -1583,6 +1586,7 @@
 % its indentations (penalties) may be set within a group; the prior values
 % will be restored when the group ends.
 %
+% % \subsection{Stanza breaking}
 % \DescribeMacro{\setstanzapenalties}
 % When the stanzas run over several pages, often it is
 % desirable that page breaks should arise between certain lines in the
@@ -1611,7 +1615,7 @@
 % desirability of a page break at a given line. There is a subtle interaction
 % between penalties and \textit{glue}, so it may take some adjustment of skips
 % and penalties to achieve the best results.
-%
+% \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
 % macro, not \verb?\&? which will end the stanza.
@@ -12389,7 +12393,8 @@
 % \appendix
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
-% \section{Migration from ledmac to eledmac}\label{migration}
+% \section{Some things to do when changing version}
+% \subsection{Migration from ledmac to eledmac}\label{migration}
 % In eledmac, some changes were made in the code to allow for easy customization.
 % This can cause problems for people who have made their own customizations. The next sections explain how to correct this.
 %
@@ -12409,6 +12414,32 @@
 % If you dont' do that, you will see a spurious \verb+[X]+, where X is series letter.
 %
 % If you used a \cs{protect} command inside a \cs{footnote} command inside a numbered section, you must change the \cs{protect} to \cs{noexpand}. If you don't, the command after the \cs{protect} won't be displayed.
+% \subsection{Migration to eledmac 1.5.1}\label{change151}
+% The version 1.5.1 corrects bug with \verb+stanzaindentsrepetition+ (cf. p.~\pageref{stanzaindentsrepetition}). This bug had two consequences:
+% \begin{enumerate}
+% \item \verb+stanzaindentsrepetition+ did'nt work when its value was greater than 2.
+% \item \verb+stanzaindentsrepetition+ worked wrong when its value was equal to 2.
+% \end{enumerate}
+% 
+% So, if you used \verb+stanzaindentsrepetition+ with value equal to 2, you must change your \cs{setstanzaindents}. Explanation:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,1,0}
+% \end{verbatim}
+% This code, in version older than 1.5.1, made that the first verse had an indent to 0, the secund verse to 1, the third verse to 0, the fourth verse to 1 etc.
+%
+% But it should have do that the first verse had an indent to 1, the secund verse to 0, the third verse to 1, the fourth verse to 0 etc.
+%
+% So the version 1.5.1 corrected this bug. If you want to keep the older presentation, you must change:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,1,0}
+% \end{verbatim}
+% by:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,0,1}
+% \end{verbatim} 
 % \clearpage
 %
 % \bibliographystyle{alpha}
