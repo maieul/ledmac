@@ -4742,17 +4742,27 @@
 % \changes{v0.7}{2005/02/25}{Deleted \cs{page@start} from \cs{line@list@stuff}}
 %    \begin{macrocode}
   \iffirst@linenum@out@
-     \immediate\closeout\linenum@out
-     \global\first@linenum@out@false
-     \immediate\openout\linenum@out=#1\relax
+     \immediate\closeout\linenum@out%
+     \global\first@linenum@out@false%
+     \immediate\openout\linenum@out=#1\relax%
   \else
 %    \end{macrocode}
 % If we get here, then this is
 % not the first line-list we've seen, so we
-% don't open or close the files immediately.
+% don't open or close the files immediately, except if we are in a minipage and this minipage is not a ledgroup.
 %    \begin{macrocode}
-     \closeout\linenum@out
-     \openout\linenum@out=#1\relax
+     \if@minipage%
+       \if@ledgroup%
+         \closeout\linenum@out%
+         \openout\linenum@out=#1\relax%
+       \else%
+         \immediate\closeout\linenum@out%
+         \immediate\openout\linenum@out=#1\relax%
+       \fi    
+     \else%
+       \closeout\linenum@out%
+       \openout\linenum@out=#1\relax%
+     \fi%
   \fi}
 
 %    \end{macrocode}
@@ -10302,8 +10312,9 @@
 % of unboxed, fixed width minipage.
 % \changes{v0.4}{2004/02/29}{Added ledgroup environment}
 %    \begin{macrocode}
+\newif\if@ledgroup
 \newenvironment{ledgroup}{%
-  \def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
+  \@ledgrouptrue\def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
   \let\@footnotetext\@mpfootnotetext
   \l@dfeetbeginmini%
 }{%
@@ -10313,6 +10324,7 @@
     \l@dunboxmpfoot
   \fi
   \l@dfeetendmini%
+  \@ledgroupfalse%
 }
 
 %    \end{macrocode}
@@ -10358,6 +10370,7 @@
 %    \end{macrocode}
 % Set up the footnoting.
 %    \begin{macrocode}
+  \@ledgrouptrue%
   \def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
   \let\@footnotetext\@mpfootnotetext
   \l@dfeetbeginmini%
@@ -10368,6 +10381,7 @@
     \l@dunboxmpfoot
   \fi
   \l@dfeetendmini%
+  \@ledgroupfalse%
 }
 
 %    \end{macrocode}
