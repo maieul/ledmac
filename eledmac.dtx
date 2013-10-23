@@ -5518,28 +5518,37 @@
 \numberpstartfalse
 \newif\iflabelpstart
 \labelpstartfalse
-\newcommand*{\pstart}{
-\if@nobreak
-\let\@oldnobreak\@nobreaktrue
-\else
-\let\@oldnobreak\@nobreakfalse
-\fi
-\@nobreaktrue
-\ifnumbering \else
-    \led@err@PstartNotNumbered
-    \beginnumbering
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pend
-  \fi
+\newcommand*{\pstart}{%
+\if@nobreak%
+  \let\@oldnobreak\@nobreaktrue%
+\else%
+  \let\@oldnobreak\@nobreakfalse%
+\fi%
+\@nobreaktrue%
+\ifnumbering \else%
+    \led@err@PstartNotNumbered%
+    \beginnumbering%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pend%
+  \fi%
   \list@clear{\inserts@list}%
-  \global\let\next@insert=\empty
-  \begingroup\normal@pars
-  \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\ifsidepstartnum\else\thepstart\fi\fi\fi\fi
-  \numberedpar@true
-  \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstart\thepstart}\fi
+  \global\let\next@insert=\empty%
+  \begingroup\normal@pars%
+  \global\setbox\raw@text=\vbox\bgroup%
+    \ifautopar\else%
+    \ifnumberpstart%
+      \ifinstanza\else%
+       \ifsidepstartnum\else%
+         \thepstart%
+        \fi%
+       \fi%
+      \fi%
+     \fi%
+  \numberedpar@true%
+  \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstart\thepstart}\fi%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5552,12 +5561,12 @@
 % \cs{pend} must be used to end a numbered paragraph.
 %
 %    \begin{macrocode}
-\newcommand*{\pend}{\ifnumbering \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
+\newcommand*{\pend}{\ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -5568,31 +5577,31 @@
 % paragraph, add a line number and footnotes, and restore it to the page;
 % we keep doing this until there aren't any more lines left.
 %    \begin{macrocode}
-  \l@dzeropenalties
-  \endgraf\global\num@lines=\prevgraf\egroup
-  \global\par@line=0
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
 %    \end{macrocode}
 % We check if lineation is by pstart: in this case, we reset line number, but only in the second line of the pstart, to prevent some trouble. We can't reset line number at the beginning of  \cs{pstart} \cs{setline} is parsed at the end of previous \cs{pend}, and so, we must do it at the end of first line of pstart.
 %    \begin{macrocode}
-  \csnumdef{pstartline}{0}
-  \loop\ifvbox\raw@text
+  \csnumdef{pstartline}{0}%
+  \loop\ifvbox\raw@text%
     \csnumdef{pstartline}{\pstartline+1}%
-    \do@line
+    \do@line%
     \ifbypstart@%
      \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
-    \fi   
-  \repeat
+    \fi%
+  \repeat%
 %    \end{macrocode}
 % Deal with any leftover notes, and then end the group that was begun
 % in the \cs{pstart}.
 %    \begin{macrocode}
-  \flush@notes
-  \endgroup
-  \ignorespaces
-  \ifnumberpstart
-   \pstartnumtrue
-   \fi
-  \@oldnobreak
+  \flush@notes%
+  \endgroup%
+  \ignorespaces%
+  \ifnumberpstart%
+   \pstartnumtrue%
+   \fi%
+  \@oldnobreak%
   \addtocounter{pstart}{1}}
 
 %    \end{macrocode}
