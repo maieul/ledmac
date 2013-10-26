@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4005}
+% \CheckSum{4003}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -156,6 +156,7 @@
 % \changes{v1.1}{2012/09/25}{Shiftedverses becomes shiftedpstarts.}
 % \changes{v1.2}{2012/10/15}{Support for \cs{led}\meta{section} commands in parallel texts.}
 % \changes{v1.3.2}{2012/12/11}{Debug with some classes.}
+% \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -213,9 +214,9 @@
 %
 % You can subscribe to the eledmac email list in:\\ \url{https://lists.berlios.de/pipermail/ledmac-users/}
 % \end{abstract}
-%
+% \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
-%
+% 
 % \listoffigures
 %
 %
@@ -719,7 +720,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2013/08/21 v1.4.2 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2013/10/27 v1.4.3 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -2335,8 +2336,9 @@
 %
 % \begin{macro}{\pstartL}
 % \begin{macro}{\pstartR}
-% changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
-% changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
+% \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
+% \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2360,83 +2362,98 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{
-\if@nobreak
-    \let\@oldnobreak\@nobreaktrue
-\else
-    \let\@oldnobreak\@nobreakfalse
-\fi
-    \@nobreaktrue
-  \ifnumbering \else
-    \led@err@PstartNotNumbered
-    \beginnumbering
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pend
-  \fi
+\newcommand*{\pstartL}{%
+\if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+\else%
+    \let\@oldnobreak\@nobreakfalse%
+\fi%
+    \@nobreaktrue%
+  \ifnumbering \else%
+    \led@err@PstartNotNumbered%
+    \beginnumbering%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pend%
+  \fi%
 %    \end{macrocode}
 % If this is the first \cs{pstart} in a numbered section, clear any inserts
 % and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
 %    \begin{macrocode}
-  \ifpst@rtedL\else
+  \ifpst@rtedL\else%
       \setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
-    \global\let\next@insert=\empty
-     \global\pst@rtedLtrue
-  \fi
-  \begingroup\normal@pars
+    \global\let\next@insert=\empty%
+     \global\pst@rtedLtrue%
+  \fi%
+  \begingroup\normal@pars%
 %    \end{macrocode}
 % When parallel processing we check that we haven't exceeded
 % the maximum number of chunks. In any event we grab a box for the
 % forthcoming text.
 %    \begin{macrocode}
-  \global\advance\l@dnumpstartsL \@ne
-  \ifnum\l@dnumpstartsL>\l@dc@maxchunks
-    \led@err@TooManyPstarts
-    \global\l@dnumpstartsL=\l@dc@maxchunks
-  \fi
-  \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartL\fi\fi\fi%
-                     \hsize=\Lcolwidth
-  \numberedpar@true
-  \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstartL\thepstartL}\fi
+  \global\advance\l@dnumpstartsL \@ne%
+  \ifnum\l@dnumpstartsL>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsL=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup%
+  \ifautopar\else%
+    \ifnumberpstart%
+      \ifsidepstartnum%
+        \else%
+         \thepstartL%
+        \fi%
+       \fi%
+      \fi%
+  \hsize=\Lcolwidth%
+  \numberedpar@true%
+  \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartL\thepstartL}\fi%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{
-\if@nobreak
-    \let\@oldnobreak\@nobreaktrue
-\else
-    \let\@oldnobreak\@nobreakfalse
-\fi
-    \@nobreaktrue
-  \ifnumberingR \else
-    \led@err@PstartNotNumbered
-    \beginnumberingR
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pendR
-  \fi
-  \ifpst@rtedR\else
+\newcommand*{\pstartR}{%
+\if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+\else%
+    \let\@oldnobreak\@nobreakfalse%
+\fi%
+    \@nobreaktrue%
+  \ifnumberingR \else%
+    \led@err@PstartNotNumbered%
+    \beginnumberingR%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pendR%
+  \fi%
+  \ifpst@rtedR\else%
       \setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
-    \global\let\next@insertR=\empty
-    \global\pst@rtedRtrue
-  \fi
-  \begingroup\normal@pars
-  \global\advance\l@dnumpstartsR \@ne
-  \ifnum\l@dnumpstartsR>\l@dc@maxchunks
-    \led@err@TooManyPstarts
-    \global\l@dnumpstartsR=\l@dc@maxchunks
-  \fi
-  \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartR\fi\fi\fi%
-                     \hsize=\Rcolwidth
-  \numberedpar@true
-   \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstartR\thepstartR}\fi
+    \global\let\next@insertR=\empty%
+    \global\pst@rtedRtrue%
+  \fi%
+  \begingroup\normal@pars%
+  \global\advance\l@dnumpstartsR \@ne%
+  \ifnum\l@dnumpstartsR>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsR=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
+    \ifautopar\else%
+      \ifnumberpstart%
+        \ifsidepstartnum\else%
+          \thepstartR%
+         \fi%
+        \fi%
+       \fi%
+  \hsize=\Rcolwidth%
+  \numberedpar@true%
+   \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartR\thepstartR}\fi%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2444,17 +2461,18 @@
 %
 %
 % \begin{macro}{\pendL}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pendL}.}
 % \cs{pend} must be used to end a numbered paragraph. Again we need 
 % a version 
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendL}{\ifnumbering \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
+\newcommand*{\pendL}{\ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -2462,41 +2480,42 @@
 % paragraph into pieces. These penalties revert to the values
 % that you set when the group for the \cs{vbox} ends. 
 %    \begin{macrocode}
-  \l@dzeropenalties
-  \endgraf\global\num@lines=\prevgraf\egroup
-  \global\par@line=0
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
 %    \end{macrocode}
 % End the group that was begun in the \cs{pstart}.
 %    \begin{macrocode}
-  \endgroup
-  \ignorespaces
-  \@oldnobreak
-    \ifnumberpstart
-    \addtocounter{pstartL}{1}
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+    \ifnumberpstart%
+    \addtocounter{pstartL}{1}%
     \fi}
 
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\pendR}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartR}.}
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendR}{\ifnumberingR \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
-  \l@dzeropenalties
-  \endgraf\global\num@linesR=\prevgraf\egroup
-  \global\par@lineR=0
-  \endgroup
-  \ignorespaces
-  \@oldnobreak
-    \ifnumberpstart
-    \addtocounter{pstartR}{1}
-    \fi    
+\newcommand*{\pendR}{\ifnumberingR \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
+  \l@dzeropenalties%
+  \endgraf\global\num@linesR=\prevgraf\egroup%
+  \global\par@lineR=0%
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+    \ifnumberpstart%
+    \addtocounter{pstartR}{1}%
+    \fi%    
 }
 
 %    \end{macrocode}
@@ -3471,18 +3490,19 @@
 % Like in eledmac, the insertion of hangingsymbol is base on \cs{ifinserthangingsymbol}, and, for the right side, on \cs{ifinserthangingsymbolR}.
 % \begin{macro}{\inserthangingsymbolL}
 % \begin{macro}{\inserthangingsymbolR}
+% \changes{v1.4.3}{2013/10/27}{Hang verse is now not automatically flush right.}
 %    \begin{macrocode}
 \newif\ifinserthangingsymbolR
 \newcommand{\inserthangingsymbolL}{%
 \ifinserthangingsymbol%
     \ifinstanzaL%
-        \hfill\hangingsymbol%
+        \hangingsymbol%
     \fi%
 \fi}
 \newcommand{\inserthangingsymbolR}{%
 \ifinserthangingsymbolR%
     \ifinstanzaR%
-        \hfill\hangingsymbol%
+        \hangingsymbol%
     \fi%
 \fi}
 %    \end{macrocode}
@@ -4218,7 +4238,7 @@
               \advance\numpagelinesL \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
-              \else
+              \else%
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
@@ -4258,7 +4278,7 @@
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
-              \else
+              \else%
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR
@@ -4658,14 +4678,39 @@
 %
 % \section{The End}\label{end}
 %
-
-
+% 
 %</code>
 %
 % \newpage
 % \appendix
 % \clearpage
 %
+% \let\oldthesection\thesection
+% \renewcommand{\thesection}{Appendix \oldthesection}
+% \section{Some things to do when changing version}
+% \subsection{Migration to eledpar 1.4.3}
+% Version 1.4.3 corrects a bug added in version 0.12, which made hanging verse automatically flush right, despite the given value of the first element of the \cs{setstanzaindents} command.
+% 
+% If, however, you want to return to automatic flush-right margins for verses with hanging indents, you have to redefine the \cs{hangingsymbol} command.
+% \begin{verbatim}
+%   \renewcommand{\hangingsymbol}{\protect\hfill}
+% \end{verbatim}
+% See the two following examples:
+%
+% With standard \cs{hangingsymbol}:
+% \setstanzaindents{4,0}
+% \beginnumbering
+% 	\stanza
+%   A very long verse should be sometime hanged. The position of the hang verse is fixed.\&
+% \endnumbering
+%
+% With the modification of \cs{hangingsymbol}:
+% \renewcommand{\hangingsymbol}{\protect\hfill}
+% \setstanzaindents{4,0}
+% \beginnumbering
+% 	\stanza
+%   A very long verse should sometimes be hanging. And we can see that an hanging verse is flush right.\&
+% \endnumbering
 % \bibliographystyle{alpha}
 % \begin{thebibliography}{WWW99}
 % \addcontentsline{toc}{section}{References}
@@ -4697,7 +4742,7 @@
 % \end{thebibliography}
 %
 % \Finale
-% \section*{}
+% \phantomsection
 % \addcontentsline{toc}{section}{Index}
 % \PrintIndex
 %

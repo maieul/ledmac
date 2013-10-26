@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8452}
+% \CheckSum{8451}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -176,6 +176,7 @@
 % \changes{v1.4.5}{2013/03/02}{Bug with komasscript + eledpar + chapter.}
 % \changes{v1.4.6}{2013/04/15}{Bug with memoir class introduced by 1.4.5.}
 % \changes{v1.4.8}{2013/07/02}{Corrects a bug with parallel texts introduced by 1.1.}
+% \changes{v1.6.1}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -1534,6 +1535,8 @@
 % is ended by an ampersand (\&), and the stanza itself is ended
 % by putting \verb?\&? at the end of the last line.
 %
+% \textbf{Be careful: you must have NO space between the end of your verse and \verb+&+ or \verb+\&+}. 
+% In most cases, you will see no difference, but if your verse is exactly the same length as a line, then you will have an empty hanging verse.
 % 
 % \DescribeMacro{\stanzaindentbase}
 % Lines within a stanza may be indented. The indents are integer multiples
@@ -1552,10 +1555,17 @@
 % The numerical entries must be whole numbers, 0 or greater, separated by
 % commas without embedded spaces. The first entry
 % gives the hanging indentation to be used if the stanza line requires more
-% than one print line. If it is known that each stanza line will fit on
-% a single print line, then this first entry should be 0; \TeX\ does less
+% than one print line.
+%  
+%  If it is known that each stanza line will fit on more than one print line,
+% then this first entry should be 0; \TeX\ does less
 % work in this case, but no harm ensues if the hanging indentation is not
-% 0 but is never used. Enumeration is by stanza lines, not by print lines.
+% 0 but is never used. 
+% 
+% If you want the hanging verse to be flush right, 
+% you can use \cs{hanginsymbol}: see p.~\pageref{hfillhanging}.
+%
+% Enumeration is by stanza lines, not by print lines.
 % In the above example the lines are indented one unit, two units, one unit,
 % two units, with 3 units of hanging indentation in case a stanza line is too
 % long to fit on one print line. 
@@ -1624,7 +1634,7 @@
 % 		\item Won't be numbered.
 % 		\item Won't affect the indent of the next verse.
 % 	\end{enumerate}
-% It could be use, for example, to add some space between verse.
+% It could be used, for example, to add some space between verses.
 % To add this type of false verse, you have to finish the previous verse with \cs{falseverse} (and not with \verb+&+).
 % For example:
 % \begin{verbatim}
@@ -1635,10 +1645,14 @@
 % 	True verse
 % \end{verbatim}
 % \subsection{Hanging symbol}
-%It's possible to insert a symbol on each line of verse's hanging, as in French typography for `['.  To insert in eledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
-%\begin{verbatim}
-%\renewcommand{\hangingsymbol}{[\,}
-%\end{verbatim}
+% It's possible to insert a symbol in each line of hanging verse, as in French typography for `['., as in French typography for `['.  To insert in eledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
+% \begin{verbatim}
+% \renewcommand{\hangingsymbol}{[\,}
+% \end{verbatim}
+% \label{hfillhanging} You can also use it to force hanging verse to be flush right:
+% \begin{verbatim}
+% \renewcommand{\hangingsymbol}{\protect\hfill}
+% \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
@@ -2705,7 +2719,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2013/10/09 v1.6.0 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2013/10/27 v1.6.1 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -5488,6 +5502,7 @@
 % \end{macro}
 %
 % \begin{macro}{\pstart}
+% \changes{v1.6.1}{2013/10/27}{Spurious space in \cs{pstart}.}
 % \begin{macro}{\numberpstarttrue}
 % \begin{macro}{\numberpstartfalse}
 % \begin{macro}{\labelpstarttrue}
@@ -5518,28 +5533,37 @@
 \numberpstartfalse
 \newif\iflabelpstart
 \labelpstartfalse
-\newcommand*{\pstart}{
-\if@nobreak
-\let\@oldnobreak\@nobreaktrue
-\else
-\let\@oldnobreak\@nobreakfalse
-\fi
-\@nobreaktrue
-\ifnumbering \else
-    \led@err@PstartNotNumbered
-    \beginnumbering
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pend
-  \fi
+\newcommand*{\pstart}{%
+\if@nobreak%
+  \let\@oldnobreak\@nobreaktrue%
+\else%
+  \let\@oldnobreak\@nobreakfalse%
+\fi%
+\@nobreaktrue%
+\ifnumbering \else%
+    \led@err@PstartNotNumbered%
+    \beginnumbering%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pend%
+  \fi%
   \list@clear{\inserts@list}%
-  \global\let\next@insert=\empty
-  \begingroup\normal@pars
-  \global\setbox\raw@text=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifinstanza\else\ifsidepstartnum\else\thepstart\fi\fi\fi\fi
-  \numberedpar@true
-  \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstart\thepstart}\fi
+  \global\let\next@insert=\empty%
+  \begingroup\normal@pars%
+  \global\setbox\raw@text=\vbox\bgroup%
+    \ifautopar\else%
+    \ifnumberpstart%
+      \ifinstanza\else%
+       \ifsidepstartnum\else%
+         \thepstart%
+        \fi%
+       \fi%
+      \fi%
+     \fi%
+  \numberedpar@true%
+  \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstart\thepstart}\fi%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5549,15 +5573,16 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\pend}
+% \changes{v1.6.1}{2013/10/27}{Spurious space in \cs{pend}.}
 % \cs{pend} must be used to end a numbered paragraph.
 %
 %    \begin{macrocode}
-\newcommand*{\pend}{\ifnumbering \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
+\newcommand*{\pend}{\ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -5568,31 +5593,31 @@
 % paragraph, add a line number and footnotes, and restore it to the page;
 % we keep doing this until there aren't any more lines left.
 %    \begin{macrocode}
-  \l@dzeropenalties
-  \endgraf\global\num@lines=\prevgraf\egroup
-  \global\par@line=0
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
 %    \end{macrocode}
 % We check if lineation is by pstart: in this case, we reset line number, but only in the second line of the pstart, to prevent some trouble. We can't reset line number at the beginning of  \cs{pstart} \cs{setline} is parsed at the end of previous \cs{pend}, and so, we must do it at the end of first line of pstart.
 %    \begin{macrocode}
-  \csnumdef{pstartline}{0}
-  \loop\ifvbox\raw@text
+  \csnumdef{pstartline}{0}%
+  \loop\ifvbox\raw@text%
     \csnumdef{pstartline}{\pstartline+1}%
-    \do@line
+    \do@line%
     \ifbypstart@%
      \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
-    \fi   
-  \repeat
+    \fi%
+  \repeat%
 %    \end{macrocode}
 % Deal with any leftover notes, and then end the group that was begun
 % in the \cs{pstart}.
 %    \begin{macrocode}
-  \flush@notes
-  \endgroup
-  \ignorespaces
-  \ifnumberpstart
-   \pstartnumtrue
-   \fi
-  \@oldnobreak
+  \flush@notes%
+  \endgroup%
+  \ignorespaces%
+  \ifnumberpstart%
+   \pstartnumtrue%
+   \fi%
+  \@oldnobreak%
   \addtocounter{pstart}{1}}
 
 %    \end{macrocode}
@@ -5684,6 +5709,7 @@
 % \begin{macro}{\l@dunhbox@line}
 % The \cs{do@line} macro is called by \cs{pend} to
 % do all the processing for a single line of text.
+% \changes{v1.6.1}{2013/10/27}{Move the call to \cs{inserthangingsymbol} to allow use \cs{hfill} inside.}
 %    \begin{macrocode}
  \newcommand*{\l@dunhbox@line}[1]{\unhbox #1}
  \newcommand*{\do@line}{%
@@ -5701,9 +5727,9 @@
   \fi
   \affixline@num
   \affixpstart@num
-  \hb@xt@ \linewidth{\do@insidelinehook\inserthangingsymbol\l@dld@ta\add@inserts\affixside@note
+  \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\new@line\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
   }}}%
 %    \end{macrocode}
@@ -10883,17 +10909,18 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%\changes{v0.15}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
-%\changes{v0.17}{2012/08/03}{New new management of hangingsymbol insertion, preventing undesirable insertions.}
 % \begin{macro}{\inserthangingymbol}
 % \begin{macro}{\ifinserthangingsymbol}
 % The boolean \cs{ifinserthangingsymbol} is set to TRUE when \cs{@lock} is greater than 1, i.e. when we are not in the first line of a verse. The switch of \cs{ifinserthangingsymbol} is  made in \cs{do@line} before the printing of line but after the line number calculation.
+%\changes{v0.15}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
+%\changes{v0.17}{2012/08/03}{New new management of hangingsymbol insertion, preventing undesirable insertions.}
+% \changes{v1.6.1}{2013/10/27}{Hang verse is now not automatically flush right.}
 %    \begin{macrocode}
 \newif\ifinserthangingsymbol
 \newcommand{\inserthangingsymbol}{%
 \ifinserthangingsymbol%
    \ifinstanza%
-      \hfill\hangingsymbol%
+      \hangingsymbol%
    \fi%
 \fi%
 }
@@ -12489,9 +12516,8 @@
 % \setstanzaindents{5,0,1}
 % \end{verbatim} 
 % \clearpage
-%
 % \bibliographystyle{alpha}
-% \section*{}
+% \phantomsection
 % \addcontentsline{toc}{section}{References}
 % \begin{thebibliography}{WWW99}
 %
