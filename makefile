@@ -16,7 +16,7 @@ doc: *.pdf
 
 
 %.sty: %.ins %.dtx 
-	rm -f $*.sty led*tex
+	rm -f $*.sty $*tex
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx 
@@ -28,8 +28,11 @@ doc: *.pdf
 
 
 dist: $(PACKAGE)
+	rm -rf eledmac
+	mkdir eledmac
+	cp $(PACKAGE) eledmac
 	@$(RM) ../eledmac.zip
-	zip ../eledmac.zip $(PACKAGE)
+	zip -r ../eledmac.zip eledmac
 	
 
 clean:

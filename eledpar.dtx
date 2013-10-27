@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{3936}
+% \CheckSum{4003}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -137,9 +137,9 @@
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
-% \changes{v0.3a}{2005/03/30}{Minor \cs{linenummargin} fix}
-% \changes{v0.3b}{2005/04/08}{Improved parallel page balancing}
-% \changes{v0.3c}{2011/06/16}{Compatibilty with Polyglossia}
+% \changes{v0.3.a}{2005/03/30}{Minor \cs{linenummargin} fix}
+% \changes{v0.3.b}{2005/04/08}{Improved parallel page balancing}
+% \changes{v0.3.c}{2011/06/16}{Compatibilty with Polyglossia}
 % \changes{v0.4}{2011/08/03}{No more ledparpatch. All patches are now in the main file.}
 % \changes{v0.5}{2011/08/21}{Corrections about \cs{section} and other titles in numbered sections}
 % \changes{v0.6}{2011/08/22}{Be able to us \cs{chapter} in parallel pages.}
@@ -156,6 +156,7 @@
 % \changes{v1.1}{2012/09/25}{Shiftedverses becomes shiftedpstarts.}
 % \changes{v1.2}{2012/10/15}{Support for \cs{led}\meta{section} commands in parallel texts.}
 % \changes{v1.3.2}{2012/12/11}{Debug with some classes.}
+% \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -209,13 +210,13 @@
 %
 % Note that before September 2012, eledpar was called ledpar. The changes from ledmac/ledpar to eledmac/eledpar is explained in ledmac documentation.
 %
-% To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users.
+% To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can report bug in English or in French.
 %
 % You can subscribe to the eledmac email list in:\\ \url{https://lists.berlios.de/pipermail/ledmac-users/}
 % \end{abstract}
-%
+% \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
-%
+% 
 % \listoffigures
 %
 %
@@ -719,7 +720,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2012/12/19 v1.3.3 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2013/10/27 v1.4.3 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -1882,6 +1883,7 @@
 % macro. It is called by \cs{beginnumberingR} and performs
 % all the line-list operations needed at the start of a section.
 % Its argument is the name of the line-list file.
+% \changes{v1.4.2}{2013/08/25}{Open / close immediatly the line-list file when in minipage, except if the minipage is a ledgroup.}
 %    \begin{macrocode}
 \newcommand*{\line@list@stuffR}[1]{%
   \read@linelist{#1}%
@@ -1890,8 +1892,18 @@
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=#1
   \else
-     \closeout\linenum@outR
-     \openout\linenum@outR=#1
+    \if@minipage%
+      \if@ledgroup%
+        \closeout\linenum@outR
+        \openout\linenum@outR=#1
+      \else
+        \immediate\closeout\linenum@outR
+        \immediate\openout\linenum@outR=#1\relax
+      \fi
+    \else
+       \closeout\linenum@outR%
+       \openout\linenum@outR=#1\relax%
+    \fi
   \fi}
 
 %    \end{macrocode}
@@ -2324,8 +2336,9 @@
 %
 % \begin{macro}{\pstartL}
 % \begin{macro}{\pstartR}
-% changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
-% changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
+% \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
+% \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2349,83 +2362,98 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{
-\if@nobreak
-    \let\@oldnobreak\@nobreaktrue
-\else
-    \let\@oldnobreak\@nobreakfalse
-\fi
-    \@nobreaktrue
-  \ifnumbering \else
-    \led@err@PstartNotNumbered
-    \beginnumbering
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pend
-  \fi
+\newcommand*{\pstartL}{%
+\if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+\else%
+    \let\@oldnobreak\@nobreakfalse%
+\fi%
+    \@nobreaktrue%
+  \ifnumbering \else%
+    \led@err@PstartNotNumbered%
+    \beginnumbering%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pend%
+  \fi%
 %    \end{macrocode}
 % If this is the first \cs{pstart} in a numbered section, clear any inserts
 % and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
 %    \begin{macrocode}
-  \ifpst@rtedL\else
+  \ifpst@rtedL\else%
       \setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
-    \global\let\next@insert=\empty
-     \global\pst@rtedLtrue
-  \fi
-  \begingroup\normal@pars
+    \global\let\next@insert=\empty%
+     \global\pst@rtedLtrue%
+  \fi%
+  \begingroup\normal@pars%
 %    \end{macrocode}
 % When parallel processing we check that we haven't exceeded
 % the maximum number of chunks. In any event we grab a box for the
 % forthcoming text.
 %    \begin{macrocode}
-  \global\advance\l@dnumpstartsL \@ne
-  \ifnum\l@dnumpstartsL>\l@dc@maxchunks
-    \led@err@TooManyPstarts
-    \global\l@dnumpstartsL=\l@dc@maxchunks
-  \fi
-  \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartL\fi\fi\fi%
-                     \hsize=\Lcolwidth
-  \numberedpar@true
-  \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstartL\thepstartL}\fi
+  \global\advance\l@dnumpstartsL \@ne%
+  \ifnum\l@dnumpstartsL>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsL=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup%
+  \ifautopar\else%
+    \ifnumberpstart%
+      \ifsidepstartnum%
+        \else%
+         \thepstartL%
+        \fi%
+       \fi%
+      \fi%
+  \hsize=\Lcolwidth%
+  \numberedpar@true%
+  \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartL\thepstartL}\fi%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{
-\if@nobreak
-    \let\@oldnobreak\@nobreaktrue
-\else
-    \let\@oldnobreak\@nobreakfalse
-\fi
-    \@nobreaktrue
-  \ifnumberingR \else
-    \led@err@PstartNotNumbered
-    \beginnumberingR
-  \fi
-  \ifnumberedpar@
-    \led@err@PstartInPstart
-    \pendR
-  \fi
-  \ifpst@rtedR\else
+\newcommand*{\pstartR}{%
+\if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+\else%
+    \let\@oldnobreak\@nobreakfalse%
+\fi%
+    \@nobreaktrue%
+  \ifnumberingR \else%
+    \led@err@PstartNotNumbered%
+    \beginnumberingR%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pendR%
+  \fi%
+  \ifpst@rtedR\else%
       \setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
-    \global\let\next@insertR=\empty
-    \global\pst@rtedRtrue
-  \fi
-  \begingroup\normal@pars
-  \global\advance\l@dnumpstartsR \@ne
-  \ifnum\l@dnumpstartsR>\l@dc@maxchunks
-    \led@err@TooManyPstarts
-    \global\l@dnumpstartsR=\l@dc@maxchunks
-  \fi
-  \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup\ifautopar\else\ifnumberpstart\ifsidepstartnum\else\thepstartR\fi\fi\fi%
-                     \hsize=\Rcolwidth
-  \numberedpar@true
-   \iflabelpstart\protected@edef\@currentlabel
-       {\p@pstartR\thepstartR}\fi
+    \global\let\next@insertR=\empty%
+    \global\pst@rtedRtrue%
+  \fi%
+  \begingroup\normal@pars%
+  \global\advance\l@dnumpstartsR \@ne%
+  \ifnum\l@dnumpstartsR>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsR=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
+    \ifautopar\else%
+      \ifnumberpstart%
+        \ifsidepstartnum\else%
+          \thepstartR%
+         \fi%
+        \fi%
+       \fi%
+  \hsize=\Rcolwidth%
+  \numberedpar@true%
+   \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartR\thepstartR}\fi%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2433,17 +2461,18 @@
 %
 %
 % \begin{macro}{\pendL}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pendL}.}
 % \cs{pend} must be used to end a numbered paragraph. Again we need 
 % a version 
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendL}{\ifnumbering \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
+\newcommand*{\pendL}{\ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
@@ -2451,41 +2480,42 @@
 % paragraph into pieces. These penalties revert to the values
 % that you set when the group for the \cs{vbox} ends. 
 %    \begin{macrocode}
-  \l@dzeropenalties
-  \endgraf\global\num@lines=\prevgraf\egroup
-  \global\par@line=0
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
 %    \end{macrocode}
 % End the group that was begun in the \cs{pstart}.
 %    \begin{macrocode}
-  \endgroup
-  \ignorespaces
-  \@oldnobreak
-    \ifnumberpstart
-    \addtocounter{pstartL}{1}
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+    \ifnumberpstart%
+    \addtocounter{pstartL}{1}%
     \fi}
 
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\pendR}
+% \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartR}.}
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendR}{\ifnumberingR \else
-    \led@err@PendNotNumbered
-  \fi
-  \ifnumberedpar@ \else
-    \led@err@PendNoPstart
-  \fi
-  \l@dzeropenalties
-  \endgraf\global\num@linesR=\prevgraf\egroup
-  \global\par@lineR=0
-  \endgroup
-  \ignorespaces
-  \@oldnobreak
-    \ifnumberpstart
-    \addtocounter{pstartR}{1}
-    \fi    
+\newcommand*{\pendR}{\ifnumberingR \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
+  \l@dzeropenalties%
+  \endgraf\global\num@linesR=\prevgraf\egroup%
+  \global\par@lineR=0%
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+    \ifnumberpstart%
+    \addtocounter{pstartR}{1}%
+    \fi%    
 }
 
 %    \end{macrocode}
@@ -2571,7 +2601,7 @@
     \add@inserts
     \affixside@note
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\inserthangingsymbolL\new@line\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@line\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
      \l@drsn@te
   }}%
   \add@penaltiesL
@@ -2586,18 +2616,24 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
+% \changes{v1.4}{2013/07/11}{Added \cs{do@insidelineLhook} and \cs{do@insidelineRhook}}
 % \begin{macro}{\do@lineLhook}
 % \begin{macro}{\do@lineRhook}
+% \begin{macro}{\do@insidelineLhook}
+% \begin{macro}{\do@insidelineRhook}
 % Hooks, initially empty, into the respective \cs{do@line(L/R)} macros.
-% \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
 %    \begin{macrocode}
 \newcommand*{\do@lineLhook}{}
 \newcommand*{\do@lineRhook}{}
+\newcommand*{\do@insidelineLhook}{}
+\newcommand*{\do@insidelineRhook}{}
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\do@lineR}
 % The \cs{do@lineR} macro is called to 
 % do all the processing for a single line of right text.
@@ -2623,7 +2659,7 @@
     \add@insertsR
     \affixside@noteR
     \l@dlsn@te
-    {\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+    {\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }}%
   \add@penaltiesR
@@ -3292,43 +3328,50 @@
 % The `footnotes' for left, right, and moveable sidenotes. The whole 
 % scheme is reminiscent of the critical footnotes code.
 % \changes{v1.3.3}{2012/12/19}{Debug on the left notes of the right column.}
+% \changes{v1.3.4}{2013/07/03}{Allow to use commands in sidenotes, like it was introduced by eledmac 1.0.}
 %    \begin{macrocode}
 \renewcommand*{\l@dlsnote}[1]{%
+  \begingroup%
+  \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
                          \to\inserts@listR
       \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dlsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \fi\ignorespaces\endgroup}
 \renewcommand*{\l@drsnote}[1]{%
+  \begingroup%
+  \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@drsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@drsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \fi\ignorespaces\endgroup}
 \renewcommand*{\l@dcsnote}[1]{%
+  \begingroup%
+  \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dcsnote{#1}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \fi\ignorespaces\endgroup}
 
 %    \end{macrocode}
 % \end{macro}
@@ -3406,15 +3449,31 @@
 %
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.3}{2005/02/04}{Removed extraneous spaces from \cs{normalbfnoteX}}
+% \changes{v1.3.5}{2013/07/10}{Allows one to redefine \cs{thefootnoteX} with \c{alph} when some packages are loaded.}
+% \changes{v1.4.1}{2013/08/16}{Fix bug with normal familiar footnotes when mixing RTL and LTR text.}
 %    \begin{macrocode}
 \renewcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
+      \ifluatex
+          \footnotelang@lua[R]%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+		{}%
+		{\footnotelang@poly[R]}%      
+      \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\@nameuse{thefootnote#1}}}%
+      \ifluatex
+          \footnotelang@lua%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+		{}%
+		{\footnotelang@poly}%    
+      \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -3431,18 +3490,19 @@
 % Like in eledmac, the insertion of hangingsymbol is base on \cs{ifinserthangingsymbol}, and, for the right side, on \cs{ifinserthangingsymbolR}.
 % \begin{macro}{\inserthangingsymbolL}
 % \begin{macro}{\inserthangingsymbolR}
+% \changes{v1.4.3}{2013/10/27}{Hang verse is now not automatically flush right.}
 %    \begin{macrocode}
 \newif\ifinserthangingsymbolR
 \newcommand{\inserthangingsymbolL}{%
 \ifinserthangingsymbol%
     \ifinstanzaL%
-        \hfill\hangingsymbol%
+        \hangingsymbol%
     \fi%
 \fi}
 \newcommand{\inserthangingsymbolR}{%
 \ifinserthangingsymbolR%
     \ifinstanzaR%
-        \hfill\hangingsymbol%
+        \hangingsymbol%
     \fi%
 \fi}
 %    \end{macrocode}
@@ -3488,6 +3548,7 @@
 %
 %
 % \begin{environment}{astanza}
+% \changes{v1.4.1}{2013/08/16}{Enable the  use of stanzaindentsrepetition within astanza environnment.}
 % This is roughly an environmental form of \cs{stanza}, which treats
 % its stanza-like contents as a single chunk.
 %
@@ -3495,7 +3556,7 @@
 \newenvironment{astanza}{%
   \startstanzahook
   \catcode`\&\active
-  \global\stanza@count\@ne
+  \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
     \let\stanza@hang\relax
     \let\endlock\relax
@@ -3527,7 +3588,14 @@
 % the paragraph style --- each line is treated as a paragraph.
 %    \begin{macrocode}
 \newcommand*{\@astanza@line}{%
-  \parindent=\csname sza@\number\stanza@count @\endcsname\stanzaindentbase
+  \ifnum\value{stanzaindentsrepetition}=0
+      \parindent=\csname sza@\number\stanza@count
+               @\endcsname\stanzaindentbase
+  \else
+      \parindent=\csname sza@\number\stanza@modulo
+               @\endcsname\stanzaindentbase
+      \managestanza@modulo
+  \fi
   \par
   \stanza@hang%\mbox{}%
   \ignorespaces}
@@ -4170,7 +4238,7 @@
               \advance\numpagelinesL \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
-              \else
+              \else%
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
@@ -4210,7 +4278,7 @@
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
-              \else
+              \else%
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR
@@ -4610,14 +4678,39 @@
 %
 % \section{The End}\label{end}
 %
-
-
+% 
 %</code>
 %
 % \newpage
 % \appendix
 % \clearpage
 %
+% \let\oldthesection\thesection
+% \renewcommand{\thesection}{Appendix \oldthesection}
+% \section{Some things to do when changing version}
+% \subsection{Migration to eledpar 1.4.3}
+% Version 1.4.3 corrects a bug added in version 0.12, which made hanging verse automatically flush right, despite the given value of the first element of the \cs{setstanzaindents} command.
+% 
+% If, however, you want to return to automatic flush-right margins for verses with hanging indents, you have to redefine the \cs{hangingsymbol} command.
+% \begin{verbatim}
+%   \renewcommand{\hangingsymbol}{\protect\hfill}
+% \end{verbatim}
+% See the two following examples:
+%
+% With standard \cs{hangingsymbol}:
+% \setstanzaindents{4,0}
+% \beginnumbering
+% 	\stanza
+%   A very long verse should be sometime hanged. The position of the hang verse is fixed.\&
+% \endnumbering
+%
+% With the modification of \cs{hangingsymbol}:
+% \renewcommand{\hangingsymbol}{\protect\hfill}
+% \setstanzaindents{4,0}
+% \beginnumbering
+% 	\stanza
+%   A very long verse should sometimes be hanging. And we can see that an hanging verse is flush right.\&
+% \endnumbering
 % \bibliographystyle{alpha}
 % \begin{thebibliography}{WWW99}
 % \addcontentsline{toc}{section}{References}
@@ -4649,7 +4742,7 @@
 % \end{thebibliography}
 %
 % \Finale
-% \section*{}
+% \phantomsection
 % \addcontentsline{toc}{section}{Index}
 % \PrintIndex
 %
