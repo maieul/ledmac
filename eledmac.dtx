@@ -3180,7 +3180,6 @@
   \initnumbering@sectcmd
 }
 \newcommand*{\initnumbering@reg}{%
-  \ifl@dpairing\else\read@pb\fi
   \global\pst@rtedLfalse
   \global\l@dnumpstartsL \z@
   \global\absline@num \z@
@@ -3372,7 +3371,7 @@
   \else
     \led@err@NumberingNotStarted
   \fi
-  \autoparfalse\ifl@dpairing\else\endgroup\write@pb\fi}
+  \autoparfalse\ifl@dpairing\else\endgroup\fi}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -12483,63 +12482,24 @@
 % Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking.
 % At the first run, the absolute line number to break is written in a <jobname>.pb<n> file.
 % At next run, page are breaking before or after this line, depending of a setting of user (by defaut : after).
-% \subsection{.pb file :input}
 % \begin{macro}{\prev@pb}
 % The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines noted in the existing .pb file.
 %     \begin{macrocode}
 \def\l@prev@pb{}
 %     \end{macrocode}
 %
-% \begin{macro}{\read@pb}
-% The \cs{read@pb} read the lines note in the .pb file and add them at the \cs{prev@pb} macro.
+% \begin{macro}{\ledpb}
+% The \cs{ledpb} macro writes the call of \cs{\led@pb} in line-list file.
 %     \begin{macrocode}
-\newcommand\read@pb{%
-    \newread\@pb%
-    % End of line
-    \def\@read@pb@read{%
-        \catcode`\^^M=9
-        \ifeof\@pb%
-        \else%
-        \immediate\read\@pb to \temp@pb%
-           \listcsxadd{l@prev@pb}{\temp@pb}%
-          \@read@pb@read%
-        \fi%
-        \catcode`\^^M=5% End of line
-        }%
-    \immediate\openin\@pb=\jobname.pb\extensionchars\the\section@num
-    \@read@pb@read%
-    \immediate\closein\@pb%
-}
+\newcommand{\ledpb}{\write\linenum@out{\string\led@pb}}
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@pb}
+% The \cs{\led@pb} add the absolute line number in the \cs{prev@pb} list.
+%    \begin{macrocode}
+\newcommand{\led@pb}{\listcsxadd{l@prev@pb}{\the\absline@num}}
 %    \end{macrocode}
 % \end{macro}
-% \subsection{.pb file :input}
-% \begin{macro}{\l@pb}
-% The \cs{l@pb} macro will contain the absolute line number to break before/after. 
-% It is an etoolbox list
-%     \begin{macrocode}
-\def\l@pb{}
-%     \end{macrocode}
-% \end{macro}
-% \begin{macro}{\write@pb}
-% The \cs{write@pb} write in the file .pb the content of the list \l@pb.
-%     \begin{macrocode}
-\newcommand{\write@pb}{
-  \newwrite\@pb
-    \immediate\openout\@pb=\jobname.pb\extensionchars\the\section@num
-    \renewcommand{\do}[1]{\immediate\write\@pb{\string##1}}
-    \dolistcsloop{l@pb}
-    \immediate\closeout\@pb
-}
-%     \end{macrocode}
-% \end{macro}
-% \subsection{Manuel use}
-% \begin{macro}{\ledpb}
-% The \cs{ledpb} macro will add the absolute line number to \cs{l@pb} in each cases.
-%     \begin{macrocode}
-\newcommand{\ledpb}{\numdef{\absline@@}{\the\absline@num+1}\listcsxadd{l@pb}{\absline@@}}
-%     \end{macrocode}
-% \end{macro}
-% \subsection{Setting}
 % \begin{macro}{\ledpbsetting}
 % \begin{macro}{\led@pb@setting}
 % The \cs{ledpbsetting} macro only change the value of \cs{led@pb@macro}, which default value is \verb+before+.
@@ -12549,7 +12509,6 @@
 %     \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \subsection{Page breaking}
 % \begin{macro}{\led@check@pb}
 % The \cs{led@check@pb} macro is call before or after each line. 
 % It check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
