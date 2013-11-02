@@ -5732,6 +5732,7 @@
   \else
     \inserthangingsymbolfalse
   \fi
+  \check@pb@in@verse
   \affixline@num
   \affixpstart@num
   \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
@@ -12548,6 +12549,14 @@
 %     \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\iflednopbinverse}
+% The \cs{lednopbinverse} boolean is set to false by default.
+% If set to true, eledmac while automatically prevent page break inside verse.
+%     \begin{macrocode}
+\newif\iflednopbinverse
+\lednopbinversefalse
+%     \end{macrocode}
+% \end{macro}
 % \subsection{Page breaking}
 % \begin{macro}{\led@check@pb}
 % The \cs{led@check@pb} macro is call before or after each line. 
@@ -12555,6 +12564,23 @@
 %     \begin{macrocode}
 \newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
 %     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\check@pb@in@verse}
+% The \cs{check@pb@in@verse} checks if a verse is broken in two page. 
+% If true, it adds :
+% \begin{itemize}
+%  \item The absolute line number of the first line of the verse -1  in the \cs{led@pb} list, if the page break must be before the verse.
+% \end{itemize}
+%    \begin{macrocode}
+\newcommand{\check@pb@in@verse}{%
+    \ifinstanza\iflednopbinverse\ifinserthangingsymbol% Be in stanza, and enable the page break in verse control, and are on a hang verse
+        \ifnum\page@num=\last@page@num\else%If we have change page
+          \IfStrEq{\led@pb@setting}{before}{\numdef{\abs@line@verse}{\the\absline@num-1}}{}%
+          \ifundef{\led@pb@setting}{}{\listcsxadd{l@pb}{\abs@line@verse}}%
+        \fi%
+    \fi\fi\fi%
+}
+%    \end{macrocode}
 % \end{macro}
 % \section{Some things to do when changing version}
 % \subsection{Migration from ledmac to eledmac}\label{migration}
