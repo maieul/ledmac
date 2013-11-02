@@ -3183,6 +3183,7 @@
   \global\pst@rtedLfalse
   \global\l@dnumpstartsL \z@
   \global\absline@num \z@
+  \gdef\normal@page@break{}
   \global\line@num \z@
   \global\subline@num \z@
   \global\@lock \z@
@@ -4382,6 +4383,7 @@
     \page@num=#1\relax
     \last@page@num=#1\relax
     \def\next@page@num{#1}%
+    \listcsxadd{normal@page@break}{\the\absline@num}
   \fi}
 
 %    \end{macrocode}
@@ -4812,7 +4814,16 @@
 % file, to mark the start of a new text line, and its page number.
 % \changes{v0.6}{2004/11/16}{Extended \cs{new@line} to output page numbers}
 %    \begin{macrocode}
-\newcommand*{\new@line}{\write\linenum@out{\string\@l[\the\c@page][\thepage]}}
+\newcommand*{\new@line}{%
+  \IfStrEq{\led@pb@setting}{after}%
+    {\xifinlistcs{\the\absline@num}{l@prev@nopb}%
+      {\numgdef{\@next@page}{\thepage+1}%
+       \write\linenum@out{\string\@l[\@next@page][\@next@page]}%
+      }%
+      {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+    }%
+    {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -12482,6 +12493,12 @@
 % Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking, or prevent a page breaking around one specific line.
 % At the first run, the line with or without page break before or after is written in the line-list file.
 % At next run, page are breaking before or after this line, depending of a setting of user (by default: after).
+% \begin{macro}{\normal@page@break}
+% \cs{normal@page@break} is an etoolbox list which contains the absolute line number of the last line of each page.
+%    \begin{macrocode}
+\def\normal@page@break{}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\prev@pb}
 % The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines with page break before or after.
 % The \cs{l@prev@nopb} macro is a etoolbox list, which will contain the lines with NO page break before or after.
@@ -12505,6 +12522,9 @@
 		\write\linenum@out{\string\led@nopb}%
 	  \fi}%
     {}%
+    \IfStrEq{\led@pb@setting}{after}{%
+      \write\linenum@out{\string\led@nopb}%
+    }{}%
 }
 \newcommand{\lednopbnum}[1]{%
 	\IfStrEq{\led@pb@setting}{before}{%
@@ -12549,7 +12569,23 @@
 % They check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
 %     \begin{macrocode}
 \newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
-\newcommand{\led@check@nopb}{\xifinlistcs{\the\absline@num}{l@prev@nopb}{\nopagebreak[4]\enlargethispage{\baselineskip}}{}}
+\newcommand{\led@check@nopb}{%
+    \IfStrEq{\led@pb@setting}{before}{%
+      \xifinlistcs{\the\absline@num}{l@prev@nopb}
+         {\nopagebreak[4]\enlargethispage{\baselineskip}}
+         {}}
+       {}%
+     {}%
+    \IfStrEq{\led@pb@setting}{after}{%
+      \xifinlistcs{\the\absline@num}{l@prev@nopb}{%
+		\xifinlistcs{\the\absline@num}{normal@page@break}%
+          {\nopagebreak[4]\enlargethispage{\baselineskip}}
+            {}%
+}%
+         {}}%
+       {}%
+     {}%
+}
 %     \end{macrocode}
 % \end{macro}
 % \end{macro}
