@@ -1630,19 +1630,19 @@
 % \subsection{False verse}
 % \label{falseverse}In some special cases, you want to add false verse after true verse. 
 % This false verse:
-% 	\begin{enumerate}
-% 		\item Won't be numbered.
-% 		\item Won't affect the indent of the next verse.
-% 	\end{enumerate}
+%     \begin{enumerate}
+%         \item Won't be numbered.
+%         \item Won't affect the indent of the next verse.
+%     \end{enumerate}
 % It could be used, for example, to add some space between verses.
 % To add this type of false verse, you have to finish the previous verse with \cs{falseverse} (and not with \verb+&+).
 % For example:
 % \begin{verbatim}
-% 	True verse&
-% 	True verse\falseverse
-% 	\vspace{3ex}&
-% 	True verse&
-% 	True verse
+%     True verse&
+%     True verse\falseverse
+%     \vspace{3ex}&
+%     True verse&
+%     True verse
 % \end{verbatim}
 % \subsection{Hanging symbol}
 % It's possible to insert a symbol in each line of hanging verse, as in French typography for `['., as in French typography for `['.  To insert in eledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
@@ -2018,8 +2018,8 @@
 %
 % Be careful with the order of package loading and index declaration. You must use this order:
 % \begin{enumerate}
-% 	\item Load \Lpack{imakeidx}.
-% 	\item Load \Lpack{eledmac}.
+%     \item Load \Lpack{imakeidx}.
+%     \item Load \Lpack{eledmac}.
 %   \item Declare the index with the macro \cs{makeindex} of \Lpack{imakeidx}.
 % \end{enumerate}
 % \DescribeMacro{\pagelinesep}
@@ -3180,6 +3180,7 @@
   \initnumbering@sectcmd
 }
 \newcommand*{\initnumbering@reg}{%
+  \ifl@dpairing\else\read@pb\fi
   \global\pst@rtedLfalse
   \global\l@dnumpstartsL \z@
   \global\absline@num \z@
@@ -3371,7 +3372,7 @@
   \else
     \led@err@NumberingNotStarted
   \fi
-  \autoparfalse\ifl@dpairing\else\endgroup\fi}
+  \autoparfalse\ifl@dpairing\else\endgroup\write@pb\fi}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5607,7 +5608,7 @@
   \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
     \csnumdef{pstartline}{\pstartline+1}%
-    \do@line
+    \do@line%
     \ifbypstart@%
      \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
     \fi%
@@ -5725,6 +5726,7 @@
    \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
   \unvbox\one@line \global\setbox\one@line=\lastbox
   \getline@num
+  \IfStrEq{\led@pb@setting}{before}{\led@check@pb}{}
   \ifnum\@lock>\@ne
     \inserthangingsymboltrue
   \else
@@ -5736,7 +5738,9 @@
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
-  }}}%
+  }}
+  \IfStrEq{\led@pb@setting}{after}{\led@check@pb}{}
+  }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -12473,6 +12477,84 @@
 % \appendix
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
+
+% \section{Page breaking depending of specific line}
+% Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking.
+% At the first run, the absolute line number to break is written in a <jobname>.pb<n> file.
+% At next run, page are breaking before or after this line, depending of a setting of user (by defaut : after).
+% \subsection{.pb file :input}
+% \begin{macro}{\prev@pb}
+% The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines noted in the existing .pb file.
+%     \begin{macrocode}
+\def\l@prev@pb{}
+%     \end{macrocode}
+%
+% \begin{macro}{\read@pb}
+% The \cs{read@pb} read the lines note in the .pb file and add them at the \cs{prev@pb} macro.
+%     \begin{macrocode}
+\newcommand\read@pb{%
+    \newread\@pb%
+    % End of line
+    \def\@read@pb@read{%
+        \catcode`\^^M=9
+        \ifeof\@pb%
+        \else%
+        \immediate\read\@pb to \temp@pb%
+           \listcsxadd{l@prev@pb}{\temp@pb}%
+          \@read@pb@read%
+        \fi%
+        \catcode`\^^M=5% End of line
+        }%
+    \immediate\openin\@pb=\jobname.pb\extensionchars\the\section@num
+    \@read@pb@read%
+    \immediate\closein\@pb%
+}
+%    \end{macrocode}
+% \end{macro}
+% \subsection{.pb file :input}
+% \begin{macro}{\l@pb}
+% The \cs{l@pb} macro will contain the absolute line number to break before/after. 
+% It is an etoolbox list
+%     \begin{macrocode}
+\def\l@pb{}
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\write@pb}
+% The \cs{write@pb} write in the file .pb the content of the list \l@pb.
+%     \begin{macrocode}
+\newcommand{\write@pb}{
+  \newwrite\@pb
+    \immediate\openout\@pb=\jobname.pb\extensionchars\the\section@num
+    \renewcommand{\do}[1]{\immediate\write\@pb{\string##1}}
+    \dolistcsloop{l@pb}
+    \immediate\closeout\@pb
+}
+%     \end{macrocode}
+% \end{macro}
+% \subsection{Manuel use}
+% \begin{macro}{\ledpb}
+% The \cs{ledpb} macro will add the absolute line number to \cs{l@pb} in each cases.
+%     \begin{macrocode}
+\newcommand{\ledpb}{\numdef{\absline@@}{\the\absline@num+1}\listcsxadd{l@pb}{\absline@@}}
+%     \end{macrocode}
+% \end{macro}
+% \subsection{Setting}
+% \begin{macro}{\ledpbsetting}
+% \begin{macro}{\led@pb@setting}
+% The \cs{ledpbsetting} macro only change the value of \cs{led@pb@macro}, which default value is \verb+before+.
+%     \begin{macrocode}
+\def\led@pb@setting{before}
+\newcommand{\ledpbsetting}[1]{\gdef\led@pb@setting{#1}}
+%     \end{macrocode}
+% \end{macro}
+% \subsection{Page breaking}
+% \begin{macro}{\led@check@pb}
+% The \cs{led@check@pb} macro is call before or after each line. 
+% It check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
+%     \begin{macrocode}
+\newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
+%     \end{macrocode}
+% \end{macro}
 % \section{Some things to do when changing version}
 % \subsection{Migration from ledmac to eledmac}\label{migration}
 % In eledmac, some changes were made in the code to allow for easy customization.
