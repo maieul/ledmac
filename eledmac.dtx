@@ -5726,7 +5726,7 @@
    \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
   \unvbox\one@line \global\setbox\one@line=\lastbox
   \getline@num
-  \IfStrEq{\led@pb@setting}{before}{\led@check@pb}{}
+  \IfStrEq{\led@pb@setting}{before}{\led@check@pb\led@check@nopb}{}
   \ifnum\@lock>\@ne
     \inserthangingsymboltrue
   \else
@@ -5740,7 +5740,7 @@
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
   }}
-  \IfStrEq{\led@pb@setting}{after}{\led@check@pb}{}
+  \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
   }%
 %    \end{macrocode}
 % \end{macro}
@@ -12479,32 +12479,48 @@
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
 
-% \section{Page breaking depending of specific line}
-% Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking.
-% At the first run, the absolute line number to break is written in a <jobname>.pb<n> file.
-% At next run, page are breaking before or after this line, depending of a setting of user (by defaut : after).
+% \section{Page breaking no breaking depending of specific line}
+% Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking, or prevent a page breaking around one specific line.
+% At the first run, the line with or without page break before or after is written in the line-list file.
+% At next run, page are breaking before or after this line, depending of a setting of user (by default: after).
 % \begin{macro}{\prev@pb}
-% The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines noted in the existing .pb file.
+% The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines with page break before or after.
+% The \cs{l@prev@nopb} macro is a etoolbox list, which will contain the lines with NO page break before or after.
 %     \begin{macrocode}
 \def\l@prev@pb{}
+\def\l@prev@nopb{}
 %     \end{macrocode}
-%
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\ledpb}
 % The \cs{ledpb} macro writes the call to \cs{led@pb} in line-list file.
 % The \cs{ledpbnum} macro writes the call to \cs{led@pbnum} in line-list file.
+% The \cs{lednopb} macro writes the call to \cs{led@nopb} in line-list file.
+% The \cs{lednopbnum} macro writes the call to \cs{led@nopbnum} in line-list file.
 %     \begin{macrocode}
 \newcommand{\ledpb}{\write\linenum@out{\string\led@pb}\xspace}
 \newcommand{\ledpbnum}[1]{\write\linenum@out{\string\led@pbnum{#1}}\xspace}
+\newcommand{\lednopb}{\write\linenum@out{\string\led@nopb}\xspace}
+\newcommand{\lednopbnum}[1]{\write\linenum@out{\string\led@nopbnum{#1}}\xspace}
 %     \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\led@pb}
 % \begin{macro}{\led@pbnum}
 % The \cs{\led@pb} add the absolute line number in the \cs{prev@pb} list.
 % The \cs{\led@pbnum} add the argument in the \cs{prev@pb} list.
+% The \cs{\led@nopb} add the absolute line number in the \cs{prev@nopb} list.
+% The \cs{\led@nopbnum} add the argument in the \cs{prev@nopb} list.
 %    \begin{macrocode}
 \newcommand{\led@pb}{\listcsxadd{l@prev@pb}{\the\absline@num}}
 \newcommand{\led@pbnum}[1]{\listcsxadd{l@prev@pb}{#1}}
+\newcommand{\led@nopb}{\listcsxadd{l@prev@nopb}{\the\absline@num}}
+\newcommand{\led@nopbnum}[1]{\listcsxadd{l@prev@nopb}{#1}}
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\ledpbsetting}
@@ -12517,11 +12533,14 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\led@check@pb}
-% The \cs{led@check@pb} macro is call before or after each line. 
-% It check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
+% \begin{macro}{\led@check@nopb}
+% The \cs{led@check@pb} and \cs{led@check@nopb} are called before or after each line. 
+% They check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
 %     \begin{macrocode}
 \newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
+\newcommand{\led@check@nopb}{\xifinlistcs{\the\absline@num}{l@prev@nopb}{\nopagebreak[4]}{}}
 %     \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Long verse: preventing begin broken by page break}
 % \begin{macro}{\iflednopbinverse}
