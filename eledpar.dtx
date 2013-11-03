@@ -4261,6 +4261,7 @@
             
               \get@nextboxL
               \checkpageL
+              \checkpbL
             \repeat
 %    \end{macrocode}
 % That (left) page has been filled. Output the number of real lines 
@@ -4296,6 +4297,7 @@
               \fi
               \get@nextboxR
               \checkpageR
+              \checkpbR
             \repeat
             \ifl@dpagefull
               \@writelinesonpageR{\the\numpagelinesR}%
@@ -4562,7 +4564,36 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\checkpbL}
+% \begin{macro}{\checkpbR}
+% \cs{checkpbL} and \cs{\checkpbR} are called at the end of each line printing, after the checking of the page. They correct the page break depending of \cs{ledpb} and \cs{lednopb}.
+%    \begin{macrocode}
+\newcommand{\checkpbL}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@num}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@num}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@absline}{\the\absline@num+1}
+     \xifinlistcs{\next@absline}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@absline}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+
+\newcommand{\checkpbR}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@abslineR}{\the\absline@numR+1}
+     \xifinlistcs{\next@abslineR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\ledthegoal}
 % \begin{macro}{\goalfraction}
 % \begin{macro}{\check@goal}
