@@ -3995,6 +3995,9 @@
             \unhbox\l@drightbox
           }%
           \checkraw@text
+          \checkverseL
+          \checkverseR
+          \checkpb@columns
         \repeat}
 %    \end{macrocode}
 % Having completed a pair of chunks, write the number of lines
@@ -4034,7 +4037,32 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\checkpb@columns}
+% \cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \cs{ledpb} or \cs{\lednopb}.
+%    \begin{macrocode}
+
+\newcommand{\checkpb@columns}{%
+    \newif\if@pb
+    \newif\if@nopb
+    \IfStrEq{\led@pb@setting}{before}{
+    \numdef{\next@absline}{\the\absline@num+1}%
+    \numdef{\next@abslineR}{\the\absline@numR+1}%
+  \xifinlistcs{\next@absline}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\next@absline}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+    \IfStrEq{\led@pb@setting}{after}{
+  \xifinlistcs{\the\absline@num}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\the\absline@num}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+\if@nopb\nopagebreak[4]\enlargethispage{\baselineskip}\fi
+\if@pb\pagebreak[4]\fi
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\columnseparator}
 % \begin{macro}{\columnrulewidth}
 % The separator between line pairs in parallel columns is in the form
