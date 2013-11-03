@@ -4517,9 +4517,6 @@
 % are set FALSE.
 %
 %    \begin{macrocode}
-\newif\ifl@dsamepage
-  \l@dsamepagetrue
-\newif\ifl@dpagefull
 \newcommand*{\checkpageL}{%
   \l@dpagefulltrue
   \l@dsamepagetrue
@@ -4532,8 +4529,10 @@
     \fi
   \else
     \l@dsamepagefalse
-    \l@dpagefulltrue
-  \fi}
+    \l@dpagefulltrue 
+  \fi
+  \IfStrEq{\led@pb@setting}{after}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\l@dsamepagetrue\l@dpagefullfalse}{}}{}
+  }
 \newcommand*{\checkpageR}{%
   \l@dpagefulltrue
   \l@dsamepagetrue
@@ -4547,7 +4546,9 @@
   \else
     \l@dsamepagefalse
     \l@dpagefulltrue
-  \fi}
+  \fi
+  \IfStrEq{\led@pb@setting}{after}{\xifinlistcs{\the\absline@numR}{l@prev@pbR}{\l@dsamepagetrue\l@dpagefullfalse}{}}{}
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -4688,6 +4689,16 @@
 %
 % \section{Page breaking no breaking depending of specific line}
 % We need to adapt the macro of the homonym section of eledmac to eledpar.
+% \begin{macro}{\prev@pbR}
+% \begin{macro}{\prev@nopbR}
+% The \cs{l@prev@pbR} macro is a etoolbox list, which will contain the lines with page break before or after.
+% The \cs{l@prev@nopbR} macro is a etoolbox list, which will contain the lines with NO page break before or after.
+%     \begin{macrocode}
+\def\l@prev@pbR{}
+\def\l@prev@nopbR{}
+%     \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\ledpb}
 % The \cs{ledpb} macro writes the call to \cs{led@pb} in line-list file.
 % The \cs{ledpbnum} macro writes the call to \cs{led@pbnum} in line-list file.
@@ -4699,6 +4710,24 @@
 \newcommand{\lednopbR}{\write\linenum@outR{\string\led@nopbR}}
 \newcommand{\lednopbnumR}[1]{\write\linenum@outR{\string\led@nopbnumR{#1}}}
 %     \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@pbR}
+% \begin{macro}{\led@pbnumR}
+% \begin{macro}{\led@nopbR}
+% \begin{macro}{\led@nopbnumR}
+% The \cs{\led@pbR} add the absolute line number in the \cs{prev@pbR} list.
+% The \cs{\led@pbnumR} add the argument in the \cs{prev@pbR} list.
+% The \cs{\led@nopbR} add the absolute line number in the \cs{prev@nopbR} list.
+% The \cs{\led@nopbnumR} add the argument in the \cs{prev@nopbR} list.
+%    \begin{macrocode}
+\newcommand{\led@pbR}{\listcsxadd{l@prev@pbR}{\the\absline@numR}}
+\newcommand{\led@pbnumR}[1]{\listcsxadd{l@prev@pbR}{#1}}
+\newcommand{\led@nopbR}{\listcsxadd{l@prev@nopbR}{\the\absline@numR}}
+\newcommand{\led@nopbnumR}[1]{\listcsxadd{l@prev@nopbR}{#1}}
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
