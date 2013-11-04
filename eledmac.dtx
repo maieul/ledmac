@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8451}
+% \CheckSum{8619}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1630,19 +1630,19 @@
 % \subsection{False verse}
 % \label{falseverse}In some special cases, you want to add false verse after true verse. 
 % This false verse:
-% 	\begin{enumerate}
-% 		\item Won't be numbered.
-% 		\item Won't affect the indent of the next verse.
-% 	\end{enumerate}
+%     \begin{enumerate}
+%         \item Won't be numbered.
+%         \item Won't affect the indent of the next verse.
+%     \end{enumerate}
 % It could be used, for example, to add some space between verses.
 % To add this type of false verse, you have to finish the previous verse with \cs{falseverse} (and not with \verb+&+).
 % For example:
 % \begin{verbatim}
-% 	True verse&
-% 	True verse\falseverse
-% 	\vspace{3ex}&
-% 	True verse&
-% 	True verse
+%     True verse&
+%     True verse\falseverse
+%     \vspace{3ex}&
+%     True verse&
+%     True verse
 % \end{verbatim}
 % \subsection{Hanging symbol}
 % It's possible to insert a symbol in each line of hanging verse, as in French typography for `['., as in French typography for `['.  To insert in eledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
@@ -1653,6 +1653,9 @@
 % \begin{verbatim}
 % \renewcommand{\hangingsymbol}{\protect\hfill}
 % \end{verbatim}
+% \subsection{Long verse and page break}
+% If you want to prevent page break inside long verses, use \cs{lednopbinversetrue}. 
+% Read \ref{lednopbinversetrue} p.~\pageref{lednopbinversetrue} for further details.
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
@@ -1691,6 +1694,11 @@
 % \stanza
 % \numberit First line, second stanza...
 % \end{verbatim}
+% \subsection{Hanging symbol}
+%It's possible to insert a symbol on each line of verse's hanging, as in French typography for `['.  To insert in eledmac, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
+%\begin{verbatim}
+%\renewcommand{\hangingsymbol}{[\,}
+%\end{verbatim}
 % \section{Grouping}
 %    In a \verb?minipage? environment LaTeX changes \verb?\footnote? numbering from
 % arabic to alphabetic and puts the footnotes at the end of the minipage.
@@ -2013,8 +2021,8 @@
 %
 % Be careful with the order of package loading and index declaration. You must use this order:
 % \begin{enumerate}
-% 	\item Load \Lpack{imakeidx}.
-% 	\item Load \Lpack{eledmac}.
+%     \item Load \Lpack{imakeidx}.
+%     \item Load \Lpack{eledmac}.
 %   \item Declare the index with the macro \cs{makeindex} of \Lpack{imakeidx}.
 % \end{enumerate}
 % \DescribeMacro{\pagelinesep}
@@ -2308,7 +2316,7 @@
 % The standard sectioning command (\cs{chapter}, \cs{section} etc.) can be used inside a numbered text.
 % But the line which contains it won't be numbered, and you can't add critical notes inside.
 % 
-% However, eledmac provides the following commands :
+% However, eledmac provides the following commands:
 % \begin{itemize}
 % \item \cs{ledchapter}\oarg{text}\marg{critical text}
 % \item \cs{ledchapter*}
@@ -2320,7 +2328,7 @@
 % \item \cs{ledsubsubsection*}
 % \end{itemize}
 % Which are the equivalent of the standard LaTeX commands, but be careful.
-% Note the  following points :
+% Note the  following points:
 % \begin{enumerate}
 % \item All these commands close a \cs{pstart}, and open a new one. The content of the command itself is between \cs{pstart} and \cs{pend}.
 % \item Don't try to make \verb|\let\chapter\ledchapter|, or other things like it: the \cs{led}section commands call the standard commands.
@@ -2346,6 +2354,21 @@
 %
 % In some case, you don't want these environments be redefined in numbered section.
 % You can load the package with the option \verb+noquotation+ to prevent this redefinition.
+% \section{Page breaks}
+% \Lpack{Eledmac} and \Lpack{eledpar} break pages automatically.
+% However, you can want to force page breaks, or to prevent page breaks. 
+% \DescribeMacro{\ledpb} \DescribeMacro{\lednopb} The packages provide two macros: 
+% \begin{itemize}
+%    \item \cs{ledpb} adds a page break.
+%    \item \cs{lednopb} prevent a page break, by adding one line to the current page if needed.
+% \end{itemize}
+% \textbf{These commands have effect only at the second run}.
+% 
+% These two commands have effect at the begining of the line which they are called. For example, if you call \cs{lednopb} at l.~444, the l.~443 will be at the p.~n, and the l.~444 at the p.~n+1.
+% \DescribeMacro{\ledpbsetting} However you can change the behavior, and decide they will have effect after  the end of the line, adding \verb+\ledpbsetting{after}+ at the begining of your file (better: in your preamble). With the previous example, the l.~444 will be at the p.~n and the l.~445 will be at the p.~n+1.
+%
+% \label{lednopbinversetrue}\DescribeMacro{\lednopbinversetrue} You can also decide to prevent page breaking between the two lines of a long verse. To do this, add \cs{lednopbinversetrue} in the begining of your file (better: in your preamble). This feature works only with verse of 2 lines, not more. It works at the third run.
+% By default, a long verse which will be normally between two pages, will have a page break before. However, if you have added \verb+\ledpbsetting{after}+, the page break will be after the long verse, and the page with the long verse will have one more line.
 % \section{Miscellaneous}
 %
 %
@@ -3178,6 +3201,9 @@
   \global\pst@rtedLfalse
   \global\l@dnumpstartsL \z@
   \global\absline@num \z@
+  \gdef\normal@page@break{}
+  \gdef\l@prev@pb{}
+  \gdef\l@prev@nopb{}
   \global\line@num \z@
   \global\subline@num \z@
   \global\@lock \z@
@@ -4377,6 +4403,7 @@
     \page@num=#1\relax
     \last@page@num=#1\relax
     \def\next@page@num{#1}%
+    \listcsxadd{normal@page@break}{\the\absline@num}
   \fi}
 
 %    \end{macrocode}
@@ -4807,7 +4834,34 @@
 % file, to mark the start of a new text line, and its page number.
 % \changes{v0.6}{2004/11/16}{Extended \cs{new@line} to output page numbers}
 %    \begin{macrocode}
-\newcommand*{\new@line}{\write\linenum@out{\string\@l[\the\c@page][\thepage]}}
+\newcommand*{\new@line}{%
+  \IfStrEq{\led@pb@setting}{after}%
+    {\xifinlistcs{\the\absline@num}{l@prev@nopb}%
+      {\xifinlistcs{\the\absline@num}{normal@page@break}%
+        {\numgdef{\@next@page}{\thepage+1}%
+        \write\linenum@out{\string\@l[\@next@page][\@next@page]}%
+      }%
+      {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+    }%
+    {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}}%
+  {}%
+  \IfStrEq{\led@pb@setting}{before}%
+   {%
+\numdef{\next@absline}{\the\absline@num+1}
+\xifinlistcs{\next@absline}{l@prev@nopb}%
+  {\xifinlistcs{\the\absline@num}{normal@page@break}%
+    {%
+    \numgdef{\nc@page}{\c@page+1}%
+    \write\linenum@out{\string\@l[\nc@page][\nc@page]}%
+    }%
+    {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+  }%
+  {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+}%
+  {}%
+  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@l[\the\c@page][\thepage]}]%
+}
+
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5720,18 +5774,22 @@
    \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
   \unvbox\one@line \global\setbox\one@line=\lastbox
   \getline@num
+  \IfStrEq{\led@pb@setting}{before}{\led@check@pb\led@check@nopb}{}
   \ifnum\@lock>\@ne
     \inserthangingsymboltrue
   \else
     \inserthangingsymbolfalse
   \fi
+  \check@pb@in@verse
   \affixline@num
   \affixpstart@num
   \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
-  }}}%
+  }}
+  \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
+  }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -7926,7 +7984,7 @@
 \newcommand{\vl@dbfnote}[2]{%
   \def\@thefnmark{#2}%
   \l@doldold@footnotetext{#1}}
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
@@ -8790,7 +8848,7 @@
 % \end{macro}
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for new commands hook, like \cs{hsizetwocol}.
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\newhookcommand@series}[1]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{\csuse{setcommand@series}{##1}{#1}{##2}}%
 }
@@ -9183,9 +9241,9 @@
 % \begin{macro}{\ifFN@bottom}
 % \changes{v1.5}{2013/07/11}{Use the bottom option of \Lpack{footmisc} package.}
 % The \cs{ifFN@bottom} macro is defined by the \Lpack{footmisc} package. If this package is not loaded, we define it.
-%     \begin{macrocode}
+%    \begin{macrocode}
 \AtBeginDocument{\@ifpackageloaded{footmisc}{}{\newif\ifFN@bottom}}
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\l@ddofootinsert}
 % This macro essentially holds the initial portion of the kernel 
@@ -10477,10 +10535,10 @@
 % \begin{macro}{\thestartpageline}
 % \begin{macro}{\theendpageline}
 % These macros make up the page/line start/end number when the \cs{edindex} command is called in critical notes.
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\thestartpageline}{\l@dparsedstartpage\pagelinesep\l@dparsedstartline}
 \newcommand{\theendpageline}{\l@dparsedendpage\pagelinesep\l@dparsedendline}
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
@@ -10504,10 +10562,10 @@
 % \end{macro}
 % \begin{macro}{\get@index@command}
 % This macro is used to analyse if a text to be indexed has a command after a \verb+|+. 
-%     \begin{macrocode}
+%    \begin{macrocode}
 \def\get@index@command#1|#2{\gdef\@index@command{#2}\gdef\@index@txt{#1}}
+%    \end{macrocode}
 % \end{macro}
-%     \end{macrocode}
 % \begin{macro}{\ledinnote}
 % \begin{macro}{\ledinnotehyperpage}
 % These macros are used to specifiy that an index reference points to a note.
@@ -12464,6 +12522,137 @@
 %
 %
 %
+% \section{Page breaking or no page breaking depending of specific lines}
+% Buy default, the page breaking is automatic. However, the user can define line which will make a page breaking, or prevent a page breaking around one specific line.
+% At the first run, the line with or without page break before or after is written in the line-list file.
+% At next run, page are breaking before or after this line, depending of a setting of user (by default: after).
+% \begin{macro}{\normal@page@break}
+% \cs{normal@page@break} is an etoolbox list which contains the absolute line number of the last line of each page.
+%    \begin{macrocode}
+\def\normal@page@break{}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\prev@pb}
+% \begin{macro}{\prev@nopb}
+% The \cs{l@prev@pb} macro is a etoolbox list, which will contain the lines with page break before or after.
+% The \cs{l@prev@nopb} macro is a etoolbox list, which will contain the lines with NO page break before or after.
+%    \begin{macrocode}
+\def\l@prev@pb{}
+\def\l@prev@nopb{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\ledpb}
+% \begin{macro}{\ledpbnum}
+% \begin{macro}{\lednopb}
+% \begin{macro}{\lednopbnum}
+% The \cs{ledpb} macro writes the call to \cs{led@pb} in line-list file.
+% The \cs{ledpbnum} macro writes the call to \cs{led@pbnum} in line-list file.
+% The \cs{lednopb} macro writes the call to \cs{led@nopb} in line-list file.
+% The \cs{lednopbnum} macro writes the call to \cs{led@nopbnum} in line-list file.
+%    \begin{macrocode}
+\newcommand{\ledpb}{\write\linenum@out{\string\led@pb}}
+\newcommand{\ledpbnum}[1]{\write\linenum@out{\string\led@pbnum{#1}}}
+\newcommand{\lednopb}{\write\linenum@out{\string\led@nopb}}
+\newcommand{\lednopbnum}[1]{\write\linenum@out{\string\led@nopbnum{#1}}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@pb}
+% \begin{macro}{\led@pbnum}
+% \begin{macro}{\led@nopb}
+% \begin{macro}{\led@nopbnum}
+% The \cs{led@pb} add the absolute line number in the \cs{prev@pb} list.
+% The \cs{led@pbnum} add the argument in the \cs{prev@pb} list.
+% The \cs{led@nopb} add the absolute line number in the \cs{prev@nopb} list.
+% The \cs{led@nopbnum} add the argument in the \cs{prev@nopb} list.
+%    \begin{macrocode}
+\newcommand{\led@pb}{\listcsxadd{l@prev@pb}{\the\absline@num}}
+\newcommand{\led@pbnum}[1]{\listcsxadd{l@prev@pb}{#1}}
+\newcommand{\led@nopb}{\listcsxadd{l@prev@nopb}{\the\absline@num}}
+\newcommand{\led@nopbnum}[1]{\listcsxadd{l@prev@nopb}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\ledpbsetting}
+% \begin{macro}{\led@pb@setting}
+% The \cs{ledpbsetting} macro only change the value of \cs{led@pb@macro}, which default value is \verb+before+.
+%    \begin{macrocode}
+\def\led@pb@setting{before}
+\newcommand{\ledpbsetting}[1]{\gdef\led@pb@setting{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@check@pb}
+% \begin{macro}{\led@check@nopb}
+% The \cs{led@check@pb} and \cs{led@check@nopb} are called before or after each line. 
+% They check if the page must be broken, depending of the courant line and of the content of \cs{l@pb}.
+%    \begin{macrocode}
+\newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
+\newcommand{\led@check@nopb}{%
+    \IfStrEq{\led@pb@setting}{before}{%
+      \xifinlistcs{\the\absline@num}{l@prev@nopb}%
+         {\numdef{\abs@prevline}{\the\absline@num-1}%
+         \xifinlistcs{\abs@prevline}{normal@page@break}%
+           {\nopagebreak[4]\enlargethispage{\baselineskip}}%
+           {}}%
+         {}}%
+       {}%
+     {}%
+    \IfStrEq{\led@pb@setting}{after}{%
+      \xifinlistcs{\the\absline@num}{l@prev@nopb}{%
+        \xifinlistcs{\the\absline@num}{normal@page@break}%
+          {\nopagebreak[4]\enlargethispage{\baselineskip}}%
+            {}%
+}%
+         {}}%
+       {}%
+     {}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \section{Long verse: preventing begin broken by page break}
+% \begin{macro}{\iflednopbinverse}
+% The \cs{lednopbinverse} boolean is set to false by default.
+% If set to true, eledmac while automatically prevent page break inside verse.
+%    \begin{macrocode}
+\newif\iflednopbinverse
+\lednopbinversefalse
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\check@pb@in@verse}
+% The \cs{check@pb@in@verse} checks if a verse is broken in two page. 
+% If true, it adds:
+% \begin{itemize}
+%  \item The absolute line number of the first line of the verse -1  in the \cs{led@pb} list, if the page break must be before the verse.
+%  \item The absolute line number of the first line of the verse -1  in the \cs{led@nopb} list, if the page break must be after the verse.
+% \end{itemize}
+%    \begin{macrocode}
+\newcommand{\check@pb@in@verse}{%
+    \ifinstanza\iflednopbinverse\ifinserthangingsymbol% Be in stanza, and enable the page break in verse control, and are on a hang verse
+        \ifnum\page@num=\last@page@num\else%If we have change page
+          \IfStrEq{\led@pb@setting}{before}{%
+              \numgdef{\abs@line@verse}{\the\absline@num-1}%
+              \ledpbnum{\abs@line@verse}%
+            }{}%
+          \IfStrEq{\led@pb@setting}{after}{%
+              \numgdef{\abs@line@verse}{\the\absline@num-1}%
+              \lednopbnum{\abs@line@verse}%
+          }{}%
+        \fi%
+    \fi\fi\fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \section{The End}\label{end}
+%
+% 
+%</code>
 % \newpage
 % \appendix
 % \let\oldthesection\thesection
