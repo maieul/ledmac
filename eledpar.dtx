@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4023}
+% \CheckSum{4254}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -785,7 +785,7 @@
 % All the error and warning messages are collected here as macros.
 %
 % \begin{macro}{\led@err@TooManyPstarts}
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand*{\led@err@TooManyPstarts}{%
   \eledmac@error{Too many \string\pstart\space without printing.
                 Some text will be lost}{\@ehc}}
@@ -793,7 +793,7 @@
 % \end{macro}
 %
 % \begin{macro}{\led@err@BadLeftRightPstarts}
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand*{\led@err@BadLeftRightPstarts}[2]{%
   \eledmac@error{The numbers of left (#1) and right (#2)
                 \string\pstart s do not match}{\@ehc}}
@@ -802,7 +802,7 @@
 %
 % \begin{macro}{\led@err@LeftOnRightPage}
 % \begin{macro}{\led@err@RightOnLeftPage}
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand*{\led@err@LeftOnRightPage}{%
   \eledmac@error{The left page has ended on a right page}{\@ehc}}
 \newcommand*{\led@err@RightOnLeftPage}{%
@@ -880,6 +880,9 @@
   \global\numberingRtrue
   \global\advance\section@numR \@ne
   \global\absline@numR \z@
+  \gdef\normal@page@breakR{}
+  \gdef\l@prev@pbR{}
+  \gdef\l@prev@nopbR{}
   \global\line@numR \z@
   \global\@lockR \z@
   \global\sub@lockR \z@
@@ -1006,8 +1009,8 @@
 % \label{lineation}\relax
 %
 % \subsection{Choosing the system of lineation}
-%% \changes{v0.11}{2012/06/11}{Lineation can be by pstart (like in eledmac 0.15).}
-%M \changes{v1.0}{2012/09/14}{Debug in lineation by pstart}
+% \changes{v0.11}{2012/06/11}{Lineation can be by pstart (like in eledmac 0.15).}
+% \changes{v1.0}{2012/09/14}{Debug in lineation by pstart}
 % Sometimes you want line numbers that start at $1$ at the top of each
 % page; sometimes you want line numbers that start at $1$ at each \cs{pstart}; other times you want line numbers that start at $1$ at the start
 % of each section and increase regardless of page breaks.
@@ -1485,6 +1488,7 @@
       \page@num=#1\relax
       \last@page@num=#1\relax
       \def\next@page@num{#1}%
+      \listcsxadd{normal@page@break}{\the\absline@num}
     \fi
   \fi}
 
@@ -1927,6 +1931,14 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\new@lineL}
+% The \cs{new@lineL} macro sends the \cs{@l} command to the left text
+% line-list file, to mark the start of a new text line.
+%    \begin{macrocode}
+\newcommand*{\new@lineL}{%
+  \write\linenum@out{\string\@l[\the\c@page][\thepage]}}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\new@lineR}
 % The \cs{new@lineR} macro sends the \cs{@l} command to the right text
 % line-list file, to mark the start of a new text line.
@@ -2295,6 +2307,8 @@
   \let\thepstart\thepstartR
   \let\pstart\pstartR
   \let\pend\pendR
+  \let\ledpb\ledpbR
+  \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
   \let\oldstanza\stanza
@@ -2619,7 +2633,7 @@
     \add@inserts
     \affixside@note
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@line\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
      \l@drsn@te
   }}%
   \add@penaltiesL
@@ -3999,6 +4013,9 @@
             \unhbox\l@drightbox
           }%
           \checkraw@text
+          \checkverseL
+          \checkverseR
+          \checkpb@columns
         \repeat}
 %    \end{macrocode}
 % Having completed a pair of chunks, write the number of lines
@@ -4038,7 +4055,32 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\checkpb@columns}
+% \cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \cs{ledpb} or \cs{lednopb}.
+%    \begin{macrocode}
+
+\newcommand{\checkpb@columns}{%
+    \newif\if@pb
+    \newif\if@nopb
+    \IfStrEq{\led@pb@setting}{before}{
+    \numdef{\next@absline}{\the\absline@num+1}%
+    \numdef{\next@abslineR}{\the\absline@numR+1}%
+  \xifinlistcs{\next@absline}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\next@absline}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+    \IfStrEq{\led@pb@setting}{after}{
+  \xifinlistcs{\the\absline@num}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\the\absline@num}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+\if@nopb\nopagebreak[4]\enlargethispage{\baselineskip}\fi
+\if@pb\pagebreak[4]\fi
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\columnseparator}
 % \begin{macro}{\columnrulewidth}
 % The separator between line pairs in parallel columns is in the form
@@ -4266,6 +4308,8 @@
             
               \get@nextboxL
               \checkpageL
+              \checkverseL
+              \checkpbL
             \repeat
 %    \end{macrocode}
 % That (left) page has been filled. Output the number of real lines 
@@ -4301,6 +4345,8 @@
               \fi
               \get@nextboxR
               \checkpageR
+              \checkverseR
+              \checkpbR
             \repeat
             \ifl@dpagefull
               \@writelinesonpageR{\the\numpagelinesR}%
@@ -4528,6 +4574,7 @@
 \newif\ifl@dsamepage
   \l@dsamepagetrue
 \newif\ifl@dpagefull
+
 \newcommand*{\checkpageL}{%
   \l@dpagefulltrue
   \l@dsamepagetrue
@@ -4566,7 +4613,66 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\checkpbL}
+% \begin{macro}{\checkpbR}
+% \cs{checkpbL} and \cs{checkpbR} are called at the end of each line printing, after the checking of the page. They correct the page break depending of \cs{ledpb} and \cs{lednopb}.
+%    \begin{macrocode}
+\newcommand{\checkpbL}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@num}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@num}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@absline}{\the\absline@num+1}
+     \xifinlistcs{\next@absline}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@absline}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+
+\newcommand{\checkpbR}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@abslineR}{\the\absline@numR+1}
+     \xifinlistcs{\next@abslineR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\checkverseL}
+% \begin{macro}{\checkverseR}
+% \cs{checkverseL} and \cs{checkverseR} are called after each line printing. 
+% They prevent page break inside verse.
+%    \begin{macrocode}
+\newcommand{\checkverseL}{
+\ifinstanzaL
+  \iflednopbinverse
+    \ifinserthangingsymbol
+      \numgdef{\prev@abslineverse}{\the\absline@num-1}
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnum{\prev@abslineverse}}{}
+      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesL=0\ledpbnum{\prev@abslineverse}\fi}{}
+    \fi
+  \fi
+\fi
+}
+\newcommand{\checkverseR}{
+\ifinstanzaR
+  \iflednopbinverse
+    \ifinserthangingsymbolR
+      \numgdef{\prev@abslineverse}{\the\absline@numR-1}
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnumR{\prev@abslineverse}}{}
+      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesR=0\ledpbnumR{\prev@abslineverse}\fi}{}
+    \fi
+  \fi
+\fi
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\ledthegoal}
 % \begin{macro}{\goalfraction}
 % \begin{macro}{\check@goal}
@@ -4694,6 +4800,54 @@
 % \end{macro}
 % \end{macro}
 %
+% \section{Page breaking no breaking depending of specific line}
+% We need to adapt the macro of the homonym section of eledmac to eledpar.
+% \begin{macro}{\prev@pbR}
+% \begin{macro}{\prev@nopbR}
+% The \cs{l@prev@pbR} macro is a etoolbox list, which will contain the lines with page break before or after.
+% The \cs{l@prev@nopbR} macro is a etoolbox list, which will contain the lines with NO page break before or after.
+%    \begin{macrocode}
+\def\l@prev@pbR{}
+\def\l@prev@nopbR{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\ledpbR}
+% \begin{macro}{\ledpbnumR}
+% \begin{macro}{\lednopbnum}
+% \begin{macro}{\lednopbnumR}
+% The \cs{ledpbR} macro writes the call to \cs{led@pbR} in line-list file.
+% The \cs{ledpbnumR} macro writes the call to \cs{led@pbnumR} in line-list file.
+% The \cs{lednopbR} macro writes the call to \cs{led@nopbR} in line-list file.
+% The \cs{lednopbnumR} macro writes the call to \cs{led@nopbnumR} in line-list file.
+%    \begin{macrocode}
+\newcommand{\ledpbR}{\write\linenum@outR{\string\led@pbR}}
+\newcommand{\ledpbnumR}[1]{\write\linenum@outR{\string\led@pbnumR{#1}}}
+\newcommand{\lednopbR}{\write\linenum@outR{\string\led@nopbR}}
+\newcommand{\lednopbnumR}[1]{\write\linenum@outR{\string\led@nopbnumR{#1}}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@pbR}
+% \begin{macro}{\led@pbnumR}
+% \begin{macro}{\led@nopbR}
+% \begin{macro}{\led@nopbnumR}
+% The \cs{led@pbR} add the absolute line number in the \cs{prev@pbR} list.
+% The \cs{led@pbnumR} add the argument in the \cs{prev@pbR} list.
+% The \cs{led@nopbR} add the absolute line number in the \cs{prev@nopbR} list.
+% The \cs{led@nopbnumR} add the argument in the \cs{prev@nopbR} list.
+%    \begin{macrocode}
+\newcommand{\led@pbR}{\listcsxadd{l@prev@pbR}{\the\absline@numR}}
+\newcommand{\led@pbnumR}[1]{\listcsxadd{l@prev@pbR}{#1}}
+\newcommand{\led@nopbR}{\listcsxadd{l@prev@nopbR}{\the\absline@numR}}
+\newcommand{\led@nopbnumR}[1]{\listcsxadd{l@prev@nopbR}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \section{The End}\label{end}
 %
 % 
