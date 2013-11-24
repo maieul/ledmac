@@ -8084,12 +8084,40 @@
 % \meta{text}.
 %    \begin{macrocode}
 \newcommand*{\normalvfootnoteX}[2]{%
-  \insert\@nameuse{footins#1}\bgroup
+  \newbox\notecontent
+  \setbox\notecontent=\vbox\bgroup
     \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \spaceskip=\z@skip \xspaceskip=\z@skip
-    \csuse{\csuse{footnote@dir}}\if@RTL\else\noindent\leavevmode\fi\@nameuse{footfmt#1}{#1}{#2}\egroup}
+    \csuse{\csuse{footnote@dir}}\if@RTL\else\noindent\leavevmode\fi\@nameuse{footfmt#1}{#1}{#2}\egroup
+%    \end{macrocode}
+% With \Lpack{eledpar}, if the note is too long, split it.
+%    \begin{macrocode}
+   \iftoggle{bothsidesX@#1}
+      {\newbox\beforesplit
+      \newdimen\leftheight
+      \advance\leftheight by \expandafter\dimen\csname footins#1\endcsname
+      \advance\leftheight by -\csname totalhX@#1\endcsname
+      \ifdim\leftheight>0pt
+        \ifdim\ht\notecontent>\leftheight
+            \splittopskip=0pt
+            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
+        \else
+            \setbox\beforesplit=\box\notecontent
+        \fi
+        \global\advance \csname totalhX@#1\endcsname by \ht\beforesplit
+        \global\advance \csname totalhX@#1\endcsname by \dp\beforesplit
+        \insert\csname footins#1\endcsname\bgroup\unvbox\beforesplit\egroup
+      \fi
+      \global\expandafter\setbox\csname toolongX@#1\endcsname=\vbox
+        \bgroup%
+          \ifvoid\csname toolongX@#1\endcsname\else\expandafter\unvbox\csname toolongX@#1\endcsname\fi%
+          \unvbox\notecontent%
+        \egroup
+      }
+      {\insert\csname footins#1\endcsname\bgroup\unvbox\notecontent\egroup}  
+}
 
 %    \end{macrocode}
 % \end{macro}
