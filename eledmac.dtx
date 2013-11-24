@@ -6691,12 +6691,40 @@
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
-  \insert\csname #1footins\endcsname\bgroup
-  \csuse{bhookXnote@#1}
-  \csuse{Xnotefontsize@#1}
-  \footsplitskips
-  \spaceskip=\z@skip \xspaceskip=\z@skip
-  \csname #1footfmt\endcsname #2[#1]\egroup}
+  \newbox\notecontent
+  \setbox\notecontent=\vbox\bgroup%
+  \csuse{bhookXnote@#1}%
+  \csuse{Xnotefontsize@#1}%
+  \footsplitskips%
+  \spaceskip=\z@skip \xspaceskip=\z@skip%
+  \csname #1footfmt\endcsname #2[#1]\egroup
+  \iftoggle{Xbothsides@#1}
+%   \end{macrocode}
+% For \Lpack{eledpar}, split too long notes, if needed.
+%   \begin{macrocode}
+      {\newbox\beforesplit
+      \newdimen\leftheight
+      \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname
+      \advance\leftheight by -\csname Xtotalh@#1\endcsname
+      \ifdim\leftheight>0pt
+        \ifdim\ht\notecontent>\leftheight
+            \splittopskip=0pt
+            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
+        \else
+            \setbox\beforesplit=\box\notecontent
+        \fi
+        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit
+        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit
+        \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup
+      \fi
+      \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox
+        \bgroup%
+          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
+          \unvbox\notecontent%
+        \egroup
+      }
+      {\insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup}
+  }
 %    \end{macrocode}
 % \end{macro}
 %
