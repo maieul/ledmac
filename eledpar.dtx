@@ -959,10 +959,10 @@
 \newcounter{subsectionR}
 \newcounter{subsubsectionR}
 \newcommand{\initnumbering@sectcountR}{
-	\let\c@chapter\c@chapterR
-	\let\c@section\c@sectionR
-	\let\c@subsection\c@subsectionR
-	\let\c@subsubsection\c@subsubsectionR
+    \let\c@chapter\c@chapterR
+    \let\c@section\c@sectionR
+    \let\c@subsection\c@subsectionR
+    \let\c@subsubsection\c@subsubsectionR
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3245,8 +3245,34 @@
 % \end{macro}
 % \end{macro}
 %
-%
-%
+% \subsection{Footnotes on both side}
+% The \cs{reinsert@notes} macro is called at the begining of each page in \cs{Pages}.
+% It reinserts the too long content of the notes of the previous page in the new page (options \cs{Xbothsides} and \cs{bothsidesX}
+% \begin{macro}{\reinsert@notes}
+%    \begin{macrocode}
+\newcommand{\reinsert@notes}{
+    \renewcommand{\do}[1]{
+    \iftoggle{Xbothsides@##1}{
+        \global\csname Xtotalh@##1\endcsname=0pt
+        \ifdim\ht\csname Xtoolong@##1\endcsname>\expandafter\dimen\csname##1footins\endcsname
+          \global\advance\csname Xtotalh@##1\endcsname by \expandafter\dimen\csname##1footins\endcsname
+          \newbox\notecontent
+          \splittopskip=0pt
+          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@##1\endcsname to \dimen\csname##1footins\endcsname
+          \insert\csname ##1footins\endcsname\bgroup\unvbox\notecontent\egroup
+        \else
+          \ifdim\ht\csname Xtoolong@##1\endcsname>0pt
+            \global\advance\csname Xtotalh@##1\endcsname by \ht\csname Xtoolong@##1\endcsname
+            \global\advance\csname Xtotalh@##1\endcsname by \dp\csname Xtoolong@##1\endcsname
+            \insert\csname ##1footins\endcsname\bgroup\unvbox\csname Xtoolong@##1\endcsname\egroup
+          \fi
+        \fi
+        }{}
+    }
+    \dolistloop{\@series}
+}
+%    \end{macrocode}
+% \end{macro}
 % \section{Cross referencing}
 % \label{xref}\relax
 %
@@ -3506,8 +3532,8 @@
           \footnotelang@lua[R]%
       \fi
       \@ifundefined{xpg@main@language}%if polyglossia
-		{}%
-		{\footnotelang@poly[R]}%      
+        {}%
+        {\footnotelang@poly[R]}%      
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@listR
@@ -3517,8 +3543,8 @@
           \footnotelang@lua%
       \fi
       \@ifundefined{xpg@main@language}%if polyglossia
-		{}%
-		{\footnotelang@poly}%    
+        {}%
+        {\footnotelang@poly}%    
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@list
@@ -4339,11 +4365,12 @@
               \@writelinesonpageL{1000}%
             \fi
 %    \end{macrocode}
-% Zero the left page lines count and clear the page to get onto the facing
-% (odd, right) page.
+% Zero the left page lines count, clear the page to get onto the facing
+% (odd, right) page, and reinsert too long notes.
 %    \begin{macrocode}
             \numpagelinesL \z@
-            \clearl@dleftpage }%
+            \clearl@dleftpage
+            \reinsert@notes }%
 %    \end{macrocode}
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
@@ -4370,10 +4397,11 @@
             \fi
             \numpagelinesR=\z@
 %    \end{macrocode}
-% The page is full, so move onto the next (left, odd) page and repeat left 
+% The page is full, so move onto the next (left, odd) page, reinsert too long notes and repeat left 
 % text processing.
 %    \begin{macrocode}
-            \clearl@drightpage}
+            \clearl@drightpage
+            \reinsert@notes}
 %    \end{macrocode}
 % More to do? If there is we have to get the number of lines for the next
 % pair of pages before starting to output them.
@@ -4893,7 +4921,7 @@
 % With standard \cs{hangingsymbol}:
 % \setstanzaindents{4,0}
 % \beginnumbering
-% 	\stanza
+%     \stanza
 %   A very long verse should be sometime hanged. The position of the hang verse is fixed.\&
 % \endnumbering
 %
@@ -4901,7 +4929,7 @@
 % \renewcommand{\hangingsymbol}{\protect\hfill}
 % \setstanzaindents{4,0}
 % \beginnumbering
-% 	\stanza
+%     \stanza
 %   A very long verse should sometimes be hanging. And we can see that an hanging verse is flush right.\&
 % \endnumbering
 % \bibliographystyle{alpha}
