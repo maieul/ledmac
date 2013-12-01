@@ -4311,7 +4311,7 @@
 %    \begin{macrocode}
               \do@lineL
               \advance\numpagelinesL \@ne
-              \insert@noterule@ledgroup
+              \insert@noterule@ledgroup{L}
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
               \else%
@@ -4354,7 +4354,7 @@
 {            \loop\ifl@dsamepage
               \do@lineR
               \advance\numpagelinesR \@ne
-              \insert@noterule@ledgroup
+              \insert@noterule@ledgroup{R}
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
               \else%
@@ -4946,15 +4946,24 @@
 % \begin{macro}{\insert@noterule@ledgroup}
 % A \cs{vskip} is not used when the box are constructed. That implies to insert it manually before the footnote. This is the goal of \cs{insert@noterule@ledgroup}
 %    \begin{macrocode}
-\newcommand{\insert@noterule@ledgroup}{
+\newcommand{\insert@noterule@ledgroup}[1]{
+    \newif\ifinsertnotes@
+    \ifledgroupnotesL@\insertnotes@true\fi
+    \ifledgroupnotesR@\insertnotes@true\fi
     \IfStrEq{\splitbotmarks\parledgroup@}{begin}{%
       \IfStrEq{\splitbotmarks\parledgroup@type}{Xfootnote}{
-        \vskip\skip\csuse{mp\splitbotmarks\parledgroup@series footins}
-        \csuse{\splitbotmarks\parledgroup@series footnoterule}}
+        \csuse{ifledgroupnotes#1@}
+          \vskip\skip\csuse{mp\splitbotmarks\parledgroup@series footins}
+          \csuse{\splitbotmarks\parledgroup@series footnoterule}
+        \fi
+        }
         {}
         \IfStrEq{\splitbotmarks\parledgroup@type}{footnoteX}{
-          \vskip\skip\csuse{mpfootins\splitbotmarks\parledgroup@series}
-          \csuse{footnoterule\splitbotmarks\parledgroup@series}}{}
+          \csuse{ifledgroupnotes#1@}
+           \vskip\skip\csuse{mpfootins\splitbotmarks\parledgroup@series}
+           \csuse{footnoterule\splitbotmarks\parledgroup@series}
+           \fi
+           }{}
         }
     {}
 }
