@@ -3226,6 +3226,7 @@
   \global\let\next@page@num=\relax
   \global\let\sub@change=\relax
   \resetprevline@
+  \resetprevpage@num
   }
 
 %    \end{macrocode}
@@ -4146,12 +4147,26 @@
 % Inside the apparatus, at each note, the line number is memorized in a macro called \cs{prevlineX},
 % where X is the letter of the current series.
 % This macro is called when using \cs{numberonlyfirstinline}.
-% This maco must be reset at the same time as the line number.
+% This macro must be reset at the same time as the line number.
 % The \cs{resetprevline@} does this resetting for every series.
 % \begin{macro}{\resetprevline@}
 %    \begin{macrocode}
 \newcommand*{\resetprevline@}{%
     \def\do##1{\global\csundef{prevline##1}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \DescribeMacro{\resetprevpage@num}
+% Inside the apparatus, at each note, the page number is memorized in a macro called \cs{prevpageX@num},
+% where X is the letter of the current series.
+% This macro is called when using \cs{parafootsep}.
+% This macro must be reset at the beginingoup of each numbered section
+% The \cs{resetprevpage@} does this resetting for every series.
+% \begin{macro}{\resetprevpage@}
+%    \begin{macrocode}
+\newcommand*{\resetprevpage@num}{%
+    \def\do##1{\ifcsdef{prevpage##1@num}{\global\csname prevpage##1@num\endcsname=0}{}}%
     \dolistloop{\@series}%
 }
 %    \end{macrocode}
@@ -10439,7 +10454,7 @@
 %    \begin{macrocode}
 \newif\if@ledgroup
 \newenvironment{ledgroup}{%
-  \ifparledgroup\endlock\fi\@ledgrouptrue\def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
+  \resetprevpage@num\@ledgrouptrue\def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
   \let\@footnotetext\@mpfootnotetext
   \l@dfeetbeginmini%
 }{%
