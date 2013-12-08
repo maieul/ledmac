@@ -10446,7 +10446,17 @@
       \flush@notes
     \fi
   \fi
-  \def\do##1{\ifvoid\csuse{mp##1footins}\else\csuse{mp##1footgroup}{##1}\fi}%
+  \def\do##1{
+    \ifvoid\csuse{mp##1footins}\else%
+      \ifl@dpairing\ifparledgroup%
+        \ifledRcol%
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}
+        \else%
+           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}
+        \fi%
+       \fi\fi%
+       \csuse{mp##1footgroup}{##1}%
+  \fi}%
   \dolistloop{\@series}%
   }
 
@@ -10528,6 +10538,15 @@
     \vskip\skip\@mpfootins
     \normalcolor
     \footnoterule
+    \ifparledgroup
+      \ifl@dpairing
+        \ifledRcol
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@mpfootins}
+        \else
+          \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@mpfootins}
+        \fi
+      \fi
+    \fi
     \unvbox\@mpfootins}
 
 %    \end{macrocode}
