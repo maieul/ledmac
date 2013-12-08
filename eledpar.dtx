@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4256}
+% \CheckSum{4477}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1020,10 +1020,10 @@
 \newcounter{subsectionR}
 \newcounter{subsubsectionR}
 \newcommand{\initnumbering@sectcountR}{
-	\let\c@chapter\c@chapterR
-	\let\c@section\c@sectionR
-	\let\c@subsection\c@subsectionR
-	\let\c@subsubsection\c@subsubsectionR
+    \let\c@chapter\c@chapterR
+    \let\c@section\c@sectionR
+    \let\c@subsection\c@subsectionR
+    \let\c@subsubsection\c@subsubsectionR
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2597,9 +2597,11 @@
   \endgroup%
   \ignorespaces%
   \@oldnobreak%
-    \ifnumberpstart%
+  \ifnumberpstart%
     \addtocounter{pstartL}{1}%
-    \fi}
+  \fi
+  \parledgroup@beforenotes@save{L}%
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -2621,9 +2623,10 @@
   \endgroup%
   \ignorespaces%
   \@oldnobreak%
-    \ifnumberpstart%
+  \ifnumberpstart%
     \addtocounter{pstartR}{1}%
-    \fi%    
+  \fi%    
+  \parledgroup@beforenotes@save{R}
 }
 
 %    \end{macrocode}
@@ -2698,6 +2701,7 @@
    \l@demptyd@ta
    \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
                            to\baselineskip}% 
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
   \unvbox\one@line \global\setbox\one@line=\lastbox 
   \getline@numL
 \ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
@@ -2756,6 +2760,7 @@
    \l@demptyd@ta
    \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
                            to\baselineskip}% 
+    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
   \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
   \getline@numR
 \ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
@@ -2794,7 +2799,7 @@
   \global\advance\absline@numR \@ne
   \do@actionsR
   \do@ballastR
-\ifnumberline
+\ifledgroupnotesR@\else\ifnumberline
   \ifsublines@
     \ifnum\sub@lockR<\tw@
       \global\advance\subline@numR \@ne
@@ -2806,12 +2811,13 @@
     \fi
   \fi
 \fi
+\fi
 }
 \newcommand*{\getline@numL}{%
     \global\advance\absline@num \@ne
   \do@actions
   \do@ballast
-\ifnumberline
+\ifledgroupnotesL@\else\ifnumberline
   \ifsublines@
      \ifnum\sub@lock<\tw@
        \global\advance\subline@num \@ne
@@ -2822,6 +2828,7 @@
        \global\subline@num \z@
      \fi
   \fi
+\fi
 \fi
 }
 
@@ -3002,7 +3009,7 @@
 
 
 \newcommand*{\affixline@numR}{%
-\ifnumberline
+\ifledgroupnotesR@\else\ifnumberline
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
@@ -3044,6 +3051,7 @@
     \fi
   \fi
   \f@x@l@cksR
+\fi
 \fi
 \fi}
 %    \end{macrocode}
@@ -3567,8 +3575,8 @@
           \footnotelang@lua[R]%
       \fi
       \@ifundefined{xpg@main@language}%if polyglossia
-		{}%
-		{\footnotelang@poly[R]}%      
+        {}%
+        {\footnotelang@poly[R]}%      
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@listR
@@ -3578,8 +3586,8 @@
           \footnotelang@lua%
       \fi
       \@ifundefined{xpg@main@language}%if polyglossia
-		{}%
-		{\footnotelang@poly}%    
+        {}%
+        {\footnotelang@poly}%    
       \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
       \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
                          \to\inserts@list
@@ -4275,6 +4283,7 @@
 \newcommand*{\Pages}{%
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
+  \parledgroup@notespacing@set@correction
   \typeout{}
   \typeout{*************************** PAGES ***************************}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4364,8 +4373,7 @@
           \checkpageL
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
-{            \loop\ifl@dsamepage
-             
+{            \loop\ifl@dsamepage       
 %    \end{macrocode}
 % Process the next (left) text line, adding it to the page.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
@@ -4375,13 +4383,13 @@
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
               \else%
+                      \parledgroup@correction@notespacing{L}
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
 % we can onto the page. If not, repeat for the next line.
-%    \begin{macrocode}
-            
+%    \begin{macrocode}        
               \get@nextboxL
               \checkpageL
               \checkverseL
@@ -4400,10 +4408,11 @@
               \@writelinesonpageL{1000}%
             \fi
 %    \end{macrocode}
-% Zero the left page lines count and clear the page to get onto the facing
-% (odd, right) page.
+% Zero the left page lines count,  clear the page to get onto the facing
+% (odd, right) page, and reinit the cumuled dimen of interlines correction for notes in parallel ledgroup.
 %    \begin{macrocode}
             \numpagelinesL \z@
+            \parledgroup@correction@notespacing@init
             \clearl@dleftpage }%
 %    \end{macrocode}
 % Now do the same for the right text.
@@ -4417,6 +4426,7 @@
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
               \else%
+                      \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR
@@ -4430,6 +4440,7 @@
               \@writelinesonpageR{1000}%
             \fi
             \numpagelinesR=\z@
+            \parledgroup@correction@notespacing@init
 %    \end{macrocode}
 % The page is full, so move onto the next (left, odd) page and repeat left 
 % text processing.
@@ -4802,10 +4813,14 @@
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
+    \parledgroup@notes@endL
     \else
 %    \end{macrocode}
 % Sufficient lines have been output.
 %    \begin{macrocode}
+      \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}=\@donetotallinesL
+        \parledgroup@notes@endL
+      \fi
       \ifwrittenlinesL 
       \else
 %    \end{macrocode}
@@ -4836,6 +4851,8 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
+        \parledgroup@notes@endL
+        \parledgroup@correction@notespacing@final{L}
       \fi
     \fi
   \fi}
@@ -4846,7 +4863,11 @@
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
+    \parledgroup@notes@endR
     \else
+      \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
+        \parledgroup@notes@endR
+      \fi
       \ifwrittenlinesR 
       \else
         \@writelinesinparR
@@ -4868,6 +4889,8 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
         \global\@donetotallinesR \z@
         \global\advance\l@dpscR \@ne
+        \parledgroup@notes@endR
+        \parledgroup@correction@notespacing@final{R}
       \fi
     \fi
   \fi}
@@ -4924,6 +4947,175 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \section{Parallel ledgroup}
+% \begin{macro}{\parledgroup@}
+% \begin{macro}{\parledgroupseries@}
+% \begin{macro}{\parledgrouptype@}
+% The marks \cs{parledgroup} will contain information about the begining and end of notes in parallel ledgroup.
+% \cs{parledgroupseries} will contain the series of the footnote.
+% \cs{parledgroupseries} will contain the type of footnote : critical (Xfootnote) or familiar (footnoteX).
+%    \begin{macrocode}
+\newmarks\parledgroup@
+\newmarks\parledgroup@series
+\newmarks\parledgroup@type
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\parledgroup@notes@startL}
+% \begin{macro}{\parledgroup@notes@startR}
+% \cs{parledgroup@notes@startL} and \cs{parledgroup@notes@startR} are used to mark the begining of a note series in parallel ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroup@notes@startL}{%
+  \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>0%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{footnoteX}{\csuse{bhooknoteX@\splitfirstmarks\parledgroup@series}}{}%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{Xfootnote}{\csuse{bhookXnote@\splitfirstmarks\parledgroup@series}}{}%
+  \fi%
+  \global\ledgroupnotesL@true%
+  \insert@noterule@ledgroup{L}%
+}
+\newcommand{\parledgroup@notes@startR}{%
+  \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>0%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{footnoteX}{\csuse{bhooknoteX@\splitfirstmarks\parledgroup@series}}{}%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{Xfootnote}{\csuse{bhookXnote@\splitfirstmarks\parledgroup@series}}{}%
+  \fi%
+  \global\ledgroupnotesR@true%
+  \insert@noterule@ledgroup{R}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\parledgroup@notes@startL}
+% \begin{macro}{\parledgroup@notes@startR}
+% \cs{parledgroup@notes@endL} and \cs{parledgroup@notes@endR} are used to mark the end of a note series in parallel ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroup@notes@endL}{%
+  \global\ledgroupnotesL@false%
+}
+\newcommand{\parledgroup@notes@endR}{%
+  \global\ledgroupnotesR@false%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\insert@noterule@ledgroup}
+% A \cs{vskip} is not used when the box are constructed. That implies to insert it manually before the footnote. This is the goal of \cs{insert@noterule@ledgroup}
+%    \begin{macrocode}
+\newcommand{\insert@noterule@ledgroup}[1]{
+    \IfStrEq{\splitbotmarks\parledgroup@}{begin}{%
+      \IfStrEq{\splitbotmarks\parledgroup@type}{Xfootnote}{
+        \csuse{ifledgroupnotes#1@}
+          \vskip\skip\csuse{mp\splitbotmarks\parledgroup@series footins}
+          \csuse{\splitbotmarks\parledgroup@series footnoterule}
+        \fi
+        }
+        {}
+        \IfStrEq{\splitbotmarks\parledgroup@type}{footnoteX}{
+          \csuse{ifledgroupnotes#1@}
+           \vskip\skip\csuse{mpfootins\splitbotmarks\parledgroup@series}
+           \csuse{footnoterule\splitbotmarks\parledgroup@series}
+           \fi
+           }{}
+        }
+    {}
+}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\parledgroupnotespacing}
+% \cs{parledgroupnotespacing} can be redefined by the user to change the spacing of ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroupnotespacing}{}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@notespacing@correction}
+% \begin{macro}{\parledgroup@notespacing@set@correction}
+% \cs{parledgroup@notespacing@correction} is the difference between normal line skip and line skip in note. It's set by \cs{parledgroup@notespacing@set@correction}, called at the begining of \cs{Pages}.
+%    \begin{macrocode}
+\dimdef{\parledgroup@notespacing@correction}{0pt}
+\newcommand{\parledgroup@notespacing@set@correction}{%
+  {\notefontsetup\parledgroupnotespacing\dimgdef{\temp@spacing}{\baselineskip}}%
+  \dimgdef{\parledgroup@notespacing@correction}{\baselineskip-\temp@spacing}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing@init}
+% \cs{parledgroup@correction@notespacing@init} Set the value of cumuled corrections of notespacing to 0pt. It's called at the begining of each pages AND at the end of each ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroup@correction@notespacing@init}{
+  \dimdef{\parledgroup@notespacing@correction@cumuled}{0pt}
+  \dimdef{\parledgroup@notespacing@correction@modulo}{0pt}
+}
+\parledgroup@correction@notespacing@init
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing@final}
+% \cs{parledgroup@correction@notespacing@final} add the total space deleted because of notes correction in parallel ledgroup. It also add the spaces needed by the other side spaces between noterules and notes.  It's called after the print of each pstart/pend.
+%    \begin{macrocode}
+\newcommand{\parledgroup@correction@notespacing@final}[1]{
+  \vspace{\parledgroup@notespacing@correction@cumuled}
+  \parledgroup@correction@notespacing@init%
+  \ifstrequal{#1}{L}{
+  	\numdef{\@checking}{\the\l@dpscL-1}
+  }{
+    \numdef{\@checking}{\the\l@dpscR-1}
+  }
+  \dimdef{\@beforenotes@current@diff}{\csuse{@parledgroup@beforenotes@\@checking L}-\csuse{@parledgroup@beforenotes@\@checking R}}%
+  \ifstrequal{#1}{L}%
+    {% Left
+    \ifdimgreater{\@beforenotes@current@diff}{0pt}{}{\vspace{-\@beforenotes@current@diff}}%
+    }%
+    {% Right
+    \ifdimgreater{\@beforenotes@current@diff}{0pt}{\vspace{\@beforenotes@current@diff}}{}
+    }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing}
+% \cs{parledgroup@correction@notespacing} is used before  printed each line. If it's a line of notes in parallel ledgroup, the space \cs{parledgroup@notespacing@correction} is decreased, to made interline space correct.
+% The decreased space is adding to \cs{parledgroup@notespacing@correction@cumuled} and \cs{parledgroup@notespacing@correction@modulo}. If \cs{parledgroup@notespacing@correction@modulo} is equal or greater than \cs{baselineskip}:
+% \begin{itemize}
+%    \item It's decreased by \cs{baselineskip}.
+%    \item The total of line number in the current page is decreased by one.
+% \end{itemize}
+% For example, suppose an normal interline of 24~pt and interline for note of 12~pt.
+% That means that two line of notes take the place of one normal line. So every two lines of notes, the total of lines in the current place is decreased by one.
+%    \begin{macrocode}{}
+\newcommand{\parledgroup@correction@notespacing}[1]{%
+    \csuse{ifledgroupnotes#1@}%
+      \vspace{-\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@cumuled}{\parledgroup@notespacing@correction@cumuled+\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
+      \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}{\advance\numpagelinesL -\@ne%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo-\baselineskip}%    
+     }% mean greater than equal
+    \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@beforenotesL}
+% \begin{macro}{\parledgroup@beforenotesR}
+% \cs{parledgroup@beforenotesL} and \cs{parledgroup@beforenotesR} store the total of space before notes in the current parallel ledgroup.
+%    \begin{macrocode}
+\dimdef\parledgroup@beforenotesL{0pt}
+\dimdef\parledgroup@beforenotesR{0pt}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\parledgroup@beforenotes@save}
+% The macro \cs{parledgroup@beforenotes@save} dumps the space befores notes of the current parallel eledgroup in a macro named with the current pstart number.
+%    \begin{macrocode}
+\newcommand{\parledgroup@beforenotes@save}[1]{
+  \ifparledgroup
+    \csdimgdef{@parledgroup@beforenotes@\the\csuse{l@dnumpstarts#1}#1}{\csuse{parledgroup@beforenotes#1}}
+    \csdimgdef{parledgroup@beforenotes#1}{0pt}
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+
+
 % \section{The End}\label{end}
 %
 % 
@@ -4948,7 +5140,7 @@
 % With standard \cs{hangingsymbol}:
 % \setstanzaindents{4,0}
 % \beginnumbering
-% 	\stanza
+%     \stanza
 %   A very long verse should be sometime hanged. The position of the hang verse is fixed.\&
 % \endnumbering
 %
@@ -4956,7 +5148,7 @@
 % \renewcommand{\hangingsymbol}{\protect\hfill}
 % \setstanzaindents{4,0}
 % \beginnumbering
-% 	\stanza
+%     \stanza
 %   A very long verse should sometimes be hanging. And we can see that an hanging verse is flush right.\&
 % \endnumbering
 % \bibliographystyle{alpha}
