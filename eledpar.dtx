@@ -2533,7 +2533,9 @@
   \@oldnobreak%
   \ifnumberpstart%
     \addtocounter{pstartL}{1}%
-  \fi}
+  \fi
+  \parledgroup@beforenotes@save{L}%
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -2558,6 +2560,7 @@
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
   \fi%    
+  \parledgroup@beforenotes@save{R}
 }
 
 %    \end{macrocode}
@@ -4783,7 +4786,7 @@
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
         \parledgroup@notes@endL
-        \parledgroup@correction@notespacing@final
+        \parledgroup@correction@notespacing@final{L}
       \fi
     \fi
   \fi}
@@ -4821,7 +4824,7 @@
         \global\@donetotallinesR \z@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
-        \parledgroup@correction@notespacing@final
+        \parledgroup@correction@notespacing@final{R}
       \fi
     \fi
   \fi}
@@ -4983,11 +4986,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\parledgroup@correction@notespacing@final}
-% \cs{parledgroup@correction@notespacing@final} add the total space deleted because of notes correction in parallel ledgroup. It's called after the print of each pstart/pend.
+% \cs{parledgroup@correction@notespacing@final} add the total space deleted because of notes correction in parallel ledgroup. It also add the spaces needed by the other side spaces between noterules and notes.  It's called after the print of each pstart/pend.
 %    \begin{macrocode}
-\newcommand{\parledgroup@correction@notespacing@final}{
+\newcommand{\parledgroup@correction@notespacing@final}[1]{
   \vspace{\parledgroup@notespacing@correction@cumuled}
-  \parledgroup@correction@notespacing@init
+  \parledgroup@correction@notespacing@init%
+  \ifstrequal{#1}{L}{
+  	\numdef{\@checking}{\the\l@dpscL-1}
+  }{
+    \numdef{\@checking}{\the\l@dpscR-1}
+  }
+  \dimdef{\@beforenotes@current@diff}{\csuse{@parledgroup@beforenotes@\@checking L}-\csuse{@parledgroup@beforenotes@\@checking R}}%
+  \ifstrequal{#1}{L}%
+    {% Left
+    \ifdimgreater{\@beforenotes@current@diff}{0pt}{}{\vspace{-\@beforenotes@current@diff}}%
+    }%
+    {% Right
+    \ifdimgreater{\@beforenotes@current@diff}{0pt}{\vspace{\@beforenotes@current@diff}}{}
+    }%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -5013,6 +5029,27 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\parledgroup@beforenotesL}
+% \begin{macro}{\parledgroup@beforenotesR}
+% \cs{parledgroup@beforenotesL} and \cs{parledgroup@beforenotesR} store the total of space before notes in the current parallel ledgroup.
+%    \begin{macrocode}
+\dimdef\parledgroup@beforenotesL{0pt}
+\dimdef\parledgroup@beforenotesR{0pt}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@beforenotes@save}
+% The macro \cs{parledgroup@beforenotes@save} dumps the space befores notes of the current parallel eledgroup in a macro named with the current pstart number.
+%    \begin{macrocode}
+\newcommand{\parledgroup@beforenotes@save}[1]{
+  \ifparledgroup
+    \csdimgdef{@parledgroup@beforenotes@\the\csuse{l@dnumpstarts#1}#1}{\csuse{parledgroup@beforenotes#1}}
+    \csdimgdef{parledgroup@beforenotes#1}{0pt}
+  \fi
+}
+%   \end{macrocode}
+% \end{macro}
+
+
 % \section{The End}\label{end}
 %
 % 
