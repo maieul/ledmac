@@ -4214,6 +4214,7 @@
 \newcommand*{\Pages}{%
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
+  \parledgroup@notespacing@set@correction
   \typeout{}
   \typeout{*************************** PAGES ***************************}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4314,6 +4315,7 @@
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
               \else%
+                      \parledgroup@correction@notespacing{L}
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
@@ -4339,10 +4341,11 @@
               \@writelinesonpageL{1000}%
             \fi
 %    \end{macrocode}
-% Zero the left page lines count and clear the page to get onto the facing
-% (odd, right) page.
+% Zero the left page lines count,  clear the page to get onto the facing
+% (odd, right) page, and reinit the cumuled dimen of interlines correction for notes in parallel ledgroup.
 %    \begin{macrocode}
             \numpagelinesL \z@
+            \parledgroup@correction@notespacing@init
             \clearl@dleftpage }%
 %    \end{macrocode}
 % Now do the same for the right text.
@@ -4356,6 +4359,7 @@
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
               \else%
+                      \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR
@@ -4369,6 +4373,7 @@
               \@writelinesonpageR{1000}%
             \fi
             \numpagelinesR=\z@
+            \parledgroup@correction@notespacing@init
 %    \end{macrocode}
 % The page is full, so move onto the next (left, odd) page and repeat left 
 % text processing.
@@ -4780,6 +4785,7 @@
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
         \parledgroup@notes@endL
+        \parledgroup@correction@notespacing@final
       \fi
     \fi
   \fi}
@@ -4817,6 +4823,7 @@
         \global\@donetotallinesR \z@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
+        \parledgroup@correction@notespacing@final
       \fi
     \fi
   \fi}
@@ -4945,6 +4952,66 @@
            }{}
         }
     {}
+}
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\parledgroupnotespacing}
+% \cs{parledgroupnotespacing} can be redefined by the user to change the spacing of ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroupnotespacing}{}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@notespacing@correction}
+% \begin{macro}{\parledgroup@notespacing@set@correction}
+% \cs{parledgroup@notespacing@correction} is the difference between normal line skip and line skip in note. It's set by \cs{parledgroup@notespacing@set@correction}, called at the begining of \cs{Pages}.
+%    \begin{macrocode}
+\dimdef{\parledgroup@notespacing@correction}{0pt}
+\newcommand{\parledgroup@notespacing@set@correction}{%
+  {\notefontsetup\parledgroupnotespacing\dimgdef{\temp@spacing}{\baselineskip}}%
+  \dimgdef{\parledgroup@notespacing@correction}{\baselineskip-\temp@spacing}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing@init}
+% \cs{parledgroup@correction@notespacing@init} Set the value of cumuled corrections of notespacing to 0pt. It's called at the begining of each pages AND at the end of each ledgroup.
+%    \begin{macrocode}
+\newcommand{\parledgroup@correction@notespacing@init}{
+  \dimdef{\parledgroup@notespacing@correction@cumuled}{0pt}
+  \dimdef{\parledgroup@notespacing@correction@modulo}{0pt}
+}
+\parledgroup@correction@notespacing@init
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing@final}
+% \cs{parledgroup@correction@notespacing@final} add the total space deleted because of notes correction in parallel ledgroup. It's called after the print of each pstart/pend.
+%    \begin{macrocode}
+\newcommand{\parledgroup@correction@notespacing@final}{
+  \vspace{\parledgroup@notespacing@correction@cumuled}
+  \parledgroup@correction@notespacing@init
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parledgroup@correction@notespacing}
+% \cs{parledgroup@correction@notespacing} is used before  printed each line. If it's a line of notes in parallel ledgroup, the space \cs{parledgroup@notespacing@correction} is decreased, to made interline space correct.
+% The decreased space is adding to \cs{parledgroup@notespacing@correction@cumuled} and \cs{parledgroup@notespacing@correction@modulo}. If \cs{parledgroup@notespacing@correction@modulo} is equal or greater than \cs{baselineskip}:
+% \begin{itemize}
+%    \item It's decreased by \cs{baselineskip}.
+%    \item The total of line number in the current page is decreased by one.
+% \end{itemize}
+% For example, suppose an normal interline of 24~pt and interline for note of 12~pt.
+% That means that two line of notes take the place of one normal line. So every two lines of notes, the total of lines in the current place is decreased by one.
+%    \begin{macrocode}{}
+\newcommand{\parledgroup@correction@notespacing}[1]{%
+    \csuse{ifledgroupnotes#1@}%
+      \vspace{-\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@cumuled}{\parledgroup@notespacing@correction@cumuled+\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
+      \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}{\advance\numpagelinesL -\@ne%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo-\baselineskip}%    
+     }% mean greater than equal
+    \fi%
 }
 %    \end{macrocode}
 % \end{macro}
