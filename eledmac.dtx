@@ -177,6 +177,7 @@
 % \changes{v1.4.6}{2013/04/15}{Bug with memoir class introduced by 1.4.5.}
 % \changes{v1.4.8}{2013/07/02}{Corrects a bug with parallel texts introduced by 1.1.}
 % \changes{v1.6.1}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
+% \changes{v1.8.0}{2013/11/12}{Compatibility with parledgroup option of eledpar package.}
 % \changes{v1.9.0}{2013/11/24}{Compatibility with \Lpack{eledpar} new tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -2345,6 +2346,10 @@
 % \item For the non-starred sections, use the optional argument \meta{text} to provide the text to the table of contents.
 % \item The \cs{ledchapter} doesn't open a new page. You must use \cs{beforeledchapter} before. This also closes a \cs{pstart} and opens a new.
 % \end{enumerate}
+%
+% \changes{v1.8.0}{2013/11/12}{Add \cs{ledsecnolinenumber} option.}
+% If you use \Lpack{eledpar}, you must use these commands to have parallel sectioning. 
+% However, if you want not to have lineation for sectioning commands, use the \verb+ledsecnolinenumber+ option when loading eledmac. Or add \cs{ledsecnolinenumbertrue} in your preamble.
 % \changes{v1.2}{2012/10/13}{Add \cs{ledsectnotoc} command.}
 % \DescribeMacro{\ledsectnotoc}
 % You can create a table of contents that indexes only the titles that appear on the left side of the edition: 
@@ -2784,12 +2789,15 @@
 \newif\ifparapparatus@
 \newif\ifnoquotation@
 \newif\iflednopbinverse
+\newif\ifparledgroup
+\newif\ifledsecnolinenumber
 \parapparatus@false
 \DeclareOption{noquotation}{\noquotation@true}
 \DeclareOption{final}{\ledfinaltrue}
 \DeclareOption{draft}{\ledfinalfalse}
 \DeclareOption{parapparatus}{\parapparatus@true}
 \DeclareOption{nopbinverse}{\lednopbinversetrue}
+\DeclareOption{ledsecnolinenumber}{\ledsecnolinenumbertrue}
 \ExecuteOptions{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
@@ -3251,52 +3259,53 @@
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
 % \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
-% \changes{v1.4.7}{2012/06/07}{Compatibility of sectionning commands with \cs{autopar}.}
+% \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
+% \changes{v1.8.0}{2013/11/12}{Correction of sectioning commands in parallel texts.}
 % \cs{initnumbering@sectcmd} defines sectioning commands inside numbered section.
 % It also defines quotation environment. 
-% Note: this supposes that the user didn't change \cs{chapter}.
+% Note: this assumes that the user didn't change \cs{chapter}.
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
 %    \begin{macrocode}
 \newcommand{\initnumbering@sectcmd}{
     \newcommand{\ledsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
         \pstart%
-        \leavevmode\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \newcommand{\ledsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \newcommand{\ledsubsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsubsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \ifl@dpairing\else\leavevmode\fi\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
@@ -4145,7 +4154,7 @@
 % \end{macro}
 %
 % \DescribeMacro{\resetprevline@}
-% Inside the apparatus, at each note, the line number is memorized in a macro called \cs{prevlineX},
+% Inside the apparatus, at each note, the line number is stored in a macro called \cs{prevlineX},
 % where X is the letter of the current series.
 % This macro is called when using \cs{numberonlyfirstinline}.
 % This macro must be reset at the same time as the line number.
@@ -4159,11 +4168,11 @@
 %    \end{macrocode}
 % \end{macro}
 % \DescribeMacro{\resetprevpage@num}
-% Inside the apparatus, at each note, the page number is memorized in a macro called \cs{prevpageX@num},
+% Inside the apparatus, at each note, the page number is stored in a macro called \cs{prevpageX@num},
 % where X is the letter of the current series.
 % This macro is called when using \cs{parafootsep}.
-% This macro must be reset at the beginingoup of each numbered section
-% The \cs{resetprevpage@} does this resetting for every series.
+% This macro must be reset at the begining of each numbered section
+% The \cs{resetprevpage@} command resets this macro for every series.
 % \begin{macro}{\resetprevpage@}
 %    \begin{macrocode}
 \newcommand*{\resetprevpage@num}{%
@@ -4473,10 +4482,10 @@
 \newcommand*{\sub@on}{\ifsublines@
      \let\sub@change=\relax
   \else
-     \def\sub@change{1}%
+     \def\sub@changes{1}%
   \fi}
 \newcommand*{\sub@off}{\ifsublines@
-     \def\sub@change{-1}%
+     \def\sub@changes{-1}%
   \else
      \let\sub@change=\relax
   \fi}
@@ -6120,7 +6129,7 @@
 % No number is attached if \cs{ifnumberline} is FALSE (the normal value is TRUE).
 % \changes{v0.15}{2012/06/11}{Line numbering can be disabled.}
 %    \begin{macrocode}
-\ifnumberline
+\ifledgroupnotesL@\else\ifnumberline
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
@@ -6250,6 +6259,7 @@
 % $2$; $3$ advances to $0$; other values are unchanged.
 %    \begin{macrocode}
   \f@x@l@cks
+\fi
 \fi
 \fi
 }
@@ -7134,9 +7144,21 @@
 %    \begin{macrocode}
 \newcommand*{\mpnormalfootgroup}[1]{{
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
- {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor%
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
+  \setlength{\parindent}{0pt}
+ {\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}
  \unvbox\csname mp#1footins\endcsname}}
 
 %    \end{macrocode}
@@ -7576,8 +7598,19 @@
 %    \begin{macrocode}
 \newcommand*{\mppara@footgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}%
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
   \unvbox\csname mp#1footins\endcsname 
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
@@ -7608,6 +7641,7 @@
 % \subsubsection{Insertion of the footnotes separator}
 %The command \cs{insertparafootsep}\marg{series} must be called at the beginning of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
+% \changes{v1.8.0}{2013/11/12}{Correct \cs{parafootsep} when using with ledgroup.}
 % \begin{macro}{\insertparafootsep}
 %    \begin{macrocode}
 \newcommand{\insertparafootsep}[1]{%
@@ -7811,8 +7845,19 @@
 %    \begin{macrocode}
 \newcommand*{\mpthreecolfootgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
@@ -7907,8 +7952,19 @@
 %    \begin{macrocode}
 \newcommand*{\mptwocolfootgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
    {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
@@ -8230,8 +8286,19 @@
 %    \begin{macrocode}
 \newcommand*{\mpnormalfootgroupX}[1]{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \unvbox\@nameuse{mpfootins#1}}
 
 %    \end{macrocode}
@@ -8391,8 +8458,19 @@
   \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
 \newcommand*{\mptwocolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
@@ -8481,8 +8559,19 @@
   \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
 \newcommand*{\mpthreecolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
@@ -8613,8 +8702,20 @@
   \noindent\unhbox0\par}
 \newcommand*{\mppara@footgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup
+    \leavevmode%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \unvbox\csname mpfootins#1\endcsname
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
@@ -9020,6 +9121,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhookcommand@series@reload}
+% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn'nt work.}
 % \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
 % but the commands created by this macro also reload the series displaying (normal, paragraph, twocol)
 %    \begin{macrocode}
@@ -10428,7 +10530,17 @@
       \flush@notes
     \fi
   \fi
-  \def\do##1{\ifvoid\csuse{mp##1footins}\else\csuse{mp##1footgroup}{##1}\fi}%
+  \def\do##1{
+    \ifvoid\csuse{mp##1footins}\else%
+      \ifl@dpairing\ifparledgroup%
+        \ifledRcol%
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}
+        \else%
+           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}
+        \fi%
+       \fi\fi%
+       \csuse{mp##1footgroup}{##1}%
+  \fi}%
   \dolistloop{\@series}%
   }
 
@@ -10510,6 +10622,15 @@
     \vskip\skip\@mpfootins
     \normalcolor
     \footnoterule
+    \ifparledgroup
+      \ifl@dpairing
+        \ifledRcol
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@mpfootins}
+        \else
+          \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@mpfootins}
+        \fi
+      \fi
+    \fi
     \unvbox\@mpfootins}
 
 %    \end{macrocode}
@@ -10599,6 +10720,15 @@
 %    \end{macrocode}
 % \end{environment}
 %
+% \begin{macro}{\ifledgroupnotesL@}
+% \begin{macro}{\ifledgroupnotesR@}
+% These boolean tests check if we are in the notes of a ledgroup.  If we are, we don't number the lines.
+%    \begin{macrocode}
+\newif\ifledgroupnotesL@
+\newif\ifledgroupnotesR@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Indexing}
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
