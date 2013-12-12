@@ -736,7 +736,7 @@
 %   \Pages
 %   \end{pages}
 % \end{verbatim}
-% You can add sectioning command between each ledgroup, with the following scheme:
+% You can add sectioning a sectioning command, following this scheme:
 % \begin{verbatim}
 % \begin{..side}
 %      \beginnumbering
@@ -760,11 +760,11 @@
 % \end{..side}
 % \end{verbatim}
 % \subsection{Parallel ledgroups and \Lpack{setspace} package}.
-% If you use the \Lpack{setspace} package and want your notes in parallel ledgroups be singlespacing and not onehalfspacing or doublespacing, just add to your preamble:
+% If you use the \Lpack{setspace} package and want your notes in parallel ledgroups ledgroups to be single-spaced (not half-spaced or double-spaced), just add to your preamble:
 % \begin{verbatim}
 % \let\parledgroupnotespacing\singlespacing
 % \end{verbatim}
-% \emph{That implies, to have a correct spacing, that you don't change the font size of your notes}.
+% \emph{In effect, to have correct spacing, don't change the font size of your notes}.
 % \StopEventually{}
 %
 % \clearpage
@@ -4413,8 +4413,8 @@
               \@writelinesonpageL{1000}%
             \fi
 %    \end{macrocode}
-% Zero the left page lines count,  clear the page to get onto the facing
-% (odd, right) page, and reinit the cumuled dimen of interline correction for notes in parallel ledgroup.
+% Reset to zero the left-page line count,  clear the page to get onto the facing
+% (odd, right) page, and reinitialize the accumulated dimension of interline correction for notes in parallel ledgroup.
 %    \begin{macrocode}
             \numpagelinesL \z@
             \parledgroup@correction@notespacing@init
@@ -4956,8 +4956,8 @@
 % \begin{macro}{\parledgroup@}
 % \begin{macro}{\parledgroupseries@}
 % \begin{macro}{\parledgrouptype@}
-% The marks \cs{parledgroup}  contains information about the begining and end of notes in a parallel ledgroup.
-% \cs{parledgroupseries} contains the series of the footnote.
+% The marks \cs{parledgroup} contains information about the beginnings and endings of notes in a parallel ledgroup.
+% \cs{parledgroupseries} contains the footnote series.
 % \cs{parledgroupseries} contains the type of the footnote: critical (Xfootnote) or familiar (footnoteX).
 %    \begin{macrocode}
 \newmarks\parledgroup@
@@ -5004,7 +5004,7 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\insert@noterule@ledgroup}
-% A \cs{vskip} is not used when the box are constructed. That implies to insert it manually before ledgroup note series. 
+% A \cs{vskip} is not used when the boxes are constructed. So we insert it before ledgroup note series when paralling lines are constructed. 
 % This is the goal of \cs{insert@noterule@ledgroup}
 %    \begin{macrocode}
 \newcommand{\insert@noterule@ledgroup}[1]{
@@ -5036,7 +5036,7 @@
 % \end{macro}
 % \begin{macro}{\parledgroup@notespacing@correction}
 % \begin{macro}{\parledgroup@notespacing@set@correction}
-% \cs{parledgroup@notespacing@correction} is the difference between normal line skip and line skip in note. It's set by \cs{parledgroup@notespacing@set@correction}, called at the begining of \cs{Pages}.
+% \cs{parledgroup@notespacing@correction} is the difference between a normal line skip and a line skip in a note. It's set by \cs{parledgroup@notespacing@set@correction}, called at the begining of \cs{Pages}.
 %    \begin{macrocode}
 \dimdef{\parledgroup@notespacing@correction}{0pt}
 \newcommand{\parledgroup@notespacing@set@correction}{%
@@ -5047,22 +5047,22 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\parledgroup@correction@notespacing@init}
-% \cs{parledgroup@correction@notespacing@init} sets the value of cumuled corrections of note spacing to 0~pt. 
+% \cs{parledgroup@correction@notespacing@init} sets the value of accumulated corrections of note spacing to 0~pt. 
 % It's called at the begining of each pages AND at the end of each ledgroup.
 %    \begin{macrocode}
 \newcommand{\parledgroup@correction@notespacing@init}{
-  \dimdef{\parledgroup@notespacing@correction@cumuled}{0pt}
+  \dimdef{\parledgroup@notespacing@correction@accumulated}{0pt}
   \dimdef{\parledgroup@notespacing@correction@modulo}{0pt}
 }
 \parledgroup@correction@notespacing@init
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\parledgroup@correction@notespacing@final}
-% \cs{parledgroup@correction@notespacing@final} adds the total space deleted because of notes correction in a parallel ledgroup. 
+% \cs{parledgroup@correction@notespacing@final} adds the total space deleted because of correction for notes, in a parallel ledgroup. 
 % It also adds the space needed by the other side spaces between note rules and notes.  It's called after the print of each pstart/pend.
 %    \begin{macrocode}
 \newcommand{\parledgroup@correction@notespacing@final}[1]{
-  \vspace{\parledgroup@notespacing@correction@cumuled}
+  \vspace{\parledgroup@notespacing@correction@accumulated}
   \parledgroup@correction@notespacing@init%
   \ifstrequal{#1}{L}{
   	\numdef{\@checking}{\the\l@dpscL-1}
@@ -5083,19 +5083,19 @@
 % \begin{macro}{\parledgroup@correction@notespacing}
 % \cs{parledgroup@correction@notespacing} is used before each printed line. 
 % If it's a line of notes in parallel ledgroup, the space \cs{parledgroup@notespacing@correction} is decreased, to make interline space correct.
-% The decreased space is adding to \cs{parledgroup@notespacing@correction@cumuled} and \cs{parledgroup@notespacing@correction@modulo}. 
+% The decreased space is added to \cs{parledgroup@notespacing@correction@accumulated} and \cs{parledgroup@notespacing@correction@modulo}. 
 % If \cs{parledgroup@notespacing@correction@modulo} is equal or greater than \cs{baselineskip}:
 % \begin{itemize}
-%    \item It's decreased by \cs{baselineskip}.
+%    \item It is decreased by \cs{baselineskip}.
 %    \item The total of line number in the current page is decreased by one.
 % \end{itemize}
 % For example, suppose an normal interline of 24~pt and interline for note of 12~pt.
-% That means that two line of notes take the place of one normal line. So every two lines of notes, the total of lines in the current place is decreased by one.
+% That means that the two lines of notes take the place of one normal line.  For every two lines of notes, the line total for the current place is decreased by one.
 %    \begin{macrocode}{}
 \newcommand{\parledgroup@correction@notespacing}[1]{%
     \csuse{ifledgroupnotes#1@}%
       \vspace{-\parledgroup@notespacing@correction}%
-      \dimdef{\parledgroup@notespacing@correction@cumuled}{\parledgroup@notespacing@correction@cumuled+\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@accumulated}{\parledgroup@notespacing@correction@accumulated+\parledgroup@notespacing@correction}%
       \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
       \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}{\advance\numpagelinesL -\@ne%
       \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo-\baselineskip}%    
@@ -5151,7 +5151,8 @@
 % \setstanzaindents{4,0}
 % \beginnumbering
 %     \stanza
-%   A very long verse should be sometime hanged. The position of the hang verse is fixed.\&
+%   A very long verse should be sometime hanged. 
+%  The position of the hanging verse is fixed.\&
 % \endnumbering
 %
 % With the modification of \cs{hangingsymbol}:
