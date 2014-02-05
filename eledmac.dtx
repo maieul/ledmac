@@ -9634,14 +9634,21 @@
 % \begin{macro}{\doxtrafeet}
 % \cs{doxtrafeet} is the code extending \cs{@makecol} to cater for
 % the extra \Eledmac{} feet. We have two classes of extra footnotes.
-% We order the footnote inserts so that the regular footnotes are first,
+% By default, we order the footnote inserts so that the regular footnotes are first,
 % then class 1\index{class 1 feet} (familiar footnotes) and finally 
 % class 2\index{class 2 feet} (critical footnotes).
 % \changes{v0.2.1}{2003/09/13}{Renamed \cs{doxtrafeet} to \cs{l@ddoxtrafeet}}
+% \changes{v1.9.0}{2014/02/05}{Add \cs{fnpos} to choice the order of footnotes.}
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
-  \doxtrafeeti 
-  \doxtrafeetii}
+  \IfStrEq{familiar-critical}{\@fnpos}
+    {\doxtrafeeti\doxtrafeetii}%
+    {%
+    \IfStrEq{critical-familiar}{\@fnpos}%
+        {\doxtrafeetii\doxtrafeeti}%
+        {\doxtrafeeti\doxtrafeetii}%
+    }%
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10452,14 +10459,22 @@
 %
 % \begin{macro}{\l@dfeetbeginmini}
 % \begin{macro}{\l@dfeetendmini}
+% \changes{v1.9.0}{2014/02/05}{Add \cs{mpfnpos} to choice the order of footnotes in minipage / ledgroup.}
 % These will be the hooks in \verb?\@iiiminpage? and \verb?\endminipage?
 % They can be extended to handle other things if necessary.
 % \changes{v0.4}{2004/02/29}{Added \cs{l@dfeetbeginmini}, \cs{l@dfeetendmini}
 %                           and all their supporting code}
 %    \begin{macrocode}
 \newcommand*{\l@dfeetbeginmini}{\l@dedbeginmini\l@dfambeginmini}
-\newcommand*{\l@dfeetendmini}{\l@dedendmini\l@dfamendmini}
-
+\newcommand*{\l@dfeetendmini}{%
+	\IfStrEq{critical-familiar}{\@mpfnpos}%
+		{\l@dedendmini\l@dfamendmini}%
+		{%
+			\IfStrEq{familiar-critical}{\@mpfnpos}%
+				{\l@dfamendmini\l@dedendmini}%
+				{\l@dedendmini\l@dfamendmini}%
+		}%
+	}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
