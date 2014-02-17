@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8909}
+% \CheckSum{8918}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -180,6 +180,7 @@
 % \changes{v1.8.0}{2013/12/13}{Compatibility with parledgroup option of eledpar package.}
 % \changes{v1.8.2}{2014/01/31}{Debug compatibility problem with hebrew option of babel package.}
 % \changes{v1.8.3}{2014/02/03}{Fixes spurious spaces add by v1.7.0.}
+% \changes{v1.10.0}{2014/02/17}{Add \cs{pstartref} and  \cs{xpstartref} to refer to a pstart number (extension of \cs{edlabel}).}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -1797,15 +1798,16 @@
 % \DescribeMacro{\edpageref}
 % \DescribeMacro{\lineref}
 % \DescribeMacro{\sublineref}
+% \DescribeMacro{\pstartref}
 % Elsewhere in the text, either before or after the \cs{edlabel},
 % you can refer to its location via \cs{edpageref}\marg{lab}, or
-% \cs{lineref}\marg{lab}, or \cs{sublineref}\marg{lab}. These commands
-% will produce, respectively, the page, line and sub-line on which
+% \cs{lineref}\marg{lab}, \cs{sublineref}\marg{lab}, or \cs{pstartref}\marg{lab}. These commands
+% will produce, respectively, the page, line, sub-line and pstart on which
 % the \cs{edlabel}\marg{lab} command occurred.
 %
 % An \cs{edlabel} command may appear in the main text, or in the
 % first argument of \cs{edtext}, but not in the apparatus itself.  But
-% \cs{edpageref}, \cs{lineref} and \cs{sublineref} commands can also be used in
+% \cs{edpageref}, \cs{lineref}, \cs{sublineref}, \cs{pstartref} commands can also be used in
 % the apparatus to refer to \cs{edlabel}'s in the text.
 %
 % The \cs{edlabel} command works by writing macros to the LaTeX
@@ -1832,6 +1834,7 @@
 % \DescribeMacro{\xpageref}
 % \DescribeMacro{\xlineref}
 % \DescribeMacro{\xsublineref}
+% \DescribeMacro{\xpstartref}
 % However, there are situations in which you'll want \Eledmac{} to
 % return a number without displaying any
 % warning messages about undefined labels or the like: if you want to
@@ -1840,7 +1843,7 @@
 % is missing. This is the case for references used within the
 % argument to \cs{linenum}, for example. For this situation,
 % three variants of the reference commands, with the \verb"x"
-% prefix, are supplied: \cs{xpageref}, \cs{xlineref}, and \cs{xsublineref}.
+% prefix, are supplied: \cs{xpageref}, \cs{xlineref}, \cs{xsublineref} and \cs{xpstartref}.
 % They have these limitations:
 % they will not tell you if the label is undefined, and they must
 % be preceded in the file by at least one of the four other
@@ -2767,7 +2770,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/02/05 v1.9.0 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/02/17 v1.10.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -9935,7 +9938,7 @@
 % scheme might also have had problems in this area).
 %    \begin{macrocode}
   \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|{#1}}%
+    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
   \@esphack}
 
 %    \end{macrocode}
@@ -9980,11 +9983,11 @@
 % has been previously defined (by a class or package).
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4{%
-  \expandafter\ifx\csname the@label#4\endcsname \relax\else
-    \led@warn@DuplicateLabel{#4}%
+\def\l@dmake@labels#1|#2|#3|#4|#5{%
+  \expandafter\ifx\csname the@label#5\endcsname \relax\else
+    \led@warn@DuplicateLabel{#5}%
   \fi
-  \expandafter\gdef\csname the@label#4\endcsname{#1|#2|#3}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -9996,7 +9999,7 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5{}%
 }
 
 %    \end{macrocode}
@@ -10068,6 +10071,15 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\pstarteref}
+% \begin{macro}{\xpstartref}
+% If the specified label exists, \cs{pstartref} gives its pstart number.
+%    \begin{macrocode}
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\l@dgetref@num{4}{#1}}
+\newcommand*{\xpstartref}[1]{\l@dgetref@num{4}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % The next three macros are used by the referencing commands above,
 % and do the job of extracting the right numbers from the label
 % macro that contains the page, line, and sub-line number.
