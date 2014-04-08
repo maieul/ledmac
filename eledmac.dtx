@@ -9066,6 +9066,7 @@
 %    \end{macrocode}
 % The counters.
 %  \begin{macrocode}
+    \newcounter{l@footnote#1}%Used in tabular tabular
     \newcounter{footnote#1}
       \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
 %  \end{macrocode}
@@ -10998,6 +10999,9 @@
 % 
 %    \begin{macrocode}
 \newcommand{\l@dcollect@body}[1]{%
+  \def\do##1{\setcounter{l@footnote##1}{\csuse{thefootnote##1}}}%
+  \dolistloop{\@series}%
+  % First, set the counter
   \l@denvbody{\expandafter#1\expandafter{\the\l@denvbody}}%
   \edef\processl@denvbody{\the\l@denvbody\noexpand\end{\@currenvir}}%
   \l@denvbody\@emptytoks \def\l@dbegin@stack{b}%
@@ -11793,7 +11797,11 @@
 % \begin{macro}{\l@modeforfootnoteX}
 % Modify various macro when familiar footnote is used.
 \newcommand{\l@modeforfootnoteX}{%
-  \def\do##1{\csdef{footnote##1}{\csuse{@footnotemark##1}\@gobble}}%
+  \def\do##1{\csdef{footnote##1}{%
+    \stepcounter{l@footnote##1}%
+    \numdef{\disp}{\csuse{thel@footnote##1}/2}%
+    \protected@csxdef{@thefnmark##1}{\disp}%
+    \csuse{@footnotemark##1}\@gobble}}%
   \dolistloop{\@series}%
   \def\footnote{\@footnotemark\@gobble}%
   }
