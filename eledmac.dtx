@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8889}
+% \CheckSum{8925}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -179,10 +179,16 @@
 % \changes{v1.6.1}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.8.0}{2013/12/13}{Compatibility with parledgroup option of eledpar package.}
 % \changes{v1.8.2}{2014/01/31}{Debug compatibility problem with hebrew option of babel package.}
-% \changes{v1.8.3}{2014/02/03}{Fixes spurious spaces add by v1.7.0.}
-% \changes{v1.10.0}{2014/02/27}{Add \cs{pstartref} and  \cs{xpstartref} to refer to a pstart number (extension of \cs{edlabel}).}
+% \changes{v1.8.3}{2014/02/03}{Fixes spurious spaces added by v1.7.0.}
+% \changes{v1.10.0}{2014/02/27}{Add \cs{pstartref} and \cs{xpstartref} to refer to a pstart number (extension of \cs{edlabel}).}
 % \changes{v1.10.1}{2014/02/28}{Compatibility with \textsf{cleveref}.}
 % \changes{v1.10.2}{2014/03/17}{Compatibility of stanza with v1.8a of babel-greek.}
+% \changes{v1.10.3}{2014/04/07}{Debug of cross-referencing.}
+% \changes{v1.10.4}{2014/04/09}{Debug of critical notes in edtabular environnment.}
+% \changes{v1.10.5}{2014/04/14}{Debug of \cs{xxref}.}
+% \changes{v1.10.5}{2014/04/14}{Debug of \cs{pausenumbering}.}
+% \changes{v1.10.6}{2014/05/01}{Debug of interaction between \cs{autopar} and\cs{pausenumbering}.}
+% \changes{v1.11.1}{2014/05/29}{Correct a bug when a critical note starts by plus or minus.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -278,7 +284,7 @@
 % who would prefer 
 % to use LaTeX. The principal functions provided by the package
 % are marginal line numbering and multiple series of
-% footnotes and endnotes keyed to line numbers. 
+% foot- and endnotes keyed to line numbers.
 %
 % In addition to the \edmac, \tabmac{} and \edstanza{} functions the package
 % also provides for index entries keyed to both page and line numbers.
@@ -557,6 +563,8 @@
 % They can make some little troubles with old customization. 
 % That is why a new name was selected: \emph{eledmac}. To migrate from ledmac to eledmac, please read Appendix \ref{migration} (p.\pageref{migration}).
 %
+% \subsubsection{List of works edited with (e)ledmac}
+% A collaborative list of works edited with (e)ledmac is available on \url{https://www.zotero.org/groups/critical_editions_typeset_with_edmac_ledmac_and_eledmac/items}. Please adds your own edition made with (e)ledmac.
 %
 % \section{The \Eledmac{} package}\label{howto}
 %
@@ -1317,6 +1325,14 @@
 % \DescribeMacro{\Xendnotefontsize}
 % \cs{Xendnotefontsize}\oarg{s}\marg{l} is used to define the font size of end critical footnotes of the series. The default value is \cs{footnotesize}.
 % The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+% \subsection{Font of the lemma}
+% \changes{v1.11.0}{2014/05/09}{Add hooks to disable the font selection for lemma in footnote.}
+% \DescribeMacro{\Xlemmadisablefontselection}
+% By default, font of the lemma in footnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command  \cs{Xlemmadisablefontselection}\oarg{s} allows to disable it for a specific series.
+%
+% \DescribeMacro{\Xendlemmadisablefontselection}
+% By default, font of the lemma in endnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command  \cs{Xendlemmadisablefontselection}\oarg{s} allows to disable it for a specific series.
+%
 %
 % \subsubsection{Styles of notes content}
 %
@@ -1366,7 +1382,7 @@
 % You can add some space after a note by using \cs{afternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\parafootsep}
-% For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
+% For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
 %
 %\subsubsection{Options for block of notes}
 % \changes{v1.1}{2012/09/12}{New options for block of notes.}
@@ -1810,9 +1826,9 @@
 % An \cs{edlabel} command may appear in the main text, or in the
 % first argument of \cs{edtext}, but not in the apparatus itself.  But
 % \cs{edpageref}, \cs{lineref}, \cs{sublineref}, \cs{pstartref} commands can also be used in
-% the apparatus to refer to \cs{edlabel}'s in the text.
+% the apparatus to refer to \cs{edlabel}s in the text.
 %
-% The \cs{edlabel} command works by writing macros to the LaTeX
+% The \cs{edlabel} command works by writing macros to LaTeX
 % \file{.aux} file. You will need to process
 % your document through LaTeX twice in order for the references to
 % be resolved.
@@ -2015,13 +2031,13 @@
 % \subsection{Position of the familiar footnotes}
 % \DescribeMacro{\fnpos}\DescribeMacro{\mpfnpos}
 % There is a historical incoherence in \Lpack{(e)ledmac}. The familiar footnotes are
-% before  the critical footnotes in a normal page, but after in a minipage or in a ledgroup.
+% before the critical footnotes in a normal page, but after in a minipage or in a ledgroup.
 % However, it is possible to change the relative position of both types of footnotes.
-% If you want to have familiar footnotes after critical in a normal page, use:
+% If you want to have familiar footnotes after critical footnotes in a normal page, use:
 % \begin{verbatim}
 % \fnpos{critical-familiar}
 % \end{verbatim}
-% In other way, if you want  in a minipage or in a ledgroup to have critical footnotes after familiar, use:
+% Or, if you want a minipage or ledgroup to have critical footnotes after familiar footnotes, use:
 % \begin{verbatim}
 % \mpfnpos{familiar-critical}
 % \end{verbatim}
@@ -2360,7 +2376,7 @@
 %
 % \changes{v1.8.0}{2013/12/13}{Add \cs{ledsecnolinenumber} option.}
 % If you use \Lpack{eledpar}, you must use these commands to have parallel sectioning. 
-% However, if you want not to have lineation for sectioning commands, use the \verb+ledsecnolinenumber+ option when loading eledmac. Or add \cs{ledsecnolinenumbertrue} in your preamble.
+% However, if you don't want lineation in sectioning command, use the \verb+ledsecnolinenumber+ option when loading eledmac. Or add \cs{ledsecnolinenumbertrue} in your preamble.
 % \changes{v1.2}{2012/10/13}{Add \cs{ledsectnotoc} command.}
 % \DescribeMacro{\ledsectnotoc}
 % You can create a table of contents that indexes only the titles that appear on the left side of the edition: 
@@ -2579,16 +2595,16 @@
 % \subsection{Parallel typesetting}
 %
 %
-% Peter Wilson have developed the Ledpar package
-% as an adjunct to \Eledmac{} specifically for parallel typesetting
+% Peter Wilson has developed the Ledpar package
+% as an extension to \Eledmac{} specifically for parallel typesetting
 % of critical texts. This also cooperates with the \Lpack{babel}
-% package for typesetting in multiple languages. The package is called \emph{eledpar} since september 2012.
+% package for typesetting in multiple languages. The package has been called \emph{eledpar} since September 2012.
 
 % He also developed 
 % the \Lpack{ledarab} package for 
-% handling parallel arabic text in critical editions.
-% Howerer, this package is not maintened by Maïeul Rouquette. 
-% You should use the possibility of modern TeX processor, like Xe(La)TeX
+% handling parallel Arabic text in critical editions.
+% However, this package is not maintened by Maïeul Rouquette. 
+% You should use the capabilities of a modern TeX processor, like Xe(La)TeX
 %
 %
 %
@@ -2772,7 +2788,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/03/17 v1.10.2 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/05/29 v1.11.1 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3443,6 +3459,7 @@
 % behind these macros.}
 %    \begin{macrocode}
 \newcommand{\pausenumbering}{%
+  \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
 %    \end{macrocode}
 % The \cs{resumenumbering} macro is a bit more involved, but not much.
@@ -3454,16 +3471,19 @@
 %    \begin{macrocode}
 \newcommand*{\resumenumbering}{%
   \ifnumbering
+     \ifautopar@pause\autopar\fi
      \global\pst@rtedLtrue
      \global\advance\section@num \@ne
      \led@mess@SectionContinued{\the\section@num}%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
+     \begingroup
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
     \beginnumbering
   \fi}
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -3847,7 +3867,7 @@
 % \cs{xright@appenditem} expands an item and appends it to the right
 % end of a list macro. We want the expansion because we'll often
 % be using this to store the current value of a counter.
-% It creates global control sequences, like \cs{xdef}, and uses two
+% \cs{xright@appenditem} creates global control sequences, like \cs{xdef}, and uses two
 % temporary token-list registers, \cs{@toksa} and \cs{@toksb}.
 %    \begin{macrocode}
 \newtoks\led@toksa \newtoks\led@toksb
@@ -4876,19 +4896,17 @@
     {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
-  {%
-\numdef{\next@absline}{\the\absline@num+1}%
-\xifinlistcs{\next@absline}{l@prev@nopb}%
-  {\xifinlistcs{\the\absline@num}{normal@page@break}%
-    {%
-    \numgdef{\nc@page}{\c@page+1}%
-    \write\linenum@out{\string\@l[\nc@page][\nc@page]}%
+    {\numdef{\next@absline}{\the\absline@num+1}%
+    \xifinlistcs{\next@absline}{l@prev@nopb}%
+      {\xifinlistcs{\the\absline@num}{normal@page@break}%
+        {\numgdef{\nc@page}{\c@page+1}%
+        \write\linenum@out{\string\@l[\nc@page][\nc@page]}%
+        }%
+        {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+      }%
+      {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
     }%
-    {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
-  }%
-  {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
-}%
-  {}%
+    {}%
   \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@l[\the\c@page][\thepage]}]%
 }
 
@@ -5787,6 +5805,15 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\ifautopar@pause}
+% We define a boolean test switched to true at the beginning
+% of the \cs{pausenumbering} command if the autopar is enabled.
+% This boolean will be tested at the begining of \cs{resumenumbering}
+% to continue the autopar if neeeded.
+%    \begin{macrocode}
+\newif\ifautopar@pause
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Processing one line}
 %
 % \begin{macro}{\do@line}\label{doline}
@@ -6792,10 +6819,10 @@
   \ledsetnormalparstuff%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
+    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}\relax%
   }}%
   #3\strut\par}
 %    \end{macrocode}
@@ -7019,7 +7046,7 @@
 %    \end{macrocode}
 % One subtlety left here is when to print a period between
 % numbers. But the only instance in which this is tricky is for the
-% ending sub-line number: it could be coming after the starting
+% ending sub-line number: it could come after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
 %    \begin{macrocode}
@@ -7520,7 +7547,7 @@
   \insertparafootsep{#4}%
   \ledsetnormalparstuff%
   \printlinefootnote{#1}{#4}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -7769,7 +7796,7 @@
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -7882,7 +7909,7 @@
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -8666,7 +8693,7 @@
 % \begin{macro}{\mpfnpos}
 % \begin{macro}{\@fnpos}
 % \begin{macro}{\@mpfnpos}
-% The \cs{fnpos} and \cs{mpfnpos} just put their arguments in \cs{@fnpos} and \cs{@mpfnpos}, which will be used later in the output routine.
+% The \cs{fnpos} and \cs{mpfnpos} simply place their arguments in \cs{@fnpos} and \cs{@mpfnpos}, which will be used later in the output routine.
 %    \begin{macrocode}
 \def\@fnpos{familiar-critical}
 \def\@mpfnpos{critical-familiar}
@@ -8792,7 +8819,7 @@
 %  to avoid clash with the amsfonts package}
 %    \begin{macrocode}
 \def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
-      \enspace{\select@lemmafont#1|#2}\enskip#3\par}}
+      \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
 \providecommand*{\@gobblethree}[3]{}
 
 \let\l@d@section=\@gobble
@@ -8898,7 +8925,7 @@
 % \begin{macro}{\doendnotes}
 % \cs{doendnotes} is
 % the command you use to print one series of endnotes; it
-% takes one argument, the series letter of the note series you want
+% takes one argument: the series letter of the note series you want
 % to print.
 %    \begin{macrocode}
 \newcommand*{\doendnotes}[1]{\l@dend@close
@@ -8912,7 +8939,7 @@
 %
 % \begin{macro}{\noendnotes}
 % You can say \cs{noendnotes} before the first
-% \cs{beginnumbering} in your file if you aren't going to be using
+% \cs{beginnumbering} in your file if if you will not use
 % any of the endnote commands: this will suppress the creation of
 % an \file{.end} file. If you do have some lingering endnote
 % commands in your file,
@@ -8951,6 +8978,8 @@
 %    \end{macrocode}
 % \subsection{Create all commands to memorize display options}
 %    \begin{macrocode}
+	\newtoggle{Xlemmadisablefontselection@#1}
+	\newtoggle{Xendlemmadisablefontselection@#1}
     \csgdef{Xhangindent@#1}{0pt}%
     \csgdef{hangindentX@#1}{0pt}
     \csgdef{hsizetwocol@#1}{0.45 \hsize}%
@@ -9281,6 +9310,8 @@
 \newhooktoggle@series{pstartinfootnote}
 \newhooktoggle@series{onlypstartinfootnote}
 \newhooktoggle@series{nonbreakableafternumber}
+\newhooktoggle@series{Xlemmadisablefontselection}
+\newhooktoggle@series{Xendlemmadisablefontselection}
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Old commands, kept for backward compatibility}
@@ -10112,13 +10143,13 @@
 % \cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4{%
-  \ifcase #4\relax
+\def\l@dlabel@parse#1|#2|#3|#4|#5{%
+  \ifcase #5%
   \or #1%
   \or #2%
   \or #3%
+  \or #4%
   \fi}
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -10137,12 +10168,19 @@
 % semi-automatically.
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
-  {\expandafter\ifx\csname the@label#1\endcsname
-   \relax \expandafter\let\csname the@label#1\endcsname\zz@@@\fi
-   \expandafter\ifx\csname the@label#2\endcsname \relax
-   \expandafter\let\csname the@label#2\endcsname\zz@@@\fi
-   \linenum{\csname the@label#1\endcsname|%
-    \csname the@label#2\endcsname}}}
+  {%
+   \expandafter\ifx\csname the@label#1\endcsname \relax%
+     \expandafter\let\csname the@@label#1\endcsname\zz@@@%
+    \else%
+      \expandafter\def\csname the@@label#1\endcsname{\l@dgetref@num{1}{#1}|\l@dgetref@num{2}{#1}|\l@dgetref@num{3}{#1}}%
+   \fi%
+   \expandafter\ifx\csname the@label#2\endcsname \relax%
+     \expandafter\let\csname the@@label#2\endcsname\zz@@@%
+   \else%
+      \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
+   \fi%
+   \linenum{\csname the@@label#1\endcsname|%
+    \csname the@@label#2\endcsname}}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11782,7 +11820,7 @@
   \let\edindex\nulledindex
   \let\linenum\@gobble}
 \newcommand{\l@drestoreforedtext}{%
-  \def\do##1{\csgdef{##1footnote}##1{\csuse{##1@@footnote}{##1}}}
+  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
   \dolistloop{\@series}%
   \let\edindex\xedindex}
 %    \end{macrocode}
