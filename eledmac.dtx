@@ -2788,7 +2788,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/05/29 v1.11.1 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/07/21 v1.12.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -5675,11 +5675,12 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\pend}
+% \changes{v1.12.0}{2014/07/21}{New optional argument for \pend, to execute code after it.}
 % \changes{v1.6.1}{2013/10/27}{Spurious space in \cs{pend}.}
 % \cs{pend} must be used to end a numbered paragraph.
 %
 %    \begin{macrocode}
-\newcommand*{\pend}{\ifnumbering \else%
+\newcommandx*{\pend}[1][1]{\ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -5720,7 +5721,8 @@
    \pstartnumtrue%
    \fi%
   \@oldnobreak%
-  \addtocounter{pstart}{1}}
+  \addtocounter{pstart}{1}%
+  #1}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11349,6 +11351,7 @@
 % \begin{macro}{\stanza}
 % \begin{macro}{\falseverse}
 % \changes{v1.6.0}{2013/10/09}{Add \cs{falseverse} macro.}
+% \changes{v1.12.0}{2014/07/21}{Add \cs{endverse} macro, \falseverse deprecated.}
 % Now we have the components of the \verb+\stanza+ macro,
 % which appears at the start of a group of lines. This macro
 % initializes the count and checks to see if hanging indentation
@@ -11390,6 +11393,9 @@
      \global\advance\stanza@modulo-\@ne%
      \global\advance\stanza@count-\@ne%
      \relax\noexpand&\leavevmode\skipnumbering}
+   \def\noexpand\endverse##1{%
+         \noexpand\endlock\noexpand\pend[##1]\noexpand\sza@penalty\global%
+         \advance\stanza@count\@ne\noexpand\stanza@line}
    \def\noexpand&{%
          \noexpand\endlock\noexpand\pend\noexpand\sza@penalty\global%
          \advance\stanza@count\@ne\noexpand\stanza@line}%
