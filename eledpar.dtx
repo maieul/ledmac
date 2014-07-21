@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4479}
+% \CheckSum{4483}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -158,6 +158,7 @@
 % \changes{v1.3.2}{2012/12/11}{Debug with some classes.}
 % \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.5.0}{2013/11/08}{Add, as in eledmac, features to manage page breaks.}
+% \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -805,7 +806,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2013/12/13 v1.6.0 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2014/04/14 v1.7.0 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -3356,7 +3357,7 @@
         \advancelabel@refs
     \fi
     \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\label@refs|{#1}}%
+      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
   \else
     \write\linenum@out{\string\@lab}%
     \ifx\labelref@list\empty
@@ -3368,9 +3369,10 @@
         \advancelabel@refs
     \fi
   \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|{#1}}%
+    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
   \fi
   \@esphack}
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -3380,14 +3382,14 @@
 % of \cs{Rlineflag}.
 %
 %    \begin{macrocode}
-\def\l@dmake@labelsR#1|#2|#3|#4{%
-  \expandafter\ifx\csname the@label#4\endcsname \relax\else
+\def\l@dmake@labelsR#1|#2|#3|#4|#5{%
+  \expandafter\ifx\csname the@label#5\endcsname \relax\else
     \led@warn@DuplicateLabel{#4}%
   \fi
-  \expandafter\gdef\csname the@label#4\endcsname{#1|#2\Rlineflag|#3}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\Rlineflag|#3|#4}%
   \ignorespaces}
 \AtBeginDocument{%
-  \def\l@dmake@labelsR#1|#2|#3|#4{}%
+  \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
 }
 
 %    \end{macrocode}
