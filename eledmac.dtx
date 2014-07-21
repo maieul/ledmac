@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{8620}
+% \CheckSum{8925}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -177,6 +177,18 @@
 % \changes{v1.4.6}{2013/04/15}{Bug with memoir class introduced by 1.4.5.}
 % \changes{v1.4.8}{2013/07/02}{Corrects a bug with parallel texts introduced by 1.1.}
 % \changes{v1.6.1}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
+% \changes{v1.8.0}{2013/12/13}{Compatibility with parledgroup option of eledpar package.}
+% \changes{v1.8.2}{2014/01/31}{Debug compatibility problem with hebrew option of babel package.}
+% \changes{v1.8.3}{2014/02/03}{Fixes spurious spaces added by v1.7.0.}
+% \changes{v1.10.0}{2014/02/27}{Add \cs{pstartref} and \cs{xpstartref} to refer to a pstart number (extension of \cs{edlabel}).}
+% \changes{v1.10.1}{2014/02/28}{Compatibility with \textsf{cleveref}.}
+% \changes{v1.10.2}{2014/03/17}{Compatibility of stanza with v1.8a of babel-greek.}
+% \changes{v1.10.3}{2014/04/07}{Debug of cross-referencing.}
+% \changes{v1.10.4}{2014/04/09}{Debug of critical notes in edtabular environnment.}
+% \changes{v1.10.5}{2014/04/14}{Debug of \cs{xxref}.}
+% \changes{v1.10.5}{2014/04/14}{Debug of \cs{pausenumbering}.}
+% \changes{v1.10.6}{2014/05/01}{Debug of interaction between \cs{autopar} and\cs{pausenumbering}.}
+% \changes{v1.11.1}{2014/05/29}{Correct a bug when a critical note starts by plus or minus.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -272,7 +284,7 @@
 % who would prefer 
 % to use LaTeX. The principal functions provided by the package
 % are marginal line numbering and multiple series of
-% footnotes and endnotes keyed to line numbers. 
+% foot- and endnotes keyed to line numbers.
 %
 % In addition to the \edmac, \tabmac{} and \edstanza{} functions the package
 % also provides for index entries keyed to both page and line numbers.
@@ -648,7 +660,7 @@
 % \end{verbatim}
 % \egmid
 % {\parskip0pt \count255=0
-% \everypar={\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
+% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
 % This is a sample paragraph\par
 % with lines numbered\par
 % automatically.\smallskip
@@ -657,11 +669,11 @@
 % has its lines automatically\par
 % numbered.\smallskip
 %
-% \everypar={\hbox to 1.5em{\hfil}}
+% \everypar{\hbox to 1.5em{\hfil}}
 % The lines of this paragraph\par
 % are not numbered.\smallskip
 %
-% \everypar={\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
+% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
 % And here the numbering\par
 % begins again.\par}
 % \egend
@@ -687,7 +699,7 @@
 % \end{verbatim}
 % \egmid
 % {\parskip0pt \count255=0
-% \everypar={\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
+% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
 % A paragraph of numbered\par
 % text.\smallskip
 %
@@ -757,7 +769,7 @@
 % \end{verbatim}
 % \egmid
 % {\parskip0pt \count255=0
-% \everypar={\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
+% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
 % Paragraph of\par
 % text.\medskip
 %
@@ -1288,15 +1300,15 @@
 % With \cs{inplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 1~em. 
 %
 % \subsubsection{Font style}
-% \DescribeMacro{Xnotenumfont}
+% \DescribeMacro{\Xnotenumfont}
 % \cs{Xnotenumfont}\oarg{s}\marg{command} is used to change the font style for line numbers in critical footnotes ;  
 % \meta{command} must be one (or more) switching command, like \cs{bfseries}.
 %
-% \DescribeMacro{Xendnotenumfont}
+% \DescribeMacro{\Xendnotenumfont}
 % \cs{Xendnotenumfont}\oarg{s}\marg{command} is used to change the font style for line numbers in critical footnotes. 
 % \meta{command} must be one (or more) switching command, like \cs{bfseries}.
 %
-% \DescribeMacro{notenumfontX}
+% \DescribeMacro{\notenumfontX}
 % \cs{notenumfontX}\oarg{s}\marg{command} is used to change the font style for note numbers in familiar footnotes.  
 % \meta{command} must be one (or more) switching command, like \cs{bfseries}.
 %
@@ -1311,6 +1323,14 @@
 % \DescribeMacro{\Xendnotefontsize}
 % \cs{Xendnotefontsize}\oarg{s}\marg{l} is used to define the font size of end critical footnotes of the series. The default value is \cs{footnotesize}.
 % The \meta{command} must not be a size in pt, but a standard LaTeX size, like \cs{small}.
+% \subsection{Font of the lemma}
+% \changes{v1.11.0}{2014/05/09}{Add hooks to disable the font selection for lemma in footnote.}
+% \DescribeMacro{\Xlemmadisablefontselection}
+% By default, font of the lemma in footnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command  \cs{Xlemmadisablefontselection}\oarg{s} allows to disable it for a specific series.
+%
+% \DescribeMacro{\Xendlemmadisablefontselection}
+% By default, font of the lemma in endnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command  \cs{Xendlemmadisablefontselection}\oarg{s} allows to disable it for a specific series.
+%
 %
 % \subsubsection{Styles of notes content}
 %
@@ -1360,7 +1380,14 @@
 % You can add some space after a note by using \cs{afternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\parafootsep}
-% For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+$||$+.
+% For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
+%
+% \changes{v1.12.0}{2014/07/21}{New options to ragg paragraphed notes.}
+% \DescribeMacro{\Xragged}
+% Text in paragraphed critical notes is justified, but you can use \cs{Xragged}\oarg{s}+{Left}+ if you want it to be ragged Left, or \cs{Xragged}\oarg{s}+{Right} if you want it to be ragged Right.
+
+% \DescribeMacro{\raggedX}
+% Text in paragraphed footnotes is justified, but you can use \cs{raggedX}\oarg{s}+{Left}+ if you want it to be ragged Left, or \cs{raggedX}\oarg{s}+{Right} if you want it to be ragged Right.
 %
 %\subsubsection{Options for block of notes}
 % \changes{v1.1}{2012/09/12}{New options for block of notes.}
@@ -1794,18 +1821,19 @@
 % \DescribeMacro{\edpageref}
 % \DescribeMacro{\lineref}
 % \DescribeMacro{\sublineref}
+% \DescribeMacro{\pstartref}
 % Elsewhere in the text, either before or after the \cs{edlabel},
 % you can refer to its location via \cs{edpageref}\marg{lab}, or
-% \cs{lineref}\marg{lab}, or \cs{sublineref}\marg{lab}. These commands
-% will produce, respectively, the page, line and sub-line on which
+% \cs{lineref}\marg{lab}, \cs{sublineref}\marg{lab}, or \cs{pstartref}\marg{lab}. These commands
+% will produce, respectively, the page, line, sub-line and pstart on which
 % the \cs{edlabel}\marg{lab} command occurred.
 %
 % An \cs{edlabel} command may appear in the main text, or in the
 % first argument of \cs{edtext}, but not in the apparatus itself.  But
-% \cs{edpageref}, \cs{lineref} and \cs{sublineref} commands can also be used in
-% the apparatus to refer to \cs{edlabel}'s in the text.
+% \cs{edpageref}, \cs{lineref}, \cs{sublineref}, \cs{pstartref} commands can also be used in
+% the apparatus to refer to \cs{edlabel}s in the text.
 %
-% The \cs{edlabel} command works by writing macros to the LaTeX
+% The \cs{edlabel} command works by writing macros to LaTeX
 % \file{.aux} file. You will need to process
 % your document through LaTeX twice in order for the references to
 % be resolved.
@@ -1829,6 +1857,7 @@
 % \DescribeMacro{\xpageref}
 % \DescribeMacro{\xlineref}
 % \DescribeMacro{\xsublineref}
+% \DescribeMacro{\xpstartref}
 % However, there are situations in which you'll want \Eledmac{} to
 % return a number without displaying any
 % warning messages about undefined labels or the like: if you want to
@@ -1837,7 +1866,7 @@
 % is missing. This is the case for references used within the
 % argument to \cs{linenum}, for example. For this situation,
 % three variants of the reference commands, with the \verb"x"
-% prefix, are supplied: \cs{xpageref}, \cs{xlineref}, and \cs{xsublineref}.
+% prefix, are supplied: \cs{xpageref}, \cs{xlineref}, \cs{xsublineref} and \cs{xpstartref}.
 % They have these limitations:
 % they will not tell you if the label is undefined, and they must
 % be preceded in the file by at least one of the four other
@@ -2004,6 +2033,19 @@
 %
 % Additional footnote series can be easily defined: you just have to use \cs{newseries}, defined above (see \ref{newseries} p.\pageref{newseries}).
 %
+% \subsection{Position of the familiar footnotes}
+% \DescribeMacro{\fnpos}\DescribeMacro{\mpfnpos}
+% There is a historical incoherence in \Lpack{(e)ledmac}. The familiar footnotes are
+% before the critical footnotes in a normal page, but after in a minipage or in a ledgroup.
+% However, it is possible to change the relative position of both types of footnotes.
+% If you want to have familiar footnotes after critical footnotes in a normal page, use:
+% \begin{verbatim}
+% \fnpos{critical-familiar}
+% \end{verbatim}
+% Or, if you want a minipage or ledgroup to have critical footnotes after familiar footnotes, use:
+% \begin{verbatim}
+% \mpfnpos{familiar-critical}
+% \end{verbatim}
 % \section{Indexing}
 %
 % \DescribeMacro{\edindex}
@@ -2336,6 +2378,10 @@
 % \item For the non-starred sections, use the optional argument \meta{text} to provide the text to the table of contents.
 % \item The \cs{ledchapter} doesn't open a new page. You must use \cs{beforeledchapter} before. This also closes a \cs{pstart} and opens a new.
 % \end{enumerate}
+%
+% \changes{v1.8.0}{2013/12/13}{Add \cs{ledsecnolinenumber} option.}
+% If you use \Lpack{eledpar}, you must use these commands to have parallel sectioning. 
+% However, if you don't want lineation in sectioning command, use the \verb+ledsecnolinenumber+ option when loading eledmac. Or add \cs{ledsecnolinenumbertrue} in your preamble.
 % \changes{v1.2}{2012/10/13}{Add \cs{ledsectnotoc} command.}
 % \DescribeMacro{\ledsectnotoc}
 % You can create a table of contents that indexes only the titles that appear on the left side of the edition: 
@@ -2554,16 +2600,16 @@
 % \subsection{Parallel typesetting}
 %
 %
-% Peter Wilson have developed the Ledpar package
-% as an adjunct to \Eledmac{} specifically for parallel typesetting
+% Peter Wilson has developed the Ledpar package
+% as an extension to \Eledmac{} specifically for parallel typesetting
 % of critical texts. This also cooperates with the \Lpack{babel}
-% package for typesetting in multiple languages. The package is called \emph{eledpar} since september 2012.
+% package for typesetting in multiple languages. The package has been called \emph{eledpar} since September 2012.
 
 % He also developed 
 % the \Lpack{ledarab} package for 
-% handling parallel arabic text in critical editions.
-% Howerer, this package is not maintened by Maïeul Rouquette. 
-% You should use the possibility of modern TeX processor, like Xe(La)TeX
+% handling parallel Arabic text in critical editions.
+% However, this package is not maintened by Maïeul Rouquette. 
+% You should use the capabilities of a modern TeX processor, like Xe(La)TeX
 %
 %
 %
@@ -2747,7 +2793,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2013/11/08 v1.7.0 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/07/21 v1.12.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2775,12 +2821,15 @@
 \newif\ifparapparatus@
 \newif\ifnoquotation@
 \newif\iflednopbinverse
+\newif\ifparledgroup
+\newif\ifledsecnolinenumber
 \parapparatus@false
 \DeclareOption{noquotation}{\noquotation@true}
 \DeclareOption{final}{\ledfinaltrue}
 \DeclareOption{draft}{\ledfinalfalse}
 \DeclareOption{parapparatus}{\parapparatus@true}
 \DeclareOption{nopbinverse}{\lednopbinversetrue}
+\DeclareOption{ledsecnolinenumber}{\ledsecnolinenumbertrue}
 \ExecuteOptions{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
@@ -3219,6 +3268,7 @@
   \global\let\next@page@num=\relax
   \global\let\sub@change=\relax
   \resetprevline@
+  \resetprevpage@num
   }
 
 %    \end{macrocode}
@@ -3241,52 +3291,54 @@
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
 % \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
-% \changes{v1.4.7}{2012/06/07}{Compatibility of sectionning commands with \cs{autopar}.}
+% \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
+% \changes{v1.8.0}{2013/12/13}{Correction of sectioning commands in parallel texts.}
+% \changes{v1.10.0}{2014/02/27}{Correction of sectioning commands in parallel texts.}
 % \cs{initnumbering@sectcmd} defines sectioning commands inside numbered section.
 % It also defines quotation environment. 
-% Note: this supposes that the user didn't change \cs{chapter}.
+% Note: this assumes that the user didn't change \cs{chapter}.
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
 %    \begin{macrocode}
 \newcommand{\initnumbering@sectcmd}{
     \newcommand{\ledsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
         \pstart%
-        \leavevmode\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \newcommand{\ledsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \newcommand{\ledsubsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
     \WithSuffix\newcommand\ledsubsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\skipnumbering%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
-        \leavevmode\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
@@ -3412,6 +3464,7 @@
 % behind these macros.}
 %    \begin{macrocode}
 \newcommand{\pausenumbering}{%
+  \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
 %    \end{macrocode}
 % The \cs{resumenumbering} macro is a bit more involved, but not much.
@@ -3423,16 +3476,19 @@
 %    \begin{macrocode}
 \newcommand*{\resumenumbering}{%
   \ifnumbering
+     \ifautopar@pause\autopar\fi
      \global\pst@rtedLtrue
      \global\advance\section@num \@ne
      \led@mess@SectionContinued{\the\section@num}%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
+     \begingroup
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
     \beginnumbering
   \fi}
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -3811,20 +3867,20 @@
 % \end{macro}
 %
 % \begin{macro}{\xright@appenditem}
-% \begin{macro}{\@toksa}
-% \begin{macro}{\@toksb}
+% \begin{macro}{\led@toksa}
+% \begin{macro}{\led@toksb}
 % \cs{xright@appenditem} expands an item and appends it to the right
 % end of a list macro. We want the expansion because we'll often
 % be using this to store the current value of a counter.
-% It creates global control sequences, like \cs{xdef}, and uses two
+% \cs{xright@appenditem} creates global control sequences, like \cs{xdef}, and uses two
 % temporary token-list registers, \cs{@toksa} and \cs{@toksb}.
 %    \begin{macrocode}
-\newtoks\@toksa \newtoks\@toksb
-\global\@toksa={\\}
+\newtoks\led@toksa \newtoks\led@toksb
+\global\led@toksa={\\}
 \long\def\xright@appenditem#1\to#2{%
-  \global\@toksb=\expandafter{#2}%
-  \xdef#2{\the\@toksb\the\@toksa\expandafter{#1}}%
-  \global\@toksb={}}
+  \global\led@toksb=\expandafter{#2}%
+  \xdef#2{\the\led@toksb\the\led@toksa\expandafter{#1}}%
+  \global\led@toksb={}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -3836,9 +3892,9 @@
 % \cs{xright@appenditem}.
 %    \begin{macrocode}
 \long\def\xleft@appenditem#1\to#2{%
-  \global\@toksb=\expandafter{#2}%
-  \xdef#2{\the\@toksa\expandafter{#1}\the\@toksb}%
-  \global\@toksb={}}
+  \global\led@toksb=\expandafter{#2}%
+  \xdef#2{\the\led@toksa\expandafter{#1}\the\led@toksb}%
+  \global\led@toksb={}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4135,15 +4191,29 @@
 % \end{macro}
 %
 % \DescribeMacro{\resetprevline@}
-% Inside the apparatus, at each note, the line number is memorized in a macro called \cs{prevlineX},
+% Inside the apparatus, at each note, the line number is stored in a macro called \cs{prevlineX},
 % where X is the letter of the current series.
 % This macro is called when using \cs{numberonlyfirstinline}.
-% This maco must be reset at the same time as the line number.
+% This macro must be reset at the same time as the line number.
 % The \cs{resetprevline@} does this resetting for every series.
 % \begin{macro}{\resetprevline@}
 %    \begin{macrocode}
 \newcommand*{\resetprevline@}{%
     \def\do##1{\global\csundef{prevline##1}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \DescribeMacro{\resetprevpage@num}
+% Inside the apparatus, at each note, the page number is stored in a macro called \cs{prevpageX@num},
+% where X is the letter of the current series.
+% This macro is called when using \cs{parafootsep}.
+% This macro must be reset at the begining of each numbered section
+% The \cs{resetprevpage@} command resets this macro for every series.
+% \begin{macro}{\resetprevpage@}
+%    \begin{macrocode}
+\newcommand*{\resetprevpage@num}{%
+    \def\do##1{\ifcsdef{prevpage##1@num}{\global\csname prevpage##1@num\endcsname=0}{}}%
     \dolistloop{\@series}%
 }
 %    \end{macrocode}
@@ -4370,28 +4440,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\@page}
-% \cs{@page}\marg{num} marks the start of a new output page; its argument is
-% the number of that page.
-%
-% First we reset the visible line numbers, if we're numbering by page,
-% and store the page number itself in a count.
-%    \begin{macrocode}
-\newcommand*{\@page}[1]{%
-  \ifbypage@
-    \line@num \z@ \subline@num \z@
-  \fi
-  \page@num=#1\relax
-%    \end{macrocode}
-%
-% And we set a flag that tells \cs{@l} that a new page number is
-% to be set, because other associated actions shouldn't occur until the
-% next line-start occurs.
-%    \begin{macrocode}
-  \def\next@page@num{#1}}
-
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\last@page@num}
 % \begin{macro}{\fix@page}
@@ -4449,10 +4497,10 @@
 \newcommand*{\sub@on}{\ifsublines@
      \let\sub@change=\relax
   \else
-     \def\sub@change{1}%
+     \def\sub@changes{1}%
   \fi}
 \newcommand*{\sub@off}{\ifsublines@
-     \def\sub@change{-1}%
+     \def\sub@changes{-1}%
   \else
      \let\sub@change=\relax
   \fi}
@@ -4853,8 +4901,8 @@
     {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
-   {%
-\numdef{\next@absline}{\the\absline@num+1}
+  {%
+\numdef{\next@absline}{\the\absline@num+1}%
 \xifinlistcs{\next@absline}{l@prev@nopb}%
   {\xifinlistcs{\the\absline@num}{normal@page@break}%
     {%
@@ -5745,7 +5793,7 @@
     \fi
   \fi
   \autopartrue
-  \everypar={\setbox0=\lastbox
+  \everypar{\setbox0=\lastbox
     \endgraf \vskip-\parskip
     \pstart \noindent \kern\wd0 \ifnumberpstart\ifinstanza\else\thepstart\fi\fi
     \let\par=\pend}%
@@ -5759,11 +5807,20 @@
 % are in force. We'll want to do this within a footnotes, for
 % example.
 %    \begin{macrocode}
-\newcommand*{\normal@pars}{\everypar={}\let\par\endgraf}
+\newcommand*{\normal@pars}{\everypar{}\let\par\endgraf}
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\ifautopar@pause}
+% We define a boolean test switched to true at the beginning
+% of the \cs{pausenumbering} command if the autopar is enabled.
+% This boolean will be tested at the begining of \cs{resumenumbering}
+% to continue the autopar if neeeded.
+%    \begin{macrocode}
+\newif\ifautopar@pause
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Processing one line}
 %
 % \begin{macro}{\do@line}\label{doline}
@@ -6096,7 +6153,7 @@
 % No number is attached if \cs{ifnumberline} is FALSE (the normal value is TRUE).
 % \changes{v0.15}{2012/06/11}{Line numbering can be disabled.}
 %    \begin{macrocode}
-\ifnumberline
+\ifledgroupnotesL@\else\ifnumberline
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
@@ -6226,6 +6283,7 @@
 % $2$; $3$ advances to $0$; other values are unchanged.
 %    \begin{macrocode}
   \f@x@l@cks
+\fi
 \fi
 \fi
 }
@@ -6768,10 +6826,10 @@
   \ledsetnormalparstuff%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
+    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}\relax%
   }}%
   #3\strut\par}
 %    \end{macrocode}
@@ -6995,7 +7053,7 @@
 %    \end{macrocode}
 % One subtlety left here is when to print a period between
 % numbers. But the only instance in which this is tricky is for the
-% ending sub-line number: it could be coming after the starting
+% ending sub-line number: it could come after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
 %    \begin{macrocode}
@@ -7081,9 +7139,21 @@
 %    \begin{macrocode}
 \newcommand*{\mpnormalfootgroup}[1]{{
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
- {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor%
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
+  \setlength{\parindent}{0pt}
+ {\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}
  \unvbox\csname mp#1footins\endcsname}}
 
 %    \end{macrocode}
@@ -7484,7 +7554,7 @@
   \insertparafootsep{#4}%
   \ledsetnormalparstuff%
   \printlinefootnote{#1}{#4}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -7523,8 +7593,19 @@
 %    \begin{macrocode}
 \newcommand*{\mppara@footgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}%
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
   \unvbox\csname mp#1footins\endcsname 
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
@@ -7555,6 +7636,7 @@
 % \subsubsection{Insertion of the footnotes separator}
 %The command \cs{insertparafootsep}\marg{series} must be called at the beginning of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
+% \changes{v1.8.0}{2013/12/13}{Correct \cs{parafootsep} when using with ledgroup.}
 % \begin{macro}{\insertparafootsep}
 %    \begin{macrocode}
 \newcommand{\insertparafootsep}[1]{%
@@ -7721,7 +7803,7 @@
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -7758,8 +7840,19 @@
 %    \begin{macrocode}
 \newcommand*{\mpthreecolfootgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
@@ -7823,7 +7916,7 @@
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
   \strut{\printlinefootnote{#1}{#4}}%
-  {\select@lemmafont#1|#2}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
     {\hskip\csuse{inplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
@@ -7854,8 +7947,19 @@
 %    \begin{macrocode}
 \newcommand*{\mptwocolfootgroup}[1]{{%
   \vskip\skip\@nameuse{mp#1footins}
-  \normalcolor
-  \@nameuse{#1footnoterule}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{#1footnoterule}%
+    \fi%
+  \else%
+    \@nameuse{#1footnoterule}%
+  \fi%
    {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
   \expandafter
@@ -8150,8 +8254,19 @@
 %    \begin{macrocode}
 \newcommand*{\mpnormalfootgroupX}[1]{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \unvbox\@nameuse{mpfootins#1}}
 
 %    \end{macrocode}
@@ -8311,8 +8426,19 @@
   \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
 \newcommand*{\mptwocolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
@@ -8401,8 +8527,19 @@
   \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
 \newcommand*{\mpthreecolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
@@ -8533,8 +8670,20 @@
   \noindent\unhbox0\par}
 \newcommand*{\mppara@footgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
-  \normalcolor
-  \@nameuse{footnoterule#1}
+  \ifl@dpairing\ifparledgroup
+    \leavevmode%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{footnoteX}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+    \@nameuse{footnoterule#1}%
+    \fi%
+  \else%
+    \@nameuse{footnoterule#1}%
+  \fi%
   \unvbox\csname mpfootins#1\endcsname
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
@@ -8546,6 +8695,22 @@
 % \end{macro}
 %
 %
+% \subsection{Footnotes' order}
+% \begin{macro}{\fnpos}
+% \begin{macro}{\mpfnpos}
+% \begin{macro}{\@fnpos}
+% \begin{macro}{\@mpfnpos}
+% The \cs{fnpos} and \cs{mpfnpos} simply place their arguments in \cs{@fnpos} and \cs{@mpfnpos}, which will be used later in the output routine.
+%    \begin{macrocode}
+\def\@fnpos{familiar-critical}
+\def\@mpfnpos{critical-familiar}
+\newcommand{\fnpos}[1]{\xdef\@fnpos{#1}}
+\newcommand{\mpfnpos}[1]{\xdef\@mpfnpos{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Footnotes' output}
 %
 
@@ -8595,7 +8760,202 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \section{Endnotes}
+% \changes{v1.8.1}{2013/12/15}{Debug endnotes when more than one series is used (change the position where tools for endnotes are defined).}
+% \label{endnotes}\relax
 %
+% \begin{macro}{\l@d@end}
+% \begin{macro}{\ifl@dend@}
+% \begin{macro}{\l@dend@true}
+% \begin{macro}{\l@dend@false}
+% Endnotes of all varieties are saved up in a file, typically named
+% \meta{jobname}\file{.end}.
+% \cs{l@d@end} is the output stream number for
+% this file, and \verb"\ifl@dend@" is a flag that's \verb"true" when the file is open.
+%    \begin{macrocode}
+\newwrite\l@d@end
+\newif\ifl@dend@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\l@dend@open}
+% \begin{macro}{\l@dend@close}
+% \cs{l@dend@open} and \cs{l@dend@close} are the
+% macros that are used to open and close the endnote file. Note that
+% all our writing to this file is \cs{immediate}: all page and
+% line numbers for the endnotes are generated by the same mechanism
+% we use for the footnotes, so that there's no need to defer any
+% writing to catch information from the output routine.
+%    \begin{macrocode}
+\newcommand{\l@dend@open}[1]{\global\l@dend@true\immediate\openout\l@d@end=#1\relax}
+\newcommand{\l@dend@close}{\global\l@dend@false\immediate\closeout\l@d@end}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\l@dend@stuff}
+% \cs{l@dend@stuff} is used by \cs{beginnumbering} to
+% do everything that's necessary for the endnotes at the
+% start of each section: it opens the \cs{l@d@end} file, if necessary,
+% and writes the section number to the endnote file.
+%    \begin{macrocode}
+\newcommand{\l@dend@stuff}{%
+ \ifl@dend@\relax\else
+   \l@dend@open{\jobname.end}%
+ \fi
+ \immediate\write\l@d@end{\string\l@d@section{\the\section@num}}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\endprint}
+% \begin{macro}{\@gobblethree}
+% \begin{macro}{\l@d@section}
+% The \cs{endprint} here is nearly identical in its
+% functioning to \cs{normalfootfmt}.
+%
+% The endnote file also contains \cs{l@d@section} commands, which
+% supply the section numbers from the main text; standard \Eledmac{} does
+% nothing with this information, but it's there if you want to write
+% custom macros to do something with it.
+% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
+%  to avoid clash with the amsfonts package}
+%    \begin{macrocode}
+\def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
+      \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
+\providecommand*{\@gobblethree}[3]{}
+
+\let\l@d@section=\@gobble
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\setprintendlines}
+% The \cs{printendlines} macro is similar to \cs{printlines} but is
+% for printing endnotes rather than footnotes. 
+%
+%    The principal difference between foot- and endnotes is that footnotes
+% are printed on the page where they are specified but endnotes
+% are printed at a different point in the document. We need an indication
+% of the source of an endnote; \cs{setprintendlines} provides this
+% by always printing the page number. The coding is slightly simpler than
+% \cs{setprintlines}.
+%
+% First of all, we print the second page number only if
+% the ending page number is different
+% from the starting page number.\phantomsection\label{printendlines}
+% \changes{v0.7}{2005/02/18}{Added \cs{setprintendlines} for use by
+%              \cs{printendlines}}
+%    \begin{macrocode}
+\newcommand*{\setprintendlines}[6]{%
+  \l@d@pnumfalse \l@d@dashfalse 
+  \ifnum#4=#1 \else
+    \l@d@pnumtrue 
+    \l@d@dashtrue
+  \fi
+%    \end{macrocode}
+%
+% We print the ending line number if\/: (1)~we're printing the ending
+% page number, or (2)~it's different from the starting line number.
+%    \begin{macrocode}
+  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
+  \ifnum#2=#5 \else
+      \l@d@elintrue
+      \l@d@dashtrue
+  \fi
+%    \end{macrocode}
+%
+% We print the starting sub-line if it's nonzero.
+%    \begin{macrocode}
+  \l@d@ssubfalse
+  \ifnum#3=0 \else
+      \l@d@ssubtrue
+  \fi
+%    \end{macrocode}
+%
+% We print the ending sub-line if it's nonzero and: (1)~it's different
+% from the starting sub-line number, or (2)~the ending line number is
+% being printed.
+%    \begin{macrocode}
+  \l@d@eslfalse
+  \ifnum#6=0 \else
+      \ifnum#6=#3
+         \ifl@d@elin \l@d@esltrue \else \l@d@eslfalse \fi
+      \else
+         \l@d@esltrue
+         \l@d@dashtrue
+      \fi
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\printendlines}
+% Now we're ready to print it all. 
+% \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p}
+%              to \cs{printendlines}}
+%    \begin{macrocode}
+\def\printendlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+  \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
+%    \end{macrocode}
+% The only subtlety left here is when to print a period between
+% numbers. But the only instance in which this is tricky is for the
+% ending sub-line number: it could be coming after the starting
+% sub-line number (in which case we want only the dash) or after an
+% ending line number (in which case we need to insert a period).
+%    \begin{macrocode}
+  \printnpnum{#1} \linenumrep{#2}%
+  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifl@d@dash \endashchar\fi
+  \ifl@d@pnum \printnpnum{#4}\fi
+  \ifl@d@elin \linenumrep{#5}\fi
+  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
+\endgroup}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\printnpnum}
+% A macro to print a page number in an endnote.
+%    \begin{macrocode}
+\newcommand*{\printnpnum}[1]{p.#1) }
+
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\doendnotes}
+% \cs{doendnotes} is
+% the command you use to print one series of endnotes; it
+% takes one argument: the series letter of the note series you want
+% to print.
+%    \begin{macrocode}
+\newcommand*{\doendnotes}[1]{\l@dend@close
+   \begingroup
+      \makeatletter
+      \expandafter\let\csname #1end\endcsname=\endprint
+      \input\jobname.end
+   \endgroup}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\noendnotes}
+% You can say \cs{noendnotes} before the first
+% \cs{beginnumbering} in your file if if you will not use
+% any of the endnote commands: this will suppress the creation of
+% an \file{.end} file. If you do have some lingering endnote
+% commands in your file,
+% the notes will be written to your terminal and to the log file.
+%    \begin{macrocode}
+\newcommand*{\noendnotes}{\global\let\l@dend@stuff=\relax
+                \global\chardef\l@d@end=16 }
+%    \end{macrocode}
+% \end{macro}
 % \section{Generate series}%
 % In this section, X means the name of the series (A, B etc.)
 % \begin{macro}{\series}
@@ -8618,13 +8978,15 @@
 %    \begin{macrocode}
 \newcommand{\newseries@}[1]{
 %    \end{macrocode}
-% \subsubsection{Test if series is still existing}
+% \subsection{Test if series is still existing}
 %    \begin{macrocode}
     \xifinlist{#1}{\@series}{\eledmac@warning{Series #1 is still existing !}}
     {%
 %    \end{macrocode}
-% \subsubsection{Create all commands to memorize display options}
+% \subsection{Create all commands to memorize display options}
 %    \begin{macrocode}
+	\newtoggle{Xlemmadisablefontselection@#1}
+	\newtoggle{Xendlemmadisablefontselection@#1}
     \csgdef{Xhangindent@#1}{0pt}%
     \csgdef{hangindentX@#1}{0pt}
     \csgdef{hsizetwocol@#1}{0.45 \hsize}%
@@ -8666,7 +9028,7 @@
     \csgdef{maxhnotesX@#1}{\ledfootinsdim}%
     \csgdef{maxhXnotes@#1}{\ledfootinsdim}
 %    \end{macrocode}
-% \subsubsection{Create inserts, needed to add notes in foot}
+% \subsection{Create inserts, needed to add notes in foot}
 % Concerning inserts, see chapter 15 of the TeXBook by D. Knuth
 %    \begin{macrocode}
 
@@ -8675,7 +9037,7 @@
     \expandafter\newinsert\csname #1footins\endcsname
     \expandafter\newinsert\csname mp#1footins\endcsname
 %    \end{macrocode}
-% \subsubsection{Create command for critical apparatus, \cs{Xfootnote}}
+% \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
 %    \begin{macrocode}
@@ -8723,7 +9085,7 @@
     \csgdef{series@display#1}{}
     \footnormal{#1}
 %    \end{macrocode}
-%\subsubsection{Create tools for familiar footnotes (\cs{footnoteX})}
+%\subsection{Create tools for familiar footnotes (\cs{footnoteX})}
 % First, create the \cs{footnoteX} command.
 %    \begin{macrocode}
 
@@ -8747,7 +9109,7 @@
     \csgdef{series@displayX#1}{}
     \footnormalX{#1}
 %    \end{macrocode}
-% \subsubsection{The endnotes}
+% \subsection{The endnotes}
 % The \cs{Xendnote} macro functions to
 % write one endnote to the \file{.end} file. We change
 % \cs{newlinechar} so that in the file every space becomes the
@@ -8786,11 +9148,11 @@
 }% End of \newseries
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Init standards series (A,B,C,D,E,Z)}
+% \subsection{Init standards series (A,B,C,D,E,Z)}
 %    \begin{macrocode}
 \newseries{A,B,C,D,E,Z}
 %    \end{macrocode}
-% \subsubsection{Some tools}
+% \subsection{Some tools}
 % \changes{v1.1}{2012/09/25}{New tools to change order of series}
 % \begin{macro}{\firstseries}
 % \cs{seriesatbegin}\marg{s} changes the order of series, to put the series \meta{s} at the beginning of the list.
@@ -8843,7 +9205,10 @@
 \newcommandx{\setcommand@series}[4][4]{%
     \def\do##1{
         \csgdef{#2@##1}{#3}
-    \ifstrequal{#4}{reload}{\csuse{foot\csuse{series@display##1}}{##1}}{}}
+    \ifstrequal{#4}{reload}{
+        \csuse{foot\csuse{series@display##1}}{##1}
+        \csuse{foot\csuse{series@displayX##1}}{##1}
+    }{}}
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
     }%
@@ -8922,6 +9287,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhookcommand@series@reload}
+% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn'nt work.}
 % \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
 % but the commands created by this macro also reload the series displaying (normal, paragraph, twocol)
 % \begin{macrocode}
@@ -8951,9 +9317,11 @@
 \newhooktoggle@series{pstartinfootnote}
 \newhooktoggle@series{onlypstartinfootnote}
 \newhooktoggle@series{nonbreakableafternumber}
+\newhooktoggle@series{Xlemmadisablefontselection}
+\newhooktoggle@series{Xendlemmadisablefontselection}
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Old commands, kept for backward compatibility}
+% \subsection{Old commands, kept for backward compatibility}
 % The next commands are kept for ascendant compatibily, but should'nt be used anymore.
 % \begin{macro}{\notenumfont}
 % \begin{macro}{\notefontsetup}
@@ -8970,7 +9338,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \subsubsection{Hooks for a particular footnote}
+% \subsection{Hooks for a particular footnote}
 %  \begin{macro}{\nonum@}
 %\cs{nonum@} toggle is used to disable line number printing in a particular footnote.
 %    \begin{macrocode}
@@ -8983,7 +9351,7 @@
 \newtoggle{nosep@}
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Alias}
+% \subsection{Alias}
 % \begin{macro}{\nolemmaseparator}
 %\cs{nolemmaseparator}\oarg{series} is just an alias for \cs{lemmaseparator}\oarg{series}\verb|{}|.
 %    \begin{macrocode}
@@ -9009,7 +9377,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{Line number printing}
+% \subsection{Line number printing}
 % \begin{macro}{\printlinefootnote}
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
@@ -9288,14 +9656,21 @@
 % \begin{macro}{\doxtrafeet}
 % \cs{doxtrafeet} is the code extending \cs{@makecol} to cater for
 % the extra \Eledmac{} feet. We have two classes of extra footnotes.
-% We order the footnote inserts so that the regular footnotes are first,
+% By default, we order the footnote inserts so that the regular footnotes are first,
 % then class 1\index{class 1 feet} (familiar footnotes) and finally 
 % class 2\index{class 2 feet} (critical footnotes).
 % \changes{v0.2.1}{2003/09/13}{Renamed \cs{doxtrafeet} to \cs{l@ddoxtrafeet}}
+% \changes{v1.9.0}{2014/02/05}{Add \cs{fnpos} to choice the order of footnotes.}
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
-  \doxtrafeeti 
-  \doxtrafeetii}
+  \IfStrEq{familiar-critical}{\@fnpos}
+    {\doxtrafeeti\doxtrafeetii}%
+    {%
+    \IfStrEq{critical-familiar}{\@fnpos}%
+        {\doxtrafeetii\doxtrafeeti}%
+        {\doxtrafeeti\doxtrafeetii}%
+    }%
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -9582,7 +9957,7 @@
 % scheme might also have had problems in this area).
 %    \begin{macrocode}
   \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|{#1}}%
+    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
   \@esphack}
 
 %    \end{macrocode}
@@ -9627,11 +10002,11 @@
 % has been previously defined (by a class or package).
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4{%
-  \expandafter\ifx\csname the@label#4\endcsname \relax\else
-    \led@warn@DuplicateLabel{#4}%
+\def\l@dmake@labels#1|#2|#3|#4|#5{%
+  \expandafter\ifx\csname the@label#5\endcsname \relax\else
+    \led@warn@DuplicateLabel{#5}%
   \fi
-  \expandafter\gdef\csname the@label#4\endcsname{#1|#2|#3}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -9643,7 +10018,7 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5{}%
 }
 
 %    \end{macrocode}
@@ -9715,6 +10090,15 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\pstarteref}
+% \begin{macro}{\xpstartref}
+% If the specified label exists, \cs{pstartref} gives its pstart number.
+%    \begin{macrocode}
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\l@dgetref@num{4}{#1}}
+\newcommand*{\xpstartref}[1]{\l@dgetref@num{4}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % The next three macros are used by the referencing commands above,
 % and do the job of extracting the right numbers from the label
 % macro that contains the page, line, and sub-line number.
@@ -9766,13 +10150,13 @@
 % \cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4{%
-  \ifcase #4\relax
+\def\l@dlabel@parse#1|#2|#3|#4|#5{%
+  \ifcase #5%
   \or #1%
   \or #2%
   \or #3%
+  \or #4%
   \fi}
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9791,12 +10175,19 @@
 % semi-automatically.
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
-  {\expandafter\ifx\csname the@label#1\endcsname
-   \relax \expandafter\let\csname the@label#1\endcsname\zz@@@\fi
-   \expandafter\ifx\csname the@label#2\endcsname \relax
-   \expandafter\let\csname the@label#2\endcsname\zz@@@\fi
-   \linenum{\csname the@label#1\endcsname|%
-    \csname the@label#2\endcsname}}}
+  {%
+   \expandafter\ifx\csname the@label#1\endcsname \relax%
+     \expandafter\let\csname the@@label#1\endcsname\zz@@@%
+    \else%
+      \expandafter\def\csname the@@label#1\endcsname{\l@dgetref@num{1}{#1}|\l@dgetref@num{2}{#1}|\l@dgetref@num{3}{#1}}%
+   \fi%
+   \expandafter\ifx\csname the@label#2\endcsname \relax%
+     \expandafter\let\csname the@@label#2\endcsname\zz@@@%
+   \else%
+      \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
+   \fi%
+   \linenum{\csname the@@label#1\endcsname|%
+    \csname the@@label#2\endcsname}}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9825,201 +10216,6 @@
 % \end{macro}
 %
 %
-% \section{Endnotes}
-% \label{endnotes}\relax
-%
-% \begin{macro}{\l@d@end}
-% \begin{macro}{\ifl@dend@}
-% \begin{macro}{\l@dend@true}
-% \begin{macro}{\l@dend@false}
-% Endnotes of all varieties are saved up in a file, typically named
-% \meta{jobname}\file{.end}.
-% \cs{l@d@end} is the output stream number for
-% this file, and \verb"\ifl@dend@" is a flag that's \verb"true" when the file is open.
-%    \begin{macrocode}
-\newwrite\l@d@end
-\newif\ifl@dend@
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@dend@open}
-% \begin{macro}{\l@dend@close}
-% \cs{l@dend@open} and \cs{l@dend@close} are the
-% macros that are used to open and close the endnote file. Note that
-% all our writing to this file is \cs{immediate}: all page and
-% line numbers for the endnotes are generated by the same mechanism
-% we use for the footnotes, so that there's no need to defer any
-% writing to catch information from the output routine.
-%    \begin{macrocode}
-\newcommand{\l@dend@open}[1]{\global\l@dend@true\immediate\openout\l@d@end=#1\relax}
-\newcommand{\l@dend@close}{\global\l@dend@false\immediate\closeout\l@d@end}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@dend@stuff}
-% \cs{l@dend@stuff} is used by \cs{beginnumbering} to
-% do everything that's necessary for the endnotes at the
-% start of each section: it opens the \cs{l@d@end} file, if necessary,
-% and writes the section number to the endnote file.
-%    \begin{macrocode}
-\newcommand{\l@dend@stuff}{%
- \ifl@dend@\relax\else
-   \l@dend@open{\jobname.end}%
- \fi
- \immediate\write\l@d@end{\string\l@d@section{\the\section@num}}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\endprint}
-% \begin{macro}{\@gobblethree}
-% \begin{macro}{\l@d@section}
-% The \cs{endprint} here is nearly identical in its
-% functioning to \cs{normalfootfmt}.
-%
-% The endnote file also contains \cs{l@d@section} commands, which
-% supply the section numbers from the main text; standard \Eledmac{} does
-% nothing with this information, but it's there if you want to write
-% custom macros to do something with it.
-% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
-%  to avoid clash with the amsfonts package}
-%    \begin{macrocode}
-\def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
-      \enspace{\select@lemmafont#1|#2}\enskip#3\par}}
-\providecommand*{\@gobblethree}[3]{}
-
-\let\l@d@section=\@gobble
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\setprintendlines}
-% The \cs{printendlines} macro is similar to \cs{printlines} but is
-% for printing endnotes rather than footnotes. 
-%
-%    The principal difference between foot- and endnotes is that footnotes
-% are printed on the page where they are specified but endnotes
-% are printed at a different point in the document. We need an indication
-% of the source of an endnote; \cs{setprintendlines} provides this
-% by always printing the page number. The coding is slightly simpler than
-% \cs{setprintlines}.
-%
-% First of all, we print the second page number only if
-% the ending page number is different
-% from the starting page number.\phantomsection\label{printendlines}
-% \changes{v0.7}{2005/02/18}{Added \cs{setprintendlines} for use by
-%              \cs{printendlines}}
-%    \begin{macrocode}
-\newcommand*{\setprintendlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse 
-  \ifnum#4=#1 \else
-    \l@d@pnumtrue 
-    \l@d@dashtrue
-  \fi
-%    \end{macrocode}
-%
-% We print the ending line number if\/: (1)~we're printing the ending
-% page number, or (2)~it's different from the starting line number.
-%    \begin{macrocode}
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
-      \l@d@elintrue
-      \l@d@dashtrue
-  \fi
-%    \end{macrocode}
-%
-% We print the starting sub-line if it's nonzero.
-%    \begin{macrocode}
-  \l@d@ssubfalse
-  \ifnum#3=0 \else
-      \l@d@ssubtrue
-  \fi
-%    \end{macrocode}
-%
-% We print the ending sub-line if it's nonzero and: (1)~it's different
-% from the starting sub-line number, or (2)~the ending line number is
-% being printed.
-%    \begin{macrocode}
-  \l@d@eslfalse
-  \ifnum#6=0 \else
-      \ifnum#6=#3
-         \ifl@d@elin \l@d@esltrue \else \l@d@eslfalse \fi
-      \else
-         \l@d@esltrue
-         \l@d@dashtrue
-      \fi
-  \fi}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\printendlines}
-% Now we're ready to print it all. 
-% \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p}
-%              to \cs{printendlines}}
-%    \begin{macrocode}
-\def\printendlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
-  \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
-%    \end{macrocode}
-% The only subtlety left here is when to print a period between
-% numbers. But the only instance in which this is tricky is for the
-% ending sub-line number: it could be coming after the starting
-% sub-line number (in which case we want only the dash) or after an
-% ending line number (in which case we need to insert a period).
-%    \begin{macrocode}
-  \printnpnum{#1} \linenumrep{#2}%
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \endashchar\fi
-  \ifl@d@pnum \printnpnum{#4}\fi
-  \ifl@d@elin \linenumrep{#5}\fi
-  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
-\endgroup}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\printnpnum}
-% A macro to print a page number in an endnote.
-%    \begin{macrocode}
-\newcommand*{\printnpnum}[1]{p.#1) }
-
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\doendnotes}
-% \cs{doendnotes} is
-% the command you use to print one series of endnotes; it
-% takes one argument, the series letter of the note series you want
-% to print.
-%    \begin{macrocode}
-\newcommand*{\doendnotes}[1]{\l@dend@close
-   \begingroup
-      \makeatletter
-      \expandafter\let\csname #1end\endcsname=\endprint
-      \input\jobname.end
-   \endgroup}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\noendnotes}
-% You can say \cs{noendnotes} before the first
-% \cs{beginnumbering} in your file if you aren't going to be using
-% any of the endnote commands: this will suppress the creation of
-% an \file{.end} file. If you do have some lingering endnote
-% commands in your file,
-% the notes will be written to your terminal and to the log file.
-%    \begin{macrocode}
-\newcommand*{\noendnotes}{\global\let\l@dend@stuff=\relax
-                \global\chardef\l@d@end=16 }
-%    \end{macrocode}
-% \end{macro}
 %
 % \section{Side notes}
 %
@@ -10301,14 +10497,22 @@
 %
 % \begin{macro}{\l@dfeetbeginmini}
 % \begin{macro}{\l@dfeetendmini}
+% \changes{v1.9.0}{2014/02/05}{Add \cs{mpfnpos} to choice the order of footnotes in minipage / ledgroup.}
 % These will be the hooks in \verb?\@iiiminpage? and \verb?\endminipage?
 % They can be extended to handle other things if necessary.
 % \changes{v0.4}{2004/02/29}{Added \cs{l@dfeetbeginmini}, \cs{l@dfeetendmini}
 %                           and all their supporting code}
 %    \begin{macrocode}
 \newcommand*{\l@dfeetbeginmini}{\l@dedbeginmini\l@dfambeginmini}
-\newcommand*{\l@dfeetendmini}{\l@dedendmini\l@dfamendmini}
-
+\newcommand*{\l@dfeetendmini}{%
+	\IfStrEq{critical-familiar}{\@mpfnpos}%
+		{\l@dedendmini\l@dfamendmini}%
+		{%
+			\IfStrEq{familiar-critical}{\@mpfnpos}%
+				{\l@dfamendmini\l@dedendmini}%
+				{\l@dedendmini\l@dfamendmini}%
+		}%
+	}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -10330,7 +10534,17 @@
       \flush@notes
     \fi
   \fi
-  \def\do##1{\ifvoid\csuse{mp##1footins}\else\csuse{mp##1footgroup}{##1}\fi}%
+  \def\do##1{
+    \ifvoid\csuse{mp##1footins}\else%
+      \ifl@dpairing\ifparledgroup%
+        \ifledRcol%
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}
+        \else%
+           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}
+        \fi%
+       \fi\fi%
+       \csuse{mp##1footgroup}{##1}%
+  \fi}%
   \dolistloop{\@series}%
   }
 
@@ -10412,6 +10626,15 @@
     \vskip\skip\@mpfootins
     \normalcolor
     \footnoterule
+    \ifparledgroup
+      \ifl@dpairing
+        \ifledRcol
+          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@mpfootins}
+        \else
+          \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@mpfootins}
+        \fi
+      \fi
+    \fi
     \unvbox\@mpfootins}
 
 %    \end{macrocode}
@@ -10427,7 +10650,7 @@
 %    \begin{macrocode}
 \newif\if@ledgroup
 \newenvironment{ledgroup}{%
-  \@ledgrouptrue\def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
+  \resetprevpage@num\@ledgrouptrue\def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
   \let\@footnotetext\@mpfootnotetext
   \l@dfeetbeginmini%
 }{%
@@ -10501,6 +10724,15 @@
 %    \end{macrocode}
 % \end{environment}
 %
+% \begin{macro}{\ifledgroupnotesL@}
+% \begin{macro}{\ifledgroupnotesR@}
+% These boolean tests check if we are in the notes of a ledgroup.  If we are, we don't number the lines.
+%    \begin{macrocode}
+\newif\ifledgroupnotesL@
+\newif\ifledgroupnotesR@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Indexing}
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
@@ -11152,7 +11384,8 @@
 \let\endstanzaextra\relax
 \xdef\stanza{\noexpand\instanzatrue\expandafter
          \begingroup\startstanzahook%
-         \catcode`\&\active\global\stanza@count\@ne\stanza@modulo\@ne
+         \catcode`\noexpand\&\active%
+         \global\stanza@count\@ne\stanza@modulo\@ne
          \noexpand\ifnum\expandafter\noexpand
          \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
          \let\noexpand\endlock\relax\noexpand\else\interlinepenalty
@@ -11594,7 +11827,7 @@
   \let\edindex\nulledindex
   \let\linenum\@gobble}
 \newcommand{\l@drestoreforedtext}{%
-  \def\do##1{\csgdef{##1footnote}##1{\csuse{##1@@footnote}{##1}}}
+  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
   \dolistloop{\@series}%
   \let\edindex\xedindex}
 %    \end{macrocode}
