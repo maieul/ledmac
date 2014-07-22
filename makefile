@@ -14,6 +14,8 @@ all: eledmac.sty eledmac.pdf eledpar.sty eledpar.pdf dist
 
 doc: *.pdf
 
+README: README.md
+	cp README.md README
 
 %.sty: %.ins %.dtx 
 	rm -f $*.sty $*tex
