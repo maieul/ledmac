@@ -189,6 +189,7 @@
 % \changes{v1.10.5}{2014/04/14}{Debug of \cs{pausenumbering}.}
 % \changes{v1.10.6}{2014/05/01}{Debug of interaction between \cs{autopar} and\cs{pausenumbering}.}
 % \changes{v1.11.1}{2014/05/29}{Correct a bug when a critical note starts by plus or minus.}
+% \changes{v1.12.0}{2014/07/22}{Compatibility with \Lpack{musixtex}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -2777,7 +2778,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/05/29 v1.11.1 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/07/22 v1.12.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -4316,7 +4317,7 @@
 % This section defines the commands that can appear within a
 % line-list file. They all have very short names because we are
 % likely to be writing very large numbers of them out. One macro,
-% \cs{@l}, is especially short, since it will be written to the
+% \cs{@nl}, is especially short, since it will be written to the
 % line-list file once for every line of text in a numbered section.
 % (Another of these commands, \cs{@lab}, will be introduced in a
 % later section, among the cross-referencing commands it is
@@ -4332,9 +4333,10 @@
 % that modifies the action-code list: again, this is so that they
 % can be turned off easily for nested calls of \cs{@ref}.
 %
-% \begin{macro}{\@l}
-% \begin{macro}{\@l@reg}
-% \cs{@l} does everything related to the start of a
+% \begin{macro}{\@nl}
+% \begin{macro}{\@nl@reg}
+% \changes{v1.12.0}{To ensure compatibility with \cs{musixtex}, \cs{@l} becomes \cs{@l}. Consequently, \cs{@l@reg} becomes \cs{@nl@reg}.}
+% \cs{@nl} does everything related to the start of a
 % new line of numbered text.
 %
 % In order to get the \verb?\setlinenum? to work Peter Wilson had to slip in some new
@@ -4348,21 +4350,21 @@
 %
 % In November 2004 in order to accurately determine page numbers Peter Wilson added 
 % these to the macro. It is now: \\
-% \cs{@l}\marg{page counter number}\marg{printed page number} \\
+% \cs{@nl}\marg{page counter number}\marg{printed page number} \\
 % I don't (yet) use the printed number (i.e., the \verb?\thepage?) but
 % it may come in handy later. The macro \cs{fix@page} checks if a new
 % page has started.
 % 
-% \changes{v0.3}{2004/02/14}{Added a bunch of code to \cs{@l} for handling 
+% \changes{v0.3}{2004/02/14}{Added a bunch of code to \cs{@nl} for handling
 %                          \cs{setlinenum}}
-% \changes{v0.6}{2004/11/16}{Extended \cs{@l} to include the page number}
-% \changes{v0.6}{2004/11/16}{Added \cs{fix@page} to \cs{@l}}
-% \changes{v0.7}{2005/02/22}{Added \cs{@l@reg}}
+% \changes{v0.6}{2004/11/16}{Extended \cs{@nl} to include the page number}
+% \changes{v0.6}{2004/11/16}{Added \cs{fix@page} to \cs{@nl}}
+% \changes{v0.7}{2005/02/22}{Added \cs{@nl@reg}}
 %    \begin{macrocode}
-\newcommand{\@l}[2]{% 
+\newcommand{\@nl}[2]{%
   \fix@page{#1}%
-  \@l@reg}
-\newcommand*{\@l@reg}{%
+  \@nl@reg}
+\newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@num \@ne
     \set@line@action
@@ -4428,7 +4430,7 @@
 % \begin{macro}{\last@page@num}
 % \begin{macro}{\fix@page}
 %  \cs{fix@page} basically replaces \cs{@page}. It determines whether or not
-% a new page has been started, based on the page values held by \cs{@l}.
+% a new page has been started, based on the page values held by \cs{@nl}.
 % \changes{v0.6}{2004/11/16}{Added \cs{last@page@num} and \cs{fix@page}}
 %    \begin{macrocode}
 \newcount\last@page@num
@@ -4476,7 +4478,7 @@
 % The \cs{sub@on} and \cs{sub@off} macros
 % turn sub-lineation on and off\/: but not directly, since such changes
 % don't really take effect until the next line of text. Instead
-% they set a flag that notifies \cs{@l} of the necessary action.
+% they set a flag that notifies \cs{@nl} of the necessary action.
 %    \begin{macrocode}
 \newcommand*{\sub@on}{\ifsublines@
      \let\sub@change=\relax
@@ -4869,7 +4871,7 @@
 % \end{macro}
 %
 % \begin{macro}{\new@line}
-% The \cs{new@line} macro sends the \cs{@l} command to the line-list
+% The \cs{new@line} macro sends the \cs{@nl} command to the line-list
 % file, to mark the start of a new text line, and its page number.
 % \changes{v0.6}{2004/11/16}{Extended \cs{new@line} to output page numbers}
 %    \begin{macrocode}
@@ -4878,25 +4880,25 @@
     {\xifinlistcs{\the\absline@num}{l@prev@nopb}%
       {\xifinlistcs{\the\absline@num}{normal@page@break}%
         {\numgdef{\@next@page}{\thepage+1}%
-        \write\linenum@out{\string\@l[\@next@page][\@next@page]}%
+        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
       }%
-      {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
     }%
-    {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}}%
+    {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
     {\numdef{\next@absline}{\the\absline@num+1}%
     \xifinlistcs{\next@absline}{l@prev@nopb}%
       {\xifinlistcs{\the\absline@num}{normal@page@break}%
         {\numgdef{\nc@page}{\c@page+1}%
-        \write\linenum@out{\string\@l[\nc@page][\nc@page]}%
+        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
         }%
-        {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+        {\write\linenum@out{\string\n@l[\the\c@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@l[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
     }%
     {}%
-  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@l[\the\c@page][\thepage]}]%
+  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@nl[\the\c@page][\thepage]}]%
 }
 
 %    \end{macrocode}
@@ -10009,7 +10011,7 @@
 % The \cs{@lab} command, which appears in the \cs{linenum@out} file,
 % appends the current values of page, line and sub-line to the
 % \cs{labelref@list}. These values are defined by the earlier
-% \cs{@page}, \cs{@l}, and the \cs{sub@on} and \cs{sub@off} commands
+% \cs{@page}, \cs{@nl}, and the \cs{sub@on} and \cs{sub@off} commands
 % appearing in the \cs{linenum@out} file.
 %
 % LaTeX uses the \texttt{page} counter for page numbers. However,
