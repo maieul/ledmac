@@ -1,0 +1,42 @@
+\documentclass{book}
+\usepackage[T1]{fontenc}
+
+\usepackage{fontspec}
+%\usepackage{polyglossia}
+%\setmainlanguage{italian}
+%\usepackage{eledmac}
+
+\usepackage{imakeidx}
+\makeindex[title=Indice dei nomi]
+\usepackage{letltxmacro}
+\makeatletter
+\LetLtxMacro\orig@@index\index
+
+\let\orig@@index\index
+\newcommand\nindex[1]{\orig@@index{#1|innota}}
+\newcommand\innota[1]{#1\textit{n}} 
+\usepackage{etoolbox}
+\AtBeginDocument{
+\pretocmd\@footnotetext{\let\index\nindex}{}{}
+}
+\makeatother
+
+\usepackage[backend=biber,style=philosophy-verbose,scauthors=true, latinemph=true, publocformat=locpubyear, inbeforejournal=true,annotation=true, volumeformat=romansc,origfields=edorig,origfieldsformat=parens,commacit=true,indexing,hyperref,backref]{biblatex}
+\usepackage[babel,italian=guillemets]{csquotes}
+
+\addbibresource{issue117.bib}
+
+\begin{document}
+
+
+
+Prova\footcite{bembo:donnini}
+
+\newpage
+Prova\footcite{bembo:donnini}
+Prova\footnote{\index{Tizio, Caio}}
+Prova\footnote{\nindex{Sempronio, Caio}}
+
+\printbibliography
+\printindex
+\end{document}
