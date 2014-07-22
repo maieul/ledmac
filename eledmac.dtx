@@ -1787,6 +1787,7 @@
 % generation of an unneeded \file{.end} file.
 %
 % \section{Cross referencing}
+% \changes{v1.18.0}{2014/07/21}{Add hyperlink to crossref (needs \Lpack{hyperref} package).}
 % \label{crossref}\relax
 % The package provides a simple cross-referencing facility that allows
 % you to mark places in the text with labels, and generate page and
@@ -10032,7 +10033,16 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\wrap@edcrossref}
+% \cs{\wrap@edcrossref} is call around all eledmac crossref command, except those which start by x. It adds the hyperlink.
+%    \begin{macrocode}
+\newcommand{\wrap@edcrossref}[2]{%
+  \ifdef{\hyperlink}%
+    {\hyperlink{#1}{#2}}%
+    {#2}
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\edpageref}
 % \begin{macro}{\xpageref}
 % If the specified label exists, \cs{edpageref} gives its page number.
@@ -10047,7 +10057,7 @@
 % LaTeX already defines a \cs{pageref}, so changing the name
 %  to \cs{edpageref}.
 %    \begin{macrocode}
-\newcommand*{\edpageref}[1]{\l@dref@undefined{#1}\l@dgetref@num{1}{#1}}
+\newcommand*{\edpageref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{1}{#1}}}
 \newcommand*{\xpageref}[1]{\l@dgetref@num{1}{#1}}
 
 %    \end{macrocode}
@@ -10058,7 +10068,7 @@
 % \begin{macro}{\xlineref}
 % If the specified label exists, \cs{lineref} gives its line number.
 %    \begin{macrocode}
-\newcommand*{\lineref}[1]{\l@dref@undefined{#1}\l@dgetref@num{2}{#1}}
+\newcommand*{\lineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{2}{#1}}}
 \newcommand*{\xlineref}[1]{\l@dgetref@num{2}{#1}}
 
 %    \end{macrocode}
@@ -10069,7 +10079,7 @@
 % \begin{macro}{\xsublineref}
 % If the specified label exists, \cs{sublineref} gives its sub-line number.
 %    \begin{macrocode}
-\newcommand*{\sublineref}[1]{\l@dref@undefined{#1}\l@dgetref@num{3}{#1}}
+\newcommand*{\sublineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{3}{#1}}}
 \newcommand*{\xsublineref}[1]{\l@dgetref@num{3}{#1}}
 
 %    \end{macrocode}
@@ -10080,8 +10090,9 @@
 % \begin{macro}{\xpstartref}
 % If the specified label exists, \cs{pstartref} gives its pstart number.
 %    \begin{macrocode}
-\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\l@dgetref@num{4}{#1}}
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{4}{#1}}}
 \newcommand*{\xpstartref}[1]{\l@dgetref@num{4}{#1}}
+
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
