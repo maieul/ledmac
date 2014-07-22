@@ -12,15 +12,15 @@ The package is available on [CTAN](http://www.ctan.org/pkg/eledmac).
 ##Copyright
 - Copyright 2003 --- 2005 Peter R. Wilson
 - Copyright 2011 --- .. Maïeul Rouquette
- 
+
 ## Licence
 This work may be distributed and/or modified under the conditions of the LaTeX Project Public License, either version 1.3 of this license or (at your option) any later version.
-  
+
 The latest version of the license is in [http://www.latex-project.org/lppl.txt](http://www.latex-project.org/lppl.txt) and version 1.3 or later is part of all distributions of LaTeX version 2003/06/01 or later.
- 
+
 This work has the LPPL maintenance status "maintained".
- 
-  This work consists of the files:
+
+This work consists of the files:
 
 - README (this file),
 - eledmac.dtx,
@@ -28,7 +28,7 @@ This work has the LPPL maintenance status "maintained".
 - eledpar.dtx,
 - eledpar.ins,
 
-and the derived files 
+and the derived files:
 
 - eledmac.sty,
 - eledpar.sty,
@@ -61,9 +61,9 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 - [Users list](https://lists.berlios.de/pipermail/ledmac-users/)
 - [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/eledmac)
 
-# Debug 
+# Debug
 
-Suggestions and bug reports are welcome. 
+Suggestions and bug reports are welcome.
 
 Maïeul Rouquette is the only one maintener. To help him in his work, please follow these rules:
 
