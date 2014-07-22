@@ -1901,11 +1901,15 @@
 %   The \cs{marginpar} command does not work in numbered text. Instead 
 % the package provides for non-floating sidenotes in either margin.
 %
+% \DescribeMacro{\ledinnernote}
+% \DescribeMacro{\ledouternote}
+% \cs{ledleftnote}\marg{text} will put \meta{text} into the inner margin level
+% with where the command was issued. Similarly, \cs{ledouternote}\marg{text}
+% puts \meta{text} in the outer margin.
+%
+% \changes{v1.12.0}{2014/07/21}{Add \cs{ledinnernote} and \cs{ledouternote} commands.}
 % \DescribeMacro{\ledleftnote}
 % \DescribeMacro{\ledrightnote}
-% \cs{ledleftnote}\marg{text} will put \meta{text} into the left margin level
-% with where the command was issued. Similarly, \cs{ledrightnote}\marg{text}
-% puts \meta{text} in the right margin. 
 % \changes{v1.0}{2012/09/15}{Possibility to have commands in sidenotes.}
 % \DescribeMacro{\ledsidenote}
 % \DescribeMacro{\sidenotemargin}
@@ -2777,7 +2781,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/05/29 v1.11.1 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/07/21 v1.12.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -10313,17 +10317,37 @@
 %
 % \begin{macro}{\ledleftnote}
 % \begin{macro}{\ledrightnote}
+% \begin{macro}{\ledinnernote}
+% \begin{macro}{\ledouterote}
 % \begin{macro}{\ledsidenote}
-% \verb?\ledleftnote?\marg{text} and \verb?\ledrightnote?\marg{text} are the
-% user commands for left and right sidenotes. \verb?\ledsidenote?\marg{text}
-% is the command for a moveable sidenote.
+% \cs{ledleftnote}, \cs{ledrightnote}, \cs{ledinnernote}, \cs{ledouternote} are the
+% user commands for left, right, inner and outer sidenotes.
+% The two last one are just alias for the two first one, depending of the page number.
+% \verb?\ledsidenote?\marg{text} is the command for a moveable sidenote.
 %    \begin{macrocode}
 \newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
 \newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
+
+\newcommand*{\ledinnernote}[1]{%
+  \ifodd\page@num%
+    \ledleftnote{#1}%
+  \else%
+    \ledrightnote{#1}%
+  \fi%
+}
+
+\newcommand*{\ledouternote}[1]{%
+  \ifodd\page@num%
+    \ledrightnote{#1}%
+  \else%
+    \ledleftnote{#1}%
+  \fi%
+}
+
 \newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}
-
-
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
