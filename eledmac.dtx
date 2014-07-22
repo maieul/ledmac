@@ -9939,9 +9939,11 @@
 % Use code from the kernel \cs{label} command to write the correct
 % page number (it seems possible that the original \edmac's \cs{page@num}
 % scheme might also have had problems in this area).
+% Also define an hypertarget if \Lpack{hyperref} package is loaded.
 %    \begin{macrocode}
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
+  \ifcsdef{hypertarget}{\hypertarget{#1}{}}{}%
   \@esphack}
 
 %    \end{macrocode}
@@ -10720,6 +10722,7 @@
 % \section{Indexing}
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
+% \change{v1.8.0}{2014/07/21}{If \Lpack{imakeidx} and \Lpack{hyperref} are loaded, add hyperref in the index.}
 % Here's some code for indexing using page \& line numbers.
 %
 % \begin{macro}{\ifeledmac@check@imakeidx@}
@@ -10796,9 +10799,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\get@index@command}
-% This macro is used to analyse if a text to be indexed has a command after a \verb+|+. 
+% This macro is used to analyse if a text to be indexed has a command after a \verb+|+.
+% \change{v1.8.0}{2014/07/21}{Debug \cs{get@index@command} and compatibility with \Lpack{hyperref} package.}
 %    \begin{macrocode}
-\def\get@index@command#1|#2{\gdef\@index@command{#2}\gdef\@index@txt{#1}}
+\def\get@index@command#1|#2+{%
+  \gdef\@index@txt{#1}%
+  \gdef\@index@command{#2}%
+  \xdef\@index@parenthesis{}%
+  \IfBeginWith{\@index@command}{(}{%
+    \StrGobbleLeft{\@index@command}{1}[\@index@command@]%
+    \global\let\@index@command\@index@command@%
+    \xdef\@index@parenthesis{(}%
+    }{}%
+  \IfBeginWith{\@index@command}{)}{%
+    \StrGobbleLeft{\@index@command}{1}[\@index@command@]%
+    \global\let\@index@command\@index@command@%
+    \xdef\@index@parenthesis{)}%
+    }{}%
+}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\ledinnote}
@@ -10934,15 +10952,16 @@
   \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
     \ifl@imakeidx%
       \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2}{\get@index@command#2|}%
+        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
         \expandafter\imki@wrindexentry{#1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
         \expandafter\imki@wrindexentry{#1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
       \else%
-        \imki@wrindexentry{#1}{#2}{\thepageline}%
+        \get@edindex@hyperref{#2}%
+        \imki@wrindexentry{#1}{\@index@txt\@edindex@hyperref}{\thepageline}%
       \fi%
     \else%
       \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2}{\get@index@command#2|}%
+        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
         \expandafter\protected@write\@indexfile{}%
           {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
           }%
@@ -10966,6 +10985,36 @@
 
 %    \end{macrocode}
 %
+% \subsection{Hyperref compatibility}
+% \begin{macro}{\hyperlinkformat}
+% \cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexding.
+%    \begin{macrocode}
+\newcommand{\hyperlinkformat}[3]{%
+  \ifstrempty{#1}%
+    {\hyperlink{#2}{#3}}%
+    {\csuse{#1}{\hyperlink{#2}{#3}}%
+  }}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\get@edindex@hyperref}
+% \begin{macro}{\@edindex@hyperref}
+% \cs{\get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, link to the point where the index was called (with \Lpack{hyperref}.
+%    \begin{macrocode}
+\newcommand{\get@edindex@hyperref}[1]{%
+  \ifcsdef{hyperlink}%
+    {\IfSubStr{#1}{|}%
+      {\get@index@command#1+%
+      \gdef\@edindex@hyperref{|\@index@parenthesis %
+        hyperlinkformat{\@index@command}
+        {\edindexlab\thelabidx}}}%
+      {\get@index@command#1|+
+      \gdef\@edindex@hyperref{|hyperlink{\edindexlab\thelabidx}}}%
+    }%
+    {\gdef\@edindex@hyperref{}}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\l@d@@wrindexhyp}
 % If the \Lpack{hyperref} package is not loaded, it doesn't make sense
 % to clutter up the index with hyperreffing things.
@@ -10973,7 +11022,7 @@
 \AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
   \def\l@d@@wrindexhyp#1||\\{%
     \ifshowindexmark\@showidx{#1}\fi
-    \IfSubStr[1]{#1}{|}{\get@index@command#1}{\get@index@command#1|}%
+    \IfSubStr[1]{#1}{|}{\get@index@command#1+}{\get@index@command#1|+}%
       \if@edindex@fornote@%
          \protected@write\@auxout{}%
             {\string\@@wrindexm@m{\@idxfile}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}}%
