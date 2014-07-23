@@ -5858,12 +5858,14 @@
 % \begin{macro}{\l@drd@ta}
 % \begin{macro}{\l@dcsnotetext}
 %  Nulls the \cs{...d@ta}, which may later hold line numbers.
-% Similarly for \cs{l@dcsnotetext} for the texts of the sidenotes.
+% Similarly for \cs{l@dcsnotetext}, \cs{l@dcsnotetext@l}, \cs{l@dcsnotetext@r} for the texts of the sidenotes, right and left notes.
 % \changes{v0.7}{2005/02/18}{Added \cs{l@demptyd@ta}}
 %    \begin{macrocode}
 \newcommand*{\l@demptyd@ta}{%
   \gdef\l@dld@ta{}%
   \gdef\l@drd@ta{}%
+  \gdef\l@dcsnotetext@l{}%
+  \gdef\l@dcsnotetext@r{}%
   \gdef\l@dcsnotetext{}}
 
 %    \end{macrocode}
@@ -10200,7 +10202,7 @@
 %
 %
 % \section{Side notes}
-%
+% \changes{v1.12.0}{2014/07/23}{Possibility to have many \cs{ledleftnote} and \cs{ledrightnote} in the same line.}
 %    Regular \verb?\marginpar?s do not work inside numbered text --- they
 % don't produce any note but do put an extra unnumbered blank line into
 % the text.
@@ -10370,10 +10372,46 @@
 % \begin{macro}{\vl@drsnote}
 % \begin{macro}{\vl@dcsnote}
 % Put the left/right text into boxes, but just save the moveable text.
-% \cs{l@dcsnotetext} is a etoolbox list (comma separated)
+% \cs{l@dcsnotetext}, \cs{l@dcsnotetext@l} and \cs{\l@dcsnotetext@r} are etoolbox lists which will store the content of side notes.
+% We store the content in lists, because we need to loop later on them, in case there is many sidenote for the same line.
+% That is there some special test to do, in order to:
+% \begin{itemize}
+% 	\item Store the content of \cs{ledsidenote} to \cs{l@dcsnotetext} in any cases.
+%   \item Store the content of \cs{rightsidenote} to:
+% 		\begin{itemize}
+% 			\item \cs{l@dcsnotetext} if \cs{ledsidenote} is to be put on right.
+% 			\item \cs{l@dcsnotetext@r} if \cs{ledsidenote} is to be put on left.
+% 		\end{itemize}
+%   \item Store the content of \cs{leftsidenote} to:
+% 		\begin{itemize}
+% 			\item \cs{l@dcsnotetext} if \cs{ledsidenote} is to be put on left.
+% 			\item \cs{l@dcsnotetext@l} if \cs{ledsidenote} is to be put on right.
+% 		\end{itemize}
+% \end{itemize}
 %    \begin{macrocode}
-\newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
-\newcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
+\newcommand*{\vl@dlsnote}[1]{%
+  \@l@dtempcntb=\sidenote@margin%
+  \ifnum\@l@dtempcntb>\@ne%
+    \advance\@l@dtempcntb by\page@num%
+  \fi%
+  \ifodd\@l@dtempcntb%
+    \listgadd{\l@dcsnotetext@l}{#1}%
+  \else%
+    \listgadd{\l@dcsnotetext}{#1}%
+  \fi
+}
+\newcommand*{\vl@drsnote}[1]{%
+  \@l@dtempcntb=\sidenote@margin%
+  \ifnum\@l@dtempcntb>\@ne%
+     \advance\@l@dtempcntb by\page@num%
+  \fi%
+  \ifodd\@l@dtempcntb%
+    \listgadd{\l@dcsnotetext}{#1}%
+  \else%
+    \listgadd{\l@dcsnotetext@r}{#1}%
+  \fi%
+}
+
 \newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
 
 %    \end{macrocode}
@@ -10457,8 +10495,18 @@
       \fi%
       \ifodd\@l@dtempcntb%
         \setl@drp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@l}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space leftnotes on line \the\line@num\space p. \the\page@num,}}{}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \else%
         \setl@dlp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@r}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space rightnotes on line \the\line@num\space p. \the\page@num,}}{}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \fi%
   \fi%
