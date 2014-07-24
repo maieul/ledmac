@@ -1375,6 +1375,13 @@
 % \DescribeMacro{\parafootsep}
 % For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
 %
+% \changes{v1.12.0}{2014/07/21}{New options to ragg paragraphed notes.}
+% \DescribeMacro{\Xragged}
+% Text in paragraphed critical notes is justified, but you can use \cs{Xragged}\oarg{s}+{L}+ if you want it to be ragged Left, or \cs{Xragged}\oarg{s}+{R} if you want it to be ragged Right.
+
+% \DescribeMacro{\raggedX}
+% Text in paragraphed footnotes is justified, but you can use \cs{raggedX}\oarg{s}+{L}+ if you want it to be ragged Left, or \cs{raggedX}\oarg{s}+{R} if you want it to be ragged Right.
+%
 %\subsubsection{Options for block of notes}
 % \changes{v1.1}{2012/09/12}{New options for block of notes.}
 % \DescribeMacro{\txtbeforeXnotes}
@@ -2837,7 +2844,7 @@
 % \end{macro}
 % Loading package \emph{xargs} to declare commands with optional arguments. 
 % \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
-% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running.
+% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
 % \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
 %  \begin{macrocode}
 \RequirePackage{xargs}
@@ -2846,6 +2853,7 @@
 \RequirePackage{suffix}
 \RequirePackage{xstring}
 \RequirePackage{ifluatex}
+\RequirePackage{ragged2e}
 %    \end{macrocode}
 % \begin{macro}{\if@RTL}
 % The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
@@ -7591,6 +7599,8 @@
 %    \begin{macrocode}
 \newcommand*{\para@footgroup}[1]{%
   \unvbox\csname #1footins\endcsname 
+  \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
@@ -7618,6 +7628,8 @@
     \@nameuse{#1footnoterule}%
   \fi%
   \unvbox\csname mp#1footins\endcsname 
+  \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
@@ -8675,6 +8687,8 @@
 %    \begin{macrocode}
 \newcommand*{\para@footgroupX}[1]{%
   \unvbox\csname footins#1\endcsname
+  \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{notefontsizeX@#1}
@@ -8696,6 +8710,8 @@
     \@nameuse{footnoterule#1}%
   \fi%
   \unvbox\csname mpfootins#1\endcsname
+  \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{notefontsizeX@#1}
@@ -8999,7 +9015,9 @@
 	\newtoggle{Xlemmadisablefontselection@#1}
 	\newtoggle{Xendlemmadisablefontselection@#1}
     \csgdef{Xhangindent@#1}{0pt}%
-    \csgdef{hangindentX@#1}{0pt}
+    \csgdef{hangindentX@#1}{0pt}%
+    \csgdef{Xragged@#1}{}%
+    \csgdef{raggedX@#1}{}%
     \csgdef{hsizetwocol@#1}{0.45 \hsize}%
     \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
     \csgdef{hsizethreecol@#1}{.3 \hsize}%
@@ -9238,6 +9256,10 @@
 \newhookcommand@series{Xhangindent}
 
 \newhookcommand@series{hangindentX}
+
+\newhookcommand@series{Xragged}
+
+\newhookcommand@series{raggedX}
 
 \newhookcommand@series{hsizetwocol}
 
