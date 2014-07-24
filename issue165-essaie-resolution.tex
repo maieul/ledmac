@@ -9,12 +9,12 @@
 \usepackage[shiftedpstarts]{eledpar}
 \numdef{\titi}{1}
 
-\firstlinenum*{3} \linenumincrement*{1}
+\firstlinenum*{1} \linenumincrement*{1}
 
 \begin{document}
-
-\makeatletter
-
+%
+%\makeatletter
+%
 \def\@sect#1#2#3#4#5#6[#7]#8{%
   \let\edtext=\dummy@edtext
   \ifnum #2>\c@secnumdepth
@@ -48,19 +48,21 @@
         #7}}%
   \fi
   \@xsect{#5}}
-  \numdef{\led@section@num}{0}
-\newcommand{\led@section}[2]{
-	%\global\csdef{section@#2}
-			%{\section{#1}}
-			}
 
-\newwrite\ledsec@out
 
-\def\test#1{%
+
+\newwrite\l@sec@out
+
+\def\lsection#1{%
   #1\numdef{\tmp}{\c@pstart}%
-  \immediate\write\ledsec@out{%
-  \string\csdef{lsection@\tmp}{\string\section{\unexpanded{#1}}}
-  }}
+  \immediate\write\l@sec@out{%
+    \string\l@section{\unexpanded{#1}{\tmp}}
+    }%
+  }
+
+\def\l@section#1#2{\global\csdef{l@section@#2}{\section{#1}}}
+
+
 
 
   
@@ -82,30 +84,29 @@
   \affixline@num
   \affixpstart@num
   \numdef{\tmp}{\c@pstart}%
-  \ifnumequal{1}{\tmp}{\csuse{lsection@\tmp}}{
   \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
     \l@dlsn@te
     {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
     \l@drsn@te
-  }}}
+  }}
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
   }%
-\def\led@section#1#2{\global\csdef{ledsection@#2}{\section{#1}}}
-\input{issue165-essaie-resolution.s}
+
+
 \beginnumbering
-\immediate\openout\ledsec@out=\jobname.s
+\immediate\openout\l@sec@out=\jobname.s
 \pstart
-\test{\edtext{a}{\Afootnote{B}}}
+\lsection{\edtext{lcr}{\Afootnote{B}}}
 \pend
 \pstart
-I use\edtext{a}{\Afootnote{B}} git to manage some package.
+I use s git to manage some package.
 I would like to add a pre-commit hook, to check if I have forgotten
-For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{lcr}{\Afootnote{C}}
 \pend
 \pstart
-s\test{b}
+\lsection{b}
 \pend
-  \immediate\closeout\ledsec@out
+  \immediate\closeout\l@sec@out
 
 \endnumbering
 
