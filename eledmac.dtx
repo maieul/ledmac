@@ -189,7 +189,8 @@
 % \changes{v1.10.5}{2014/04/14}{Debug of \cs{pausenumbering}.}
 % \changes{v1.10.6}{2014/05/01}{Debug of interaction between \cs{autopar} and\cs{pausenumbering}.}
 % \changes{v1.11.1}{2014/05/29}{Correct a bug when a critical note starts by plus or minus.}
-% \changes{v1.12.0}{2014/07/22}{Compatibility with \Lpack{musixtex}.}
+% \changes{v1.12.0}{2014/07/23}{Compatibility with \Lpack{musixtex}.}
+% \changes{v1.12.0}{2014/07/23}{Debug eledmac sectionning command after using \cs{resumenumbering}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -2784,7 +2785,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/07/22 v1.12.0 LaTeX port of EDMAC]
+\ProvidesPackage{eledmac}[2014/07/23 v1.12.0 LaTeX port of EDMAC]
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3280,6 +3281,7 @@
 % \begin{macro}{\quote}
 % \begin{macro}{\endquote}
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
+% \changes{v1.12.0}{2014/07/21}{Compatibility of \cs{ledchapter} with the \emph{memoir} class (again!).}
 % \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
 % \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
@@ -3333,8 +3335,26 @@
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand\ledchapter[2][]{\ifl@dmemoir\gdef\ch@pt@c{##1}\fi~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
-    \WithSuffix\newcommand\ledchapter*[1]{~\pend\skipnumbering\pstart\chapter*{##1}\pend\pstart}
+    \ifl@dmemoir\def\clearforchapter{}\fi%
+    \newcommand\ledchapter[2][]{%
+      \ifl@dmemoir%
+        \gdef\ch@pt@c{##1}%
+      \fi~%
+      \pend%
+      \ifl@dmemoir\else%
+        \skipnumbering%
+      \fi%
+      \pstart\chapter[##1]{##2}\pend%
+      \pstart}
+    \WithSuffix\newcommand\ledchapter*[1]{%
+      ~\pend%
+      \ifl@dmemoir%
+        \def\clearforchapter{}%
+      \else%
+        \skipnumbering%
+      \fi%
+      \pstart\chapter*{##1}\pend%
+      \pstart}
     \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
     \pretocmd{\@makeschapterhead}{\par}{}{}
     \apptocmd{\@makeschapterhead}{\par}{}{}
@@ -3474,6 +3494,7 @@
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
      \begingroup
+     \initnumbering@sectcmd
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
