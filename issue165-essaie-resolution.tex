@@ -64,7 +64,7 @@
 \newwrite\ledsec@out
 
 \def\test#1{%
-  \numdef{\tmp}{\c@pstart}%
+  #1\numdef{\tmp}{\c@pstart}%
   \immediate\write\ledsec@out{%
   \string\csdef{lsection@\tmp}{\string\section{\unexpanded{#1}}}
   }}
@@ -81,7 +81,7 @@
   \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
     \csnumdef{pstartline}{\pstartline+1}%
-    \do@line%
+          \do@line%
     \ifbypstart@%
      \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
     \fi%
@@ -93,12 +93,36 @@
    \pstartnumtrue%
    \fi%
   \@oldnobreak%
-  \numdef{\tmp}{\c@pstart}%
-    \csuse{lsection@\tmp}%
   \addtocounter{pstart}{1}%
-  #1
+  #1%
   }
-
+  
+ \newcommand*{\do@line}{%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@linehook
+\l@demptyd@ta
+   \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@num
+  \IfStrEq{\led@pb@setting}{before}{\led@check@pb\led@check@nopb}{}
+  \ifnum\@lock>\@ne
+    \inserthangingsymboltrue
+  \else
+    \inserthangingsymbolfalse
+  \fi
+  \check@pb@in@verse
+  \affixline@num
+  \affixpstart@num
+  \numdef{\tmp}{\c@pstart}%
+  \ifnumequal{1}{\tmp}{\csuse{lsection@\tmp}}{
+  \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+    \l@drsn@te
+  }}}
+  \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
+  }%
 \def\led@section#1#2{\global\csdef{ledsection@#2}{\section{#1}}}
 \input{issue165-essaie-resolution.s}
 \beginnumbering
@@ -107,12 +131,12 @@
 \test{\edtext{a}{\Afootnote{B}}}
 \pend
 \pstart
-I use git to manage some package.
+I use\edtext{a}{\Afootnote{B}} git to manage some package.
 I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.
 \pend
 \pstart
-\test{b}
+s\test{b}
 \pend
   \immediate\closeout\ledsec@out
 
