@@ -159,6 +159,8 @@
 % \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.5.0}{2013/11/08}{Add, as in eledmac, features to manage page breaks.}
 % \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
+% \changes{v1.8.0}{2014/07/23}{Debug eledmac sectionning command after using \cs{resumenumbering}.}
+% \changes{v1.8.0}{2014/07/23}{Compatibility with \Lpack{musixtex}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -806,7 +808,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2014/04/14 v1.7.0 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2014/07/23 v1.8.0 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -1048,6 +1050,7 @@
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
+     \initnumbering@sectcmd
   \else
     \led@err@numberingShouldHaveStarted
      \endnumberingR
@@ -1481,14 +1484,14 @@
 %
 % The macros with \verb"action" in their names contain all the code
 % that modifies the action-code list.
-% \begin{macro}{\@l@regR}
+% \begin{macro}{\@nl@regR}
 % \begin{macro}{\@l}
 % \cs{@l} does everything related to the start of a
 % new line of numbered text. Exactly what it does depends
 % on whether right text is being processed.
 %
 %    \begin{macrocode}
-\newcommand{\@l@regR}{%
+\newcommand{\@nl@regR}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@numR \@ne
     \set@line@action
@@ -1535,9 +1538,9 @@
 \renewcommand*{\@l}[2]{%
   \fix@page{#1}%
   \ifledRcol
-    \@l@regR
+    \@nl@regR
   \else
-    \@l@reg
+    \@nl@reg
   \fi}
 
 %    \end{macrocode}
@@ -2018,7 +2021,7 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \write\linenum@out{\string\@l[\the\c@page][\thepage]}}
+  \write\linenum@out{\string\@nl[\the\c@page][\thepage]}}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\new@lineR}
@@ -2026,7 +2029,7 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \write\linenum@outR{\string\@l[\the\c@page][\thepage]}}
+  \write\linenum@outR{\string\@nl[\the\c@page][\thepage]}}
 %    \end{macrocode}
 % \end{macro}
 %
