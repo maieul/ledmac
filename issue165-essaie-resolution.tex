@@ -7,7 +7,7 @@
 \makeatletter
 \usepackage{eledmac}
 \usepackage[shiftedpstarts]{eledpar}
-
+\numdef{\titi}{1}
 
 \firstlinenum*{1} \linenumincrement*{1}
 
@@ -20,9 +20,11 @@
 \begin{document}
 
 \makeatletter
-\def\toto#1{\subsection{#1}}
+\def\toto#1{\titi\edlabel{ledsc\titi}\global\numdef{\titi}{\titi+1}\relax#1\section{#1}}
+
 \def\@sect#1#2#3#4#5#6[#7]#8{%
-  \let\edtext=\dummy@edtext\ifnum #2>\c@secnumdepth
+  \let\edtext=\dummy@edtext
+  \ifnum #2>\c@secnumdepth
     \let\@svsec\@empty
   \else
     \refstepcounter{#1}%
@@ -32,7 +34,7 @@
   \ifdim \@tempskipa>\z@
     \begingroup
       #6{%
-        \@hangfrom{\hskip #3\global\advance\line@num 1\llap{\leftlinenum} \relax\@svsec}%
+        \@hangfrom{\hskip #3 \llap{\numlabfont\ledlinenum\kern\linenumsep} \relax\@svsec}%
           \interlinepenalty \@M #8\@@par}%
     \endgroup
     \csname #1mark\endcsname{#7}%
@@ -53,15 +55,71 @@
         #7}}%
   \fi
   \@xsect{#5}}
+  \numdef{\led@section@num}{0}
+\newcommand{\led@section}[2]{
+	%\global\csdef{section@#2}
+			%{\section{#1}}
+			}
 
+\newwrite\ledsec@out
+
+\def\test#1{%
+  \numdef{\tmp}{\c@pstart}%
+  \immediate\write\ledsec@out{%
+  \string\csdef{lsection@\tmp}{\string\section{\unexpanded{#1}}}
+  }}
+
+\renewcommandx*{\pend}[1][1]{\ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
+  \csnumdef{pstartline}{0}%
+  \loop\ifvbox\raw@text%
+    \csnumdef{pstartline}{\pstartline+1}%
+    \do@line%
+    \ifbypstart@%
+     \ifnumequal{\pstartline}{1}{\setline{1}\resetprevline@}{}%
+    \fi%
+  \repeat%
+  \flush@notes%
+  \endgroup%
+  \ignorespaces%
+  \ifnumberpstart%
+   \pstartnumtrue%
+   \fi%
+  \@oldnobreak%
+  \numdef{\tmp}{\c@pstart}%
+    \csuse{lsection@\tmp}%
+  \addtocounter{pstart}{1}%
+  #1
+  }
+
+\def\led@section#1#2{\global\csdef{ledsection@#2}{\section{#1}}}
+\input{issue165-essaie-resolution.s}
 \beginnumbering
-
+\immediate\openout\ledsec@out=\jobname.s
 \pstart
-
-\section{toto}
-\subsection{toto}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas laoreet, velit non fringilla molestie, mi augue aliquam turpis, in sagittis nibh dui quis sapien. In tempor gravida magna, nec pretium velit. Morbi ac volutpat arcu. Aliquam pharetra risus sit amet lobortis consectetur. Vestibulum eros justo, commodo nec rhoncus ac, tristique a massa. Vivamus blandit mattis mi eu adipiscing. In dolor ante, elementum ac est non, condimentum posuere lorem. Mauris eget dapibus magna. Sed iaculis tortor ac urna mattis consectetur. Proin dapibus semper interdum. Sed pulvinar vitae eros at scelerisque. Pellentesque sed iaculis mi, at euismod ante. Donec feugiat commodo neque, a commodo elit pellentesque et. Aliquam fringilla mauris vel lectus convallis aliquam. Morbi eu nisi fringilla, blandit diam ullamcorper, lacinia magna. Duis fringilla ultrices tortor vel venenatis.</p> 
+\test{\edtext{a}{\Afootnote{B}}}
 \pend
+\pstart
+I use git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.
+\pend
+\pstart
+\test{b}
+\pend
+  \immediate\closeout\ledsec@out
+
 \endnumbering
+
+
+
+
 
 \end{document}
