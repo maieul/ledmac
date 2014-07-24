@@ -159,6 +159,7 @@
 % \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.5.0}{2013/11/08}{Add, as in eledmac, features to manage page breaks.}
 % \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
+% \changes{v.1.8.0}{2014/07/11}{Add, as in eledmac, possibility to insert something between \cs{pstart}s / verse.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -806,7 +807,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2014/04/14 v1.7.0 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2014/07/22 v1.8.0 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -2581,7 +2582,8 @@
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendL}{\ifnumbering \else%
+\newcommandx*{\pendL}[1][1]{%
+  \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2607,6 +2609,9 @@
     \addtocounter{pstartL}{1}%
   \fi
   \parledgroup@beforenotes@save{L}%
+%    \end{macrocode}
+% Dump content of the optional argument.
+  \csgdef{after@pendL@\the\l@dnumpstartsL}{#1}%
   }
 
 %    \end{macrocode}
@@ -2617,7 +2622,8 @@
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendR}{\ifnumberingR \else%
+\newcommandx*{\pendR}[1][1]{%
+  \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2632,7 +2638,8 @@
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
   \fi%    
-  \parledgroup@beforenotes@save{R}
+  \parledgroup@beforenotes@save{R}%
+  \csgdef{after@pendR@\the\l@dnumpstartsR}{#1}%
 }
 
 %    \end{macrocode}
@@ -4816,7 +4823,12 @@
 %    \begin{macrocode}
   \else%                                      box is empty
 %    \end{macrocode}
-% The box is empty; check if enough lines (real and blank) have been
+% The box is empty;
+% add the content of the optional argument of the previous pend.
+% \begin{macrocode}
+   \csuse{after@pendL@\the\l@dpscL}%
+% \end{macrocode}
+% Check if enough lines (real and blank) have been
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
@@ -4868,6 +4880,7 @@
 \newcommand*{\get@nextboxR}{%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
+  \csuse{after@pendR@\the\l@dpscR}%
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
       \parledgroup@notes@endR
     \else
