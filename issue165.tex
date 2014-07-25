@@ -293,7 +293,7 @@
 	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*{#2}}}
 	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
 	  }%
-	\listcsgadd{eled@sections@@#5}{#3}%
+	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@section#1#2#3#4#5{%
     \ifstrempty{#4}%
@@ -305,7 +305,7 @@
 	    {\global\csdef{eled@sectionning@#3#5}{\section*{#2}}}%
 	    {\global\csdef{eled@sectionning@#3#5}{\section*[#1]{#2}}}%Bug in LaTeX!
 	  }
-	\listcsgadd{eled@sections@@#5}{#3}%
+	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@subsection#1#2#3#4#5{%
     \ifstrempty{#4}%
@@ -317,7 +317,7 @@
 	    {\global\csdef{eled@sectionning@#3#5}{\subsection*{#2}}}%
 	    {\global\csdef{eled@sectionning@#3#5}{\subsection*[#1]{#2}}}%Bug in LaTeX!
 	  }
-	\listcsgadd{eled@sections@@#5}{#3}%
+	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@subsubsection#1#2#3#4#5{%
     \ifstrempty{#4}%
@@ -329,13 +329,109 @@
 	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*{#2}}}%
 	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*[#1]{#2}}}%Bug in LaTeX!
 	  }
-	\listcsgadd{eled@sections@@#5}{#3}%
+	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 
 
+\renewcommand*{\do@lineL}{%
+  \advance\countLline \@ne
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineLhook
+   \l@demptyd@ta
+   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
+                           to\baselineskip}%
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@numL
+\ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
+  \setbox\l@dleftbox
+  \hb@xt@ \Lcolwidth{%
+      \affixpstart@numL
+    \affixline@num
+    \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}
+     {\print@ledsectionL}%
+     {\print@lineL}%
+  }%
+  \add@penaltiesL
+  \global\advance\@donereallinesL\@ne
+  \global\advance\@donetotallinesL\@ne
+\else
+  \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+  \global\advance\@donetotallinesL\@ne
+\fi}
 
 
+
+
+\def\print@ledsectionL{%
+    \add@inserts\affixside@note%
+    \numdef{\temp@}{\l@dnumpstartsL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dnumpstartsL}\hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip-\baselineskip%
+}
+
+
+
+\def\print@lineL{
+    \l@dld@ta
+    \add@inserts
+    \affixside@note
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
   
+  
+
+
+
+\renewcommand*{\do@lineR}{%
+  \advance\countRline \@ne
+  \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineRhook
+   \l@demptyd@ta
+   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
+                           to\baselineskip}%
+    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox
+  \getline@numR
+\ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
+  \setbox\l@drightbox
+  \hb@xt@ \Rcolwidth{%
+      \affixpstart@numR
+    \affixline@numR
+        \xifinlist{\the\l@dnumpstartsR}{\eled@sectionsR@@}
+     {\print@ledsectionR}%
+     {\print@lineR}%
+    \l@dld@ta
+    \add@insertsR
+    \affixside@noteR
+    \l@dlsn@te
+    }%
+  \add@penaltiesR
+  \global\advance\@donereallinesR\@ne
+  \global\advance\@donetotallinesR\@ne
+\else
+  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
+  \global\advance\@donetotallinesR\@ne
+\fi}
+
+\def\print@lineR{\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@ledsectionR{%
+    \add@inserts\affixside@note%
+    \numdef{\temp@}{\l@dnumpstartsR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dnumpstartsR}\hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
+    \vskip-\baselineskip%
+}
+
  \renewcommand*{\do@line}{%
   {\vbadness=10000
    \splittopskip=\z@
@@ -518,7 +614,7 @@
 }
 
 
-\tableofcontents
+
 \newpage
 %
 %\beginnumbering
@@ -580,7 +676,7 @@
 \beginnumbering
 
 \pstart
-\eledchapter*{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
+s\eledchapter*{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
 \pend
 \pstart
 DI use s git to manage some package.
@@ -588,13 +684,13 @@ I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
 \pend
 \pstart
-\eledsection*{xxxx\ledsidenote{section}}
+s\eledsection*{xxxx\ledsidenote{section}}
 \pend
 \pstart
-\eledsubsection*{xxxx\ledsidenote{sub}}
+s\eledsubsection*{xxxx\ledsidenote{sub}}
 \pend
 \pstart
-\eledsubsubsection{sssxxxx\ledsidenote{subsub}}
+s\eledsubsubsection{sssxxxx\ledsidenote{subsub}}
 \pend
 \pstart
 \edtext{D}{\Afootnote{C}}I use s git to manage some package.
@@ -618,7 +714,7 @@ For now, I have a minimal pre-commit, which test only the blank spaces at ends o
 \beginnumbering
 
 \pstart
-\eledchapter*{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
+s\eledchapter*{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
 \pend
 \pstart
 DI use s git to manage some package.
@@ -626,13 +722,13 @@ I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
 \pend
 \pstart
-\eledsection*{xxxx\ledsidenote{section}}
+s\eledsection*{xxxx\ledsidenote{section}}
 \pend
 \pstart
-\eledsubsection*{xxxx\ledsidenote{sub}}
+s\eledsubsection*{xxxx\ledsidenote{sub}}
 \pend
 \pstart
-\eledsubsubsection{sssxxxx\ledsidenote{subsub}}
+s\eledsubsubsection{sssxxxx\ledsidenote{subsub}}
 \pend
 \pstart
 \edtext{D}{\Afootnote{C}}I use s git to manage some package.
