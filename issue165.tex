@@ -1,4 +1,4 @@
-\documentclass[a4paper, oneside, notitlepage, 12pt]{book}
+\documentclass[a4paper, oneside, 12pt]{book}
 \usepackage{fontspec}
 \usepackage{libertineotf}
 \usepackage{xunicode}
@@ -17,6 +17,30 @@
 
 \makeatletter
 
+\def\@makechapterhead#1{%
+  \vspace*{50\p@}%
+  {\parindent \z@ \raggedright \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      \if@mainmatter
+        \huge\bfseries \@chapapp\space \thechapter
+        \par\nobreak
+        \vskip 20\p@
+      \fi
+    \fi
+    \interlinepenalty\@M
+    \Huge \bfseries #1\par\nobreak
+    \vskip 40\p@
+  }}
+
+\patchcmd{\@makechapterhead}
+  {#1}
+  {\ifnumbering\l@dld@ta\add@inserts\l@dlsn@te\fi%
+    #1%
+  \ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
+  
 
 \patchcmd{\@sect}
   {\hskip #3\relax}
@@ -24,6 +48,7 @@
   \ifnumbering\l@dld@ta\add@inserts\l@dlsn@te\fi}
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
+  
 \pretocmd{\@sect}
   {\let\edtext=\dummy@edtext}
   {}
@@ -173,7 +198,7 @@
   \ifl@dpairing\else
     \begingroup
   \fi
-  \initnumbering@sectcmd
+  %\initnumbering@sectcmd
   \InputIfFileExists{\jobname.eledsec\the\section@num}{}{}
   \immediate\openout\eled@sectionning@out=\jobname.eledsec\the\section@num\relax
 }
