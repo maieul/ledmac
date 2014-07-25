@@ -14,10 +14,10 @@
 \firstlinenum*{1} \linenumincrement*{1}
 
 \begin{document}
-%
-%\makeatletter
-%
-   
+
+\makeatletter
+
+
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
@@ -30,39 +30,39 @@
 	{ca marche}
 	{ca marche pas}
 
-\newwrite\l@sec@out
+\newwrite\eled@section@out
 
-\def\lsection#1{%
+\def\eledsection#1{%
   #1%
-  \immediate\write\l@sec@out{%
-    \string\l@section{\unexpanded{#1}}{\the\l@dnumpstartsL}
+  \immediate\write\eled@section@out{%
+    \string\eled@section{\unexpanded{#1}}{\the\l@dnumpstartsL}
     }%
   }
-\def\lsubsection#1{%
+\def\eledsubsection#1{%
   #1%
-  \immediate\write\l@sec@out{%
-    \string\l@subsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
+  \immediate\write\eled@section@out{%
+    \string\eled@subsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
     }%
   }
-\def\lsubsubsection#1{%
+\def\eledsubsubsection#1{%
   #1%
-  \immediate\write\l@sec@out{%
-    \string\l@subsubsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
+  \immediate\write\eled@section@out{%
+    \string\eled@subsubsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
     }%
   }
  
-\def\l@sections@@{}
-\def\l@section#1#2{%
-	\global\csdef{l@section@#2}{\section{#1}}%
-	\listgadd{\l@sections@@}{#2}%
+\def\eled@sections@@{}
+\def\eled@section#1#2{%
+	\global\csdef{eled@section@#2}{\section{#1}}%
+	\listgadd{\eled@sections@@}{#2}%
 	}
-\def\l@subsection#1#2{%
-	\global\csdef{l@section@#2}{\subsection{#1}}%
-	\listgadd{\l@sections@@}{#2}%
+\def\eled@subsection#1#2{%
+	\global\csdef{eled@section@#2}{\subsection{#1}}%
+	\listgadd{\eled@sections@@}{#2}%
 	}
-\def\l@subsubsection#1#2{%
-	\global\csdef{l@section@#2}{\subsubsection{#1}}%
-	\listgadd{\l@sections@@}{#2}%
+\def\eled@subsubsection#1#2{%
+	\global\csdef{eled@section@#2}{\subsubsection{#1}}%
+	\listgadd{\eled@sections@@}{#2}%
 	}
 
 
@@ -86,9 +86,9 @@
   \check@pb@in@verse
   \affixline@num
   \affixpstart@num
-  \xifinlist{\the\l@dnumpstartsL}{\l@sections@@}%
-     {\print@lsection}  
-     {\print@line}
+  \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
+     {\print@ledsection}%
+     {\print@line}%
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
   }%
 \def\print@line{
@@ -99,11 +99,11 @@
 	  }}%
 }
 
-\def\print@lsection{%
+\def\print@ledsection{%
     \add@inserts\affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
-    \xifinlist{\temp@}{\l@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
-    \csuse{l@section@\the\l@dnumpstartsL}\hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@section@\the\l@dnumpstartsL}\hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
     \vskip-\baselineskip%
 }
 
@@ -143,24 +143,24 @@
        {\p@pstart\thepstart}
   \fi%
 }
-
+%\tableofcontents
 \newpage
 \beginnumbering
 \input{\jobname.s}
-\immediate\openout\l@sec@out=\jobname.s
+\immediate\openout\eled@section@out=\jobname.s
 \pstart
 DI use s git to manage some package.
 I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
 \pend
 \pstart
-\lsection{xxxx\ledsidenote{s}}
+\eledsection{xxxx\ledsidenote{s}}
 \pend
 \pstart
-\lsubsection{xxxx\ledsidenote{s}}
+\eledsubsection{xxxx\ledsidenote{s}}
 \pend
 \pstart
-\lsubsubsection{xxxx\ledsidenote{s}}
+\eledsubsubsection{xxxx\ledsidenote{s}}
 \pend
 \pstart
 \edtext{D}{\Afootnote{C}}I use s git to manage some package.
@@ -168,14 +168,14 @@ I would like to \ledsidenote{s}add a pre-commit hook, to check if I have forgott
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{E}{\Afootnote{F}}.
 \pend
 \pstart
-\lsection{\edtext{xxx}{\Afootnote{yyyy}}}
+\eledsection{\edtext{xxx}{\Afootnote{yyyy}}}
 \pend
 \pstart
 \edtext{D}{\Afootnote{C}}I use s git to manage some package.
 I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{E}{\Afootnote{F}}.
 \pend
-\immediate\closeout\l@sec@out
+\immediate\closeout\eled@section@out
 
 \endnumbering
 \newpage
