@@ -147,11 +147,57 @@
        {\p@pstart\thepstart}
   \fi%
 }
+
+\renewcommand*{\beginnumbering}{%
+  \ifnumbering
+    \led@err@NumberingStarted
+    \endnumbering
+  \fi
+  \global\numberingtrue
+  \global\advance\section@num \@ne
+  \initnumbering@reg
+  \message{Section \the\section@num }%
+  \line@list@stuff{\jobname.\extensionchars\the\section@num}%
+  \l@dend@stuff
+  \setcounter{pstart}{1}
+  \ifl@dpairing\else
+    \begingroup
+  \fi
+  \initnumbering@sectcmd
+  \InputIfFileExists{\jobname.eledsec\the\section@num}{}{}
+  \immediate\openout\eled@sectionning@out=\jobname.eledsec\the\section@num\relax
+}
+
+\def\endnumbering{%
+  \ifnumbering
+    \global\numberingfalse
+    \normal@pars
+    \ifl@dpairing
+      \global\pst@rtedLfalse
+    \else
+      \ifx\insertlines@list\empty\else
+        \global\noteschanged@true
+      \fi
+      \ifx\line@list\empty\else
+        \global\noteschanged@true
+      \fi
+    \fi
+    \ifnoteschanged@
+      \led@mess@NotesChanged
+    \fi
+  \else
+    \led@err@NumberingNotStarted
+  \fi
+  \autoparfalse
+  \immediate\closeout\eled@sectionning@out
+  \ifl@dpairing\else
+    \endgroup
+  \fi}
+
+
 \tableofcontents
 \newpage
 \beginnumbering
-\input{\jobname.s}
-\immediate\openout\eled@sectionning@out=\jobname.s
 \pstart
 DI use s git to manage some package.
 I would like to add a pre-commit hook, to check if I have forgotten
@@ -179,7 +225,7 @@ For now, I have a minimal pre-commit, which test only the blank spaces at ends o
 I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{E}{\Afootnote{F}}.
 \pend
-\immediate\closeout\eled@sectionning@out
+
 
 \endnumbering
 \newpage
