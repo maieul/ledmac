@@ -1,32 +1,167 @@
-\documentclass{book}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[german]{babel}
-\usepackage{lmodern}
+\documentclass[a4paper, oneside, notitlepage, 12pt]{article}
+\usepackage{fontspec}
+\usepackage{libertineotf}
+\usepackage{xunicode}
+\usepackage{polyglossia}
+\setmainlanguage{french}
+\makeatletter
 \usepackage{eledmac}
-\firstlinenum{1}
-\linenumincrement{1}
+\usepackage[shiftedpstarts]{eledpar}
+\numdef{\titi}{1}
+ \sidenotemargin{right}
+ \linenummargin{right}
+ \setlength{\ledrsnotesep}{2\linenumsep}
+\firstlinenum*{1} \linenumincrement*{1}
+
 \begin{document}
+%
+%\makeatletter
+%
+   
+\patchcmd{\@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\add@inserts\l@dlsn@te\fi}
+  {ca marche}{ca marche pas}
+\pretocmd{\@sect}{\let\edtext=\dummy@edtext}{ca marche}{ca marche pas}
+\patchcmd{\@sect}
+	{#8}
+	{#8\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi}
+	{ca marche}
+	{ca marche pas}
 
+\newwrite\l@sec@out
+
+\def\lsection#1{%
+  #1%
+  \immediate\write\l@sec@out{%
+    \string\l@section{\unexpanded{#1}}{\the\c@pstart}
+    }%
+  }
+\def\lsubsection#1{%
+  #1%
+  \immediate\write\l@sec@out{%
+    \string\l@subsection{\unexpanded{#1}}{\the\c@pstart}
+    }%
+  }
+\def\lsubsubsection#1{%
+  #1%
+  \immediate\write\l@sec@out{%
+    \string\l@subsubsection{\unexpanded{#1}}{\the\c@pstart}
+    }%
+  }
+ 
+\def\l@sections@@{}
+\def\l@section#1#2{%
+	\global\csdef{l@section@#2}{\section{#1}}%
+	\listgadd{\l@sections@@}{#2}%
+	}
+\def\l@subsection#1#2{%
+	\global\csdef{l@section@#2}{\subsection{#1}}%
+	\listgadd{\l@sections@@}{#2}%
+	}
+\def\l@subsubsection#1#2{%
+	\global\csdef{l@section@#2}{\subsubsection{#1}}%
+	\listgadd{\l@sections@@}{#2}%
+	}
+
+
+
+
+  
+ \renewcommand*{\do@line}{%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@linehook
+\l@demptyd@ta
+   \global\setbox\one@line=\vsplit\raw@text to\baselineskip}%
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@num
+  \IfStrEq{\led@pb@setting}{before}{\led@check@pb\led@check@nopb}{}
+  \ifnum\@lock>\@ne
+    \inserthangingsymboltrue
+  \else
+    \inserthangingsymbolfalse
+  \fi
+  \check@pb@in@verse
+  \affixline@num
+  \affixpstart@num
+  \xifinlist{\the\c@pstart}{\l@sections@@}%
+     {\print@lsection}  
+     {\print@line}
+  \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
+  }%
+\def\print@line{
+	\hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
+	    \l@dlsn@te
+	    {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+	    \l@drsn@te
+	  }}%
+}
+
+\def\print@lsection{%
+    \add@inserts\affixside@note%
+    \numdef{\temp@}{\c@pstart-1}%
+    \xifinlist{\temp@}{\l@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{l@section@\the\c@pstart}\hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip-\baselineskip%
+}
+
+
+
+s
+\newpage
 \beginnumbering
+\input{\jobname.s}
+\immediate\openout\l@sec@out=\jobname.s
 \pstart
-\ledchapter[Praefatio]{Praefatio\ledsidenote{folio 10r}}
-Iustum est primo Deo gracias agere 
+DI use s git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
 \pend
+\pstart
+\lsection{xxxx\ledsidenote{s}}
+\pend
+\pstart
+\lsubsection{xxxx\ledsidenote{s}}
+\pend
+\pstart
+\lsubsubsection{xxxx\ledsidenote{s}}
+\pend
+\pstart
+\edtext{D}{\Afootnote{C}}I use s git to manage some package.
+I would like to \ledsidenote{s}add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{E}{\Afootnote{F}}.
+\pend
+\pstart
+\lsection{\edtext{xxx}{\Afootnote{yyyy}}}
+\pend
+\pstart
+\edtext{D}{\Afootnote{C}}I use s git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten.\edtext{E}{\Afootnote{F}}.
+\pend
+\immediate\closeout\l@sec@out
 
-\pstart
-\ledsection[Sectio prima]{Sectio prima\ledsidenote{folio 20r}}
-\pend
-
-\pstart
-\ledsubsection[Sectio secunda]{Sectio secunda\ledsidenote{folio 30r}}
-\pend
-
-\pstart
-\ledsubsubsection[Sectio tertia]{Sectio tertia\ledsidenote{folio 40r}}
-\pend
 \endnumbering
+\newpage
+
+
+DI use s git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
+\section{xxxx}
+\subsection{xxxx}
+\subsubsection{xxxx}
+DI use s git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
+\section{xxxx}
+
+DI use s git to manage some package.
+I would like to add a pre-commit hook, to check if I have forgotten
+For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
+
+
 
 \end{document}
-
-
