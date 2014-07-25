@@ -154,47 +154,114 @@
 
 \newwrite\eled@sectionning@out
 
-\def\eledchapter#1{%
-  #1%
+
+
+
+
+
+\newcommand{\eledchapter}[2][]{%
+  #2%
   \immediate\write\eled@sectionning@out{%
-    \string\eled@chapter{\unexpanded{#1}}{\the\l@dnumpstartsL}
+    \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}
     }%
   }
-\def\eledsection#1{%
-  #1%
+
+\newcommand{\eledsection}[2][]{%
+  #2%
   \immediate\write\eled@sectionning@out{%
-    \string\eled@section{\unexpanded{#1}}{\the\l@dnumpstartsL}
+    \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}
     }%
   }
-\def\eledsubsection#1{%
-  #1%
+\newcommand{\eledsubsection}[2][]{%
+  #2%
   \immediate\write\eled@sectionning@out{%
-    \string\eled@subsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
+    \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}
     }%
   }
-\def\eledsubsubsection#1{%
-  #1%
+\newcommand{\eledsubsubsection}[2][]{%
+  #2%
   \immediate\write\eled@sectionning@out{%
-    \string\eled@subsubsection{\unexpanded{#1}}{\the\l@dnumpstartsL}
+    \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}
     }%
   }
  
+
+\WithSuffix\newcommand\eledchapter*[2][]{%
+  #2%
+  \immediate\write\eled@sectionning@out{%
+    \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}
+    }%
+  } 
+ 
+\WithSuffix\newcommand\eledsection*[2][]{%
+  #2%
+  \immediate\write\eled@sectionning@out{%
+    \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}
+    }%
+  }
+\WithSuffix\newcommand\eledsubsection*[2][]{%
+  #2%
+  \immediate\write\eled@sectionning@out{%
+    \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}
+    }%
+  }
+\WithSuffix\newcommand\eledsubsubsection*[2][]{%
+  #2%
+  \immediate\write\eled@sectionning@out{%
+    \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}
+    }%
+  }
+
 \def\eled@sections@@{}
-\def\eled@chapter#1#2{%
-	\global\csdef{eled@sectionning@#2}{\chapter{#1}}%
-	\listgadd{\eled@sections@@}{#2}%
+\def\eled@chapter#1#2#3#4{%
+    \ifstrempty{#4}%
+      {%
+      \ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\let\edtext=\dummy@edtext\chapter{#2}}}
+	    {\global\csdef{eled@sectionning@#3}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}}
+	  }%
+	  {%
+	  \ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\let\edtext=\dummy@edtext\chapter*{#2}}}
+	    {\global\csdef{eled@sectionning@#3}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
+	  }%
+	\listgadd{\eled@sections@@}{#3}%
 	}
-\def\eled@section#1#2{%
-	\global\csdef{eled@sectionning@#2}{\section{#1}}%
-	\listgadd{\eled@sections@@}{#2}%
+\def\eled@section#1#2#3#4{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\section{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\section[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\section*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\section*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listgadd{\eled@sections@@}{#3}%
 	}
-\def\eled@subsection#1#2{%
-	\global\csdef{eled@sectionning@#2}{\subsection{#1}}%
-	\listgadd{\eled@sections@@}{#2}%
+\def\eled@subsection#1#2#3#4{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\subsection{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\subsection[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\subsection*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\subsection*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listgadd{\eled@sections@@}{#3}%
 	}
-\def\eled@subsubsection#1#2{%
-	\global\csdef{eled@sectionning@#2}{\subsubsection{#1}}%
-	\listgadd{\eled@sections@@}{#2}%
+\def\eled@subsubsection#1#2#3#4{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\subsubsection{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\subsubsection[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3}{\subsubsection*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3}{\subsubsection*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listgadd{\eled@sections@@}{#3}%
 	}
 
 
@@ -323,13 +390,13 @@
   \fi}
 
 
-s
+\tableofcontents
 \newpage
 
 \beginnumbering
 
 \pstart
-\eledchapter{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
+\eledchapter*{\edtext{xxx}{\Afootnote{yyyy}}\ledsidenote{chapter}}
 \pend
 \pstart
 DI use s git to manage some package.
@@ -337,10 +404,10 @@ I would like to add a pre-commit hook, to check if I have forgotten
 For now, I have a minimal pre-commit, which test only the blank spaces at ends of lines, but not the forgotten..
 \pend
 \pstart
-\eledsection{xxxx\ledsidenote{section}}
+\eledsection*{xxxx\ledsidenote{section}}
 \pend
 \pstart
-\eledsubsection{xxxx\ledsidenote{sub}}
+\eledsubsection*{xxxx\ledsidenote{sub}}
 \pend
 \pstart
 \eledsubsubsection{sssxxxx\ledsidenote{subsub}}
