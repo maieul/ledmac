@@ -1,0 +1,161 @@
+\renewcommand*{\beginnumberingR}{%
+  \ifnumberingR
+    \led@err@NumberingStarted
+    \endnumberingR
+  \fi
+  \global\l@dnumpstartsR \z@
+  \global\pst@rtedRfalse
+  \global\numberingRtrue
+  \global\advance\section@numR \@ne
+  \global\absline@numR \z@
+  \gdef\normal@page@breakR{}
+  \gdef\l@prev@pbR{}
+  \gdef\l@prev@nopbR{}
+  \global\line@numR \z@
+  \global\@lockR \z@
+  \global\sub@lockR \z@
+  \global\sublines@false
+  \global\let\next@page@numR\relax
+  \global\let\sub@change\relax
+  \message{Section \the\section@numR R }%
+  \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
+  \l@dend@stuff
+  \setcounter{pstartR}{1}
+  \begingroup
+  \initnumbering@sectcmd
+  \initnumbering@sectcountR
+  \gdef\eled@sectionsR@@{}
+  \InputIfFileExists{\jobname.eledsec\the\section@num R}{}{}
+  \immediate\openout\eled@sectionningR@out=\jobname.eledsec\the\section@num R\relax
+}
+
+\def\endnumberingR{%
+  \ifnumberingR
+    \global\numberingRfalse
+    \normal@pars
+    \ifl@dpairing
+      \global\pst@rtedRfalse
+    \else
+      \ifx\insertlines@listR\empty\else
+        \global\noteschanged@true
+      \fi
+      \ifx\line@listR\empty\else
+        \global\noteschanged@true
+      \fi
+    \fi
+    \ifnoteschanged@
+      \led@mess@NotesChanged
+    \fi
+  \else
+    \led@err@NumberingNotStarted
+  \fi
+  \endgroup
+  \immediate\closeout\eled@sectionningR@out
+  }
+  
+
+
+\newwrite\eled@sectionningR@out
+
+
+
+
+\renewcommand*{\do@lineL}{%
+  \advance\countLline \@ne
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineLhook
+   \l@demptyd@ta
+   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
+                           to\baselineskip}%
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@numL
+\ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
+  \setbox\l@dleftbox
+  \hb@xt@ \Lcolwidth{%
+      \affixpstart@numL
+    \affixline@num
+    \xifinlist{\the\l@dpscL}{\eled@sections@@}
+     {\print@ledsectionL}%
+     {\print@lineL}%
+  }%
+  \add@penaltiesL
+  \global\advance\@donereallinesL\@ne
+  \global\advance\@donetotallinesL\@ne
+\else
+  \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+  \global\advance\@donetotallinesL\@ne
+\fi}
+
+
+
+
+\def\print@ledsectionL{%
+    \add@inserts\affixside@note%
+    \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dpscL}\hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip-\baselineskip\relax%
+}
+
+
+
+\def\print@lineL{
+    \l@dld@ta
+    \add@inserts
+    \affixside@note
+    \l@dlsn@te
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
+  
+  
+
+
+
+\renewcommand*{\do@lineR}{%
+  \advance\countRline \@ne
+  \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineRhook
+   \l@demptyd@ta
+   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
+                           to\baselineskip}%
+    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox
+  \getline@numR
+\ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
+  \setbox\l@drightbox
+  \hb@xt@ \Rcolwidth{%
+      \affixpstart@numR
+    \affixline@numR
+        \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+     {\print@ledsectionR}%
+     {\print@lineR}%
+    }%
+  \add@penaltiesR
+  \global\advance\@donereallinesR\@ne
+  \global\advance\@donetotallinesR\@ne
+\else
+  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
+  \global\advance\@donetotallinesR\@ne
+\fi}
+
+\def\print@lineR{
+    \l@dld@ta
+    \add@insertsR
+    \affixside@noteR
+    \l@dlsn@te
+\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@ledsectionR{%
+    \add@insertsR\affixside@noteR%
+    \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dpscR}\hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
+    \vskip-\baselineskip%
+}
