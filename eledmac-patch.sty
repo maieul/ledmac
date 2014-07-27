@@ -106,7 +106,13 @@
     \fi
 }
 
-
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \ifnumbering\else%
+    \if@openright\cleardoublepage\else\clearpage\fi%
+  \fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\chapter\space fails}}
 \patchcmd{\@makechapterhead}
   {#1}
   {\ifnumbering\leavevmode\l@dld@ta\add@inserts\l@dlsn@te\fi%
@@ -164,6 +170,7 @@
 
 
 \newcommand{\eledchapter}[2][]{%
+  \if@openright\cleardoublepage\else\clearpage\fi%
   #2%
   \ifledRcol%
     \immediate\write\eled@sectionningR@out{%
