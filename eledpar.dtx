@@ -2454,6 +2454,7 @@
 % \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
 % \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendL} and \cs{pendR} can have a optional arguments.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2477,12 +2478,12 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{%
-\if@nobreak%
+\newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2526,16 +2527,20 @@
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartL\thepstartL}\fi%
+%    \end{macrocode}
+% Dump the optional arguments
+%    \begin{macrocode}
+  \csgdef{before@pstartL@\the\l@dnumpstartsL}{#1}%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{%
-\if@nobreak%
+\newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2569,6 +2574,7 @@
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
+   \csgdef{before@pstartR@\the\l@dnumpstartsR}{#1}%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -4381,6 +4387,7 @@
 %    \begin{macrocode}
 %      \begingroup
 {        \loop\ifaraw@text
+         \csuse{before@pstartL@\the\l@dpscL}%
 %    \end{macrocode}
 % See if there is more that can be done for the left page and set up the 
 % left language.
@@ -4434,6 +4441,7 @@
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
 %    \begin{macrocode}
+          \csuse{before@pstartR@\the\l@dpscR}%
           \checkpageR
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage
@@ -4876,6 +4884,10 @@
 %    \begin{macrocode}
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
+%    \end{macrocode}
+% Add optional argument of pstart
+%    \begin{macrocode}
+        \csuse{before@pstartL@\the\l@dpscL}%
       \fi
     \fi
   \fi}
@@ -4914,6 +4926,7 @@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
+        \csuse{before@pstartR@\the\l@dpscR}%
       \fi
     \fi
   \fi}
