@@ -12811,6 +12811,189 @@
 \fi
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\chapter}
+% \begin{macro}{\M@sect}
+% \begin{macro}{\@mem@old@ssect}
+% \begin{macro}{\@makechapterhead}
+% \begin{macro}{\@makechapterhead}
+% \begin{macro}{\@makeschapterhead}
+% \begin{macro}{\@sect}
+% \begin{macro}{\@ssect}
+% We have to patch \LaTeX, \Lclass{book} and \Lclass{memoir} sectionning commands in order to:
+% \begin{itemize}
+%  \item Disable \cs{edtext} inside.
+%  \item Disable page breaking (for \cs{chapter}).
+%  \item Add line numbers and sidenotes. 
+% \end{itemize}
+% Unfortunatly, I was not able to try if \Lclass{memoir} is loaded. That is why \Lpack{eledmac} try to define for both standard class and \Lclass{memoir} class.
+%
+% I was also not able to use \cs{ifboolexpr}. That why some logical "or" are printed as two test (bad, I know!. If someone has solution\ldots)
+%   
+%    \begin{macrocode}
+\patchcmd{\chapter}{\clearforchapter}{%
+  \ifnumbering\else%
+    \clearforchapter
+  \fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\chapter\space fails}}
+
+\patchcmd{\M@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+  
+\pretocmd{\M@sect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+
+\patchcmd{\M@sect}
+	{#8}
+	{#8%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\M@sect\space fails}}
+
+\patchcmd{\M@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+  
+\pretocmd{\@mem@old@ssect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+\patchcmd{\@mem@old@ssect}
+	{#5}
+	{#5%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+\patchcmd{\@mem@old@ssect}
+  {\hskip #1}
+  {\hskip #1%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+% Normal
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \ifnumbering\else%
+    \if@openright\cleardoublepage\else\clearpage\fi%
+  \fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\chapter\space fails}}
+
+
+
+
+\patchcmd{\@makechapterhead}
+  {#1}
+  {\ifnumbering\leavevmode\l@dld@ta\l@dlsn@te\fi%
+   \ifaraw@text\leavevmode\l@dld@ta\l@dlsn@te\fi%
+    #1%
+  \ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+  \ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
+
+\patchcmd{\@makeschapterhead}
+  {#1}
+  {\ifnumbering\leavevmode\l@dld@ta\l@dlsn@te\fi%
+   \ifaraw@text\leavevmode\l@dld@ta\l@dlsn@te\fi%
+    #1%
+   \ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+   \ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
+
+
+\patchcmd{\@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+  
+\pretocmd{\@sect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+\patchcmd{\@sect}
+	{#8}
+	{#8%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi}
+	{}
+	{\eledmac@warning{Patching \string\@sect\space fails}}
+
+\patchcmd{\@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+  
+\pretocmd{\@ssect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+
+
+\patchcmd{\@ssect}
+	{#5}
+	{#5%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\@ssect\space fails}}
+
+
+\patchcmd{\@ssect}
+  {\hskip #1}
+  {\hskip #1%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@ssect\space fails}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \section{Page breaking or no page breaking depending of specific lines}
 % By default, page breaks are automatic.  However, the use can define lines which will force page breaks, or prevent page breaks around one specific line.
 % On the first run, the line-list file records the line number of where the page break is being changed (either forced, or prevented).
