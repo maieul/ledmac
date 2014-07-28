@@ -2723,13 +2723,12 @@
   \hb@xt@ \Lcolwidth{%
       \affixpstart@numL
     \affixline@num
-    \l@dld@ta
     \add@inserts
     \affixside@note
     \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      {}%
+      {\print@lineL}}%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
   \global\advance\@donetotallinesL\@ne
@@ -2742,6 +2741,29 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@ledsectionL}
+% \cs{print@lineL} is for line without sectioning command.
+%    \begin{macrocode}
+\def\print@lineL{%
+    \l@dld@ta %space kept for backwar compatibility
+    \l@dlsn@te %space kept for backwar compatibility
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@ledsectionL}
+% \cs{print@ledsectionL} is for line with macro code
+%    \begin{macrocode}
+\def\print@ledsectionL{%
+    \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+    \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dpscL}%
+    \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip\eledsection@correcting@skip%
+}
+%    \end{macrocode}
+% \end{macro}
 % \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
 % \changes{v1.4}{2013/07/11}{Added \cs{do@insidelineLhook} and \cs{do@insidelineRhook}}
 % \begin{macro}{\do@lineLhook}
@@ -2774,21 +2796,25 @@
    \l@demptyd@ta
    \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
                            to\baselineskip}% 
-    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
   \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
   \getline@numR
-\ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
+  \ifnum\@lockR>\@ne%
+    \inserthangingsymbolRtrue
+  \else%
+    \inserthangingsymbolRfalse%
+  \fi%
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
-      \affixpstart@numR
+    \affixpstart@numR
     \affixline@numR
-    \l@dld@ta
     \add@insertsR
     \affixside@noteR
-    \l@dlsn@te
-    {\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \affixside@noteR
+    \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
+     {}%
+     {\print@lineR}%
+  }%
   \add@penaltiesR
   \global\advance\@donereallinesR\@ne
   \global\advance\@donetotallinesR\@ne
@@ -2801,6 +2827,26 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@lineR}{}
+% \begin{macro}{\print@ledsectionR}{}
+\def\print@lineR{%
+    \l@dld@ta%
+    \l@dlsn@te%
+\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@ledsectionR{%
+    \initnumbering@sectcountR%
+    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+    \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dpscR}%
+    \hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
+    \vskip\eledsection@correcting@skip
+}
+% \end{macro}
+% \end{macro}
 %
 % \subsection{Line and page number computation}
 %
