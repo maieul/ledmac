@@ -3279,10 +3279,12 @@
 % \begin{macro}{\ledsubsubsection*}
 % \begin{macro}{\ledchapter}
 % \begin{macro}{\ledchapter*}
+% \begin{macro}{\@patchforledchapter}
 % \begin{macro}{\quotation}
 % \begin{macro}{\endquotation}
 % \begin{macro}{\quote}
 % \begin{macro}{\endquote}
+% \changes{v1.12.0}{2014/07/24}{\cs{ledxxx} sectionning commands are deprecated and replaced by \cs{eledxxx} commands.}
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
 % \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
@@ -3295,63 +3297,78 @@
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
 %    \begin{macrocode}
 \newcommand{\initnumbering@sectcmd}{
-    \newcommand{\ledsection}[2][]{%
+    \newcommand{\ledsection}[2][]{\eledmac@warning{\string\ledsection\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsection*[1]{%
+    \WithSuffix\newcommand\ledsection*[1]{\eledmac@warning{\string\ledsection*\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand{\ledsubsection}[2][]{%
+    \newcommand{\ledsubsection}[2][]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsubsection*[1]{%
+    \WithSuffix\newcommand\ledsubsection*[1]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand{\ledsubsubsection}[2][]{%
+    \newcommand{\ledsubsubsection}[2][]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsubsubsection*[1]{%
+    \WithSuffix\newcommand\ledsubsubsection*[1]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand\ledchapter[2][]{\ifl@dmemoir\gdef\ch@pt@c{##1}\fi~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
-    \WithSuffix\newcommand\ledchapter*[1]{~\pend\skipnumbering\pstart\chapter*{##1}\pend\pstart}
-    \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
-    \pretocmd{\@makeschapterhead}{\par}{}{}
-    \apptocmd{\@makeschapterhead}{\par}{}{}
-    \patchcmd{\@makeschapterhead}{\vskip 40\p@}{}{}{}
-    \patchcmd{\@makechapterhead}{1\par}{1}{}{}
-    \pretocmd{\@makechapterhead}{\par}{}{}
-    \apptocmd{\@makechapterhead}{\par}{}{}
-    \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
-    \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-    \apptocmd{\@schapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-    \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
-    \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
-    \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+    \newcommand\ledchapter[2][]{%
+      \eledmac@warning{\string\ledchapter\space deprecated}%
+      \ifl@dmemoir%
+        \gdef\ch@pt@c{##1}%
+      \fi%
+      ~\pend\skipnumbering%
+      \pstart%
+        \@patchforledchapter\chapter[##1]{##2}%
+      \pend\pstart}
+    \WithSuffix\newcommand\ledchapter*[1]{%
+      \eledmac@warning{\string\ledchapter*\space deprecated}%
+      ~\pend\skipnumbering%
+      \pstart%
+        \@patchforledchapter\chapter*{##1}\pend%
+        \pstart}
+    \def\@patchforledchapter{
+      \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
+      \pretocmd{\@makeschapterhead}{\par}{}{}
+      \apptocmd{\@makeschapterhead}{\par}{}{}
+      \patchcmd{\@makeschapterhead}{\vskip 40\p@}{}{}{}
+      \patchcmd{\@makechapterhead}{1\par}{1}{}{}
+      \pretocmd{\@makechapterhead}{\par}{}{}
+      \apptocmd{\@makechapterhead}{\par}{}{}
+      \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
+      \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+      \apptocmd{\@schapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+      \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
+      \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
+      \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+    }
     \ifnoquotation@\else
     \renewcommand{\quotation}{\par\leavevmode%
                                 \parindent=1.5em%
@@ -3384,7 +3401,7 @@
                                     \vskip\topsep%
                                 \fi%
                                 \global\leftskip=\leftmargin%
-                                \global\rightskip=\leftmargin%                                              
+                                \global\rightskip=\leftmargin%
     }
     \renewcommand{\endquote}{\par%
                                 \global\leftskip=0pt%
@@ -3400,6 +3417,7 @@
     \fi
 }
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
