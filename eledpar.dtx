@@ -159,6 +159,7 @@
 % \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.5.0}{2013/11/08}{Add, as in eledmac, features to manage page breaks.}
 % \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
+% \changes{v.1.8.0}{2014/07/11}{Add, as in eledmac, possibility to insert something after \cs{pend}s / verses.}
 % \changes{v.1.8.0}{2014/07/11}{Add, as in eledmac, possibility to insert something between \cs{pstart}s / verse.}
 % \changes{v.1.8.0}{2014/07/11}{Add, as in eledmac, new system of sectioning commands.}
 % \hyphenation{man-u-script man-u-scripts}
@@ -2450,6 +2451,7 @@
 % \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
 % \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendL} and \cs{pendR} can have a optional arguments.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2473,12 +2475,12 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{%
-\if@nobreak%
+\newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2522,16 +2524,20 @@
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartL\thepstartL}\fi%
+%    \end{macrocode}
+% Dump the optional arguments
+%    \begin{macrocode}
+  \csgdef{before@pstartL@\the\l@dnumpstartsL}{#1}%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{%
-\if@nobreak%
+\newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2565,6 +2571,7 @@
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
+   \csgdef{before@pstartR@\the\l@dnumpstartsR}{#1}%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2573,6 +2580,7 @@
 %
 % \begin{macro}{\pendL}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pendL}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendL} can have a optional arguments.}
 % \cs{pend} must be used to end a numbered paragraph. Again we need 
 % a version 
 % that knows about left parallel texts.
@@ -2615,6 +2623,7 @@
 %
 % \begin{macro}{\pendR}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartR}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendR} can have a optional arguments.}
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
@@ -4451,6 +4460,7 @@
 %    \begin{macrocode}
 %      \begingroup
 {        \loop\ifaraw@text
+         \csuse{before@pstartL@\the\l@dpscL}%
 %    \end{macrocode}
 % See if there is more that can be done for the left page and set up the 
 % left language.
@@ -4507,6 +4517,7 @@
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
 %    \begin{macrocode}
+          \csuse{before@pstartR@\the\l@dpscR}%
           \checkpageR
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage
@@ -4902,7 +4913,7 @@
   \else%                                      box is empty
 %    \end{macrocode}
 % The box is empty;
-% add the content of the optional argument of the previous pend.
+% add the content of the optional argument of the previous \cs{pend}.
 % \begin{macrocode}
    \csuse{after@pendL@\the\l@dpscL}%
 % \end{macrocode}
@@ -4947,8 +4958,15 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
+%    \end{macrocode}
+% Add notes of parallel ledgroup
+%    \begin{macrocode}
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
+%    \end{macrocode}
+% Add optional argument of pstart
+%    \begin{macrocode}
+        \csuse{before@pstartL@\the\l@dpscL}%
       \fi
     \fi
   \fi}
@@ -4987,6 +5005,7 @@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
+        \csuse{before@pstartR@\the\l@dpscR}%
       \fi
     \fi
   \fi}
