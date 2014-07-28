@@ -79,7 +79,7 @@
     \affixline@num
     \add@inserts\affixside@note
     \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-    {\print@ledsectionL}%
+    {}%
      {\print@lineL}%
   }%
   \add@penaltiesL
@@ -96,9 +96,9 @@
 \def\print@ledsectionL{%
     \numdef{\temp@}{\l@dpscL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
-    %\csuse{eled@sectionning@\the\l@dpscL}%
+    \csuse{eled@sectionning@\the\l@dpscL}%
     \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
-    %\vspace{-\baselineskip}\relax%
+    \vskip-\baselineskip%
 }
 
 
@@ -133,7 +133,7 @@
         \add@insertsR
     \affixside@noteR
         \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
-     {\print@ledsectionR}%
+     {}%
      {\print@lineR}%
     }%
   \add@penaltiesR
@@ -154,7 +154,203 @@
 \def\print@ledsectionR{%
     \numdef{\temp@}{\l@dpscR-1}%
     \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
-    %\csuse{eled@sectionning@\the\l@dpscR}%
+    \csuse{eled@sectionning@\the\l@dpscR}%
     \hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
-    %\vspace{-\baselineskip}%
+    \vskip-\baselineskip
 }
+\newsavebox{\@ledsectionL}
+\newsavebox{\@ledsectionR}
+\renewcommand*{\Columns}{%
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
+  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
+    \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
+  \fi
+  \begingroup
+    \l@dzeropenalties
+    \endgraf\global\num@lines=\prevgraf
+            \global\num@linesR=\prevgraf
+    \global\par@line=\z@
+    \global\par@lineR=\z@
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \check@pstarts
+    \loop\if@pstarts
+        \global\pstartnumtrue
+        \global\pstartnumRtrue
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \checkraw@text
+      \l@dchecklang
+{        \loop\ifaraw@text
+          \ifl@dsamelang
+            \do@lineL
+            \do@lineR
+          \else
+            \l@duselanguage{\theledlanguageL}%
+            \do@lineL
+            \l@duselanguage{\theledlanguageR}%
+            \do@lineR
+          \fi
+          \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@ledsectionL}}}%
+                {}%
+          \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@ledsectionR}}}%
+                {}%
+          \hb@xt@ \hsize{%
+           \hfill \unhbox\l@dleftbox\usebox{\@ledsectionL}
+            \hfill \columnseparator  \hfill
+            \unhbox\l@drightbox\usebox{\@ledsectionR}
+          }%
+          \checkraw@text
+          \checkverseL
+          \checkverseR
+          \checkpb@columns
+        \repeat}
+      \@writelinesinparL
+      \@writelinesinparR
+      \check@pstarts
+            \ifbypstart@
+           \write\linenum@out{\string\@set[1]}
+           \resetprevline@
+        \fi
+       \ifbypstart@R
+           \write\linenum@outR{\string\@set[1]}
+           \resetprevline@
+        \fi
+      \addtocounter{pstartL}{1}
+      \addtocounter{pstartR}{1}
+    \repeat
+    \flush@notes
+    \flush@notesR
+  \endgroup
+  \global\l@dpscL=\z@
+  \global\l@dpscR=\z@
+  \global\l@dnumpstartsL=\z@
+  \global\l@dnumpstartsR=\z@
+  \ignorespaces
+    \global\instanzaLfalse
+    \global\instanzaRfalse}
+
+
+\renewcommand*{\Pages}{%
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
+  \parledgroup@notespacing@set@correction
+  \typeout{}
+  \typeout{*************************** PAGES ***************************}
+  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
+    \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
+  \fi
+  \cleartol@devenpage
+  \begingroup
+    \l@dzeropenalties
+    \endgraf\global\num@lines=\prevgraf
+            \global\num@linesR=\prevgraf
+    \global\par@line=\z@
+    \global\par@lineR=\z@
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \writtenlinesLfalse
+    \writtenlinesRfalse
+    \check@pstarts
+    \loop\if@pstarts
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \getlinesfromparlistL
+      \getlinesfromparlistR
+      \l@dcalc@maxoftwo{\@cs@linesinparL}{\@cs@linesinparR}%
+          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
+      \check@pstarts
+    \repeat
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \getlinesfrompagelistL
+    \getlinesfrompagelistR
+    \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
+        {\l@dminpagelines}%
+    \check@pstarts
+    \if@pstarts
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \global\@donereallinesL=\z@
+      \global\@donetotallinesL=\z@
+      \global\@donereallinesR=\z@
+      \global\@donetotallinesR=\z@
+      \checkraw@text
+{        \loop\ifaraw@text
+          \checkpageL
+          \l@duselanguage{\theledlanguageL}%
+%%%          \begingroup
+{            \loop\ifl@dsamepage
+              \do@lineL
+              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\print@ledsectionL}%
+                {}%
+              \advance\numpagelinesL \@ne
+              \ifshiftedpstarts
+                      \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+              \else%
+                      \parledgroup@correction@notespacing{L}
+                      \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
+              \fi
+              \get@nextboxL
+              \checkpageL
+              \checkverseL
+              \checkpbL
+            \repeat
+            \ifl@dpagefull
+              \@writelinesonpageL{\the\numpagelinesL}%
+            \else
+              \@writelinesonpageL{1000}%
+            \fi
+            \numpagelinesL \z@
+            \parledgroup@correction@notespacing@init
+            \clearl@dleftpage }%
+          \checkpageR
+          \l@duselanguage{\theledlanguageR}%
+{            \loop\ifl@dsamepage
+              \do@lineR
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\print@ledsectionR}%
+                {}%
+              \advance\numpagelinesR \@ne
+              \ifshiftedpstarts
+                      \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+              \else%
+                      \parledgroup@correction@notespacing{R}
+                      \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+              \fi
+              \get@nextboxR
+              \checkpageR
+              \checkverseR
+              \checkpbR
+            \repeat
+            \ifl@dpagefull
+              \@writelinesonpageR{\the\numpagelinesR}%
+            \else
+              \@writelinesonpageR{1000}%
+            \fi
+            \numpagelinesR=\z@
+            \parledgroup@correction@notespacing@init
+            \clearl@drightpage}
+          \checkraw@text
+          \ifaraw@text
+            \getlinesfrompagelistL
+            \getlinesfrompagelistR
+            \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
+                             {\l@dminpagelines}%
+          \fi
+        \repeat}
+    \fi
+    \flush@notes
+    \flush@notesR
+  \endgroup
+  \global\l@dpscL=\z@
+  \global\l@dpscR=\z@
+  \global\l@dnumpstartsL=\z@
+  \global\l@dnumpstartsR=\z@
+    \global\instanzaLfalse
+    \global\instanzaRfalse
+  \ignorespaces}
