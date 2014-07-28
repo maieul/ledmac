@@ -4359,12 +4359,14 @@
 %
 %
 % \begin{macro}{\Pages}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
+  \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \parledgroup@notespacing@set@correction
@@ -4463,6 +4465,9 @@
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
               \do@lineL
+              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\print@ledsectionL}%
+                {}%
               \advance\numpagelinesL \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
@@ -4506,6 +4511,9 @@
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage
               \do@lineR
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\print@ledsectionR}%
+                {}%
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
