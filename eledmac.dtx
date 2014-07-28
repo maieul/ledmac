@@ -2343,11 +2343,12 @@
 %
 %
 % \section{Sectioning commands}
-% \changes{v1.1}{2012/09/25}{sectioning commands}
+% \changes{v1.1.0}{2012/09/25}{Sectioning commands.}
+% \changes{v1.12.0}{2014/07/28}{New Sectioning commands.}
 % The standard sectioning command (\cs{chapter}, \cs{section} etc.) can be used inside a numbered text.
 % But the line which contains it won't be numbered, and you can't add critical notes inside.
-% 
-% However, eledmac provides the following commands:
+% In the past (between versions 1.1.0 and 1.12.0), 
+% these following commands were provided:
 % \begin{itemize}
 % \item \cs{ledchapter}\oarg{text}\marg{critical text}
 % \item \cs{ledchapter*}
@@ -2358,29 +2359,35 @@
 % \item \cs{ledsubsubsection}\oarg{text}\marg{critical text}
 % \item \cs{ledsubsubsection*}
 % \end{itemize}
-% Which are the equivalent of the standard LaTeX commands, but be careful.
-% Note the following points:
-% \begin{enumerate}
-% \item All these commands close a \cs{pstart}, and open a new one. The content of the command itself is between \cs{pstart} and \cs{pend}.
-% \item Don't try to make \verb|\let\chapter\ledchapter|, or other things like it: the \cs{led}section commands call the standard commands.
-% \item For the non-starred sections, use the optional argument \meta{text} to provide the text to the table of contents.
-% \item The \cs{ledchapter} doesn't open a new page. You must use \cs{beforeledchapter} before. This also closes a \cs{pstart} and opens a new.
-% \end{enumerate}
-%
-% \changes{v1.8.0}{2013/12/13}{Add \cs{ledsecnolinenumber} option.}
-% If you use \Lpack{eledpar}, you must use these commands to have parallel sectioning. 
-% However, if you don't want lineation in sectioning command, use the \verb+ledsecnolinenumber+ option when loading eledmac. Or add \cs{ledsecnolinenumbertrue} in your preamble.
-% \changes{v1.2}{2012/10/13}{Add \cs{ledsectnotoc} command.}
-% \DescribeMacro{\ledsectnotoc}
-% You can create a table of contents that indexes only the titles that appear on the left side of the edition: 
-% for instance, titles from the original language, not the translation.
-% You could use \cs{ledsectnotoc} at the beginning of the side environnment :
+% These commands are deprecated, and wont' be maintened anymore, because of a bad conception.
+% Since version 1.12.0, you have to use the following commands:
+% \begin{itemize}
+% \item \cs{eledchapter}\oarg{text}\marg{critical text}
+% \item \cs{eledchapter*}
+% \item \cs{eledsection}\oarg{text}\marg{critical text}
+% \item \cs{eledsection*}
+% \item \cs{eledsubsection}\oarg{text}\marg{critical text}
+% \item \cs{eledsubsection*}
+% \item \cs{eledsubsubsection}\oarg{text}\marg{critical text}
+% \item \cs{eledsubsubsection*}
+% \end{itemize}
+% Which are equivalent to the \LaTeX\ commands. Each indivual command must be called alone in a \cs{pstart}\ldots\cs{pend}:
 % \begin{verbatim}
-% \begin{Rightside}
-% \ledsectnotoc 
-% ...
-% \end{Rightside}
+%\pstart
+%\eledsection*{xxxx\ledsidenote{section}}
+%\pend
+%\pstart
+%\eledsubsection*{xxxx\ledsidenote{sub}}
+%\pend
+%\pstart
+%normal text
+%\pend
 % \end{verbatim}
+% At the first run, you will see only the text. It's normal. 
+% At the second run, you will see the formating.
+% And consequently, at the third run, you will see the table of contents. 
+%
+% For technical reason, the page break before \cs{elechapter} can't be add automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
@@ -3225,6 +3232,12 @@
 % should be no direct interaction between the use of these counters
 % and variables in the two processing steps.
 % \changes{v0.7}{2005/02/24}{Added \cs{initnumbering@reg}}
+% \changes{v1.12.0}{2014/07/24}{\cs{beginnumbering} is defined only on \Lpack{eledmac}, not on \Lpack{eledpar}.}
+% For parallel processing :
+%\begin{itemize}
+%  \item zero \cs{l@dnumpstartsL} --- the number of chunks to be processed.
+%  \item set \cs{ifpst@rtedL} to FALSE.
+% \end{itemize}
 %    \begin{macrocode}
 \newcommand*{\beginnumbering}{%
   \ifnumbering
@@ -3238,8 +3251,25 @@
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \l@dend@stuff
   \setcounter{pstart}{1}
-  \ifl@dpairing\else\begingroup\fi
+  \ifl@dpairing
+    \global\l@dnumpstartsL \z@
+    \global\pst@rtedLfalse
+  \else
+     \begingroup
+  \fi
+%    \end{macrocode}
+% The tools for section's title commands are called:
+% \begin{itemize}
+%   \item Defining old (deprecated) sectionning commands.
+%   \item Define an empty list of pstart number where sectioning commands are called,
+%   \item Input auxiliary file with the description of section^ titles.
+%   \item Open the same auxiliary file to write in.
+% \end{itemize} 
+%    \begin{macrocode}
   \initnumbering@sectcmd
+  \gdef\eled@sections@@{}
+  \InputIfFileExists{\jobname.eledsec\the\section@num}{}{}
+  \immediate\openout\eled@sectionning@out=\jobname.eledsec\the\section@num\relax
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -3263,155 +3293,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\initnumbering@sectcmd}
-% \begin{macro}{\ledsection}
-% \begin{macro}{\ledsection*}
-% \begin{macro}{\ledsubsection}
-% \begin{macro}{\ledsubsection*}
-% \begin{macro}{\ledsubsubsection}
-% \begin{macro}{\ledsubsubsection*}
-% \begin{macro}{\ledchapter}
-% \begin{macro}{\ledchapter*}
-% \begin{macro}{\quotation}
-% \begin{macro}{\endquotation}
-% \begin{macro}{\quote}
-% \begin{macro}{\endquote}
-% \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
-% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
-% \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
-% \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
-% \changes{v1.8.0}{2013/12/13}{Correction of sectioning commands in parallel texts.}
-% \changes{v1.10.0}{2014/02/27}{Correction of sectioning commands in parallel texts.}
-% \cs{initnumbering@sectcmd} defines sectioning commands inside numbered section.
-% It also defines quotation environment. 
-% Note: this assumes that the user didn't change \cs{chapter}.
-% If he did, he should redefine \cs{initnumbering@sectcmd}.
-%    \begin{macrocode}
-\newcommand{\initnumbering@sectcmd}{
-    \newcommand{\ledsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \WithSuffix\newcommand\ledsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \newcommand{\ledsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \WithSuffix\newcommand\ledsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \newcommand{\ledsubsubsection}[2][]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \WithSuffix\newcommand\ledsubsubsection*[1]{%
-        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
-        \pstart%
-        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
-        \vspace{-2\parskip}\vspace{-2\baselineskip}%
-        \ifautopar\else\pstart\fi
-    }
-    \newcommand\ledchapter[2][]{\ifl@dmemoir\gdef\ch@pt@c{##1}\fi~\pend\skipnumbering\pstart\chapter[##1]{##2}\pend\pstart}
-    \WithSuffix\newcommand\ledchapter*[1]{~\pend\skipnumbering\pstart\chapter*{##1}\pend\pstart}
-    \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
-    \pretocmd{\@makeschapterhead}{\par}{}{}
-    \apptocmd{\@makeschapterhead}{\par}{}{}
-    \patchcmd{\@makeschapterhead}{\vskip 40\p@}{}{}{}
-    \patchcmd{\@makechapterhead}{1\par}{1}{}{}
-    \pretocmd{\@makechapterhead}{\par}{}{}
-    \apptocmd{\@makechapterhead}{\par}{}{}
-    \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
-    \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-    \apptocmd{\@schapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
-    \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
-    \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
-    \patchcmd{\chapter}{\clearpage}{\relax}{}{}
-    \ifnoquotation@\else
-    \renewcommand{\quotation}{\par\leavevmode%
-                                \parindent=1.5em%
-                                \skipnumbering%
-                                \ifautopar%
-                                    \vskip-\parskip%
-                                \else%
-                                    \vskip\topsep%
-                                \fi%
-                                \global\leftskip=\leftmargin%
-                                \global\rightskip=\leftmargin%
-                            }
-    \renewcommand{\endquotation}{\par%
-                             \global\leftskip=0pt%
-                                \global\rightskip=0pt%
-                                \leavevmode%
-                                \skipnumbering%
-                                \ifautopar%
-                                    \vskip-\parskip%
-                                \else%
-                                    \vskip\topsep%
-                                \fi%
-                                }
-    \renewcommand{\quote}{\par\leavevmode%
-                                \parindent=0pt%
-                                \skipnumbering%
-                                \ifautopar%
-                                    \vskip-\parskip%
-                                \else%
-                                    \vskip\topsep%
-                                \fi%
-                                \global\leftskip=\leftmargin%
-                                \global\rightskip=\leftmargin%                                              
-    }
-    \renewcommand{\endquote}{\par%
-                                \global\leftskip=0pt%
-                                \global\rightskip=0pt%
-                                \leavevmode%
-                                \skipnumbering%
-                                \ifautopar%
-                                    \vskip-\parskip%
-                                \else%
-                                    \vskip\topsep%
-                                \fi%
-                                }
-    \fi
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\ledsectnotoc}
-% The \cs{ledsectnotoc} only disables the \cs{addcontentsline} macro.
-%    \begin{macrocode}
-\newcommand{\ledsectnotoc}{\let\addcontentsline\@gobblethree}
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\endnumbering}
 % \cs{endnumbering} must follow the last text for a numbered section.
 % It takes care of notifying you when changes have been noted in the
@@ -3439,7 +3320,12 @@
   \else
     \led@err@NumberingNotStarted
   \fi
-  \autoparfalse\ifl@dpairing\else\endgroup\fi}
+  \autoparfalse  
+  \immediate\closeout\eled@sectionning@out
+  \ifl@dpairing\else
+    \endgroup
+  \fi
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3471,6 +3357,7 @@
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
      \begingroup
+     \initnumbering@sectcmd
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
@@ -3481,7 +3368,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
 %
 % \section{Line counting}
 % \label{lineation}\relax
@@ -5630,9 +5516,9 @@
     \let\@oldnobreak\@nobreaktrue%
   \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
-\@nobreaktrue%
-\ifnumbering \else%
+  \fi%
+  \@nobreaktrue%
+  \ifnumbering \else%
     \led@err@PstartNotNumbered%
     \beginnumbering%
   \fi%
@@ -5655,7 +5541,8 @@
      \fi%
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
-       {\p@pstart\thepstart}\fi%
+       {\p@pstart\thepstart}
+  \fi%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5832,17 +5719,46 @@
   \check@pb@in@verse
   \affixline@num
   \affixpstart@num
-  \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta\add@inserts\affixside@note
-    \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol\l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
-    \l@drsn@te
-  }}
+  \add@inserts\affixside@note
+%    \end{macrocode}
+% \changes{v1.12.0}{2014/07/24}{\cs{do@line} is splitted in more little commands.}
+% Depending wether a sectioning command is called at this pstart or not 
+% we print sectioning command or normal line, 
+%    \begin{macrocode}
+  \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
+     {\print@ledsection}%
+     {\print@line}%
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
   }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\print@line}
+%    \begin{macrocode}
+% \cs{print@line} is for normal line, i. e line without sectionning command.
+\def\print@line{
+	\hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta
+	    \l@dlsn@te
+	    {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+	    \l@drsn@te
+	  }}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@ledsection}
+% \cs{print@ledsection} ss for lines with sectionning command.
+% It set the correct spacing, depending whether a sectionning command was called at previous \cs{pstart}, calls the sectionning command, print the normal line outside of the paper, to be able to have critical footnotes. 
+% Because of this printing, a vertical spacing correction is added.
+\def\print@ledsection{%
+    \numdef{\temp@}{\l@dnumpstartsL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \csuse{eled@sectionning@\the\l@dnumpstartsL}%
+    \csundef{eled@sectionning@\the\l@dnumpstartsL}%
+    \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip-\baselineskip%
+}
+%    \end{macrocode}
 % \begin{macro}{\do@linehook}
 % \begin{macro}{\do@insidelinehook}
 % Two hooks into \cs{do@line}. The first is called at the beginning of \cs{do@line}, the second is called in the line box.
@@ -12750,7 +12666,586 @@
 %
 %
 %
+% \section{Section's title commands}
+% \subsection{Deprecated commands}
+% \begin{macro}{\initnumbering@sectcmd}
+% \begin{macro}{\ledsection}
+% \begin{macro}{\ledsection*}
+% \begin{macro}{\ledsubsection}
+% \begin{macro}{\ledsubsection*}
+% \begin{macro}{\ledsubsubsection}
+% \begin{macro}{\ledsubsubsection*}
+% \begin{macro}{\ledchapter}
+% \begin{macro}{\ledchapter*}
+% \begin{macro}{\@patchforledchapter}
+% \begin{macro}{\quotation}
+% \begin{macro}{\endquotation}
+% \begin{macro}{\quote}
+% \begin{macro}{\endquote}
+% \changes{v1.12.0}{2014/07/24}{\cs{ledxxx} sectionning commands are deprecated and replaced by \cs{eledxxx} commands.}
+% \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
+% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
+% \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
+% \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
+% \changes{v1.8.0}{2013/12/13}{Correction of sectioning commands in parallel texts.}
+% \changes{v1.10.0}{2014/02/27}{Correction of sectioning commands in parallel texts.}
+% \cs{initnumbering@sectcmd} defines  \cs{ledxxx} commands. These commands are deprecated.
+% It also defines quotation environment. 
+% Note: this assumes that the user didn't change \cs{chapter}.
+% If he did, he should redefine \cs{initnumbering@sectcmd}.
+%    \begin{macrocode}
+\newcommand{\initnumbering@sectcmd}{
+    \newcommand{\ledsection}[2][]{\eledmac@warning{\string\ledsection\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \WithSuffix\newcommand\ledsection*[1]{\eledmac@warning{\string\ledsection*\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \newcommand{\ledsubsection}[2][]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \WithSuffix\newcommand\ledsubsection*[1]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \newcommand{\ledsubsubsection}[2][]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \WithSuffix\newcommand\ledsubsubsection*[1]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
+        \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
+        \pstart%
+        \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
+        \vspace{-2\parskip}\vspace{-2\baselineskip}%
+        \ifautopar\else\pstart\fi
+    }
+    \newcommand\ledchapter[2][]{%
+      \eledmac@warning{\string\ledchapter\space deprecated}%
+      \ifl@dmemoir%
+        \gdef\ch@pt@c{##1}%
+      \fi%
+      ~\pend\skipnumbering%
+      \pstart%
+        \@patchforledchapter\chapter[##1]{##2}%
+      \pend\pstart}
+    \WithSuffix\newcommand\ledchapter*[1]{%
+      \eledmac@warning{\string\ledchapter*\space deprecated}%
+      ~\pend\skipnumbering%
+      \pstart%
+        \@patchforledchapter\chapter*{##1}\pend%
+        \pstart}
+    \def\@patchforledchapter{
+      \patchcmd{\@makeschapterhead}{1\par}{1}{}{}
+      \pretocmd{\@makeschapterhead}{\par}{}{}
+      \apptocmd{\@makeschapterhead}{\par}{}{}
+      \patchcmd{\@makeschapterhead}{\vskip 40\p@}{}{}{}
+      \patchcmd{\@makechapterhead}{1\par}{1}{}{}
+      \pretocmd{\@makechapterhead}{\par}{}{}
+      \apptocmd{\@makechapterhead}{\par}{}{}
+      \patchcmd{\@makechapterhead}{\vskip 40\p@}{}{}{}
+      \apptocmd{\@chapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+      \apptocmd{\@schapter}{\par\leavevmode\vspace{40 \p@}\skipnumbering}{}{}
+      \newcommand\beforeledchapter{\pend\cleardoublepage\pstart}
+      \patchcmd{\chapter}{\cleardoublepage}{\relax}{}{}
+      \patchcmd{\chapter}{\clearpage}{\relax}{}{}
+    }
+    \ifnoquotation@\else
+    \renewcommand{\quotation}{\par\leavevmode%
+                                \parindent=1.5em%
+                                \skipnumbering%
+                                \ifautopar%
+                                    \vskip-\parskip%
+                                \else%
+                                    \vskip\topsep%
+                                \fi%
+                                \global\leftskip=\leftmargin%
+                                \global\rightskip=\leftmargin%
+                            }
+    \renewcommand{\endquotation}{\par%
+                             \global\leftskip=0pt%
+                                \global\rightskip=0pt%
+                                \leavevmode%
+                                \skipnumbering%
+                                \ifautopar%
+                                    \vskip-\parskip%
+                                \else%
+                                    \vskip\topsep%
+                                \fi%
+                                }
+    \renewcommand{\quote}{\par\leavevmode%
+                                \parindent=0pt%
+                                \skipnumbering%
+                                \ifautopar%
+                                    \vskip-\parskip%
+                                \else%
+                                    \vskip\topsep%
+                                \fi%
+                                \global\leftskip=\leftmargin%
+                                \global\rightskip=\leftmargin%
+    }
+    \renewcommand{\endquote}{\par%
+                                \global\leftskip=0pt%
+                                \global\rightskip=0pt%
+                                \leavevmode%
+                                \skipnumbering%
+                                \ifautopar%
+                                    \vskip-\parskip%
+                                \else%
+                                    \vskip\topsep%
+                                \fi%
+                                }
+    \fi
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\ledsectnotoc}
+% The \cs{ledsectnotoc} only disables the \cs{addcontentsline} macro.
+%    \begin{macrocode}
+\newcommand{\ledsectnotoc}{\let\addcontentsline\@gobblethree}
+%    \end{macrocode}
+% \end{macro}
 %
+% \subsection{New commands : \cs{eledxxx}}
+% The new system of \cs{eledxxxx} commands to section text work like this:
+% \begin{enumerate}
+% 	\item When one of this command is called, \Lpack{eledmac} write to an auxiliary files:
+%      \begin{itemize}
+%           \item The section level.
+%           \item The section title
+%           \item The side (when \Lpack{eledpar} is used).
+%           \item The pstart where the command is called.
+%           \item If we have starred version or not.
+%      \end{itemize}
+%   \item \Lpack{eledmac} add the title of the section to pstart, as a normal content. That is to enable critical notes.
+%   \item When \LaTeX\ is run a other time, this file is read. That:
+%     \begin{itemize}
+%         \item Add the pstart number to a list of pstarts where a sectionning command is used.
+%         \item Define a command, which name contains the pstart number, and which calls the normal \LaTeX\ sectionning command.
+%     \end{itemize}
+%   \item This last commands is called when the pstart is effectively printed.
+% \end{enumerate}
+%
+% \begin{macro}{\beforeeledchapter}
+% For technical reasons, not solved today, the page breaking before chapter can't be mae automatically by eledmac. User have to use \cs{beforeeledchapter}.
+%    \begin{macrocode}
+\ifl@dmemoir
+  \newcommand\beforeeledchapter{\clearforchapter}
+\else
+  \newcommand\beforeeledchapter{\if@openright\cleardoublepage\else\clearpage\fi}
+\fi
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\chapter}
+% \begin{macro}{\M@sect}
+% \begin{macro}{\@mem@old@ssect}
+% \begin{macro}{\@makechapterhead}
+% \begin{macro}{\@makechapterhead}
+% \begin{macro}{\@makeschapterhead}
+% \begin{macro}{\@sect}
+% \begin{macro}{\@ssect}
+% We have to patch \LaTeX, \Lclass{book} and \Lclass{memoir} sectionning commands in order to:
+% \begin{itemize}
+%  \item Disable \cs{edtext} inside.
+%  \item Disable page breaking (for \cs{chapter}).
+%  \item Add line numbers and sidenotes. 
+% \end{itemize}
+% Unfortunatly, I was not able to try if \Lclass{memoir} is loaded. That is why \Lpack{eledmac} try to define for both standard class and \Lclass{memoir} class.
+%
+% I was also not able to use \cs{ifboolexpr}. That why some logical "or" are printed as two test (bad, I know!. If someone has solution\ldots)
+%   
+%    \begin{macrocode}
+\patchcmd{\chapter}{\clearforchapter}{%
+  \ifnumbering\else%
+    \clearforchapter
+  \fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\chapter\space fails}}
+
+\patchcmd{\M@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+  
+\pretocmd{\M@sect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+
+\patchcmd{\M@sect}
+	{#8}
+	{#8%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\M@sect\space fails}}
+
+\patchcmd{\M@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+  
+\pretocmd{\@mem@old@ssect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+\patchcmd{\@mem@old@ssect}
+	{#5}
+	{#5%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+\patchcmd{\@mem@old@ssect}
+  {\hskip #1}
+  {\hskip #1%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
+
+
+% Normal
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \ifnumbering\else%
+    \if@openright\cleardoublepage\else\clearpage\fi%
+  \fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\chapter\space fails}}
+
+
+
+
+\patchcmd{\@makechapterhead}
+  {#1}
+  {\ifnumbering\leavevmode\l@dld@ta\l@dlsn@te\fi%
+   \ifaraw@text\leavevmode\l@dld@ta\l@dlsn@te\fi%
+    #1%
+  \ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+  \ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
+
+\patchcmd{\@makeschapterhead}
+  {#1}
+  {\ifnumbering\leavevmode\l@dld@ta\l@dlsn@te\fi%
+   \ifaraw@text\leavevmode\l@dld@ta\l@dlsn@te\fi%
+    #1%
+   \ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+   \ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
+
+
+\patchcmd{\@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+  
+\pretocmd{\@sect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+\patchcmd{\@sect}
+	{#8}
+	{#8%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi}
+	{}
+	{\eledmac@warning{Patching \string\@sect\space fails}}
+
+\patchcmd{\@sect}
+  {\hskip #3\relax}
+  {\hskip #3\relax%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+  
+\pretocmd{\@ssect}
+  {\let\edtext=\dummy@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+
+
+\patchcmd{\@ssect}
+	{#5}
+	{#5%
+	\ifnumbering\hfill\l@drd@ta \l@drsn@te\fi%
+	\ifaraw@text\hfill\l@drd@ta \l@drsn@te\fi
+	}
+	{}
+	{\eledmac@warning{Patching \string\@ssect\space fails}}
+
+
+\patchcmd{\@ssect}
+  {\hskip #1}
+  {\hskip #1%
+  \ifnumbering\l@dld@ta\l@dlsn@te\fi%
+  \ifaraw@text\l@dld@ta\l@dlsn@te\fi
+  }
+  {}
+  {\eledmac@warning{Patching \string\@ssect\space fails}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\eled@sectionning@out}
+% \cs{eled@sectionning@out} is the output file, to dump the pstarts where a sectionning command is used.
+%    \begin{macro}
+\newwrite\eled@sectionning@out
+%    \end{macro}
+% \end{macro}
+% \begin{macro}{\eledchapter}
+% \begin{macro}{\eledsection}
+% \begin{macro}{\eledsubsection}
+% \begin{macro}{\eledsubsubsection}
+% \begin{macro}{\eledchapter*}
+% \begin{macro}{\eledsection*}
+% \begin{macro}{\eledsubsection*}
+% \begin{macro}{\eledsubsubsection*}
+% And now, the user sectionning commands, which write to the file, and also add content as a "normal" line.
+%    \begin{macrocode}
+\newcommand{\eledchapter}[2][]{%
+  \makebox{#2}% 
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      }%
+  \fi%
+}
+
+\newcommand{\eledsection}[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      }%
+  \fi%
+}
+
+\newcommand{\eledsubsection}[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      }%
+  \fi%
+}
+\newcommand{\eledsubsubsection}[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      }%
+  \fi%
+}
+ 
+
+\WithSuffix\newcommand\eledchapter*[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      }%
+  \fi%
+}
+ 
+\WithSuffix\newcommand\eledsection*[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      }%
+  \fi%
+}
+  
+\WithSuffix\newcommand\eledsubsection*[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      }%
+  \fi%
+}
+  
+\WithSuffix\newcommand\eledsubsubsection*[2][]{%
+  \makebox{#2}%
+  \ifledRcol%
+    \immediate\write\eled@sectionningR@out{%
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
+      }%
+  \else%
+    \immediate\write\eled@sectionning@out{%
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      }%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\eled@chapter}
+% \begin{macro}{\eled@section}
+% \begin{macro}{\eled@subsection}
+% \begin{macro}{\eled@subsubsection}
+% The sectionning macros, called in the auxiliary file. They have five arguments:
+% \begin{enumerate}
+%   \item Optional arguments of \LaTeX\ sectioning command.
+%   \item Mandatory arguments of \LaTeX\ sectioning command.
+%   \item Pstart number.
+%   \item Side: \verb+R+ if right, nothing if left.
+%   \item Starred or not.
+% \end{enumerate}
+%    \begin{macrocode}
+\def\eled@chapter#1#2#3#4#5{%
+    \ifstrempty{#4}%
+      {%
+      \ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}}
+	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}}
+	  }%
+	  {%
+	  \ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*{#2}}}
+	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
+	  }%
+	\listcsgadd{eled@sections#5@@}{#3}%
+	}
+\def\eled@section#1#2#3#4#5{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\section{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\section[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\section*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\section*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listcsgadd{eled@sections#5@@}{#3}%
+	}
+\def\eled@subsection#1#2#3#4#5{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsection{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsection[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsection*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsection*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listcsgadd{eled@sections#5@@}{#3}%
+	}
+\def\eled@subsubsection#1#2#3#4#5{%
+    \ifstrempty{#4}%
+      {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection[#1]{#2}}}%
+	  }%
+	  {\ifstrempty{#1}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*{#2}}}%
+	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*[#1]{#2}}}%Bug in LaTeX!
+	  }
+	\listcsgadd{eled@sections#5@@}{#3}%
+	}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \section{Page breaking or no page breaking depending of specific lines}
 % By default, page breaks are automatic.  However, the use can define lines which will force page breaks, or prevent page breaks around one specific line.
 % On the first run, the line-list file records the line number of where the page break is being changed (either forced, or prevented).
