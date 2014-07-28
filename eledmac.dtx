@@ -3270,6 +3270,77 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\endnumbering}
+% \cs{endnumbering} must follow the last text for a numbered section.
+% It takes care of notifying you when changes have been noted in the
+% input that require running the file through again to move everything
+% to the right place.
+% \changes{v0.7}{2005/02/24}{Changed \cs{endnumbering} for eledpar}
+%    \begin{macrocode}
+\def\endnumbering{%
+  \ifnumbering
+    \global\numberingfalse
+    \normal@pars
+    \ifl@dpairing
+      \global\pst@rtedLfalse
+    \else
+      \ifx\insertlines@list\empty\else
+        \global\noteschanged@true
+      \fi
+      \ifx\line@list\empty\else
+        \global\noteschanged@true
+      \fi
+    \fi
+    \ifnoteschanged@
+      \led@mess@NotesChanged
+    \fi
+  \else
+    \led@err@NumberingNotStarted
+  \fi
+  \autoparfalse\ifl@dpairing\else\endgroup\fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\pausenumbering}
+% \begin{macro}{\resumenumbering}
+% The \cs{pausenumbering} macro is just the same as
+% \cs{endnumbering}, but with the \cs{ifnumbering} flag set to \verb"true", to
+% show that numbering continues across the gap.\footnote{Our thanks
+% to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
+% behind these macros.}
+%    \begin{macrocode}
+\newcommand{\pausenumbering}{%
+  \ifautopar\global\autopar@pausetrue\fi%
+  \endnumbering\global\numberingtrue}
+%    \end{macrocode}
+% The \cs{resumenumbering} macro is a bit more involved, but not much.
+% It does most of the same things as \cs{beginnumbering}, but
+% without resetting the various counters. Note that no check is made
+% by \cs{resumenumbering} to ensure that \cs{pausenumbering} was actually
+% invoked.
+% \changes{v0.7}{2005/02/24}{Changed \cs{resumenumbering} for eledpar}
+%    \begin{macrocode}
+\newcommand*{\resumenumbering}{%
+  \ifnumbering
+     \ifautopar@pause\autopar\fi
+     \global\pst@rtedLtrue
+     \global\advance\section@num \@ne
+     \led@mess@SectionContinued{\the\section@num}%
+     \line@list@stuff{\jobname.\extensionchars\the\section@num}%
+     \l@dend@stuff
+     \begingroup
+     \initnumbering@sectcmd
+  \else
+    \led@err@NumberingShouldHaveStarted
+    \endnumbering
+    \beginnumbering
+  \fi}
+
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 % \section{Section's title commands}
 % \subsection{Deprecated commands}
 % \begin{macro}{\initnumbering@sectcmd}
@@ -3439,77 +3510,6 @@
 \newcommand{\ledsectnotoc}{\let\addcontentsline\@gobblethree}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\endnumbering}
-% \cs{endnumbering} must follow the last text for a numbered section.
-% It takes care of notifying you when changes have been noted in the
-% input that require running the file through again to move everything
-% to the right place.
-% \changes{v0.7}{2005/02/24}{Changed \cs{endnumbering} for eledpar}
-%    \begin{macrocode}
-\def\endnumbering{%
-  \ifnumbering
-    \global\numberingfalse
-    \normal@pars
-    \ifl@dpairing
-      \global\pst@rtedLfalse
-    \else
-      \ifx\insertlines@list\empty\else
-        \global\noteschanged@true
-      \fi
-      \ifx\line@list\empty\else
-        \global\noteschanged@true
-      \fi
-    \fi
-    \ifnoteschanged@
-      \led@mess@NotesChanged
-    \fi
-  \else
-    \led@err@NumberingNotStarted
-  \fi
-  \autoparfalse\ifl@dpairing\else\endgroup\fi}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\pausenumbering}
-% \begin{macro}{\resumenumbering}
-% The \cs{pausenumbering} macro is just the same as
-% \cs{endnumbering}, but with the \cs{ifnumbering} flag set to \verb"true", to
-% show that numbering continues across the gap.\footnote{Our thanks
-% to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
-% behind these macros.}
-%    \begin{macrocode}
-\newcommand{\pausenumbering}{%
-  \ifautopar\global\autopar@pausetrue\fi%
-  \endnumbering\global\numberingtrue}
-%    \end{macrocode}
-% The \cs{resumenumbering} macro is a bit more involved, but not much.
-% It does most of the same things as \cs{beginnumbering}, but
-% without resetting the various counters. Note that no check is made
-% by \cs{resumenumbering} to ensure that \cs{pausenumbering} was actually
-% invoked.
-% \changes{v0.7}{2005/02/24}{Changed \cs{resumenumbering} for eledpar}
-%    \begin{macrocode}
-\newcommand*{\resumenumbering}{%
-  \ifnumbering
-     \ifautopar@pause\autopar\fi
-     \global\pst@rtedLtrue
-     \global\advance\section@num \@ne
-     \led@mess@SectionContinued{\the\section@num}%
-     \line@list@stuff{\jobname.\extensionchars\the\section@num}%
-     \l@dend@stuff
-     \begingroup
-     \initnumbering@sectcmd
-  \else
-    \led@err@NumberingShouldHaveStarted
-    \endnumbering
-    \beginnumbering
-  \fi}
-
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
 %
 % \section{Line counting}
 % \label{lineation}\relax
