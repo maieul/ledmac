@@ -4102,12 +4102,14 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\Columns}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Columns} to enable to add section's title.}
 % The \cs{Columns} command results in the previous Left and
 % Right texts being typeset in matching columns. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \eledsection@correcting@skip=-\eledsection@correcting@skip% Correction for sections' titles
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4150,21 +4152,33 @@
 {        \loop\ifaraw@text
 %    \end{macrocode}
 % Grab the next pair of left and right text lines and output them, swapping
-% languages if they differ
+% languages if they differ, add section title if needed.
 %    \begin{macrocode}
           \ifl@dsamelang
             \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@ledsectionL}}}%
+                {}%
             \do@lineR
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@ledsectionR}}}%
+                {}%
           \else
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@ledsectionL}}}%
+                {}%
             \l@duselanguage{\theledlanguageR}%
             \do@lineR
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@ledsectionR}}}%
+                {}%
           \fi
           \hb@xt@ \hsize{%
-           \hfill \unhbox\l@dleftbox
+           \hfill \unhbox\l@dleftbox\usebox{\@ledsectionL}
             \hfill \columnseparator  \hfill
-            \unhbox\l@drightbox
+            \unhbox\l@drightbox\usebox{\@ledsectionR}
           }%
           \checkraw@text
           \checkverseL
