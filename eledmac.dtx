@@ -135,6 +135,17 @@
 %            \my@changes#1.\@nil
 %    }%
 %\makeatother
+% \newcommand{\Lpack}[1]{\textsf{#1}}
+% \newcommand{\Lclass}[1]{\textsf{#1}}
+% \newcommand{\file}[1]{\texttt{#1}}
+% \newcommand{\eledmac}{eledmac}
+% \newcommand{\Eledmac}{\Lpack{\eledmac}}
+% \newcommand{\edmac}{\texttt{EDMAC}}
+% \newcommand{\tabmac}{\texttt{TABMAC}}
+% \newcommand{\edstanza}{\texttt{EDSTANZA}}
+% \newcommand{\texbook}{\textit{TeXbook}}
+% \newcommand{\thetexbook}{\textit{The TeXbook}}
+%
 % \changes{v0.1}{2003/03/25}{First public release}
 % \changes{v0.2}{2003/08/16}{Added tabmac code, and extended indexing}
 % \changes{v0.2.1}{2003/09/13}{Bug fixes and match with mempatch v1.8}
@@ -193,16 +204,6 @@
 % \changes{v1.12.0}{2014/07/23}{Debug eledmac sectionning command after using \cs{resumenumbering}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
-% \newcommand{\Lpack}[1]{\textsf{#1}}
-% \newcommand{\Lclass}[1]{\textsf{#1}}
-% \newcommand{\file}[1]{\texttt{#1}}
-% \newcommand{\eledmac}{eledmac}
-% \newcommand{\Eledmac}{\Lpack{\eledmac}}
-% \newcommand{\edmac}{\texttt{EDMAC}}
-% \newcommand{\tabmac}{\texttt{TABMAC}}
-% \newcommand{\edstanza}{\texttt{EDSTANZA}}
-% \newcommand{\texbook}{\textit{TeXbook}}
-% \newcommand{\thetexbook}{\textit{The TeXbook}}
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
 % \newcommand{\egstart}{}
@@ -3215,20 +3216,26 @@
 % \begin{macro}{\pst@rtedLfalse}
 % \begin{macro}{\l@dnumpstartsL}
 % \begin{macro}{\ifledRcol}
+% \begin{macro}{\ifledRcol@}
 % In preparation for the \Lpack{eledpar} package, these are related to 
 % the `left' text of parallel texts (when \cs{ifl@dpairing} is TRUE). 
 % They are explained in the \Lpack{eledpar}
 % manual.
 % \changes{v0.7}{2005/02/24}{Added \cs{l@dnumpstartsL}, \cs{ifl@dpairing} 
 %              and \cs{ifpst@rted} for/from eledpar}
-% \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from eledpar}
+% \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from \Lpack{eledpar}}
+% \changes{v1.18.0}{2014/07/29}{Add \cs{ifledRcol@} for \Lpack{eledpar}}
 %    \begin{macrocode}
 \newif\ifl@dpairing
   \l@dpairingfalse
 \newif\ifpst@rtedL
   \pst@rtedLfalse
 \newcount\l@dnumpstartsL
+%    \end{macrocode}
+% \cs{ifledRcol} is set to true in the \verb+Rightside+ environnement. It must be distingued from \cs{ifledRcol@} which is set to true when a right line is processed, in \cs{Pages} or \cs{Columns}. 
+%    \begin{macrocode}
 \newif\ifledRcol
+\newif\ifledRcol@
 %    \end{macrocode}
 % The \cs{ifnumberingR} flag is
 % set to \verb"true" if we're within a right text numbered section.
@@ -10003,7 +10010,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\wrap@edcrossref}
-% \cs{\wrap@edcrossref} is call around all eledmac crossref command, except those which start by x. It adds the hyperlink.
+% \cs{wrap@edcrossref} is call around all eledmac crossref command, except those which start by x. It adds the hyperlink.
 %    \begin{macrocode}
 \newcommand{\wrap@edcrossref}[2]{%
   \ifdef{\hyperlink}%
@@ -10218,14 +10225,26 @@
 % These are the sidenote equivalents to \cs{line@margin} and \cs{linenummargin}
 % for specifying which margin. The default is the right margin (opposite to
 % the default for line numbers).
+% \cs{l@dgetsidenote@margin} return the number associated to side note margin:
+% \begin{description}
+%   \item[left] : 0
+%	\item[right] : 1
+%	\item[outer] : 2
+%	\item[inner] : 3
+% \end{description}
 % \changes{v0.5.1}{2004/04/10}{Added \cs{sidenotemargin} and \cs{sidenote@margin}}
 % \changes{v0.7}{2005/02/23}{Added \cs{l@dgetsidenote@margin}}
+% \changes{v1.12.0}{2014/07/29}{\cs{sidenotemargin} is now directly defined in \Lpack{eledmac} to be able to manage \Lpack{eledpar}.}
 %    \begin{macrocode}
 \newcount\sidenote@margin
 \newcommand*{\sidenotemargin}[1]{{%
   \l@dgetsidenote@margin{#1}%
   \ifnum\@l@dtempcntb>\m@ne
-    \global\sidenote@margin=\@l@dtempcntb
+    \ifledRcol
+      \global\sidenote@marginR=\@l@dtempcntb
+    \else
+      \global\sidenote@margin=\@l@dtempcntb
+    \fi
   \fi}}
 \newcommand*{\l@dgetsidenote@margin}[1]{%
   \def\@tempa{#1}\def\@tempb{left}%
@@ -10336,7 +10355,7 @@
 % \begin{macro}{\l@dlsnote}
 % \begin{macro}{\l@drsnote}
 % \begin{macro}{\l@dcsnote}
-% \changes{v1.12.0}{2014/07/22}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \LPack{eledmac}, including needs for eledpar case.}.
+% \changes{v1.12.0}{2014/07/22}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \Lpack{eledmac}, including needs for eledpar case.}.
 % The `footnotes' for left, right, and moveable sidenotes. The whole 
 % scheme is reminiscent of the critical footnotes code.
 %    \begin{macrocode}
@@ -10397,10 +10416,59 @@
 % \begin{macro}{\vl@drsnote}
 % \begin{macro}{\vl@dcsnote}
 % Put the left/right text into boxes, but just save the moveable text.
-% \cs{l@dcsnotetext} is a etoolbox list (comma separated)
+% \cs{l@dcsnotetext}, \cs{l@dcsnotetext@l} and \cs{l@dcsnotetext@r} are etoolbox lists which will store the content of side notes.
+% We store the content in lists, because we need to loop later on them, in case there is many sidenote for the same line.
+% That is there some special test to do, in order to:
+% \begin{itemize}
+% 	\item Store the content of \cs{ledsidenote} to \cs{l@dcsnotetext} in any cases.
+%   \item Store the content of \cs{rightsidenote} to:
+% 		\begin{itemize}
+% 			\item \cs{l@dcsnotetext} if \cs{ledsidenote} is to be put on right.
+% 			\item \cs{l@dcsnotetext@r} if \cs{ledsidenote} is to be put on left.
+% 		\end{itemize}
+%   \item Store the content of \cs{leftsidenote} to:
+% 		\begin{itemize}
+% 			\item \cs{l@dcsnotetext} if \cs{ledsidenote} is to be put on left.
+% 			\item \cs{l@dcsnotetext@l} if \cs{ledsidenote} is to be put on right.
+% 		\end{itemize}
+% \end{itemize}
 %    \begin{macrocode}
-\newcommand*{\vl@dlsnote}[1]{\setl@dlp@rbox{#1}}
-\newcommand*{\vl@drsnote}[1]{\setl@drp@rbox{#1}}
+\newcommand*{\vl@dlsnote}[1]{%
+  \ifledRcol@%
+    \@l@dtempcntb=\sidenote@marginR%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@numR%
+    \fi%
+  \else%
+    \@l@dtempcntb=\sidenote@margin%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@num%
+    \fi%
+  \fi%
+  \ifodd\@l@dtempcntb%
+    \listgadd{\l@dcsnotetext@l}{#1}%
+  \else%
+    \listgadd{\l@dcsnotetext}{#1}%
+  \fi
+}
+\newcommand*{\vl@drsnote}[1]{%
+  \ifledRcol@%
+    \@l@dtempcntb=\sidenote@marginR%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@numR%
+    \fi%
+  \else%
+    \@l@dtempcntb=\sidenote@margin%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@num%
+    \fi%
+  \fi%
+  \ifodd\@l@dtempcntb%
+    \listgadd{\l@dcsnotetext}{#1}%
+  \else%
+    \listgadd{\l@dcsnotetext@r}{#1}%
+  \fi%
+}
 \newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
 
 %    \end{macrocode}
@@ -10745,12 +10813,12 @@
 % \section{Indexing}
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
-% \change{v1.8.0}{2014/07/21}{If \Lpack{imakeidx} and \Lpack{hyperref} are loaded, add hyperref in the index.}
+% \changes{v1.8.0}{2014/07/21}{If \Lpack{imakeidx} and \Lpack{hyperref} are loaded, add hyperref in the index.}
 % Here's some code for indexing using page \& line numbers.
 %
 % \begin{macro}{\ifeledmac@check@imakeidx@}
 % First, ensure that \Lpack{imakeidx} is loaded \emph{before} \Lpack{eledmac}.
-% \changes{v1.12.0}{2014/07/21}{Ensure that \Lpack{imakeidx} is loaded \emph{before}.} \Lpack{eledmac}}
+% \changes{v1.12.0}{2014/07/21}{Ensure that \Lpack{imakeidx} is loaded \emph{before} \Lpack{eledmac}}
 %    \begin{macrocode}
 \newif\ifeledmac@after@imakeidx@
 \@ifpackageloaded{imakeidx}{\eledmac@after@imakeidx@true}{}
@@ -10759,7 +10827,8 @@
     \@ifpackageloaded{imakeidx}{\eledmac@error{Imakeidx must be loaded before eledmac.}}{}%
   \fi
 }
-%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\pagelinesep}
 % \begin{macro}{\edindexlab}
 % \begin{macro}{\c@labidx}
@@ -10823,7 +10892,7 @@
 % \end{macro}
 % \begin{macro}{\get@index@command}
 % This macro is used to analyse if a text to be indexed has a command after a \verb+|+.
-% \change{v1.8.0}{2014/07/21}{Debug \cs{get@index@command} and compatibility with \Lpack{hyperref} package.}
+% \changes{v1.8.0}{2014/07/21}{Debug \cs{get@index@command} and compatibility with \Lpack{hyperref} package.}
 %    \begin{macrocode}
 \def\get@index@command#1|#2+{%
   \gdef\@index@txt{#1}%
@@ -11021,7 +11090,7 @@
 % \end{macro}
 % \begin{macro}{\get@edindex@hyperref}
 % \begin{macro}{\@edindex@hyperref}
-% \cs{\get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, link to the point where the index was called (with \Lpack{hyperref}.
+% \cs{get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, link to the point where the index was called (with \Lpack{hyperref}.
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
   \ifcsdef{hyperlink}%
