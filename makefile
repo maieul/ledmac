@@ -4,6 +4,7 @@ PACKAGE = *.dtx \
 		  eledpar.pdf \
 		  README \
 		  Makefile \
+		  latexmkrc \
 
 
 
@@ -37,6 +38,7 @@ dist: $(PACKAGE) examples
 	cp examples/*pdf eledmac/examples
 	cp examples/*tex eledmac/examples
 	cp examples/makefile eledmac/examples
+
 	cp $(PACKAGE) eledmac
 	@$(RM) ../eledmac.zip
 	zip -r ../eledmac.zip eledmac
