@@ -11259,11 +11259,13 @@
 %
 % \begin{macro}{\startstanzahook}
 % \begin{macro}{\endstanzaextra}
+% \begin{macro}{\@startstanza}
 % \begin{macro}{\stanza}
 % \begin{macro}{\newverse}
 % \begin{macro}{\falseverse}
 % \changes{v1.6.0}{2013/10/09}{Add \cs{falseverse} macro.}
 % \changes{v1.12.0}{2014/07/21}{Add \cs{newverse} macro, \cs{falseverse} deprecated.}
+% \changes{v1.12.0}{2014/07/21}{\cs{Stanza} can have a optional argument: content to be printed before. To implemente it, \cs{@startstanza} is defined.}
 % Now we have the components of the \verb+\stanza+ macro,
 % which appears at the start of a group of lines. This macro
 % initializes the count and checks to see if hanging indentation
@@ -11290,7 +11292,7 @@
 %    \begin{macrocode}
 \let\startstanzahook\relax
 \let\endstanzaextra\relax
-\xdef\stanza{%
+\xdef\@startstanza[#1]{%
    \noexpand\instanzatrue\expandafter
    \begingroup\startstanzahook%
    \catcode`\noexpand\&\active%
@@ -11309,11 +11311,14 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{%
          \noexpand\endlock\noexpand\pend\endgroup\noexpand\instanzafalse\expandafter\endstanzaextra}%
-   \noexpand\stanza@line}
+   \noexpand\stanza@line[#1]}
 
-   \newcommandx*{\newverse}[2][1,2,usedefault]{%
-         \endlock\pend[#1]\sza@penalty\global%
-         \advance\stanza@count\@ne\stanza@line[#2]}
+\newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+
+\newcommandx*{\newverse}[2][1,2,usedefault]{%
+  \endlock\pend[#1]\sza@penalty\global%
+  \advance\stanza@count\@ne\stanza@line[#2]%
+  }
 
 %    \end{macrocode}
 % \end{macro}
