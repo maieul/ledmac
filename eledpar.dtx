@@ -161,6 +161,9 @@
 % \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
 % \changes{v1.8.0}{2014/07/23}{Debug eledmac sectionning command after using \cs{resumenumbering}.}
 % \changes{v1.8.0}{2014/07/23}{Compatibility with \Lpack{musixtex}.}
+% \changes{v1.8.0}{2014/07/11}{Add, as in eledmac, possibility to insert something after \cs{pend}s / verses.}
+% \changes{v1.8.0}{2014/07/11}{Add, as in eledmac, possibility to insert something between \cs{pstart}s / verse.}
+% \changes{v1.8.0}{2014/07/11}{Add, as in eledmac, new system of sectioning commands.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -771,6 +774,12 @@
 % \StopEventually{}
 %
 % \clearpage
+% \section{Sectioning commands and table of contents}
+% \changes{v.1.8.0}{2014/07/11}{New sectioning commands, as in eledmac.}
+% The standard sectioning commands of eledmac are available, and provides parallel sectionings, in both two columns and two pages way.
+% \DescribeMacro{\eledsectnotoc}
+% By default, the section commands of the right side are not add to the table of contents.
+% But you can change it, using \cs{eledsectnotoc}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
 % \section{Implementation overview}\label{overview}
 %
 %    TeX is designed to process a single stream of text, which may include
@@ -808,7 +817,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2014/07/23 v1.8.0 eledmac extension for parallel texts]
+\ProvidesPackage{eledpar}[2014/07/22 v1.8.0 eledmac extension for parallel texts]
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -929,25 +938,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\beginnumbering}
-% For parallel processing the original \cs{beginnumbering} is extended
-% to zero \cs{l@dnumpstartsL} --- the number of chunks to be processed.
-% It also sets \cs{ifpst@rtedL} to FALSE.
-%    \begin{macrocode}
-\providecommand*{\beginnumbering}{%
-  \ifnumbering
-    \led@err@NumberingStarted
-    \endnumbering
-  \fi
-  \global\l@dnumpstartsL \z@
-  \global\pst@rtedLfalse
-  \global\numberingtrue
-  \global\advance\section@num \@ne
-  \initnumbering@reg
-  \message{Section \the\section@num}%
-  \line@list@stuff{\jobname.\extensionchars\the\section@num}%
-  \l@dend@stuff}
-%    \end{macrocode}
+% \changes{v1.12.0}{2014/07/24}{\cs{beginnumbering} is defined only on \Lpack{eledmac}, not on \Lpack{eledpar}.}
 % \end{macro}
 %
 % \begin{macro}{\beginnumberingR}
@@ -979,7 +970,11 @@
   \setcounter{pstartR}{1}
   \begingroup
   \initnumbering@sectcountR
+  \gdef\eled@sectionsR@@{}
+  \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@numR R}{}{}\makeatother
+  \immediate\openout\eled@sectioningR@out=\jobname.eledsec\the\section@numR R\relax
 }
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -1013,7 +1008,10 @@
     \fi
   \else
     \led@err@NumberingNotStarted
-  \fi\endgroup}
+  \fi
+  \endgroup
+  \immediate\closeout\eled@sectioningR@out
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -2343,16 +2341,15 @@
 %    \begin{macrocode}
 \newenvironment{Leftside}{%
   \ledRcolfalse
-  \let\beginnumbering\beginnumbering\setcounter{pstartL}{1}
+  \setcounter{pstartL}{1}
   \let\pstart\pstartL
   \let\thepstart\thepstartL
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaLtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
 }{
-    \let\stanza\oldstanza
     \Leftsidehookend}
 %    \end{macrocode}
 % \end{environment}
@@ -2397,11 +2394,10 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaRtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
 }{%
   \ledRcolfalse
-  \let\stanza\oldstanza
   \Rightsidehookend
 }
 
@@ -2457,6 +2453,7 @@
 % \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
 % \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendL} and \cs{pendR} can have a optional arguments.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2480,12 +2477,12 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{%
-\if@nobreak%
+\newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2529,16 +2526,20 @@
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartL\thepstartL}\fi%
+%    \end{macrocode}
+% Dump the optional arguments
+%    \begin{macrocode}
+  \csgdef{before@pstartL@\the\l@dnumpstartsL}{#1}%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{%
-\if@nobreak%
+\newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2572,6 +2573,7 @@
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
+   \csgdef{before@pstartR@\the\l@dnumpstartsR}{#1}%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2580,12 +2582,14 @@
 %
 % \begin{macro}{\pendL}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pendL}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendL} can have a optional arguments.}
 % \cs{pend} must be used to end a numbered paragraph. Again we need 
 % a version 
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendL}{\ifnumbering \else%
+\newcommandx*{\pendL}[1][1]{%
+  \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2611,6 +2615,9 @@
     \addtocounter{pstartL}{1}%
   \fi
   \parledgroup@beforenotes@save{L}%
+%    \end{macrocode}
+% Dump content of the optional argument.
+  \csgdef{after@pendL@\the\l@dnumpstartsL}{#1}%
   }
 
 %    \end{macrocode}
@@ -2618,10 +2625,12 @@
 %
 % \begin{macro}{\pendR}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartR}.}
+% \changes{v1.8.0}{2014/07/28}{As in \Lpack{eledmac}, \cs{pendR} can have a optional arguments.}
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendR}{\ifnumberingR \else%
+\newcommandx*{\pendR}[1][1]{%
+  \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2636,7 +2645,8 @@
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
   \fi%    
-  \parledgroup@beforenotes@save{R}
+  \parledgroup@beforenotes@save{R}%
+  \csgdef{after@pendR@\the\l@dnumpstartsR}{#1}%
 }
 
 %    \end{macrocode}
@@ -2695,6 +2705,7 @@
 %
 %
 % \changes{v0.11}{2012/06/11}{Change \cs{do@lineL} and \cs{do@lineR} to allow line numbering by pstart(like in eledmac 0.15).}
+% \changes{v1.8.0}{2014/07/28}{Change \cs{do@lineR} and \cs{do@lineR} to new sectioning commands.}
 % \begin{macro}{\do@lineL}
 % The \cs{do@lineL} macro is called to 
 % do all the processing for a single line of left text.
@@ -2714,18 +2725,20 @@
   \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
   \unvbox\one@line \global\setbox\one@line=\lastbox 
   \getline@numL
-\ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
+  \ifnum\@lock>\@ne%
+    \inserthangingsymboltrue%
+  \else%
+    \inserthangingsymbolfalse%
+  \fi
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
       \affixpstart@numL
     \affixline@num
-    \l@dld@ta
     \add@inserts
     \affixside@note
-    \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      {}%
+      {\print@lineL}}%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
   \global\advance\@donetotallinesL\@ne
@@ -2738,6 +2751,32 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@eledsectionL}
+% \cs{print@lineL} is for line without sectioning command.
+%    \begin{macrocode}
+\def\print@lineL{%
+    \l@dld@ta %space kept for backwar compatibility
+    \l@dlsn@te %space kept for backwar compatibility
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@eledsectionL}
+% \cs{print@eledsectionL} is for line with macro code
+%    \begin{macrocode}
+\def\print@eledsectionL{%
+    \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+    \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscL}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscL}%
+    \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \vskip\eledsection@correcting@skip%
+}
+%    \end{macrocode}
+% \end{macro}
 % \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
 % \changes{v1.4}{2013/07/11}{Added \cs{do@insidelineLhook} and \cs{do@insidelineRhook}}
 % \begin{macro}{\do@lineLhook}
@@ -2770,21 +2809,24 @@
    \l@demptyd@ta
    \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
                            to\baselineskip}% 
-    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
   \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
   \getline@numR
-\ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
+  \ifnum\@lockR>\@ne%
+    \inserthangingsymbolRtrue
+  \else%
+    \inserthangingsymbolRfalse%
+  \fi%
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
-      \affixpstart@numR
+    \affixpstart@numR
     \affixline@numR
-    \l@dld@ta
     \add@insertsR
     \affixside@noteR
-    \l@dlsn@te
-    {\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
+     {}%
+     {\print@lineR}%
+  }%
   \add@penaltiesR
   \global\advance\@donereallinesR\@ne
   \global\advance\@donetotallinesR\@ne
@@ -2797,6 +2839,29 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@lineR}{}
+% \begin{macro}{\print@eledsectionR}{}
+\def\print@lineR{%
+    \l@dld@ta
+    \l@dlsn@te
+\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@eledsectionR{%
+    \initnumbering@sectcountR%
+    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+    \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscR R}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscR R}%
+    \hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
+    \vskip\eledsection@correcting@skip
+}
+% \end{macro}
+% \end{macro}
 %
 % \subsection{Line and page number computation}
 %
@@ -3990,13 +4055,24 @@
 %
 % \section{Parallel columns}
 %
+% \begin{macro}{\@ledsectionL}
+% \begin{macro}{\@ledsectionR}
+% The parbox \cs{@ledsectionL} and \cs{@ledsectionR} will keep the sections' title.
+%    \begin{macrocode}
+\newsavebox{\@ledsectionL}
+\newsavebox{\@ledsectionR}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\Columns}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Columns} to enable to add section's title.}
 % The \cs{Columns} command results in the previous Left and
 % Right texts being typeset in matching columns. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \eledsection@correcting@skip=-\eledsection@correcting@skip% Correction for sections' titles
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4039,21 +4115,33 @@
 {        \loop\ifaraw@text
 %    \end{macrocode}
 % Grab the next pair of left and right text lines and output them, swapping
-% languages if they differ
+% languages if they differ, add section title if needed.
 %    \begin{macrocode}
           \ifl@dsamelang
             \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}}%
+                {}%
             \do@lineR
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
+                {}%
           \else
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}}%
+                {}%
             \l@duselanguage{\theledlanguageR}%
             \do@lineR
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
+                {}%
           \fi
           \hb@xt@ \hsize{%
-           \hfill \unhbox\l@dleftbox
+           \hfill \unhbox\l@dleftbox\usebox{\@ledsectionL}
             \hfill \columnseparator  \hfill
-            \unhbox\l@drightbox
+            \unhbox\l@drightbox\usebox{\@ledsectionR}
           }%
           \checkraw@text
           \checkverseL
@@ -4234,12 +4322,14 @@
 %
 %
 % \begin{macro}{\Pages}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
+  \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \parledgroup@notespacing@set@correction
@@ -4332,12 +4422,18 @@
           \checkpageL
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
-{            \loop\ifl@dsamepage       
+{            \loop\ifl@dsamepage%       
 %    \end{macrocode}
-% Process the next (left) text line, adding it to the page.
+% Process the next (left) text line, adding it to the page. Eventually, add the optional argument of pstart.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
+              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+              \csuse{before@pstartL@\the\l@dpscL}
+              \global\csundef{before@pstartL@\the\l@dpscL}
               \do@lineL
+              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\print@eledsectionL}%
+                {}%
               \advance\numpagelinesL \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
@@ -4379,8 +4475,15 @@
 %    \begin{macrocode}
           \checkpageR
           \l@duselanguage{\theledlanguageR}%
-{            \loop\ifl@dsamepage
+{            \loop\ifl@dsamepage%
+              \initnumbering@sectcountR
+              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+              \csuse{before@pstartR@\the\l@dpscR}
+              \global\csundef{before@pstartR@\the\l@dpscR}
               \do@lineR
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\print@eledsectionR}%
+                {}%
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
@@ -4768,7 +4871,8 @@
 %    \begin{macrocode}
   \else%                                      box is empty
 %    \end{macrocode}
-% The box is empty; check if enough lines (real and blank) have been
+% The box is empty.
+% Check if enough lines (real and blank) have been
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
@@ -4802,6 +4906,12 @@
             \resetprevline@
           \fi  
           \fi
+% Add the content of the optional argument of the previous \cs{pend}.
+%     \begin{macrocode}
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
         \addtocounter{pstartL}{1}
         \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
@@ -4809,8 +4919,19 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
+%    \end{macrocode}
+% Add notes of parallel ledgroup
+%    \begin{macrocode}
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
+      \else
+% Add the content of the optional argument of the last \cs{pend}.
+%     \begin{macrocode}
+         \l@dpagefulltrue
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
       \fi
     \fi
   \fi}
@@ -4839,6 +4960,8 @@
                \resetprevline@
             \fi
         \fi
+		\csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
         \addtocounter{pstartR}{1}
         \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
@@ -4848,6 +4971,10 @@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
+      \else
+		\csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
+        \l@dpagefulltrue
       \fi
     \fi
   \fi}
@@ -4856,6 +4983,26 @@
 % \end{macro}
 % \end{macro}
 %
+% \section{Section's title's commands}
+% \begin{macro}{\eledsectnotoc}
+% \cs{\eledsectnotoc} just save its content \cs{\@eledsectnotoc}, which will be tested where sectioning commands will be printed.
+%    \begin{macrocode}
+\newcommand{\eledsectnotoc}[1]{\xdef\@eledsectnotoc{#1}}
+\eledsectnotoc{R}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\eledsection@correcting@skip}
+% Because the vertical correction needs after inserting a title in parallel depends whether we are in parallel columns or parallel pages, we stock its length in \cs{eledsection@correcting@skip}.
+%    \begin{macrocode}
+\newskip\eledsection@correcting@skip
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+% We save the sectioning commands of the right side in the \cs{eled@sectioningR@out} file.
+%    \begin{macrocode}
+\newwrite\eled@sectioningR@out
+%    \end{macrocode}
+% \end{macro}
 % \section{Page break/no page break, depending on the specific line}
 % We need to adapt the macro of the homonym section of eledmac to eledpar.
 % \begin{macro}{\prev@pbR}
