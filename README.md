@@ -46,6 +46,8 @@ The distribution consists of the following files:
 - eledpar.ins
 - eledpar.pdf
 - makefile
+- examples/*tex
+- examples/*pdf
 
 #Installation
 
