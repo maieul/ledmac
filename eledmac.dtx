@@ -5755,7 +5755,9 @@
 \def\print@ledsection{%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
     \csuse{eled@sectioning@\the\l@dnumpstartsL}%
+    \@eled@sectioningfalse%
     \csundef{eled@sectioning@\the\l@dnumpstartsL}%
     \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
     \vskip-\baselineskip%
@@ -12873,7 +12875,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\if@eled@sectioning}
-% The boolean \cs{if@eled@sectioning} is set to true when a if@eled@sectioning
+% The boolean \cs{if@eled@sectioning} is set to true when a sectioning command is called by a \cs{eledxxx} command, and set to false after. It is used to enable/disable line number printing.
 %    \begin{macrocode}
 \newif\if@eled@sectioning
 %    \end{macrocode}
@@ -12894,7 +12896,6 @@
 % \end{itemize}
 % Unfortunatly, I was not able to try if \Lclass{memoir} is loaded. That is why \Lpack{eledmac} try to define for both standard class and \Lclass{memoir} class.
 %
-% I was also not able to use \cs{ifboolexpr}. That why some logical "or" are printed as two test (bad, I know!. If someone has solution\ldots)
 %   
 %    \begin{macrocode}
 \patchcmd{\chapter}{\clearforchapter}{%
@@ -12908,8 +12909,7 @@
 \patchcmd{\M@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi
   }
   {}
   {\eledmac@warning{Patching \string\M@sect\space fails}}
@@ -12922,8 +12922,7 @@
 \patchcmd{\M@sect}
   {#8}
   {#8%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-  \ifl@dpairing\hfill\l@drd@ta \l@drsn@te\fi
+  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\M@sect\space fails}}
@@ -12931,8 +12930,7 @@
 \patchcmd{\M@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi%
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\M@sect\space fails}}
@@ -12946,8 +12944,7 @@
 \patchcmd{\@mem@old@ssect}
   {#5}
   {#5%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-  \ifl@dpairing\hfill\l@drd@ta \l@drsn@te\fi
+  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
@@ -12956,8 +12953,7 @@
 \patchcmd{\@mem@old@ssect}
   {\hskip #1}
   {\hskip #1%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi%
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
@@ -12965,7 +12961,7 @@
 
 % Normal
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
-  \ifnumberedpar@\else%
+  \if@eled@sectioning\else%
     \if@openright\cleardoublepage\else\clearpage\fi%
   \fi%
   }
@@ -12977,22 +12973,18 @@
 
 \patchcmd{\@makechapterhead}
   {#1}
-  {\ifnumberedpar@\leavevmode\l@dld@ta\l@dlsn@te\fi%
-   \ifl@dpairing\leavevmode\l@dld@ta\l@dlsn@te\fi%
+  {\if@eled@sectioning\leavevmode\l@dld@ta\l@dlsn@te\fi%
     #1%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
+  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
 
 \patchcmd{\@makeschapterhead}
   {#1}
-  {\ifnumberedpar@\leavevmode\l@dld@ta\l@dlsn@te\fi%
-   \ifl@dpairing\leavevmode\l@dld@ta\l@dlsn@te\fi%
+  {\if@eled@sectioning\leavevmode\l@dld@ta\l@dlsn@te\fi%
     #1%
-   \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-   \ifl@dpairing\hfill\l@drd@ta \l@drsn@te\fi%
+   \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@makechapterhead\space fails}}
@@ -13001,8 +12993,8 @@
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi}
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  }
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
   
@@ -13014,8 +13006,7 @@
 \patchcmd{\@sect}
   {#8}
   {#8%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-  \ifl@dpairing\hfill\l@drd@ta \l@drsn@te\fi%
+  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
@@ -13023,8 +13014,7 @@
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi%
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
@@ -13038,8 +13028,7 @@
 \patchcmd{\@ssect}
   {#5}
   {#5%
-  \ifnumberedpar@\hfill\l@drd@ta \l@drsn@te\fi%
-  \ifl@dpairing\hfill\l@drd@ta \l@drsn@te\fi
+  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@ssect\space fails}}
@@ -13048,8 +13037,7 @@
 \patchcmd{\@ssect}
   {\hskip #1}
   {\hskip #1%
-  \ifnumberedpar@\l@dld@ta\l@dlsn@te\fi%
-  \ifl@dpairing\l@dld@ta\l@dlsn@te\fi
+  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
   }
   {}
   {\eledmac@warning{Patching \string\@ssect\space fails}}
