@@ -134,6 +134,19 @@
 %      \my@changes#1\@nil
 %    }%
 %\makeatother
+% \newcommand{\Lpack}[1]{\textsf{#1}}
+% \newcommand{\Lclass}[1]{\textsf{#1}}
+% \newcommand{\file}[1]{\texttt{#1}}
+% \newcommand{\eledpar}{eledpar}
+% \newcommand{\eledmac}{eledmac}
+% \newcommand{\Eledmac}{\Lpack{\eledmac}}
+% \newcommand{\Eledpar}{\Lpack{\eledpar}}
+% \newcommand{\edmac}{\texttt{EDMAC}}
+% \newcommand{\tabmac}{\texttt{TABMAC}}
+% \newcommand{\edstanza}{\texttt{EDSTANZA}}
+% \newcommand{\texbook}{\textit{TeXbook}}
+% \newcommand{\thetexbook}{\textit{The TeXbook}}
+%
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -166,18 +179,6 @@
 % \changes{v1.8.0}{2014/07/11}{Add, as in eledmac, new system of sectioning commands.}
 % \hyphenation{man-u-script man-u-scripts}
 %
-% \newcommand{\Lpack}[1]{\textsf{#1}}
-% \newcommand{\Lclass}[1]{\textsf{#1}}
-% \newcommand{\file}[1]{\texttt{#1}}
-% \newcommand{\eledpar}{eledpar}
-% \newcommand{\eledmac}{eledmac}
-% \newcommand{\Eledmac}{\Lpack{\eledmac}}
-% \newcommand{\Eledpar}{\Lpack{\eledpar}}
-% \newcommand{\edmac}{\texttt{EDMAC}}
-% \newcommand{\tabmac}{\texttt{TABMAC}}
-% \newcommand{\edstanza}{\texttt{EDSTANZA}}
-% \newcommand{\texbook}{\textit{TeXbook}}
-% \newcommand{\thetexbook}{\textit{The TeXbook}}
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
 % \newcommand{\egstart}{}
@@ -700,12 +701,17 @@
 %
 % When you use \cs{lednopb} make sure to use it on both sides in the corresponding
 % verses to keep the pages in sync.
+% \section{Side notes}
+% As in \Lpack{eledmac}, you must use one of the following commands to add side notes: \cs{ledsidenote}, \cs{ledleftnote}, \cs{ledrightnote}, \cs{ledouterote}, \cs{ledinnerrote}.
+% 
+% The \cs{sidenotemargin} define the margin of the sidenote for Left or Right side, depending of current environnement.
+% You can use \cs{sidenotemargin*} to define it for both side.
 % \section{Parallel ledgroups}
 % \changes{v1.6.0}{2013/12/13}{Add tool and documentation for parallel ledgroups}
 % You can also make parallel ledgroups (see the documentation of eledmac about ledgroups).
 % To do it you have:
 % \begin{itemize}
-%   \item To load \Lpack{eledpar} package with the \verb+parledgroup+ option, or to add \cs{\parledgrouptrue}.
+%   \item To load \Lpack{eledpar} package with the \verb+parledgroup+ option, or to add \cs{parledgrouptrue}.
 %   \item To push each ledgroup between \cs{pstart}…\cs{pend} command. 
 % \end{itemize} 
 % See the following example:
@@ -1326,7 +1332,7 @@
 % \subsection{Line-number counters and lists}
 %
 % We need another set of counters and lists for the right text, 
-% corresponding to those in \Lpack{eledmac} for regualr or left text.
+% corresponding to those in \Lpack{eledmac} for regular or left text.
 %
 % \begin{macro}{\line@numR}
 % \begin{macro}{\subline@numR}
@@ -2801,6 +2807,7 @@
 % \changes{v0.3}{2005/02/10}{Changed \cs{do@lineR} similarly to \cs{do@lineL}}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \ledRcol@true%
   \advance\countRline \@ne
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
   {\vbadness=10000 
@@ -2833,7 +2840,9 @@
 \else
   \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
   \global\advance\@donetotallinesR\@ne
-\fi}
+\fi
+\ledRcol@false%
+}
 
 
 %    \end{macrocode}
@@ -3494,20 +3503,17 @@
 % don't produce any note but do put an extra unnumbered blank line into
 % the text.
 % \begin{macro}{\sidenote@marginR}
-% \begin{macro}{\sidenotemargin}
+% \begin{macro}{\sidenotemargin*}
+% \changes{v1.8.0}{2014/07/29}{\cs{sidenotemargin} is now directly defined in \Lpack{eledmac} to be able to manage \Lpack{eledpar}.}
+% \changes{v1.8.0}{2014/07/29}{Add \cs{sidenotemargin*}}
 % Specifies which margin sidenotes can be in.
 %    \begin{macrocode}
+\WithSuffix\newcommand\sidenotemargin*[1]{%
+  \l@dgetsidenote@margin{#1}
+  \global\sidenote@marginR=\@l@dtempcntb
+  \global\sidenote@margin=\@l@dtempcntb
+}
 \newcount\sidenote@marginR
-\renewcommand*{\sidenotemargin}[1]{{%
-  \l@dgetsidenote@margin{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \ifledRcol
-      \global\sidenote@marginR=\@l@dtempcntb 
-    \else
-      \global\sidenote@margin=\@l@dtempcntb 
-    \fi
-  \fi}}
-\sidenotemargin{right}
 \global\sidenote@margin=\@ne
 
 %    \end{macrocode}
@@ -3517,7 +3523,7 @@
 
 % \changes{v1.3.3}{2012/12/19}{Debug on the left notes of the right column.}
 % \changes{v1.3.4}{2013/07/03}{Allow to use commands in sidenotes, like it was introduced by eledmac 1.0.}
-% \changes{v1.8.0}{2014/12/22}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \LPack{eledmac}. }
+% \changes{v1.8.0}{2014/12/22}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \Lpack{eledmac}. }
 % \begin{macro}{\affixside@noteR}
 % The right text version of \cs{affixside@note}.
 % \changes{v1.1.2}{2012/10/06}{Remove spurious space between line number and line content}
@@ -3534,27 +3540,38 @@
             \numdef{\itemcount@}{\itemcount@+1}%
     }%
     \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR R p. \the\page@numR,}}{}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR\space p. \the\page@numR,}}{}%
   \gdef\@templ@d{}%
   \ifx\@templ@d\l@dcsnotetext \else%
     \if@twocolumn%
       \if@firstcolumn%
-        \setl@dlp@rbox{\sidenotecontent@}%
+        \setl@dlp@rbox{##1}{\sidenotecontent@}%
       \else%
         \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \else%
       \@l@dtempcntb=\sidenote@marginR%
       \ifnum\@l@dtempcntb>\@ne%
-        \advance\@l@dtempcntb by\page@num%
+        \advance\@l@dtempcntb by\page@numR%
       \fi%
       \ifodd\@l@dtempcntb%
-        \setl@drp@rbox{\sidenotecontent@t}%
+        \setl@drp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@l}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space leftnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \else%
         \setl@dlp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@r}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space rightnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \fi%
-  \fi}
+  \fi%
+}
 
 %    \end{macrocode}
 % \end{macro}
