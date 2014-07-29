@@ -3,7 +3,7 @@ PACKAGE = *.dtx \
 		  eledmac.pdf \
 		  eledpar.pdf \
 		  README \
-		  Makefile
+		  Makefile \
 
 
 
@@ -29,9 +29,14 @@ README: README.md
 	@pdflatex $*.dtx
 
 
-dist: $(PACKAGE)
+dist: $(PACKAGE) examples
 	rm -rf eledmac
 	mkdir eledmac
+	mkdir eledmac/examples
+	$(MAKE) -C examples all
+	cp examples/*pdf eledmac/examples
+	cp examples/*tex eledmac/examples
+	cp examples/makefile eledmac/examples
 	cp $(PACKAGE) eledmac
 	@$(RM) ../eledmac.zip
 	zip -r ../eledmac.zip eledmac
