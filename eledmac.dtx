@@ -11261,11 +11261,13 @@
 % \begin{macro}{\endstanzaextra}
 % \begin{macro}{\@startstanza}
 % \begin{macro}{\stanza}
+% \begin{macro}{\@stopstanza}
 % \begin{macro}{\newverse}
 % \begin{macro}{\falseverse}
 % \changes{v1.6.0}{2013/10/09}{Add \cs{falseverse} macro.}
 % \changes{v1.12.0}{2014/07/21}{Add \cs{newverse} macro, \cs{falseverse} deprecated.}
 % \changes{v1.12.0}{2014/07/21}{\cs{Stanza} can have a optional argument: content to be printed before. To implemente it, \cs{@startstanza} is defined.}
+% \changes{v1.12.0}{2014/07/21}{\cs{&} can have a optional argument: content to be printed after. To implemente it, \cs{@stopstanza} is defined.}
 % Now we have the components of the \verb+\stanza+ macro,
 % which appears at the start of a group of lines. This macro
 % initializes the count and checks to see if hanging indentation
@@ -11309,11 +11311,18 @@
      \relax\noexpand&\leavevmode\skipnumbering}
    \def\noexpand&{%
          \noexpand\newverse[][]}%
-   \def\noexpand\&{%
-         \noexpand\endlock\noexpand\pend\endgroup\noexpand\instanzafalse\expandafter\endstanzaextra}%
+   \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\stanza@line[#1]}
 
 \newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+
+\newcommandx{\@stopstanza}[1][1,usedefault]{%
+  \endlock%
+  \pend[#1]%
+  \endgroup%
+  \instanzafalse%
+  \endstanzaextra%
+}
 
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
   \endlock\pend[#1]\sza@penalty\global%
@@ -11321,6 +11330,8 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
