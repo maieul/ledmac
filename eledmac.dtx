@@ -678,6 +678,11 @@
 % begins again.\par}
 % \egend
 %
+% \changes{v1.12.0}{2014/07/29}{Optional arguments for \cs{pstart} and \pend{cs}.}
+% Both \cs{pstart} and \pend{command} can takes a optional argument, in brackets. 
+% Its content will be printed before the begining of the \cs{pstart} / after the end of the \cs{pend}.
+% This feature is not needed for a normal use of \LPack{eledmac}, but it is needed when using verse (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
+%
 % \DescribeMacro{\autopar}
 % You can use \cs{autopar} to avoid the nuisance of this paragraph markup
 % and still have every paragraph automatically numbered.  The scope of the
@@ -1527,7 +1532,7 @@
 %    If you need more than 5 series of critical footnotes you can
 % create extra series, using \cs{newseries} command. For example to create G and H series \cs{newseries}\verb+G,H+.
 %
-% \section{Verse}
+% \section{Verse}\label{verse}
 %
 %
 %    In 1992 Wayne Sullivan\footnote{Department of Mathematics,
@@ -1540,8 +1545,8 @@
 %
 %    With Wayne Sullivan's\index{Sullivan, Wayne} permission the majority 
 % of this section has 
-% been taken from~\cite{EDSTANZA}. I have made a few changes to enable his 
-% macros to be used in the LaTeX \Lpack{eledmac}
+% been taken from~\cite{EDSTANZA}. Peter has made a few changes to enable his 
+% macros to be used in the LaTeX \Lpack{ledmac}, and now in \Lpack{eledmac}.
 % package.
 % 
 %
@@ -1715,6 +1720,13 @@
 %\begin{verbatim}
 %\renewcommand{\hangingsymbol}{[\,}
 %\end{verbatim}
+% \subsection{Text before/after verses}
+% It is possible to add text, like subtitle, before or after verse:
+% \begin{itemize}
+%   \item \cs{stanza} command can take a optional argument (in brackets). It's content will be printed before stanza.
+%   \item \verb+&+ can be replaced by \cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
+%   \item \cs{&} can take a optional argument (in brackets). Its content will be printed  after the stanza.
+% \end{itemize}
 % \section{Grouping}
 %    In a \verb?minipage? environment LaTeX changes \verb?\footnote? numbering from
 % arabic to alphabetic and puts the footnotes at the end of the minipage.
@@ -2592,7 +2604,7 @@
 % on a solution.
 %
 %
-% \subsection{Parallel typesetting}
+% \subsection{Parallel typesetting}\label{eledpar}
 %
 %
 % Peter Wilson has developed the Ledpar package
@@ -11235,7 +11247,7 @@
 % the user may initiate these penalties to indicate good and bad
 % places in the stanza for page breaking.
 %    \begin{macrocode}
-\def\stanza@line{
+\newcommandx{\stanza@line}[1][1]{
     \ifnum\value{stanzaindentsrepetition}=0
         \parindent=\csname sza@\number\stanza@count
                  @\endcsname\stanzaindentbase
@@ -11244,7 +11256,7 @@
                  @\endcsname\stanzaindentbase
         \managestanza@modulo
     \fi
-    \pstart\stanza@hang\ignorespaces}
+    \pstart[#1]\stanza@hang\ignorespaces}
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
             \hangindent\expandafter
             \noexpand\csname sza@0@\endcsname\stanzaindentbase
@@ -11259,11 +11271,15 @@
 %
 % \begin{macro}{\startstanzahook}
 % \begin{macro}{\endstanzaextra}
+% \begin{macro}{\@startstanza}
 % \begin{macro}{\stanza}
+% \begin{macro}{\@stopstanza}
 % \begin{macro}{\newverse}
 % \begin{macro}{\falseverse}
 % \changes{v1.6.0}{2013/10/09}{Add \cs{falseverse} macro.}
 % \changes{v1.12.0}{2014/07/21}{Add \cs{newverse} macro, \cs{falseverse} deprecated.}
+% \changes{v1.12.0}{2014/07/21}{\cs{Stanza} can have a optional argument: content to be printed before. To implemente it, \cs{@startstanza} is defined.}
+% \changes{v1.12.0}{2014/07/21}{\cs{&} can have a optional argument: content to be printed after. To implemente it, \cs{@stopstanza} is defined.}
 % Now we have the components of the \verb+\stanza+ macro,
 % which appears at the start of a group of lines. This macro
 % initializes the count and checks to see if hanging indentation
@@ -11290,7 +11306,7 @@
 %    \begin{macrocode}
 \let\startstanzahook\relax
 \let\endstanzaextra\relax
-\xdef\stanza{%
+\xdef\@startstanza[#1]{%
    \noexpand\instanzatrue\expandafter
    \begingroup\startstanzahook%
    \catcode`\noexpand\&\active%
@@ -11306,16 +11322,28 @@
      \global\advance\stanza@count-\@ne%
      \relax\noexpand&\leavevmode\skipnumbering}
    \def\noexpand&{%
-         \noexpand\newverse[]}%
-   \def\noexpand\&{%
-         \noexpand\endlock\noexpand\pend\endgroup\noexpand\instanzafalse\expandafter\endstanzaextra}%
-   \noexpand\stanza@line}
+         \noexpand\newverse[][]}%
+   \def\noexpand\&{\noexpand\@stopstanza}%
+   \noexpand\stanza@line[#1]}
 
-   \newcommandx*{\newverse}[1][1]{%
-         \endlock\pend[#1]\sza@penalty\global%
-         \advance\stanza@count\@ne\stanza@line}
+\newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+
+\newcommandx{\@stopstanza}[1][1,usedefault]{%
+  \endlock%
+  \pend[#1]%
+  \endgroup%
+  \instanzafalse%
+  \endstanzaextra%
+}
+
+\newcommandx*{\newverse}[2][1,2,usedefault]{%
+  \endlock\pend[#1]\sza@penalty\global%
+  \advance\stanza@count\@ne\stanza@line[#2]%
+  }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
