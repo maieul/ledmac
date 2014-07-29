@@ -3260,7 +3260,7 @@
 %    \end{macrocode}
 % The tools for section's title commands are called:
 % \begin{itemize}
-%   \item Defining old (deprecated) sectionning commands.
+%   \item Defining old (deprecated) sectioning commands.
 %   \item Define an empty list of pstart number where sectioning commands are called,
 %   \item Input auxiliary file with the description of section titles.
 %   \item Open the same auxiliary file to write in.
@@ -3269,7 +3269,7 @@
   \initnumbering@sectcmd
   \gdef\eled@sections@@{}
   \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@num}{}{}\makeatother
-  \immediate\openout\eled@sectionning@out=\jobname.eledsec\the\section@num\relax
+  \immediate\openout\eled@sectioning@out=\jobname.eledsec\the\section@num\relax
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -3321,7 +3321,7 @@
     \led@err@NumberingNotStarted
   \fi
   \autoparfalse  
-  \immediate\closeout\eled@sectionning@out
+  \immediate\closeout\eled@sectioning@out
   \ifl@dpairing\else
     \endgroup
   \fi
@@ -5737,7 +5737,7 @@
 %
 % \begin{macro}{\print@line}
 %    \begin{macrocode}
-% \cs{print@line} is for normal line, i. e line without sectionning command.
+% \cs{print@line} is for normal line, i. e line without sectioning command.
 \def\print@line{
 	\hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta
 	    \l@dlsn@te
@@ -5748,15 +5748,15 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\print@ledsection}
-% \cs{print@ledsection} ss for lines with sectionning command.
-% It set the correct spacing, depending whether a sectionning command was called at previous \cs{pstart}, calls the sectionning command, print the normal line outside of the paper, to be able to have critical footnotes. 
+% \cs{print@ledsection} ss for lines with sectioning command.
+% It set the correct spacing, depending whether a sectioning command was called at previous \cs{pstart}, calls the sectioning command, print the normal line outside of the paper, to be able to have critical footnotes. 
 % Because of this printing, a vertical spacing correction is added.
 %    \begin{macrocode}
 \def\print@ledsection{%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
-    \csuse{eled@sectionning@\the\l@dnumpstartsL}%
-    \csundef{eled@sectionning@\the\l@dnumpstartsL}%
+    \csuse{eled@sectioning@\the\l@dnumpstartsL}%
+    \csundef{eled@sectioning@\the\l@dnumpstartsL}%
     \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
     \vskip-\baselineskip%
 }
@@ -12688,7 +12688,7 @@
 % \begin{macro}{\endquotation}
 % \begin{macro}{\quote}
 % \begin{macro}{\endquote}
-% \changes{v1.12.0}{2014/07/24}{\cs{ledxxx} sectionning commands are deprecated and replaced by \cs{eledxxx} commands.}
+% \changes{v1.12.0}{2014/07/24}{\cs{ledxxx} sectioning commands are deprecated and replaced by \cs{eledxxx} commands.}
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
 % \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
@@ -12856,8 +12856,8 @@
 %   \item \Lpack{eledmac} add the title of the section to pstart, as a normal content. That is to enable critical notes.
 %   \item When \LaTeX\ is run a other time, this file is read. That:
 %     \begin{itemize}
-%         \item Add the pstart number to a list of pstarts where a sectionning command is used.
-%         \item Define a command, which name contains the pstart number, and which calls the normal \LaTeX\ sectionning command.
+%         \item Add the pstart number to a list of pstarts where a sectioning command is used.
+%         \item Define a command, which name contains the pstart number, and which calls the normal \LaTeX\ sectioning command.
 %     \end{itemize}
 %   \item This last commands is called when the pstart is effectively printed.
 % \end{enumerate}
@@ -12872,6 +12872,12 @@
 \fi
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\if@eled@sectioning}
+% The boolean \cs{if@eled@sectioning} is set to true when a if@eled@sectioning
+%    \begin{macrocode}
+\newif\if@eled@sectioning
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\chapter}
 % \begin{macro}{\M@sect}
 % \begin{macro}{\@mem@old@ssect}
@@ -12880,7 +12886,7 @@
 % \begin{macro}{\@makeschapterhead}
 % \begin{macro}{\@sect}
 % \begin{macro}{\@ssect}
-% We have to patch \LaTeX, \Lclass{book} and \Lclass{memoir} sectionning commands in order to:
+% We have to patch \LaTeX, \Lclass{book} and \Lclass{memoir} sectioning commands in order to:
 % \begin{itemize}
 %  \item Disable \cs{edtext} inside.
 %  \item Disable page breaking (for \cs{chapter}).
@@ -13057,10 +13063,10 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \begin{macro}{\eled@sectionning@out}
-% \cs{eled@sectionning@out} is the output file, to dump the pstarts where a sectionning command is used.
+% \begin{macro}{\eled@sectioning@out}
+% \cs{eled@sectioning@out} is the output file, to dump the pstarts where a sectioning command is used.
 %    \begin{macrocode}
-\newwrite\eled@sectionning@out
+\newwrite\eled@sectioning@out
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\eledchapter}
@@ -13071,16 +13077,16 @@
 % \begin{macro}{\eledsection*}
 % \begin{macro}{\eledsubsection*}
 % \begin{macro}{\eledsubsubsection*}
-% And now, the user sectionning commands, which write to the file, and also add content as a "normal" line.
+% And now, the user sectioning commands, which write to the file, and also add content as a "normal" line.
 %    \begin{macrocode}
 \newcommand{\eledchapter}[2][]{%
   \makebox{#2}% 
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
       }%
   \fi%
@@ -13089,11 +13095,11 @@
 \newcommand{\eledsection}[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
       }%
   \fi%
@@ -13102,11 +13108,11 @@
 \newcommand{\eledsubsection}[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
       }%
   \fi%
@@ -13114,11 +13120,11 @@
 \newcommand{\eledsubsubsection}[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
       }%
   \fi%
@@ -13128,11 +13134,11 @@
 \WithSuffix\newcommand\eledchapter*[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
       }%
   \fi%
@@ -13141,11 +13147,11 @@
 \WithSuffix\newcommand\eledsection*[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
       }%
   \fi%
@@ -13154,11 +13160,11 @@
 \WithSuffix\newcommand\eledsubsection*[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
       }%
   \fi%
@@ -13167,11 +13173,11 @@
 \WithSuffix\newcommand\eledsubsubsection*[2][]{%
   \makebox{#2}%
   \ifledRcol%
-    \immediate\write\eled@sectionningR@out{%
+    \immediate\write\eled@sectioningR@out{%
       \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsR}{*}{R}
       }%
   \else%
-    \immediate\write\eled@sectionning@out{%
+    \immediate\write\eled@sectioning@out{%
       \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
       }%
   \fi%
@@ -13189,7 +13195,7 @@
 % \begin{macro}{\eled@section}
 % \begin{macro}{\eled@subsection}
 % \begin{macro}{\eled@subsubsection}
-% The sectionning macros, called in the auxiliary file. They have five arguments:
+% The sectioning macros, called in the auxiliary file. They have five arguments:
 % \begin{enumerate}
 %   \item Optional arguments of \LaTeX\ sectioning command.
 %   \item Mandatory arguments of \LaTeX\ sectioning command.
@@ -13202,49 +13208,49 @@
     \ifstrempty{#4}%
       {%
       \ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}}
-	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}}
+	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}}
+	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}}
 	  }%
 	  {%
 	  \ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*{#2}}}
-	    {\global\csdef{eled@sectionning@#3#5}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
+	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter*{#2}}}
+	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
 	  }%
 	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@section#1#2#3#4#5{%
     \ifstrempty{#4}%
       {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\section{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\section[#1]{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\section{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\section[#1]{#2}}}%
 	  }%
 	  {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\section*{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\section*[#1]{#2}}}%Bug in LaTeX!
+	    {\global\csdef{eled@sectioning@#3#5}{\section*{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\section*[#1]{#2}}}%Bug in LaTeX!
 	  }
 	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@subsection#1#2#3#4#5{%
     \ifstrempty{#4}%
       {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsection{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsection[#1]{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsection{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsection[#1]{#2}}}%
 	  }%
 	  {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsection*{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsection*[#1]{#2}}}%Bug in LaTeX!
+	    {\global\csdef{eled@sectioning@#3#5}{\subsection*{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsection*[#1]{#2}}}%Bug in LaTeX!
 	  }
 	\listcsgadd{eled@sections#5@@}{#3}%
 	}
 \def\eled@subsubsection#1#2#3#4#5{%
     \ifstrempty{#4}%
       {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection[#1]{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsubsection{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsubsection[#1]{#2}}}%
 	  }%
 	  {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*{#2}}}%
-	    {\global\csdef{eled@sectionning@#3#5}{\subsubsection*[#1]{#2}}}%Bug in LaTeX!
+	    {\global\csdef{eled@sectioning@#3#5}{\subsubsection*{#2}}}%
+	    {\global\csdef{eled@sectioning@#3#5}{\subsubsection*[#1]{#2}}}%Bug in LaTeX!
 	  }
 	\listcsgadd{eled@sections#5@@}{#3}%
 	}
