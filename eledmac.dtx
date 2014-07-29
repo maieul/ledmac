@@ -2344,7 +2344,7 @@
 %
 % \section{Sectioning commands}
 % \changes{v1.1.0}{2012/09/25}{Sectioning commands.}
-% \changes{v1.12.0}{2014/07/28}{New Sectioning commands.}
+% \changes{v1.12.0}{2014/07/28}{New Sectioning commands.}\label{eledsection}
 % The standard sectioning command (\cs{chapter}, \cs{section} etc.) can be used inside a numbered text.
 % But the line which contains it won't be numbered, and you can't add critical notes inside.
 % In the past (between versions 1.1.0 and 1.12.0), 
@@ -12920,7 +12920,14 @@
   {\eledmac@warning{Patching \string\M@sect\space fails}}
   
 \pretocmd{\M@sect}
-  {\let\edtext=\dummy@edtext}
+  {\let\old@edtext=\edtext%
+  \let\edtext=\dummy@edtext%
+  }
+  {}
+  {\eledmac@warning{Patching \string\M@sect\space fails}}
+
+\apptocmd{\M@sect}
+  {\let\edtext=\old@edtext}
   {}
   {\eledmac@warning{Patching \string\M@sect\space fails}}
 
@@ -12941,10 +12948,16 @@
   {\eledmac@warning{Patching \string\M@sect\space fails}}
   
 \pretocmd{\@mem@old@ssect}
-  {\let\edtext=\dummy@edtext}
+  {\let\old@edtext=\edtext%
+  \let\edtext=\dummy@edtext%
+  }
   {}
   {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
 
+\apptocmd{\@mem@old@ssect}
+  {\let\edtext=\old@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@mem@old@ssect\space fails}}
 
 \patchcmd{\@mem@old@ssect}
   {#5}
@@ -13004,7 +13017,14 @@
   {\eledmac@warning{Patching \string\@sect\space fails}}
   
 \pretocmd{\@sect}
-  {\let\edtext=\dummy@edtext}
+  {\let\old@edtext=\edtext
+  \let\edtext=\dummy@edtext%
+  }
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
+
+\apptocmd{\@sect}
+  {\let\edtext=\old@edtext}
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
 
@@ -13025,10 +13045,16 @@
   {\eledmac@warning{Patching \string\@sect\space fails}}
   
 \pretocmd{\@ssect}
-  {\let\edtext=\dummy@edtext}
+  {\let\old@edtext=\edtext%
+  \let\edtext=\dummy@edtext%
+  }
   {}
   {\eledmac@warning{Patching \string\@sect\space fails}}
 
+\apptocmd{\@ssect}
+  {\let\edtext=\old@edtext}
+  {}
+  {\eledmac@warning{Patching \string\@sect\space fails}}
 
 \patchcmd{\@ssect}
   {#5}
@@ -13413,6 +13439,8 @@
 % \item \verb+stanzaindentsrepetition+ worked wrong when its value was equal to 2.
 % \end{enumerate}
 % 
+% \subsection{Migration to eledmac 1.12.0}
+% The version 1.12.0 adds new best way to manage section title inside numbered text. Please read \ref{eledsection} (p.~\pageref{eledsection}).
 % So, if you used \verb+stanzaindentsrepetition+ with value equal to 2, you must change your \cs{setstanzaindents}. Explanation:
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{2}
