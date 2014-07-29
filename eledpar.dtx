@@ -2343,10 +2343,9 @@
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaLtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
 }{
-    \let\stanza\oldstanza
     \Leftsidehookend}
 %    \end{macrocode}
 % \end{environment}
@@ -2391,11 +2390,10 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaRtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
 }{%
   \ledRcolfalse
-  \let\stanza\oldstanza
   \Rightsidehookend
 }
 
@@ -4464,7 +4462,6 @@
 %    \begin{macrocode}
 %      \begingroup
 {        \loop\ifaraw@text
-         \csuse{before@pstartL@\the\l@dpscL}%
 %    \end{macrocode}
 % See if there is more that can be done for the left page and set up the 
 % left language.
@@ -4473,11 +4470,14 @@
           \checkpageL
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
-{            \loop\ifl@dsamepage       
+{            \loop\ifl@dsamepage%       
 %    \end{macrocode}
-% Process the next (left) text line, adding it to the page.
+% Process the next (left) text line, adding it to the page. Eventually, add the optional argument of pstart.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
+              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+              \csuse{before@pstartL@\the\l@dpscL}
+              \global\csundef{before@pstartL@\the\l@dpscL}
               \do@lineL
               \xifinlist{\the\l@dpscL}{\eled@sections@@}
                 {\print@eledsectionL}%
@@ -4521,10 +4521,13 @@
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
 %    \begin{macrocode}
-          \csuse{before@pstartR@\the\l@dpscR}%
           \checkpageR
           \l@duselanguage{\theledlanguageR}%
-{            \loop\ifl@dsamepage
+{            \loop\ifl@dsamepage%
+              \initnumbering@sectcountR
+              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+              \csuse{before@pstartR@\the\l@dpscR}
+              \global\csundef{before@pstartR@\the\l@dpscR}
               \do@lineR
               \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
                 {\print@eledsectionR}%
@@ -4916,11 +4919,7 @@
 %    \begin{macrocode}
   \else%                                      box is empty
 %    \end{macrocode}
-% The box is empty;
-% add the content of the optional argument of the previous \cs{pend}.
-% \begin{macrocode}
-   \csuse{after@pendL@\the\l@dpscL}%
-% \end{macrocode}
+% The box is empty.
 % Check if enough lines (real and blank) have been
 % output.
 %    \begin{macrocode}
@@ -4955,6 +4954,12 @@
             \resetprevline@
           \fi  
           \fi
+% Add the content of the optional argument of the previous \cs{pend}.
+%     \begin{macrocode}
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
         \addtocounter{pstartL}{1}
         \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
@@ -4967,10 +4972,14 @@
 %    \begin{macrocode}
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
-%    \end{macrocode}
-% Add optional argument of pstart
-%    \begin{macrocode}
-        \csuse{before@pstartL@\the\l@dpscL}%
+      \else
+% Add the content of the optional argument of the last \cs{pend}.
+%     \begin{macrocode}
+         \l@dpagefulltrue
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
       \fi
     \fi
   \fi}
@@ -4980,7 +4989,6 @@
 \newcommand*{\get@nextboxR}{%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
-  \csuse{after@pendR@\the\l@dpscR}%
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
       \parledgroup@notes@endR
     \else
@@ -5000,6 +5008,8 @@
                \resetprevline@
             \fi
         \fi
+		\csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
         \addtocounter{pstartR}{1}
         \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
@@ -5009,7 +5019,10 @@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
-        \csuse{before@pstartR@\the\l@dpscR}%
+      \else
+		\csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
+        \l@dpagefulltrue
       \fi
     \fi
   \fi}
