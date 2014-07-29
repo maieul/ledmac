@@ -3196,20 +3196,26 @@
 % \begin{macro}{\pst@rtedLfalse}
 % \begin{macro}{\l@dnumpstartsL}
 % \begin{macro}{\ifledRcol}
+% \begin{macro}{\ifledRcol@}
 % In preparation for the \Lpack{eledpar} package, these are related to 
 % the `left' text of parallel texts (when \cs{ifl@dpairing} is TRUE). 
 % They are explained in the \Lpack{eledpar}
 % manual.
 % \changes{v0.7}{2005/02/24}{Added \cs{l@dnumpstartsL}, \cs{ifl@dpairing} 
 %              and \cs{ifpst@rted} for/from eledpar}
-% \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from eledpar}
+% \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from \Lpack{eledpar}}
+% \changes{v1.18.0}{2014/07/29}{Add \cs{ifledRcol@} for \Lpack{eledpar}}
 %    \begin{macrocode}
 \newif\ifl@dpairing
   \l@dpairingfalse
 \newif\ifpst@rtedL
   \pst@rtedLfalse
 \newcount\l@dnumpstartsL
+%    \end{macrocode}
+% \cs{ifledRcol} is set to true in the \verb+Rightside+ environnement. It must be distingued from \cs{ifledRcol@} which is set to true when a right line is processed, in \cs{Pages} or \cs{Columns}. 
+%    \begin{macrocode}
 \newif\ifledRcol
+\newif\ifledRcol@
 %    \end{macrocode}
 % The \cs{ifnumberingR} flag is
 % set to \verb"true" if we're within a right text numbered section.
@@ -10511,9 +10517,16 @@
 % \end{itemize}
 %    \begin{macrocode}
 \newcommand*{\vl@dlsnote}[1]{%
-  \@l@dtempcntb=\sidenote@margin%
-  \ifnum\@l@dtempcntb>\@ne%
-    \advance\@l@dtempcntb by\page@num%
+  \ifledRcol@%
+    \@l@dtempcntb=\sidenote@marginR%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@numR%
+    \fi%
+  \else%
+    \@l@dtempcntb=\sidenote@margin%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@num%
+    \fi%
   \fi%
   \ifodd\@l@dtempcntb%
     \listgadd{\l@dcsnotetext@l}{#1}%
@@ -10522,9 +10535,16 @@
   \fi
 }
 \newcommand*{\vl@drsnote}[1]{%
-  \@l@dtempcntb=\sidenote@margin%
-  \ifnum\@l@dtempcntb>\@ne%
-     \advance\@l@dtempcntb by\page@num%
+  \ifledRcol@%
+    \@l@dtempcntb=\sidenote@marginR%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@numR%
+    \fi%
+  \else%
+    \@l@dtempcntb=\sidenote@margin%
+    \ifnum\@l@dtempcntb>\@ne%
+      \advance\@l@dtempcntb by\page@num%
+    \fi%
   \fi%
   \ifodd\@l@dtempcntb%
     \listgadd{\l@dcsnotetext}{#1}%
@@ -10532,7 +10552,6 @@
     \listgadd{\l@dcsnotetext@r}{#1}%
   \fi%
 }
-
 \newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
 
 %    \end{macrocode}
