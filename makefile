@@ -45,5 +45,6 @@ dist: $(PACKAGE) examples
 	
 
 clean:
+	$(MAKE) -C examples clean
 	@$(RM) *.aux *.log *.out *.toc *tex *.pdf eledmac.sty eledpar.sty  *ind *ilg  *lof *idx *glo *gls ../eledmac.zip
 
