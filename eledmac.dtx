@@ -13175,6 +13175,16 @@
 \newcommand{\ledsectnotoc}{\let\addcontentsline\@gobblethree}
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ledsectnomark}
+% The \cs{ledsectnomark} only disables the \cs{chaptermark}, \cs{sectionmark} and \cs{subsectionmark} macros.
+%    \begin{macrocode}
+\newcommand{\ledsectnomark}{%
+  \let\chaptermark\@gobble%
+  \let\sectionmark\@gobble%
+  \let\subsectionmark\@gobble%
+}
+%    \end{macrocode}
+% \end{macro}
 %
 % \subsection{New commands : \cs{eledxxx}}
 % The new system of \cs{eledxxxx} commands to section text work like this:
@@ -13547,8 +13557,14 @@
     \ifstrempty{#4}%
       {%
       \ifstrempty{#1}%
-	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}}
-	    {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}}
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%
+	    }%
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%Need for \pairs, because of using parbox.
+	    }%
 	  }%
 	  {%
 	  \ifstrempty{#1}%
@@ -13560,8 +13576,14 @@
 \def\eled@section#1#2#3#4#5{%
     \ifstrempty{#4}%
       {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectioning@#3#5}{\section{#2}}}%
-	    {\global\csdef{eled@sectioning@#3#5}{\section[#1]{#2}}}%
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\section{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\sectionmark{#2}}%Need for \pairs, because of using parbox.
+	    }%
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\section[#1]{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\sectionmark{#1}}%Need for \pairs, because of using parbox.	    
+	    }%
 	  }%
 	  {\ifstrempty{#1}%
 	    {\global\csdef{eled@sectioning@#3#5}{\section*{#2}}}%
@@ -13572,8 +13594,14 @@
 \def\eled@subsection#1#2#3#4#5{%
     \ifstrempty{#4}%
       {\ifstrempty{#1}%
-	    {\global\csdef{eled@sectioning@#3#5}{\subsection{#2}}}%
-	    {\global\csdef{eled@sectioning@#3#5}{\subsection[#1]{#2}}}%
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\subsection{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\csuse{subsectionmark}{#2}}%Need for \pairs, because of using parbox. \csuse in case of \subsectionmark is not defined (book)	
+	    }%
+	    {%
+	    \global\csdef{eled@sectioning@#3#5}{\subsection[#1]{#2}}%
+	    \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\csuse{subsectionmark}{#1}}%Need for \pairs, because of using parbox. \csuse in case of \subsectionmark is not defined (book)	
+	    }%
 	  }%
 	  {\ifstrempty{#1}%
 	    {\global\csdef{eled@sectioning@#3#5}{\subsection*{#2}}}%

@@ -786,6 +786,9 @@
 % \DescribeMacro{\eledsectnotoc}
 % By default, the section commands of the right side are not add to the table of contents.
 % But you can change it, using \cs{eledsectnotoc}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
+%
+% \DescribeMacro{\eledsectmark}
+% By default, the \LaTeX\ marks for header are token from left side. You can change it, using{\eledsectmark}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
 % \section{Implementation overview}\label{overview}
 %
 %    TeX is designed to process a single stream of text, which may include
@@ -2777,6 +2780,7 @@
 %    \begin{macrocode}
 \def\print@eledsectionL{%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+    \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
     \numdef{\temp@}{\l@dpscL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
@@ -2864,7 +2868,8 @@
 
 \def\print@eledsectionR{%
     \initnumbering@sectcountR%
-    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
+    \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
     \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
@@ -4142,22 +4147,44 @@
           \ifl@dsamelang
             \do@lineL
             \xifinlist{\the\l@dpscL}{\eled@sections@@}
-                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}}%
+                {%
+                \ifdefstring{\@eledsectmark}{L}%
+                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  }{}%
+                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}
+                }%
                 {}%
             \do@lineR
             \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
-                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
+                {%
+                \ifdefstring{\@eledsectmark}{R}%
+                  {\csuse{eled@sectmark@\the\l@dpscR R}%
+                  }{}%   
+                \global\csundef{eled@sectmark@\the\l@dpscR R}%             
+                \savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
                 {}%
           \else
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
             \xifinlist{\the\l@dpscL}{\eled@sections@@}
-                {\savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}}%
+                {%
+                \ifdefstring{\@eledsectmark}{L}%
+                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  }{}%
+                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}
+                }%
                 {}%
             \l@duselanguage{\theledlanguageR}%
             \do@lineR
             \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
-                {\savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
+                {%
+                \ifdefstring{\@eledsectmark}{R}%
+                  {\csuse{eled@sectmark@\the\l@dpscR R}%
+                  }{}%   
+                \global\csundef{eled@sectmark@\the\l@dpscR R}%             
+                \savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
                 {}%
           \fi
           \hb@xt@ \hsize{%
@@ -5005,12 +5032,18 @@
 % \end{macro}
 % \end{macro}
 %
-% \section{Section's title's commands}
+% \section{Sections' titles' commands}
 % \begin{macro}{\eledsectnotoc}
 % \cs{eledsectnotoc} just save its content \cs{@eledsectnotoc}, which will be tested where sectioning commands will be printed.
 %    \begin{macrocode}
 \newcommand{\eledsectnotoc}[1]{\xdef\@eledsectnotoc{#1}}
 \eledsectnotoc{R}
+%    \end{macrocode}
+% \end{macro}
+% \cs{eledsectmark} just save its content \cs{@eledsectmark}, which will be tested where sectioning commands will be printed.
+%    \begin{macrocode}
+\newcommand{\eledsectmark}[1]{\xdef\@eledsectmark{#1}}
+\eledsectmark{L}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\eledsection@correcting@skip}
