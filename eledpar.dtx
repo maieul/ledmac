@@ -375,6 +375,13 @@
 % is invisible. For a visible rule between the columns you could try: \\
 % \verb?\setlength{\columnrulewidth}{0.4pt}? \\
 % You can also modify \cs{columnseparator} if you want more control.
+%
+% \DescribeMacro{\columnsposition}
+% \changes{v1.8.0}{2014/08/01}{Add \cs{columnsposition}.}
+% By default, columns are positioned to the right of the page.
+% However, you use \cs{columnsposition}\verb+{L} to align them to the left,
+% or \cs{columnsposition}\verb+{C} to center them.
+%
 % When you use \cs{stanza}, the visible rule may shift when a verse has a hanging indent. To prevent shifting, use \cs{setstanzaindents} outside the \verb|Leftside| or \verb|Rightside| environment.
 %
 %
@@ -4166,9 +4173,17 @@
                 \savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
                 {}%
           \hb@xt@ \hsize{%
-           \hfill \unhbox\l@dleftbox\ifhbox\@ledsectionL\usebox{\@ledsectionL}\fi%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+             \unhbox\l@dleftbox%
+               \ifhbox%
+                 \@ledsectionL\usebox{\@ledsectionL}%
+               \fi%
             \hfill \columnseparator  \hfill
-            \unhbox\l@drightbox\ifhbox\@ledsectionR\usebox{\@ledsectionR}\fi%
+            \unhbox\l@drightbox%
+            \ifhbox\@ledsectionR%
+              \usebox{\@ledsectionR}%
+            \fi%
+            \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
           \checkraw@text
           \checkverseL
@@ -4254,7 +4269,18 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\columnsposition}
+% \begin{macro}{\columns@position}
+% The position of the \cs{Columns} in a page. Default value is R. 
+% Stored in \cs{\columns@position}.
+%    \begin{macrocode}
+\newcommand*{\columnsposition}[1]{%
+  \xdef\columns@position{#1}%
+  }%
+\xdef\columns@position{R}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\if@pstarts}
 % \begin{macro}{\@pstartstrue}
 % \begin{macro}{\@pstartsfalse}
