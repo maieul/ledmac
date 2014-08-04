@@ -2795,7 +2795,12 @@
     \csuse{eled@sectioning@\the\l@dpscL}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscL}%
-    \hspace{\paperwidth}{\new@line \l@dunhbox@line{\one@line}}%
+    \if@RTL%
+      \hspace{-\paperwidth}%
+    \else%
+      \hspace{\paperwidth}%
+    \fi%
+    {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \vskip\eledsection@correcting@skip%
 }
 %    \end{macrocode}
@@ -2884,7 +2889,12 @@
     \csuse{eled@sectioning@\the\l@dpscR R}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscR R}%
-    \hspace{\paperwidth}{\new@lineR \l@dunhbox@line{\one@lineR}}%
+    \if@RTL%
+      \hspace{-\paperwidth}%
+    \else%
+      \hspace{\paperwidth}%
+    \fi%
+    {\new@lineR \hbox{\l@dunhbox@line{\one@lineR}}}%
     \vskip\eledsection@correcting@skip
 }
 % \end{macro}
@@ -4093,12 +4103,12 @@
 %
 % \section{Parallel columns}
 %
-% \begin{macro}{\@ledsectionL}
-% \begin{macro}{\@ledsectionR}
-% The parbox \cs{@ledsectionL} and \cs{@ledsectionR} will keep the sections' title.
+% \begin{macro}{\@eledsectionL}
+% \begin{macro}{\@eledsectionR}
+% The parbox \cs{@eledsectionL} and \cs{@eledsectionR} will keep the sections' title.
 %    \begin{macrocode}
-\newsavebox{\@ledsectionL}
-\newsavebox{\@ledsectionR}
+\newsavebox{\@eledsectionL}%
+\newsavebox{\@eledsectionR}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -4163,7 +4173,7 @@
                   {\csuse{eled@sectmark@\the\l@dpscL}%
                   }{}%
                 \global\csundef{eled@sectmark@\the\l@dpscL}%
-                \savebox{\@ledsectionL}{\parbox{\Rcolwidth}{\print@eledsectionL}}
+                \savebox{\@eledsectionL}{\parbox[t][][t]{\Rcolwidth}{\print@eledsectionL}}%
                 }%
                 {}%
             \ifl@dsamelang\else\l@duselanguage{\theledlanguageR}\fi%
@@ -4174,18 +4184,18 @@
                   {\csuse{eled@sectmark@\the\l@dpscR R}%
                   }{}%   
                 \global\csundef{eled@sectmark@\the\l@dpscR R}%             
-                \savebox{\@ledsectionR}{\parbox{\Lcolwidth}{\print@eledsectionR}}}%
+                \savebox{\@eledsectionR}{\parbox[t][][t]{\Lcolwidth}{\print@eledsectionR}}}%
                 {}%
           \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
-             \unhbox\l@dleftbox%
-               \ifhbox%
-                 \@ledsectionL\usebox{\@ledsectionL}%
-               \fi%
+            \unhbox\l@dleftbox%
+            \ifhbox\@eledsectionL%
+               \usebox{\@eledsectionL}%
+            \fi%
             \hfill \columnseparator  \hfill
             \unhbox\l@drightbox%
-            \ifhbox\@ledsectionR%
-              \usebox{\@ledsectionR}%
+            \ifhbox\@eledsectionR%
+              \usebox{\@eledsectionR}%
             \fi%
             \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
