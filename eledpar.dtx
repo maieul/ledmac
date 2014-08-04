@@ -2753,7 +2753,6 @@
   \fi
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
-      \affixpstart@numL
     \affixline@num
     \add@inserts
     \affixside@note
@@ -2776,6 +2775,7 @@
 % \cs{print@lineL} is for lines without a sectioning command.
 %    \begin{macrocode}
 \def\print@lineL{%
+    \affixpstart@numL%
     \l@dld@ta %space kept for backwar compatibility
     \l@dlsn@te %space kept for backwar compatibility
     {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
@@ -2786,6 +2786,7 @@
 % \cs{print@eledsectionL} is for line with macro code.
 %    \begin{macrocode}
 \def\print@eledsectionL{%
+    \addtocounter{pstartL}{-1}%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
     \numdef{\temp@}{\l@dpscL-1}%
@@ -2842,8 +2843,6 @@
   \fi%
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
-    \affixpstart@numR
-    \affixline@numR
     \add@insertsR
     \affixside@noteR
     \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
@@ -2867,6 +2866,7 @@
 % \begin{macro}{\print@lineR}{}
 % \begin{macro}{\print@eledsectionR}{}
 \def\print@lineR{%
+    \affixpstart@numR%
     \l@dld@ta
     \l@dlsn@te
 \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
@@ -2874,6 +2874,7 @@
   }
 
 \def\print@eledsectionR{%
+    \addtocounter{pstartR}{-1}%
     \initnumbering@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
@@ -4068,12 +4069,15 @@
    }
 %    \end{macrocode}
 % If on Polyglossia
+% \changes{v1.8.0}{2014/08/01}{Correct left/right language setting with polyglossia.}
 % \begin{macrocode}
-  {    \apptocmd{\xpg@set@language}{%
-        \ifledRcol \gdef\theledlanguageR{#1}%
-        \else      \gdef\theledlanguageL{#1}%
+  {    \let\old@otherlanguage\otherlanguage%
+       \renewcommand{\otherlanguage}[2][]{%
+        \selectlanguage[#1]{#2}%
+        \ifledRcol  \gdef\theledlanguageR{#2}%
+        \else      \gdef\theledlanguageL{#2}%
         \fi}%
-      \let\l@duselanguage\xpg@set@language
+      \let\l@duselanguage\xpg@set@language%
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
 % \end{macrocode}
