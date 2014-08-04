@@ -82,7 +82,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 		- Choose the correct branch in the "branch" menu.
 		- Click on the cloud, in the right side.
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
-	- Put the `.sty` files along your test files.
+	- Put the `.sty` files with your test files (in the same folder).
 	- Make your report.
 
 
