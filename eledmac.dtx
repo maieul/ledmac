@@ -13209,6 +13209,45 @@
 \newif\if@eled@sectioning
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\print@leftmargin@eledsection}
+% \begin{macro}{\print@rightmargin@eledsection}
+% \cs{print@leftmargin@eledsection} and \cs{print@rightmargin@eledsection} are added by eledmac inside the code of sectioning command, in order to affix lines numbers.
+% They include tests for RTL languages. 
+%    \begin{macrocode}
+\def\print@rightmargin@eledsection{%
+  \if@eled@sectioning%
+    \begingroup%
+    \if@RTL%  
+        \let\llap\rlap%
+        \let\leftlinenum\rightlinenum%
+        \let\leftlinenumR\rightlinenumR%
+        \let\l@drd@ta\l@dld@ta%
+        \let\l@drsn@te\l@dlsn@te%
+    \fi%
+    \hfill\l@drd@ta \l@drsn@te%
+    \endgroup%
+  \fi%
+}%
+
+\def\print@leftmargin@eledsection{%
+  \if@eled@sectioning%
+    \leavevmode%
+    \begingroup%
+    \if@RTL%
+        \let\rlap\llap%
+        \let\rightlinenum\leftlinenum%
+        \let\rightlinenumR\leftlinenumR%
+        \let\l@dld@ta\l@drd@ta%
+        \let\l@dlsn@te\l@drsn@te%
+    \fi%
+    \l@dld@ta\l@dlsn@te%
+    \endgroup%
+  \fi%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\chapter}
 % \begin{macro}{\M@sect}
 % \begin{macro}{\@mem@old@ssect}
@@ -13252,7 +13291,7 @@
 \patchcmd{\M@sect}
   { #9}
   { #9%
-  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+  \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13260,7 +13299,7 @@
 \patchcmd{\M@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  \print@leftmargin@eledsection%
   }
   {}
   {}
@@ -13280,7 +13319,7 @@
 \patchcmd{\@mem@old@ssect}
   {#5}
   {#5%
-  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+  \print@leftmargin@eledsection%
   }
   {}
   {}
@@ -13288,7 +13327,7 @@
 \patchcmd{\@mem@old@ssect}
   {\hskip #1}
   {\hskip #1%
-  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13303,9 +13342,9 @@
 
 \patchcmd{\@makechapterhead}
   {#1}
-  {\if@eled@sectioning\leavevmode\l@dld@ta\l@dlsn@te\fi%
+  {\print@leftmargin@eledsection%
     #1%
-  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+  \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13321,9 +13360,9 @@
 
 \patchcmd{\@makeschapterhead}
   {#1}
-  {\if@eled@sectioning\leavevmode\l@dld@ta\l@dlsn@te\fi%
+  {\print@leftmargin@eledsection%
     #1%
-   \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+   \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13331,7 +13370,7 @@
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  \print@leftmargin@eledsection%
   }
   {}
   {}
@@ -13351,7 +13390,7 @@
 \patchcmd{\@sect}
   {#8}
   {#8%
-  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+  \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13359,7 +13398,7 @@
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
-  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  \print@leftmargin@eledsection%
   }
   {}
   {}
@@ -13379,7 +13418,7 @@
 \patchcmd{\@ssect}
   {#5}
   {#5%
-  \if@eled@sectioning\hfill\l@drd@ta \l@drsn@te\fi%
+  \print@rightmargin@eledsection%
   }
   {}
   {}
@@ -13387,7 +13426,7 @@
 \patchcmd{\@ssect}
   {\hskip #1}
   {\hskip #1%
-  \if@eled@sectioning\l@dld@ta\l@dlsn@te\fi%
+  \print@leftmargin@eledsection%
   }
   {}
   {}
