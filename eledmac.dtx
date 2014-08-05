@@ -13227,6 +13227,7 @@
 %
 %   
 %    \begin{macrocode}
+\AtBeginDocument{%
 \patchcmd{\chapter}{\clearforchapter}{%
   \ifnumbering\else%
     \clearforchapter
@@ -13235,7 +13236,6 @@
   {}
   {}
 
-  
 \pretocmd{\M@sect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext%
@@ -13263,7 +13263,7 @@
   }
   {}
   {}
-  
+
 \pretocmd{\@mem@old@ssect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext%
@@ -13284,7 +13284,6 @@
   {}
   {}
 
-
 \patchcmd{\@mem@old@ssect}
   {\hskip #1}
   {\hskip #1%
@@ -13292,20 +13291,6 @@
   }
   {}
   {}
-
-
-% Normal
-\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
-  \if@eled@sectioning%
-    \if@RTL\vskip 1pt\fi%Correct a little bug with Bidi
-    \else%
-    \if@openright\cleardoublepage\else\clearpage\fi%
-  \fi%
-  }
-  {}
-  {}
-
-
 
 
 \patchcmd{\@makechapterhead}
@@ -13317,6 +13302,15 @@
   {}
   {}
 
+\patchcmd{\@makechapterhead}% For BIDI
+  {\if@RTL\raggedleft\else\raggedright\fi}%
+  {\if@eled@sectioning\else%
+    \if@RTL\raggedleft\else\raggedright\fi%
+  \fi%
+  }%
+  {}%
+  {}%
+
 \patchcmd{\@makeschapterhead}
   {#1}
   {\if@eled@sectioning\leavevmode\l@dld@ta\l@dlsn@te\fi%
@@ -13326,7 +13320,6 @@
   {}
   {}
 
-
 \patchcmd{\@sect}
   {\hskip #3\relax}
   {\hskip #3\relax%
@@ -13334,7 +13327,7 @@
   }
   {}
   {}
-  
+
 \pretocmd{\@sect}
   {\let\old@edtext=\edtext
   \let\edtext=\dummy@edtext%
@@ -13362,7 +13355,7 @@
   }
   {}
   {}
-  
+
 \pretocmd{\@ssect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext%
@@ -13383,7 +13376,6 @@
   {}
   {}
 
-
 \patchcmd{\@ssect}
   {\hskip #1}
   {\hskip #1%
@@ -13391,7 +13383,7 @@
   }
   {}
   {}
-
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -13549,7 +13541,7 @@
         {%
         \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}%
         \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%
-        }%
+        }%Need for \pairs, because of using parbox.
         {%
         \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}%
         \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%Need for \pairs, because of using parbox.
