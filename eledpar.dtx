@@ -3970,34 +3970,12 @@
 % \end{macro}
 %
 % \begin{macro}{\ifl@dsamelang}
-% \begin{macro}{\l@dsamelangfalse}
-% \begin{macro}{\l@dsamelangtrue}
-% A flag for checking if the same \verb?babel? language has been used 
-% for both the left and right texts.
-%    \begin{macrocode}
-\newif\ifl@dsamelang
-  \l@dsamelangtrue
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
+% Suppress \cs{ifl@dsamelang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.
 % \end{macro}
 %
 % \begin{macro}{\l@dchecklang}
-% I'm going to use \cs{theledlanguageL} and \cs{theledlanguageR} to hold
-% the names of the languages used for the left and right texts. This macro
-% sets \cs{ifl@dsamelang} TRUE if they are the same, otherwise it
-% sets it FALSE.
-% \changes{v1.8.0}{2014/08/01}{Debug \cs{l@dchecklang}.}
-%    \begin{macrocode}
-\newcommand*{\l@dchecklang}{%
-  \l@dsamelangfalse
-  \ifx\theledlanguageL\theledlanguageR
-    \l@dsamelangtrue
-  \fi}
-
-%    \end{macrocode}
+% \changes{v1.12.0}{2014/08/01}{Suppress \cs{l@dchecklang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.}
 % \end{macro}
-%
 % \begin{macro}{\l@dbbl@set@language}
 % In \verb?babel? the macro \cs{bbl@set@language}\marg{lang} does the work when
 % the language \meta{lang} is changed via \cs{selectlanguage}. 
@@ -4157,15 +4135,15 @@
 % are the same
 % \changes{v0.2}{2004/12/20}{Added \cs{l@dchecklang} and \cs{l@duselanguage}
 %                to \cs{Columns}}
+% \changes{v1.12.0}{2014/08/01}{Suppress \cs{l@dchecklang} from \cs{Columns}.}
 %    \begin{macrocode}
       \checkraw@text
-      \l@dchecklang
 {        \loop\ifaraw@text
 %    \end{macrocode}
 % Grab the next pair of left and right text lines and output them, swapping
 % languages if they differ, adding section title if needed.
 %    \begin{macrocode}
-            \ifl@dsamelang\else\l@duselanguage{\theledlanguageL}\fi%
+            \l@duselanguage{\theledlanguageL}%
             \do@lineL
             \xifinlist{\the\l@dpscL}{\eled@sections@@}
                 {%
@@ -4176,7 +4154,7 @@
                 \savebox{\@eledsectionL}{\parbox[t][][t]{\Lcolwidth}{\print@eledsectionL}}%
                 }%
                 {}%
-            \ifl@dsamelang\else\l@duselanguage{\theledlanguageR}\fi%
+            \l@duselanguage{\theledlanguageR}%
             \do@lineR
             \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
                 {%
