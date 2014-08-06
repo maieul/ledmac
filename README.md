@@ -63,7 +63,7 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 
 # Help
 
-- [Users list](https://lists.berlios.de/pipermail/ledmac-users/)
+- [Users list](http://geekographie.maieul.net/146)
 - [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/eledmac)
 
 # Debug
