@@ -5145,13 +5145,19 @@
 % \end{macro}
 %
 % \begin{macro}{\dummy@edtext}
-% LaTeX users are not used to delimited arguments, so I provide
+% \LaTeX\ users are not used to delimited arguments, so we provide
 % a \cs{edtext} macro as well.
 %    \begin{macrocode}
 \newcommand{\dummy@edtext}[2]{#1}
 %    \end{macrocode}
 % \end{macro}
-%
+% 
+% \begin{macro}{\dummy@edtext@showlemma}
+% Some time, we want to obtain only the first arguments of \cs{edtext}, but also wrap it in \cs{showlemma}. For example, when printing a \cs{eledsection}.
+%    \begin{macrocode}
+\newcommand{\dummy@edtext@showlemma}[2]{\showlemma{#1}}%
+%    \end{macrocode}
+% \end{macro}
 %
 % We're going to need another macro that takes one argument and ignores
 % it entirely. This is supplied by the LaTeX \cs{@gobble}\marg{arg}.
@@ -13284,7 +13290,7 @@
 
 \pretocmd{\M@sect}
   {\let\old@edtext=\edtext%
-  \let\edtext=\dummy@edtext%
+  \let\edtext=\dummy@edtext@showlemma%
   }
   {}
   {}
@@ -13312,7 +13318,7 @@
 
 \pretocmd{\@mem@old@ssect}
   {\let\old@edtext=\edtext%
-  \let\edtext=\dummy@edtext%
+  \let\edtext=\dummy@edtext@showlemma%
   }
   {}
   {}
@@ -13375,7 +13381,7 @@
 
 \pretocmd{\@sect}
   {\let\old@edtext=\edtext
-  \let\edtext=\dummy@edtext%
+  \let\edtext=\dummy@edtext@showlemma%
   }
   {}
   {}
@@ -13403,7 +13409,7 @@
 
 \pretocmd{\@ssect}
   {\let\old@edtext=\edtext%
-  \let\edtext=\dummy@edtext%
+  \let\edtext=\dummy@edtext@showlemma%
   }
   {}
   {}
@@ -13585,18 +13591,18 @@
       {%
       \ifstrempty{#1}%
         {%
-        \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter{#2}}%
+        \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext@showlemma\chapter{#2}}%
         \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%
         }%Need for \pairs, because of using parbox.
         {%
-        \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter[#1]{#2}}%
+        \global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext@showlemma\chapter[#1]{#2}}%
         \global\csdef{eled@sectmark@#3#5}{\let\edtext=\dummy@edtext{}\chaptermark{#2}}%Need for \pairs, because of using parbox.
         }%
       }%
       {%
       \ifstrempty{#1}%
-        {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter*{#2}}}
-        {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext\chapter*[#1]{#2}}}%Bug in LaTeX!
+        {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext@showlemma\chapter*{#2}}}%
+        {\global\csdef{eled@sectioning@#3#5}{\let\edtext=\dummy@edtext@showlemma\chapter*[#1]{#2}}}%Bug in LaTeX!
       }%
   \listcsgadd{eled@sections#5@@}{#3}%
     }
