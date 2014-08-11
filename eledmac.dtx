@@ -11273,7 +11273,6 @@
     \expandafter\let\csname\@currenvir\endcsname\l@dcollect@@body
     \edef\processl@denvbody{\expandafter\noexpand\csname\@currenvir\endcsname}%
     \processl@denvbody%
-    \reset@familiarnotes@counter%
     }%
 
 %    \end{macrocode}
@@ -11743,28 +11742,29 @@
 
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\reset@familiarnotes@counter}
-% Command to reset counters for familiar footnotes.
-%    \begin{macrocode}
-\newcommand{\reset@familiarnotes@counter}{%
-  \def\do##1{%
-    \setcounter{footnote##1}{0}%
-  }%
-  \dolistloop{\@series}%
-}%
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\disable@familiarnotes}
-% A macro to disable familiar notes, to prevent to print it multiple time in a edtabularx and edarrayx environments. 
+% \begin{macro}{\restore@familiarnotes}
+% Macros to disable and restore familiar notes, to prevent to print it multiple time in a edtabularx and edarrayx environments. 
 %    \begin{macrocode}
 \newcommand{\disable@familiarnotes}{%
   \def\do##1{%
-      \expandafter\renewcommand\csname vfootnote##1\endcsname[2]{%
+      \csletcs{footnote@@##1}{footnote##1}%
+      \expandafter\renewcommand \csname footnote##1\endcsname[1]{%
+        \protected@csxdef{@thefnmark##1}{\csuse{thefootnote##1}}%
+        \csuse{@footnotemark##1}%
       }%
   }%
   \dolistloop{\@series}%
 }%
+\newcommand{\restore@familiarnotes}{%
+  \def\do##1{%
+      \csletcs{footnote##1}{footnote@@##1}%
+  }%
+  \dolistloop{\@series}%
+}%
+
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\l@dampcount}
 % \begin{macro}{\l@dcolcount}
@@ -12188,7 +12188,6 @@
 % Typeset (recursively) cells of display math right justified. (was |\rverteilen|)
 %    \begin{macrocode}
 \def\setmcellright #1&{\def\edlabel##1{}%
-       \disable@familiarnotes%
        \let\edindex\nulledindex
        \ifx #1\\ \ifnum\l@dcolcount=0%\removelastskip
                      \let\Next\relax% 
@@ -12198,9 +12197,11 @@
        \else% 
            \disablel@dtabfeet%
            \stepl@dcolcount%
+           \disable@familiarnotes%
            \setbox\hilfsbox=\hbox{$\displaystyle{#1}$}%
+           \restore@familiarnotes%
            \letsforverteilen%
-           {\let\stepcounter\@gobble\hskip\hilfsskip$\displaystyle{#1}$}%
+           \hskip\hilfsskip$\displaystyle{#1}$%
            \hskip\edtabcolsep%
            \let\Next=\setmcellright% 
        \fi\Next}
@@ -12212,7 +12213,6 @@
 % Typeset (recursively) cells of text right justified. (was |\rverteilentext|)
 %    \begin{macrocode}
 \def\settcellright #1&{\def\edlabel##1{}%
-       \disable@familiarnotes%
        \let\edindex\nulledindex
        \ifx #1\\ \ifnum\l@dcolcount=0%\removelastskip
                     \let\Next\relax% 
@@ -12222,9 +12222,11 @@
        \else% 
            \disablel@dtabfeet%
            \stepl@dcolcount%
+           \disable@familiarnotes%
            \setbox\hilfsbox=\hbox{#1}%
+           \restore@familiarnotes%
            \letsforverteilen%
-           {\let\stepcounter\@gobble\hskip\hilfsskip#1}%
+           \hskip\hilfsskip#1%
            \hskip\edtabcolsep%
            \let\Next=\settcellright% 
        \fi\Next}
@@ -12235,7 +12237,6 @@
 % Typeset (recursively) cells of display math left justified. (was |\lverteilen|)
 %    \begin{macrocode}
 \def\setmcellleft #1&{\def\edlabel##1{}%
-    \disable@familiarnotes%
     \let\edindex\nulledindex
     \ifx #1\\ \ifnum\l@dcolcount=0 \let\Next\relax%
               \else\l@dcolcount=0%
@@ -12243,9 +12244,11 @@
               \fi%
      \else   \disablel@dtabfeet%   
               \stepl@dcolcount%
+              \disable@familiarnotes%
               \setbox\hilfsbox=\hbox{$\displaystyle{#1}$}%
+              \restore@familiarnotes%
               \letsforverteilen%
-              {\let\stepcounter\@gobble$\displaystyle{#1}$}\hskip\hilfsskip\hskip\edtabcolsep%
+              $\displaystyle{#1}$\hskip\hilfsskip\hskip\edtabcolsep%
               \let\Next=\setmcellleft%
      \fi\Next}
 
@@ -12256,7 +12259,6 @@
 % Typeset (recursively) cells of text left justified. (was |\lverteilentext|)
 %    \begin{macrocode}
 \def\settcellleft #1&{\def\edlabel##1{}%
-    \disable@familiarnotes%
     \let\edindex\nulledindex
     \ifx #1\\ \ifnum\l@dcolcount=0 \let\Next\relax%
               \else\l@dcolcount=0%
@@ -12264,9 +12266,11 @@
               \fi%
      \else   \disablel@dtabfeet%   
               \stepl@dcolcount%
+              \disable@familiarnotes%
               \setbox\hilfsbox=\hbox{#1}%
+              \restore@familiarnotes%
               \letsforverteilen%
-              {\let\stepcounter\@gobble#1}\hskip\hilfsskip\hskip\edtabcolsep%
+              #1\hskip\hilfsskip\hskip\edtabcolsep%
               \let\Next=\settcellleft%
      \fi\Next}
 %    \end{macrocode}
@@ -12276,7 +12280,6 @@
 % Typeset (recursively) cells of display math centered. (was |\zverteilen|)
 %    \begin{macrocode}
 \def\setmcellcenter #1&{\def\edlabel##1{}%
-    \disable@familiarnotes%
     \let\edindex\nulledindex
     \ifx #1\\ \ifnum\l@dcolcount=0\let\Next\relax%
              \else\l@dcolcount=0%
@@ -12284,9 +12287,11 @@
              \fi%
     \else    \disablel@dtabfeet%
              \stepl@dcolcount%
+             \disable@familiarnotes%
              \setbox\hilfsbox=\hbox{$\displaystyle{#1}$}%
+             \restore@familiarnotes%
              \letsforverteilen%
-             {\let\stepcounter\@gobble\hskip 0.5\hilfsskip$\displaystyle{#1}$\hskip0.5\hilfsskip}%
+             \hskip 0.5\hilfsskip$\displaystyle{#1}$\hskip0.5\hilfsskip%
              \hskip\edtabcolsep%
              \let\Next=\setmcellcenter%
      \fi\Next}
@@ -12298,7 +12303,6 @@
 % Typeset (recursively) cells of text centered. (new)
 %    \begin{macrocode}
 \def\settcellcenter #1&{\def\edlabel##1{}%
-    \disable@familiarnotes%
     \let\edindex\nulledindex
     \ifx #1\\ \ifnum\l@dcolcount=0 \let\Next\relax%
               \else\l@dcolcount=0%
@@ -12306,9 +12310,11 @@
               \fi%
      \else   \disablel@dtabfeet%   
               \stepl@dcolcount%
+              \disable@familiarnotes%
               \setbox\hilfsbox=\hbox{#1}%
+              \restore@familiarnotes%
               \letsforverteilen%
-              {\let\stepcounter\@gobble\hskip 0.5\hilfsskip #1\hskip 0.5\hilfsskip}%
+              \hskip 0.5\hilfsskip #1\hskip 0.5\hilfsskip%
               \hskip\edtabcolsep%
               \let\Next=\settcellcenter%
      \fi\Next}
@@ -12740,11 +12746,13 @@
 % |\measuretbody|\marg{body} measures the tabular \meta{body}.
 %    \begin{macrocode}
 \newcommand{\measuretbody}[1]{%
+  \disable@familiarnotes%
   \disablel@dtabfeet%
   \l@dcolcount=0%
   \nullsetzen%
   \l@dcolcount=0
   \measuretrow #1\\&\\%
+  \restore@familiarnotes%
   \global\l@dampcount=1}
 
 %    \end{macrocode}
