@@ -30,7 +30,7 @@
               hyperindex=false
              ]{hyperref}
 \usepackage[utf8]{inputenc}
-\providecommand{\phantomsection}{} % just in case hyperref is not used
+\usepackage[english]{babel}
 \usepackage{graphicx,eledmac,eledpar}
 \makeatletter
   \@mparswitchfalse
@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4483}
+% \CheckSum{4633}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -134,6 +134,19 @@
 %      \my@changes#1\@nil
 %    }%
 %\makeatother
+% \newcommand{\Lpack}[1]{\textsf{#1}}
+% \newcommand{\Lclass}[1]{\textsf{#1}}
+% \newcommand{\file}[1]{\texttt{#1}}
+% \newcommand{\eledpar}{eledpar}
+% \newcommand{\eledmac}{eledmac}
+% \newcommand{\Eledmac}{\Lpack{\eledmac}}
+% \newcommand{\Eledpar}{\Lpack{\eledpar}}
+% \newcommand{\edmac}{\texttt{EDMAC}}
+% \newcommand{\tabmac}{\texttt{TABMAC}}
+% \newcommand{\edstanza}{\texttt{EDSTANZA}}
+% \newcommand{\texbook}{\textit{TeXbook}}
+% \newcommand{\thetexbook}{\textit{The TeXbook}}
+%
 % \changes{v0.1}{2004/12/10}{First public release}
 % \changes{v0.2}{2005/01/01}{Fix babel problems}
 % \changes{v0.3}{2005/03/24}{Reorganize for ledarab}
@@ -159,21 +172,16 @@
 % \changes{v1.4.3}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
 % \changes{v1.5.0}{2013/11/08}{Add, as in eledmac, features to manage page breaks.}
 % \changes{v1.7.0}{2014/04/14}{Add, as in eledmac, features to make crossrefs with pstart numbers.}
+% \changes{v1.8.0}{2014/08/05}{Debug eledmac sectioning command after using \cs{resumenumbering}.}
+% \changes{v1.8.0}{2014/08/05}{Compatibility with \Lpack{musixtex}.}
+% \changes{v1.8.0}{2014/08/05}{Add, as in eledmac, possibility to insert something after \cs{pend}s / verses.}
+% \changes{v1.8.0}{2014/08/05}{Add, as in eledmac, possibility to insert something between \cs{pstart}s / verse.}
+% \changes{v1.8.0}{2014/08/05}{Add, as in eledmac, new system of sectioning commands.}
+% \changes{v1.8.2}{2014/08/15}{Debug left and side note (bugs added by 1.8.0)}
+% \changes{v1.8.2}{2014/08/15}{Debug \eledxxx with some paper size}
 % \changes{v1.x.0}{2013/11/24}{New tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
-% \newcommand{\Lpack}[1]{\textsf{#1}}
-% \newcommand{\Lclass}[1]{\textsf{#1}}
-% \newcommand{\file}[1]{\texttt{#1}}
-% \newcommand{\eledpar}{eledpar}
-% \newcommand{\eledmac}{eledmac}
-% \newcommand{\Eledmac}{\Lpack{\eledmac}}
-% \newcommand{\Eledpar}{\Lpack{\eledpar}}
-% \newcommand{\edmac}{\texttt{EDMAC}}
-% \newcommand{\tabmac}{\texttt{TABMAC}}
-% \newcommand{\edstanza}{\texttt{EDSTANZA}}
-% \newcommand{\texbook}{\textit{TeXbook}}
-% \newcommand{\thetexbook}{\textit{The TeXbook}}
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
 % \newcommand{\egstart}{}
@@ -213,9 +221,12 @@
 %
 % Note that before September 2012, eledpar was called ledpar. The changes from ledmac/ledpar to eledmac/eledpar is explained in ledmac documentation.
 %
-% To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can report bug in English or in French.
+% \Lpack{eledpar} provides many tools and options. Normally, they are all documented in this file.
+% Also provided is a help folder, ``\href{examples/.}{examples}''. The folder contains additional examples (although not for all cases).
 %
-% You can subscribe to the eledmac email list in:\\ \url{https://lists.berlios.de/pipermail/ledmac-users/}
+% To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can report bug in English or in French (better).
+%
+% You can subscribe to the eledmac email list in:\\ \url{http://geekographie.maieul.net/146}
 % \end{abstract}
 % \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
@@ -370,9 +381,30 @@
 % is invisible. For a visible rule between the columns you could try: \\
 % \verb?\setlength{\columnrulewidth}{0.4pt}? \\
 % You can also modify \cs{columnseparator} if you want more control.
+%
+% \DescribeMacro{\columnsposition}
+% \changes{v1.8.0}{2014/08/05}{Add \cs{columnsposition}.}
+% By default, columns are positioned to the right of the page.
+% However, you use \cs{columnsposition}\verb+{L}+ to align them to the left,
+% or \cs{columnsposition}\verb+{C}+ to center them.
+%
 % When you use \cs{stanza}, the visible rule may shift when a verse has a hanging indent. To prevent shifting, use \cs{setstanzaindents} outside the \verb|Leftside| or \verb|Rightside| environment.
 %
 %
+% \DescribeMacro{\beforecolumnseparator}\DescribeMacro{\aftercolumnseparator}
+% \changes{v1.8.0}{2014/08/05}{Add \cs{beforecolumnseparator} and \cs{aftercolumnseparator}.}
+% By default, the spaces around column separator are the same as the space:
+% \begin{itemize}
+%  \item On the left of columns, if columns are aligned right.
+%  \item On the right of columns, if columns are aligned left.
+%  \item On both the Left and Right columns, if columns are centered.
+% \end{itemize}
+% You can redefine \cs{beforecolumnseparator} and \cs{aftercolumnseparator} length to define spaces before or after the column separator, instead of letting eledpar calculate them automatically. 
+% \begin{verbatim}
+% \setlength{\beforecolumseparator}{length}
+% \setlength{\aftercolumseparator}{length}
+% \end{verbatim}
+% If you want to come back to the previous behavior, just set them with a negative value. 
 % \section{Facing pages}\label{pages}
 %
 % \DescribeEnv{pages}
@@ -696,6 +728,11 @@
 %
 % When you use \cs{lednopb} make sure to use it on both sides in the corresponding
 % verses to keep the pages in sync.
+% \section{Side notes}
+% As in \Lpack{eledmac}, you must use one of the following commands to add side notes: \cs{ledsidenote}, \cs{ledleftnote}, \cs{ledrightnote}, \cs{ledouterote}, \cs{ledinnerrote}.
+% 
+% The \cs{sidenotemargin} defines the margin of the sidenote for either left or right side, depending on the current environment.
+% You can use \cs{sidenotemargin*} to define it for both sides.
 % \section{Notes}
 % \DescribeMacro{\Xbothsides}\DescribeMacro{\bothsidesX}
 % The \Lpack{eledpar} package can use all types of notes defined in \Lpack{eledmac} package: critical, familiar and end notes.
@@ -707,7 +744,7 @@
 % You can also make parallel ledgroups (see the documentation of eledmac about ledgroups).
 % To do it you have:
 % \begin{itemize}
-%   \item To load \Lpack{eledpar} package with the \verb+parledgroup+ option, or to add \cs{\parledgrouptrue}.
+%   \item To load \Lpack{eledpar} package with the \verb+parledgroup+ option, or to add \cs{parledgrouptrue}.
 %   \item To push each ledgroup between \cs{pstart}…\cs{pend} command. 
 % \end{itemize} 
 % See the following example:
@@ -776,6 +813,15 @@
 % \StopEventually{}
 %
 % \clearpage
+% \section{Sectioning commands}
+% \changes{v1.8.0}{2014/08/05}{New sectioning commands, as in eledmac.}
+% The standard sectioning commands of eledmac are available, and provide parallel sectionings, for both two-column and two-page layout.
+% \DescribeMacro{\eledsectnotoc}
+% By default, the section commands of the right side are not added to the table of contents.
+% But you can change it, using \cs{eledsectnotoc}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
+%
+% \DescribeMacro{\eledsectmark}
+% By default, the \LaTeX\ marks for header are token from left side. You can change it, using \cs{eledsectmark}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
 % \section{Implementation overview}\label{overview}
 %
 %    TeX is designed to process a single stream of text, which may include
@@ -934,26 +980,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\beginnumbering}
-% For parallel processing the original \cs{beginnumbering} is extended
-% to zero \cs{l@dnumpstartsL} --- the number of chunks to be processed.
-% It also sets \cs{ifpst@rtedL} to FALSE.
-%    \begin{macrocode}
-\providecommand*{\beginnumbering}{%
-  \ifnumbering
-    \led@err@NumberingStarted
-    \endnumbering
-  \fi
-  \global\l@dnumpstartsL \z@
-  \global\pst@rtedLfalse
-  \global\numberingtrue
-  \global\advance\section@num \@ne
-  \initnumbering@reg
-  \message{Section \the\section@num}%
-  \line@list@stuff{\jobname.\extensionchars\the\section@num}%
-  \l@dend@stuff}
-%    \end{macrocode}
-% \end{macro}
+% \changes{v1.12.0}{2014/07/24}{\cs{beginnumbering} is defined only on \Lpack{eledmac}, not on \Lpack{eledpar}.}
 %
 % \begin{macro}{\beginnumberingR}
 % This is the right text equivalent of \cs{beginnumbering}, and begins 
@@ -983,10 +1010,11 @@
   \l@dend@stuff
   \setcounter{pstartR}{1}
   \begingroup
-  \initnumbering@sectcmd
   \initnumbering@sectcountR
+  \gdef\eled@sectionsR@@{}
+  \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@numR R}{}{}\makeatother
+  \immediate\openout\eled@sectioningR@out=\jobname.eledsec\the\section@numR R\relax
 }
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1019,7 +1047,10 @@
     \fi
   \else
     \led@err@NumberingNotStarted
-  \fi\endgroup}
+  \fi
+  \endgroup
+  \immediate\closeout\eled@sectioningR@out
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -1055,6 +1086,7 @@
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
+     \initnumbering@sectcmd
   \else
     \led@err@numberingShouldHaveStarted
      \endnumberingR
@@ -1333,7 +1365,7 @@
 % \subsection{Line-number counters and lists}
 %
 % We need another set of counters and lists for the right text, 
-% corresponding to those in \Lpack{eledmac} for regualr or left text.
+% corresponding to those in \Lpack{eledmac} for regular or left text.
 %
 % \begin{macro}{\line@numR}
 % \begin{macro}{\subline@numR}
@@ -1488,14 +1520,14 @@
 %
 % The macros with \verb"action" in their names contain all the code
 % that modifies the action-code list.
-% \begin{macro}{\@l@regR}
-% \begin{macro}{\@l}
-% \cs{@l} does everything related to the start of a
+% \begin{macro}{\@nl@regR}
+% \begin{macro}{\@nl}
+% \cs{@nl} does everything related to the start of a
 % new line of numbered text. Exactly what it does depends
 % on whether right text is being processed.
 %
 %    \begin{macrocode}
-\newcommand{\@l@regR}{%
+\newcommand{\@nl@regR}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@numR \@ne
     \set@line@action
@@ -1539,12 +1571,12 @@
     \fi
   \fi}
 
-\renewcommand*{\@l}[2]{%
+\renewcommand*{\@nl}[2]{%
   \fix@page{#1}%
   \ifledRcol
-    \@l@regR
+    \@nl@regR
   \else
-    \@l@reg
+    \@nl@reg
   \fi}
 
 %    \end{macrocode}
@@ -2021,19 +2053,19 @@
 % \end{macro}
 %
 % \begin{macro}{\new@lineL}
-% The \cs{new@lineL} macro sends the \cs{@l} command to the left text
+% The \cs{new@lineL} macro sends the \cs{@nl} command to the left text
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \write\linenum@out{\string\@l[\the\c@page][\thepage]}}
+  \write\linenum@out{\string\@nl[\the\c@page][\thepage]}}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\new@lineR}
-% The \cs{new@lineR} macro sends the \cs{@l} command to the right text
+% The \cs{new@lineR} macro sends the \cs{@nl} command to the right text
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \write\linenum@outR{\string\@l[\the\c@page][\thepage]}}
+  \write\linenum@outR{\string\@nl[\the\c@page][\thepage]}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2297,6 +2329,7 @@
 \newenvironment{pairs}{%}
   \l@dpairingtrue
   \l@dpagingfalse
+  \initnumbering@sectcmd
 }{%
   \l@dpairingfalse
 }
@@ -2309,6 +2342,7 @@
  \let\chapter\chapterinpages
   \l@dpairingtrue
   \l@dpagingtrue
+  \initnumbering@sectcmd
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -2346,16 +2380,15 @@
 %    \begin{macrocode}
 \newenvironment{Leftside}{%
   \ledRcolfalse
-  \let\beginnumbering\beginnumbering\setcounter{pstartL}{1}
+  \setcounter{pstartL}{1}
   \let\pstart\pstartL
   \let\thepstart\thepstartL
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaLtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
 }{
-    \let\stanza\oldstanza
     \Leftsidehookend}
 %    \end{macrocode}
 % \end{environment}
@@ -2400,11 +2433,10 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\oldstanza\stanza
-  \renewcommand{\stanza}{\oldstanza\global\instanzaRtrue}
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
 }{%
   \ledRcolfalse
-  \let\stanza\oldstanza
   \Rightsidehookend
 }
 
@@ -2460,6 +2492,7 @@
 % \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue} (from eledmac).}
 % \changes{v1.1.1}{2012/10/01}{Correct \cs{pstartR} bug introduced by 1.1.}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartL} and \cs{pstartR}.}
+% \changes{v1.8.0}{2014/08/05}{As in \Lpack{eledmac}, \cs{pendL} and \cs{pendR} can have an optional argument.}
 % \cs{pstart} starts the paragraph by
 % clearing the \cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -2483,12 +2516,12 @@
 \newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommand*{\pstartL}{%
-\if@nobreak%
+\newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2532,16 +2565,22 @@
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartL\thepstartL}\fi%
+%    \end{macrocode}
+% Dump the optional arguments
+%    \begin{macrocode}
+  \ifstrempty{#1}%
+    {}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
   }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-\newcommand*{\pstartR}{%
-\if@nobreak%
+\newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
-\else%
+  \else%
     \let\@oldnobreak\@nobreakfalse%
-\fi%
+  \fi%
     \@nobreaktrue%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2575,6 +2614,9 @@
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
+   \ifstrempty{#1}%
+     {}
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2583,12 +2625,14 @@
 %
 % \begin{macro}{\pendL}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pendL}.}
+% \changes{v1.8.0}{2014/08/05}{As in \Lpack{eledmac}, \cs{pendL} can have an optional argument.}
 % \cs{pend} must be used to end a numbered paragraph. Again we need 
 % a version 
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendL}{\ifnumbering \else%
+\newcommandx*{\pendL}[1][1]{%
+  \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2614,17 +2658,24 @@
     \addtocounter{pstartL}{1}%
   \fi
   \parledgroup@beforenotes@save{L}%
+%    \end{macrocode}
+% Dump content of the optional argument.
+%    \begin{macrocode}
+  \ifstrempty{#1}%
+    {}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
   }
-
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\pendR}
 % \changes{v1.4.3}{2013/10/27}{Spurious spaces in \cs{pstartR}.}
+% \changes{v1.8.0}{2014/08/05}{As in \Lpack{eledmac}, \cs{pendR} can have an optional argument.}
 % The version of \cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommand*{\pendR}{\ifnumberingR \else%
+\newcommandx*{\pendR}[1][1]{%
+  \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
@@ -2639,7 +2690,10 @@
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
   \fi%    
-  \parledgroup@beforenotes@save{R}
+  \parledgroup@beforenotes@save{R}%
+  \ifstrempty{#1}%
+    {}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
 }
 
 %    \end{macrocode}
@@ -2697,8 +2751,10 @@
 % \end{macro}
 %
 %
-% \changes{v0.11}{2012/06/11}{Change \cs{do@lineL} and \cs{do@lineR} to allow line numbering by pstart(like in eledmac 0.15).}
+% \changes{v0.11}{2012/06/11}{Change \cs{do@lineL} and \cs{do@lineR} to allow line numbering by pstart (like in eledmac 0.15).}
+% \changes{v1.8.0}{2014/08/05}{Change \cs{do@lineR} and \cs{do@lineR} to allow new sectioning commands.}
 % \begin{macro}{\do@lineL}
+% \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, (maybe added by v1.8.0) (?).}
 % The \cs{do@lineL} macro is called to 
 % do all the processing for a single line of left text.
 % \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} to \cs{do@lineL}}
@@ -2717,18 +2773,17 @@
   \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
   \unvbox\one@line \global\setbox\one@line=\lastbox 
   \getline@numL
-\ifnum\@lock>\@ne\inserthangingsymboltrue\else\inserthangingsymbolfalse\fi
+  \ifnum\@lock>\@ne%
+    \inserthangingsymboltrue%
+  \else%
+    \inserthangingsymbolfalse%
+  \fi
   \setbox\l@dleftbox
   \hb@xt@ \Lcolwidth{%
-      \affixpstart@numL
     \affixline@num
-    \l@dld@ta
-    \add@inserts
-    \affixside@note
-    \l@dlsn@te
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      {}%
+      {\print@lineL}}%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
   \global\advance\@donetotallinesL\@ne
@@ -2741,6 +2796,43 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@eledsectionL}
+% \cs{print@lineL} is for lines without a sectioning command.
+%    \begin{macrocode}
+\def\print@lineL{%
+    \affixpstart@numL%
+    \l@dld@ta %space kept for backward compatibility
+    \add@inserts\affixside@note%
+    \l@dlsn@te %space kept for backward compatibility
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@eledsectionL}
+% \cs{print@eledsectionL} is for line with macro code.
+%    \begin{macrocode}
+\def\print@eledsectionL{%
+    \add@inserts\affixside@note%
+    \addtocounter{pstartL}{-1}%
+    \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+    \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
+    \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscL}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscL}%
+    \if@RTL%
+      \hspace{-3\paperwidth}%
+    {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
+    \else%
+      \hspace{3\paperwidth}%
+    {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
+    \fi%
+    \vskip\eledsection@correcting@skip%
+}
+%    \end{macrocode}
+% \end{macro}
 % \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
 % \changes{v1.4}{2013/07/11}{Added \cs{do@insidelineLhook} and \cs{do@insidelineRhook}}
 % \begin{macro}{\do@lineLhook}
@@ -2763,8 +2855,10 @@
 % The \cs{do@lineR} macro is called to 
 % do all the processing for a single line of right text.
 % \changes{v0.3}{2005/02/10}{Changed \cs{do@lineR} similarly to \cs{do@lineL}}
+% \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, added by v1.8.0 (?).}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \ledRcol@true%
   \advance\countRline \@ne
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
   {\vbadness=10000 
@@ -2773,33 +2867,71 @@
    \l@demptyd@ta
    \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
                            to\baselineskip}% 
-    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
   \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
   \getline@numR
-\ifnum\@lockR>\@ne\inserthangingsymbolRtrue\else\inserthangingsymbolRfalse\fi
+  \ifnum\@lockR>\@ne%
+    \inserthangingsymbolRtrue
+  \else%
+    \inserthangingsymbolRfalse%
+  \fi%
   \setbox\l@drightbox
   \hb@xt@ \Rcolwidth{%
-      \affixpstart@numR
-    \affixline@numR
-    \l@dld@ta
-    \add@insertsR
-    \affixside@noteR
-    \l@dlsn@te
-    {\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
-     \l@drsn@te
-  }}%
+    \affixline@numR%
+    \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
+     {}%
+     {\print@lineR}%
+  }%
   \add@penaltiesR
   \global\advance\@donereallinesR\@ne
   \global\advance\@donetotallinesR\@ne
 \else
   \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
   \global\advance\@donetotallinesR\@ne
-\fi}
+\fi
+\ledRcol@false%
+}
 
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\print@lineR}{}
+% \begin{macro}{\print@eledsectionR}{}
+\def\print@lineR{%
+    \affixpstart@numR%
+    \l@dld@ta  %space kept for backward compatibility
+    \add@insertsR%
+    \affixside@noteR%
+    \l@dlsn@te  %space kept for backward compatibility
+\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@eledsectionR{%
+    \add@insertsR%
+    \affixside@noteR%
+    \addtocounter{pstartR}{-1}%
+    \initnumbering@sectcountR%
+    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
+    \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
+    \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscR R}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscR R}%
+    \if@RTL%
+      \hspace{-\paperwidth}%
+    {\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
+    \else%
+      \hspace{\paperwidth}%
+    {\new@lineR \hbox{\l@dunhbox@line{\one@lineR}}}%
+    \fi%
+    \vskip\eledsection@correcting@skip
+}
+% \end{macro}
+% \end{macro}
 %
 % \subsection{Line and page number computation}
 %
@@ -3447,7 +3579,7 @@
 % The \cs{@lab} command, which appears in the \cs{linenum@out} file,
 % appends the current values of page, line and sub-line to the
 % \cs{labelref@list}. These values are defined by the earlier
-% \cs{@page}, \cs{@l}, and the \cs{sub@on} and \cs{sub@off} commands
+% \cs{@page}, \cs{@nl}, and the \cs{sub@on} and \cs{sub@off} commands
 % appearing in the \cs{linenum@out} file.
 %
 %    \begin{macrocode}
@@ -3472,82 +3604,27 @@
 % don't produce any note but do put an extra unnumbered blank line into
 % the text.
 % \begin{macro}{\sidenote@marginR}
-% \begin{macro}{\sidenotemargin}
+% \begin{macro}{\sidenotemargin*}
+% \changes{v1.8.0}{2014/08/05}{\cs{sidenotemargin} is now directly defined in \Lpack{eledmac} to be able to manage \Lpack{eledpar}.}
+% \changes{v1.8.0}{2014/08/05}{Add \cs{sidenotemargin*}}
 % Specifies which margin sidenotes can be in.
 %    \begin{macrocode}
+\WithSuffix\newcommand\sidenotemargin*[1]{%
+  \l@dgetsidenote@margin{#1}
+  \global\sidenote@marginR=\@l@dtempcntb
+  \global\sidenote@margin=\@l@dtempcntb
+}
 \newcount\sidenote@marginR
-\renewcommand*{\sidenotemargin}[1]{{%
-  \l@dgetsidenote@margin{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \ifledRcol
-      \global\sidenote@marginR=\@l@dtempcntb 
-    \else
-      \global\sidenote@margin=\@l@dtempcntb 
-    \fi
-  \fi}}
-\sidenotemargin{right}
 \global\sidenote@margin=\@ne
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\l@dlsnote}
-% \begin{macro}{\l@drsnote}
-% \begin{macro}{\l@dcsnote}
-% The `footnotes' for left, right, and moveable sidenotes. The whole 
-% scheme is reminiscent of the critical footnotes code.
-% \changes{v1.3.3}{2012/12/19}{Debug on the left notes of the right column.}
-% \changes{v1.3.4}{2013/07/03}{Allow to use commands in sidenotes, like it was introduced by eledmac 1.0.}
-%    \begin{macrocode}
-\renewcommand*{\l@dlsnote}[1]{%
-  \begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
-                         \to\inserts@listR
-      \global\advance\insert@countR \@ne%
-    \else%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
-                         \to\inserts@list
-      \global\advance\insert@count \@ne%
-    \fi
-  \fi\ignorespaces\endgroup}
-\renewcommand*{\l@drsnote}[1]{%
-  \begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \ifledRcol%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
-                         \to\inserts@listR
-       \global\advance\insert@countR \@ne%
-    \else%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
-                         \to\inserts@list
-      \global\advance\insert@count \@ne%
-    \fi
-  \fi\ignorespaces\endgroup}
-\renewcommand*{\l@dcsnote}[1]{%
-  \begingroup%
-  \newcommand{\content}{#1}%
-  \ifnumberedpar@
-    \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
-                         \to\inserts@listR
-       \global\advance\insert@countR \@ne%
-    \else%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
-                         \to\inserts@list
-      \global\advance\insert@count \@ne%
-    \fi
-  \fi\ignorespaces\endgroup}
 
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
+% \changes{v1.3.3}{2012/12/19}{Debugging the left notes of the right column.}
+% \changes{v1.3.4}{2013/07/03}{Allow use of commands in sidenotes, as introduced by eledmac 1.0.}
+% \changes{v1.8.0}{2014/08/05}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \Lpack{eledmac}. }
 % \begin{macro}{\affixside@noteR}
 % The right text version of \cs{affixside@note}.
 % \changes{v1.1.2}{2012/10/06}{Remove spurious space between line number and line content}
@@ -3564,27 +3641,39 @@
             \numdef{\itemcount@}{\itemcount@+1}%
     }%
     \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR R p. \the\page@numR,}}{}%
+    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR\space p. \the\page@numR,}}{}%
   \gdef\@templ@d{}%
-  \ifx\@templ@d\l@dcsnotetext \else%
+  \gdef\@templ@n{\l@dcsnotetext\l@dcsnotetext@l\l@dcsnotetext@r}%
+  \ifx\@templ@d\@templ@n \else%
     \if@twocolumn%
       \if@firstcolumn%
-        \setl@dlp@rbox{\sidenotecontent@}%
+        \setl@dlp@rbox{##1}{\sidenotecontent@}%
       \else%
         \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \else%
       \@l@dtempcntb=\sidenote@marginR%
       \ifnum\@l@dtempcntb>\@ne%
-        \advance\@l@dtempcntb by\page@num%
+        \advance\@l@dtempcntb by\page@numR%
       \fi%
       \ifodd\@l@dtempcntb%
-        \setl@drp@rbox{\sidenotecontent@t}%
+        \setl@drp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@l}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space leftnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \setl@dlp@rbox{\sidenotecontent@}%
       \else%
         \setl@dlp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@r}%
+        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space rightnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \fi%
-  \fi}
+  \fi%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -3955,34 +4044,12 @@
 % \end{macro}
 %
 % \begin{macro}{\ifl@dsamelang}
-% \begin{macro}{\l@dsamelangfalse}
-% \begin{macro}{\l@dsamelangtrue}
-% A flag for checking if the same \verb?babel? language has been used 
-% for both the left and right texts.
-%    \begin{macrocode}
-\newif\ifl@dsamelang
-  \l@dsamelangtrue
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
+% Suppress \cs{ifl@dsamelang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.
 % \end{macro}
 %
 % \begin{macro}{\l@dchecklang}
-% I'm going to use \cs{theledlanguageL} and \cs{theledlanguageR} to hold
-% the names of the languages used for the left and right texts. This macro
-% sets \cs{ifl@dsamelang} TRUE if they are the same, otherwise it
-% sets it FALSE.
-%    \begin{macrocode}
-\newcommand*{\l@dchecklang}{%
-  \l@dsamelangfalse
-  \edef\@tempa{\theledlanguageL}\edef\@temp{\theledlanguageR}%
-  \ifx\@tempa\@tempb
-    \l@dsamelangtrue
-  \fi}
-
-%    \end{macrocode}
+% \changes{v1.12.0}{2014/08/05}{Suppress \cs{l@dchecklang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.}
 % \end{macro}
-%
 % \begin{macro}{\l@dbbl@set@language}
 % In \verb?babel? the macro \cs{bbl@set@language}\marg{lang} does the work when
 % the language \meta{lang} is changed via \cs{selectlanguage}. 
@@ -4064,12 +4131,15 @@
    }
 %    \end{macrocode}
 % If on Polyglossia
+% \changes{v1.8.0}{2014/08/05}{Correct left/right language setting with polyglossia.}
 % \begin{macrocode}
-  {    \apptocmd{\xpg@set@language}{%
-        \ifledRcol \gdef\theledlanguageR{#1}%
-        \else      \gdef\theledlanguageL{#1}%
+  {    \let\old@otherlanguage\otherlanguage%
+       \renewcommand{\otherlanguage}[2][]{%
+        \selectlanguage[#1]{#2}%
+        \ifledRcol  \gdef\theledlanguageR{#2}%
+        \else      \gdef\theledlanguageL{#2}%
         \fi}%
-      \let\l@duselanguage\xpg@set@language
+      \let\l@duselanguage\xpg@set@language%
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
 % \end{macrocode}
@@ -4085,13 +4155,24 @@
 %
 % \section{Parallel columns}
 %
+% \begin{macro}{\@eledsectionL}
+% \begin{macro}{\@eledsectionR}
+% The parbox \cs{@eledsectionL} and \cs{@eledsectionR} will keep the sections' title.
+%    \begin{macrocode}
+\newsavebox{\@eledsectionL}%
+\newsavebox{\@eledsectionR}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\Columns}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Columns} to enable to add section's title.}
 % The \cs{Columns} command results in the previous Left and
 % Right texts being typeset in matching columns. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4128,27 +4209,47 @@
 % are the same
 % \changes{v0.2}{2004/12/20}{Added \cs{l@dchecklang} and \cs{l@duselanguage}
 %                to \cs{Columns}}
+% \changes{v1.12.0}{2014/08/05}{Suppress \cs{l@dchecklang} from \cs{Columns}.}
 %    \begin{macrocode}
       \checkraw@text
-      \l@dchecklang
 {        \loop\ifaraw@text
 %    \end{macrocode}
 % Grab the next pair of left and right text lines and output them, swapping
-% languages if they differ
+% languages if they differ, adding section title if needed.
 %    \begin{macrocode}
-          \ifl@dsamelang
-            \do@lineL
-            \do@lineR
-          \else
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {%
+                \ifdefstring{\@eledsectmark}{L}%
+                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  }{}%
+                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \savebox{\@eledsectionL}{\parbox[t][][t]{\Lcolwidth}{\vbox{}\print@eledsectionL}}%\vbox{}-> prevent alignment troubles with RTL language
+                }%
+                {}%
             \l@duselanguage{\theledlanguageR}%
             \do@lineR
-          \fi
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {%
+                \ifdefstring{\@eledsectmark}{R}%
+                  {\csuse{eled@sectmark@\the\l@dpscR R}%
+                  }{}%   
+                \global\csundef{eled@sectmark@\the\l@dpscR R}%             
+                \savebox{\@eledsectionR}{\parbox[t][][t]{\Rcolwidth}{\vbox{}\print@eledsectionR}}}%\vbox{}-> prevent alignment troubles with RTL language
+                {}%
           \hb@xt@ \hsize{%
-           \hfill \unhbox\l@dleftbox
-            \hfill \columnseparator  \hfill
-            \unhbox\l@drightbox
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+            \unhbox\l@dleftbox%
+            \ifhbox\@eledsectionL%
+               \usebox{\@eledsectionL}%
+            \fi%
+            \print@columnseparator%
+            \unhbox\l@drightbox%
+            \ifhbox\@eledsectionR%
+              \usebox{\@eledsectionR}%
+            \fi%
+            \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
           \checkraw@text
           \checkverseL
@@ -4193,6 +4294,27 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\print@columnseparator}
+% \changes{v1.8.0}{2014/08/05}{Move some code of \cs{Columns} to \cs{print@columnseparator}.}
+% \cs{print@columnseparator} prints the column separator, with surrounding spaces (as the user has set them).
+% We use the \TeX\ \cs{ifdim} instead of \Lpack{etoolbox} 
+% to avoid having \cs{hfill} in a \verb+{}+, which deletes some space (but not much).
+%    \begin{macrocode}
+\def\print@columnseparator{%
+  \ifdim\beforecolumnseparator<0pt%
+    \hfill%
+  \else%
+    \hspace{\beforecolumnseparator}%
+  \fi%
+  \columnseparator%
+  \ifdim\aftercolumnseparator<0pt%
+    \hfill%
+  \else%
+    \hspace{\beforecolumnseparator}%
+  \fi%
+}%
+%\end{macrocode}
+% \end{macro}
 % \begin{macro}{\checkpb@columns}
 % \cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \cs{ledpb} or \cs{lednopb}.
 %    \begin{macrocode}
@@ -4234,7 +4356,30 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\columnsposition}
+% \begin{macro}{\columns@position}
+% The position of the \cs{Columns} in a page. Default value is R. 
+% Stored in \cs{columns@position}.
+%    \begin{macrocode}
+\newcommand*{\columnsposition}[1]{%
+  \xdef\columns@position{#1}%
+  }%
+\xdef\columns@position{R}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\beforecolumnseparator}
+% \begin{macro}{\aftercolumnseparator}
+% \cs{beforecolumnseparator} and \cs{aftercolumnseparator} lengths are defined to \verb+-1pt+. If user changes them to a positive length, the lengths are used to define blank spaces before / after the column separator, instead of \cs{hfill}.
+%    \begin{macrocode}
+\newlength{\beforecolumnseparator}%
+\setlength{\beforecolumnseparator}{-2pt}%
+
+\newlength{\aftercolumnseparator}%
+\setlength{\aftercolumnseparator}{-2pt}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\if@pstarts}
 % \begin{macro}{\@pstartstrue}
 % \begin{macro}{\@pstartsfalse}
@@ -4329,12 +4474,14 @@
 %
 %
 % \begin{macro}{\Pages}
+% \changes{v1.12.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
 %
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
+  \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \setcounter{pstartL}{\value{pstartLold}}
   \setcounter{pstartR}{\value{pstartRold}}
   \parledgroup@notespacing@set@correction
@@ -4427,12 +4574,19 @@
           \checkpageL
           \l@duselanguage{\theledlanguageL}%
 %%%          \begingroup
-{            \loop\ifl@dsamepage       
+{            \loop\ifl@dsamepage%       
 %    \end{macrocode}
-% Process the next (left) text line, adding it to the page.
+% Process the next (left) text line, adding it to the page. 
+% Eventually, adds the optional argument of pstart.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
+              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+              \csuse{before@pstartL@\the\l@dpscL}
+              \global\csundef{before@pstartL@\the\l@dpscL}
               \do@lineL
+              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\print@eledsectionL}%
+                {}%
               \advance\numpagelinesL \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
@@ -4476,8 +4630,15 @@
 %    \begin{macrocode}
           \checkpageR
           \l@duselanguage{\theledlanguageR}%
-{            \loop\ifl@dsamepage
+{            \loop\ifl@dsamepage%
+              \initnumbering@sectcountR
+              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+              \csuse{before@pstartR@\the\l@dpscR}
+              \global\csundef{before@pstartR@\the\l@dpscR}
               \do@lineR
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\print@eledsectionR}%
+                {}%
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
                       \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
@@ -4866,7 +5027,8 @@
 %    \begin{macrocode}
   \else%                                      box is empty
 %    \end{macrocode}
-% The box is empty; check if enough lines (real and blank) have been
+% The box is empty.
+% Check if enough lines (real and blank) have been
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
@@ -4900,6 +5062,12 @@
             \resetprevline@
           \fi  
           \fi
+% Add the content of the optional argument of the previous \cs{pend}.
+%     \begin{macrocode}
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
         \addtocounter{pstartL}{1}
         \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
@@ -4907,8 +5075,19 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
         \global\advance\l@dpscL \@ne
+%    \end{macrocode}
+% Add notes of parallel ledgroup.
+%    \begin{macrocode}
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
+      \else
+% Add the content of the optional argument of the last \cs{pend}.
+%     \begin{macrocode}
+         \l@dpagefulltrue
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+%     \end{macrocode}
+%     \begin{macrocode}
       \fi
     \fi
   \fi}
@@ -4937,6 +5116,8 @@
                \resetprevline@
             \fi
         \fi
+        \csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
         \addtocounter{pstartR}{1}
         \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
@@ -4946,12 +5127,44 @@
         \global\advance\l@dpscR \@ne
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
+      \else
+        \csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
+        \l@dpagefulltrue
       \fi
     \fi
   \fi}
 
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+%
+% \section{Sections' titles' commands}
+% \begin{macro}{\eledsectnotoc}
+% \cs{eledsectnotoc} just saves its content \cs{@eledsectnotoc}, which will be tested where sectioning commands will be printed.
+%    \begin{macrocode}
+\newcommand{\eledsectnotoc}[1]{\xdef\@eledsectnotoc{#1}}
+\eledsectnotoc{R}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\eledsectmark}
+% \cs{eledsectmark} just saves its content \cs{@eledsectmark}, which will be tested where sectioning commands will be printed.
+%    \begin{macrocode}
+\newcommand{\eledsectmark}[1]{\xdef\@eledsectmark{#1}}
+\eledsectmark{L}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\eledsection@correcting@skip}
+% Because the vertical correction needed after inserting a title in parallel depends whether we are in parallel columns or parallel pages, we stock its length in \cs{eledsection@correcting@skip}.
+%    \begin{macrocode}
+\newskip\eledsection@correcting@skip
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}
+% We save the sectioning commands of the right side in the \cs{eled@sectioningR@out} file.
+%    \begin{macrocode}
+\newwrite\eled@sectioningR@out
+%    \end{macrocode}
 % \end{macro}
 % \section{New options for series in eledpar}
 % \subsection{Notes through both sides}
@@ -5122,7 +5335,7 @@
     \vspace{\parledgroup@notespacing@correction@accumulated}
     \parledgroup@correction@notespacing@init%
     \ifstrequal{#1}{L}{
-  	  \numdef{\@checking}{\the\l@dpscL-1}
+        \numdef{\@checking}{\the\l@dpscL-1}
     }{
       \numdef{\@checking}{\the\l@dpscR-1}
     }
