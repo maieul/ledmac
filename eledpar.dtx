@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4633}
+% \CheckSum{4593}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -178,7 +178,7 @@
 % \changes{v1.8.0}{2014/08/05}{Add, as in eledmac, possibility to insert something between \cs{pstart}s / verse.}
 % \changes{v1.8.0}{2014/08/05}{Add, as in eledmac, new system of sectioning commands.}
 % \changes{v1.8.2}{2014/08/15}{Debug left and side note (bugs added by 1.8.0)}
-% \changes{v1.8.2}{2014/08/15}{Debug \eledxxx with some paper size}
+% \changes{v1.8.2}{2014/08/15}{Debug \cs{eledxxx} with some paper size}
 % \changes{v1.x.0}{2013/11/24}{New tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -520,7 +520,10 @@
 % Generally speaking, controls like \cs{firstlinenum} or \cs{linenummargin}
 % apply to sequential and left texts. To effect right texts only they have 
 % to be within a \verb?Rightside? environment. 
-
+% \DescribeMacro{\lineationR}
+% \cs{lineationR} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for the right side.
+% \DescribeMacro{\lineation*} 
+% \cs{lineation*} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for both sides.
 % If you are using the 
 % \Lpack{babel} package with different languages 
 % (via, say, \cs{selectlanguage}) for the left and right texts it is 
@@ -604,7 +607,6 @@
 % This may be useful for parallel columns but for parallel pages it might
 % be more appropriate to redefine it as: \\
 % \verb?\renewcommand*{\Rlineflag}{}?.
-%
 % \DescribeMacro{\printlinesR}
 % \DescribeMacro{\ledsavedprintlines}
 % The \cs{printlines} macro is ordinarily used to print the line number 
@@ -919,10 +921,16 @@
 %
 % All the error and warning messages are collected here as macros.
 %
+% \begin{macro}{\eledpar@error}
+% \changes{v1.8.2}{2014/08/15}{Errors specific to eledpar send to eledpar handbook}
+%     \begin{macrocode}
+\newcommand{\eledpar@error}[2]{\PackageError{eledpar}{#1}{#2}}
+%     \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@err@TooManyPstarts}
 %    \begin{macrocode}
 \newcommand*{\led@err@TooManyPstarts}{%
-  \eledmac@error{Too many \string\pstart\space without printing.
+  \eledpar@error{Too many \string\pstart\space without printing.
                 Some text will be lost}{\@ehc}}
 %    \end{macrocode}
 % \end{macro}
@@ -930,7 +938,7 @@
 % \begin{macro}{\led@err@BadLeftRightPstarts}
 %    \begin{macrocode}
 \newcommand*{\led@err@BadLeftRightPstarts}[2]{%
-  \eledmac@error{The numbers of left (#1) and right (#2)
+  \eledpar@error{The numbers of left (#1) and right (#2)
                 \string\pstart s do not match}{\@ehc}}
 %    \end{macrocode}
 % \end{macro}
@@ -939,9 +947,9 @@
 % \begin{macro}{\led@err@RightOnLeftPage}
 %    \begin{macrocode}
 \newcommand*{\led@err@LeftOnRightPage}{%
-  \eledmac@error{The left page has ended on a right page}{\@ehc}}
+  \eledpar@error{The left page has ended on a right page}{\@ehc}}
 \newcommand*{\led@err@RightOnLeftPage}{%
-  \eledmac@error{The right page has ended on a left page}{\@ehc}}
+  \eledpar@error{The right page has ended on a left page}{\@ehc}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1194,6 +1202,16 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\lineation*}
+% \changes{v1.8.2}{2014/08/15}{Add \cs{lineation*}}
+% \cs{lineation*} change the lineation system for the side.
+%    \begin{macrocode}
+\WithSuffix\newcommand\lineation*[1]{%
+  \lineation{#1}%
+  \lineationR{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\linenummargin}
 % \begin{macro}{\line@marginR}
 % You call \cs{linenummargin}\marg{word} to specify which margin you want your
@@ -2075,24 +2093,7 @@
 % \cs{flag@start} and \cs{flag@end}: these send the \cs{@ref}
 % command to the line-list file.
 % \changes{v0.3}{2005/02/04}{Removed extraneous spaces from\cs{flag@end}}
-%    \begin{macrocode}
-\renewcommand*{\flag@start}{%
-  \ifledRcol
-    \edef\next{\write\linenum@outR{%
-                  \string\@ref[\the\insert@countR][}}%
-    \next
-  \else
-    \edef\next{\write\linenum@out{%
-                  \string\@ref[\the\insert@count][}}%
-    \next
-  \fi}
-\renewcommand*{\flag@end}{%
-  \ifledRcol
-    \write\linenum@outR{]}%
-  \else
-    \write\linenum@out{]}%
-  \fi}
-%    \end{macrocode}
+% \changes{v1.8.2}{2014/08/15}{\cs{flag@start} and \cs{flag@end} are now defined only one time for eledmac and eledpar}
 % \end{macro}
 % \end{macro}
 %
@@ -3631,17 +3632,17 @@
 %    \begin{macrocode}
 \newcommand*{\affixside@noteR}{%
     \def\sidenotecontent@{}%
-    \numdef{\itemcount@}{0}%
+    \numgdef{\itemcount@}{0}%
     \def\do##1{%
         \ifnumequal{\itemcount@}{0}%
             {%
             \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
             {\appto\sidenotecontent@{\sidenotesep ##1}%
             }%
-            \numdef{\itemcount@}{\itemcount@+1}%
+            \numgdef{\itemcount@}{\itemcount@+1}%
     }%
     \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+    \ifnumgreater{\itemcount@}{1}{\led@err@ManySidenotes}{}%
   \gdef\@templ@d{}%
   \gdef\@templ@n{\l@dcsnotetext\l@dcsnotetext@l\l@dcsnotetext@r}%
   \ifx\@templ@d\@templ@n \else%
@@ -3661,14 +3662,14 @@
         \gdef\sidenotecontent@{}%
         \numdef{\itemcount@}{0}%
         \dolistloop{\l@dcsnotetext@l}%
-        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space leftnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyLeftnotes}{}%
         \setl@dlp@rbox{\sidenotecontent@}%
       \else%
         \setl@dlp@rbox{\sidenotecontent@}%
         \gdef\sidenotecontent@{}%
         \numdef{\itemcount@}{0}%
         \dolistloop{\l@dcsnotetext@r}%
-        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space rightnotes on line \the\line@numR\space p. \the\page@numR,}}{}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyRightnotes}{}%
         \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \fi%

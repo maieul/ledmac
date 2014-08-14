@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{9059}
+% \CheckSum{10051}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -204,8 +204,8 @@
 % \changes{v1.12.0}{2014/08/05}{Debug eledmac sectioning command after using \cs{resumenumbering}.}
 % \changes{v1.12.3}{2014/08/15}{Underline lemma in \cs{eledxxx} when using draft mode.}
 % \changes{v1.12.3}{2014/08/15}{Correct bug with side and familiar notes in tabular environments.}
-% \changes{v1.12.3}{2014/08/15}{Debug left and side note (bugs added by 1.8.0)}
-% \changes{v1.12.3}{2014/08/15}{Debug \eledxxx with some paper size}
+% \changes{v1.12.3}{2014/08/15}{Debug left and right notes (bugs added by 1.12.0)}
+% \changes{v1.12.3}{2014/08/15}{Debug \cs{eledxxx} with some paper size}
 % \changes{v1.x.0}{2013/11/24}{Compatibility with eledpar new tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -2981,6 +2981,7 @@
 % All the messages are grouped here as macros. This saves TeX's memory
 % when the same message is repeated and also lets them be edited easily.
 % \changes{v0.7}{2005/02/21}{Made macros of all messages}
+% \changes{v1.12.3}{2012/08/15}{Add macros for new messages since v0.7}
 % 
 % \begin{macro}{\eledmac@warning}
 % Write a warning message.
@@ -2992,6 +2993,7 @@
 % \begin{macro}{\eledmac@error}
 % Write an error message. 
 % \changes{v0.2}{2003/07/25}{Added \cs{eledmac@error} and replaced error messages}
+% \changes{v1.12.3}{2014/08/15}{Replaced error messages}
 %    \begin{macrocode}
 \newcommand{\eledmac@error}[2]{\PackageError{eledmac}{#1}{#2}}
 %    \end{macrocode}
@@ -3157,7 +3159,66 @@
   \eledmac@warning{Undefined index file #1}}
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\led@warn@AddfootinsXobsolete}
+% \begin{macro}{\led@warn@Addfootinsobsolete}
+%    \begin{macrocode}
+\newcommand{\led@warn@AddfootinsXObsolete}{%
+  \eledmac@warning{AddfootinsX is obsolete in eledmac 1.0. Use newseries instead.}%
+}%
+\newcommand{\led@warn@AddfootinsObsolete}{%
+  \eledmac@warning{Addfootins is obsolete in eledmac 1.0. Use newseries instead.}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@warn@SeriesStillExist}
+%    \begin{macrocode}
+\newcommand{\led@warn@SeriesStillExist}[1]{%
+  \eledmac@warning{Series #1 is still existing !}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@err@ManySidenotes}
+% \begin{macro}{\led@err@ManyLeftnotes}
+% \begin{macro}{\led@err@ManyRightnotes}
+%    \begin{macrocode}
+\newcommand{\led@err@ManySidenotes}{%
+  \ifledRcol@%
+     \eledmac@warning{\itemcount@\space sidenotes on line \the\line@numR\space p. \the\page@numR}%
+  \else%
+     \eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num}%
+  \fi%
+}%
+\newcommand{\led@err@ManyLeftnotes}{%
+  \ifledRcol@%
+    \eledmac@warning{\itemcount@\space leftnotes on line \the\line@numR\space p. \the\page@numR}%
+  \else%
+    \eledmac@warning{\itemcount@\space leftnotes on line \the\line@num\space p. \the\page@num}%
+  \fi%
+}%
+\newcommand{\led@err@ManyRightnotes}{%
+  \ifledRcol@%
+    \eledmac@warning{\itemcount@\space rightnotes on line \the\line@numR\space p. \the\page@numR}%
+  \else%
+    \eledmac@warning{\itemcount@\space rightnotes on line \the\line@num\space p. \the\page@num}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@war@FalseverseDeprecated}
+% \begin{macro}{\led@war@ledxxxDeprecated}
+%    \begin{macrocode}
+\newcommand{\led@war@FalseverseDeprecated}{%
+  \eledmac@warning{\string\falseverse\space deprecated. Look at \string\newverse\space instead.}%
+}%
+\newcommand{\led@war@ledxxxDeprecated}[1]{%
+  \eledmac@warning{\string\led#1\space deprecated. Look at \string\e#1 instead.}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\led@err@TooManyColumns}
 % \begin{macro}{\led@err@UnequalColumns}
 % \begin{macro}{\led@err@LowStartColumn}
@@ -3182,6 +3243,20 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@EdtextWithoutFootnote}
+%    \begin{macrocode}
+\newcommand{\led@err@EdtextWithoutFootnote}{%
+  \eledmac@error{edtext without Xfootnote. Check syntaxis.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@ImakeidxAfterEledmac}
+%    \begin{macrocode}
+\newcommand{\led@error@ImakeidxAfterEledmac}{%
+  \eledmac@error{Imakeidx must be loaded before eledmac.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
 %
 %
 % \section{Sectioning commands}
@@ -4862,6 +4937,8 @@
 %
 % \begin{macro}{\flag@start}
 % \begin{macro}{\flag@end}
+% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} and \cs{flag@end} are now defined only one time for eledmac and eledpar}
+% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} send a error message when a \cs{edtext} is done without insert (note)}
 % We enclose a lemma marked by \cs{edtext} in
 % \cs{flag@start} and \cs{flag@end}: these send the \cs{@ref}
 % command to the line-list file. \cs{edtext} is responsible for
@@ -4869,10 +4946,28 @@
 % actually gets done by the various footnote macros.
 %    \begin{macrocode}
 \newcommand*{\flag@start}{%
-  \edef\next{\write\linenum@out{%
+  \ifledRcol%
+    \edef\next{\write\linenum@outR{%
+                  \string\@ref[\the\insert@countR][}}%
+    \next%
+    \ifnum\insert@countR<1%
+      \led@err@EdtextWithoutFootnote%
+    \fi%
+  \else%
+    \edef\next{\write\linenum@out{%
                   \string\@ref[\the\insert@count][}}%
-  \next}
-\newcommand*{\flag@end}{\write\linenum@out{]}}
+    \next%
+    \ifnum\insert@count<1%
+      \led@err@EdtextWithoutFootnote%
+    \fi%
+  \fi}%
+
+\newcommand*{\flag@end}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -8832,7 +8927,7 @@
 % Juste for backward compatibility: print a warning message.
 %    \begin{macrocode}
 \newcommand*{\addfootinsX}[1]{%
-  \eledmac@warning{AddfootinsX is obsolete in eledmac 1.0. Use newseries instead.}%
+  \led@warn@AddfootinsXObsolete%
   \footnormalX{#1}%
   \g@addto@macro{\doxtrafeeti}{%
     \setbox\@outputbox \vbox{%
@@ -9070,7 +9165,7 @@
 %    \end{macrocode}
 % \subsection{Test if series is still existing}
 %    \begin{macrocode}
-    \xifinlist{#1}{\@series}{\eledmac@warning{Series #1 is still existing !}}
+    \xifinlist{#1}{\@series}{\led@warn@SeriesStillExist{#1}}%
     {%
 %    \end{macrocode}
 % \subsection{Create all commands to memorize display options}
@@ -9888,7 +9983,7 @@
 % \cs{addfootins} is for backward compatibility, but should'nt be used anymore.
 %    \begin{macrocode}
 \newcommand*{\addfootins}[1]{%
-   \eledmac@warning{addfootins is deprecated, use newseries instead}
+  \led@warn@AddfootinsObsolete%
   \footnormal{#1}
   \g@addto@macro{\@opxtrafeetii}{%
     \ifvoid\@nameuse{#1footins}\else
@@ -10069,8 +10164,6 @@
      \advancelabel@refs
   \fi
   \fi
-%  \edef\next{\write\@aux{\string\l@dmake@labels\label@refs|{#1}}}%
-%  \next}
 %    \end{macrocode}
 % Use code from the kernel \cs{label} command to write the correct
 % page number (it seems possible that the original \edmac's \cs{page@num}
@@ -10683,17 +10776,17 @@
 %    \begin{macrocode}
 \newcommand*{\affixside@note}{%
     \def\sidenotecontent@{}%
-    \numdef{\itemcount@}{0}%
+    \numgdef{\itemcount@}{0}%
     \def\do##1{%
         \ifnumequal{\itemcount@}{0}%
             {%
             \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
             {\appto\sidenotecontent@{\sidenotesep ##1}%
             }%
-            \numdef{\itemcount@}{\itemcount@+1}%
+            \numgdef{\itemcount@}{\itemcount@+1}%
     }%
     \dolistloop{\l@dcsnotetext}%
-    \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space sidenotes on line \the\line@num\space p. \the\page@num,}}{}%
+    \ifnumgreater{\itemcount@}{1}{\led@err@ManySidenotes}{}%
 %    \end{macrocode}
 % And we do the same for left and right notes (not movable).
 %     \begin{macrocode}
@@ -10714,16 +10807,16 @@
       \ifodd\@l@dtempcntb%
         \setl@drp@rbox{\sidenotecontent@}%
         \gdef\sidenotecontent@{}%
-        \numdef{\itemcount@}{0}%
+        \numgdef{\itemcount@}{0}%
         \dolistloop{\l@dcsnotetext@l}%
-        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space leftnotes on line \the\line@num\space p. \the\page@num,}}{}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyLeftnotes}{}%
         \setl@dlp@rbox{\sidenotecontent@}%
       \else%
         \setl@dlp@rbox{\sidenotecontent@}%
         \gdef\sidenotecontent@{}%
-        \numdef{\itemcount@}{0}%
+        \numgdef{\itemcount@}{0}%
         \dolistloop{\l@dcsnotetext@r}%
-        \ifnumgreater{\itemcount@}{1}{\eledmac@warning{\itemcount@\space rightnotes on line \the\line@num\space p. \the\page@num,}}{}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyRightnotes}{}%
         \setl@drp@rbox{\sidenotecontent@}%
       \fi%
     \fi%
@@ -10995,7 +11088,7 @@
 \@ifpackageloaded{imakeidx}{\eledmac@after@imakeidx@true}{}
 \AtBeginDocument{%
   \ifeledmac@after@imakeidx@\else%
-    \@ifpackageloaded{imakeidx}{\eledmac@error{Imakeidx must be loaded before eledmac.}}{}%
+    \@ifpackageloaded{imakeidx}{\led@error@ImakeidxAfterEledmac}{}%
   \fi
 }
 %    \end{macrocode}
@@ -11709,7 +11802,7 @@
    \expandafter\noexpand\csname szp@0@\endcsname=\z@
    \let\noexpand\sza@penalty\relax\noexpand\fi%
    \def\noexpand\falseverse{%
-     \noexpand\eledmac@warning{\string\falseverse\space deprecated. Look at \string\newverse\space instead.}
+     \noexpand\led@war@FalseverseDeprecated%
      \global\advance\stanza@modulo-\@ne%
      \global\advance\stanza@count-\@ne%
      \relax\noexpand&\leavevmode\skipnumbering}
@@ -12676,7 +12769,6 @@
   \ifnum #1>#2\relax
     \l@dstartendokfalse
     \led@err@ReverseColumns
-%%%    \eledmac@error{Start column is greater than end column}{\@ehc}%
   \fi
 }
 
@@ -13195,42 +13287,48 @@
 % If he did, he should redefine \cs{initnumbering@sectcmd}.
 %    \begin{macrocode}
 \newcommand{\initnumbering@sectcmd}{
-    \newcommand{\ledsection}[2][]{\eledmac@warning{\string\ledsection\space deprecated}%
+    \newcommand{\ledsection}[2][]{%
+        \led@war@ledxxxDeprecated{section}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section[##1]{##2}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsection*[1]{\eledmac@warning{\string\ledsection*\space deprecated}%
+    \WithSuffix\newcommand\ledsection*[1]{%
+        \led@war@ledxxxDeprecated{section*}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\section*{##1}\leavevmode\vspace{2.3ex \@plus.2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand{\ledsubsection}[2][]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
+    \newcommand{\ledsubsection}[2][]{%
+        \led@war@ledxxxDeprecated{subsection}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsubsection*[1]{\eledmac@warning{\string\ledsubsection*\space deprecated}%
+    \WithSuffix\newcommand\ledsubsection*[1]{%
+        \led@war@ledxxxDeprecated{subsection*}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \newcommand{\ledsubsubsection}[2][]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
+    \newcommand{\ledsubsubsection}[2][]{%
+        \led@war@ledxxxDeprecated{subsubsection}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection[##1]{##2}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
         \vspace{-2\parskip}\vspace{-2\baselineskip}%
         \ifautopar\else\pstart\fi
     }
-    \WithSuffix\newcommand\ledsubsubsection*[1]{\eledmac@warning{\string\ledsubsubsection*\space deprecated}%
+    \WithSuffix\newcommand\ledsubsubsection*[1]{%
+        \led@war@ledxxxDeprecated{subsubsection*}%
         \leavevmode\pend\vspace{3.5ex \@plus 1ex \@minus .2ex}\ifl@dpairing\else\skipnumbering\fi%
         \pstart%
         \leavevmode\ifledsecnolinenumber\skipnumbering\fi\subsubsection*{##1}\leavevmode\vspace{1.5ex \@plus .2ex}\skipnumbering\pend%
@@ -13238,7 +13336,7 @@
         \ifautopar\else\pstart\fi
     }
     \newcommand\ledchapter[2][]{%
-      \eledmac@warning{\string\ledchapter\space deprecated}%
+      \led@war@ledxxxDeprecated{chapter}%
       \ifl@dmemoir%
         \gdef\ch@pt@c{##1}%
       \fi%
@@ -13247,7 +13345,7 @@
         \@patchforledchapter\chapter[##1]{##2}%
       \pend\pstart}
     \WithSuffix\newcommand\ledchapter*[1]{%
-      \eledmac@warning{\string\ledchapter*\space deprecated}%
+       \led@war@ledxxxDeprecated{chapter*}%
       ~\pend\skipnumbering%
       \pstart%
         \@patchforledchapter\chapter*{##1}\pend%
