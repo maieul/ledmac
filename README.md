@@ -4,6 +4,7 @@ The eledmac package is for typesetting critical editions. It is a LaTeX port, an
 Eledmac and eledpar are successors of ledmac and ledpar.
 
 The package is available on [CTAN](http://www.ctan.org/pkg/eledmac).
+
 #Copyright and Licence
 
 ##Authors
