@@ -2,17 +2,26 @@
 %http://tex.stackexchange.com/a/196456/7712
 \usepackage{tikz,etoolbox}
 \usetikzlibrary{calc}
+
 \makeatletter
 \newcount\@eledtikzline
 \@eledtikzline=1
+\xdef\@eledtikzlines{}
+
 \newcommand{\beledtikzline}{%
   \the\@eledtikzline%
 }
 \newcommand{\eeledtikzline}{%
+  \xdef\@eledtikzlines{%
+    \ifx\@eledtikzlines\empty%
+      \the\@eledtikzline%
+    \else%
+      \@eledtikzlines,\the\@eledtikzline%
+    \fi
+    }%
   \global\advance\@eledtikzline by 1%
 }
 \def\lines{1,2,3}
-
 
 \begin{document}
 
@@ -26,16 +35,19 @@
         };
 
 
-  % loop over the "left" nodes
-  \foreach \Node in \lines {%\y1=y-coord of the node
+  \foreach \Node in \@eledtikzlines {%\y1=y-coord of the node
     \path let \p1=($ (\Node) $) in node at (-5,\y1){\Node};
   }
 
   % loop over the "right" nodes
-  \foreach \Node in \lines {%\y1=y-coord of the node
+  \foreach \Node in \@eledtikzlines {%\y1=y-coord of the node
     \path let \p1=($ (\Node) $) in node at (7,\y1){\Node};
   }
 
+
 \end{tikzpicture}
+
+%\lines
+
 
 \end{document}
