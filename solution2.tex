@@ -7,6 +7,7 @@
 
 \linenumincrement{1}
 \makeatletter
+%%% This code will be in .sty file
 \newcommand{\do@tikzline@numberalign}{%
   \newbox\@temp%
   \setbox\@temp=\hbox{X}%
@@ -25,8 +26,11 @@
 \newcommand{\eledtikz}[1]{#1%
   \csxdef{a}{s}%
 }
+
 \newcommand{\edtikztext}[3]{%
-  \edtext{#1}{\xxref{#3}{#3}#2}%
+  \showlemma{#1}%
+  \ifcsundef{edtikzt@#3}{\csdef{edtikzt@#3}{}}{}%
+  \global\expandafter\appto\csname edtikzt@#3\endcsname{\edtext{}{\lemma{#1}\xxref{#3}{#3}#2}}{}{}%
 }
 \newcommandx{\pstarttikz}[2][1,2,usedefault]{%
   \pstart[#2]%
@@ -34,14 +38,15 @@
 }
 \newcommandx{\pendtikz}[2][1,2,usedefault]{%
  \foreach \Node in {#1} {%\y1=y-coord of the node
-    \path let \p1=($ (\Node) $) in node at (0,\y1)[inner sep=0,outer sep=0,text width=\textwidth]{\do@tikzline{\Node}};%
+    \path let \p1=($ (\Node) $) in node at (0,\y1)[inner sep=0,outer sep=0,text width=\textwidth]{\do@tikzline{\Node}};
+    \csuse{edtikzt@\Node}%
   }%
  \end{tikzpicture}\skipnumbering
  \pend[#2]%
 }
 
 \makeatother
-
+% And so, now, user code
 \begin{document}
 \beginnumbering
 \pstart
@@ -81,15 +86,17 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et ligula eros. Pro
 
 \node(O) at (0,0){};
 \node(N) at (0,3){\edtikztext{Nord}{\Afootnote{Septentrion}}{N}};
+\node(S) at (0,-3){\edtikztext{Sud}{\Afootnote{Midi}}{S}};
+
 \node(E) at (3,0){\edtikztext{Est}{\Afootnote{Levant}}{O}};
 \node(W) at (-3,0){\edtikztext{Ouest}{\Afootnote{Couchant}}{O}};
-\node(S) at (0,-3){\edtikztext{Sud}{\Afootnote{Midi}}{S}};
 
 \draw(O.center)--(N);
 \draw(O.center)--(S);
 \draw(O.center)--(E);
 \draw(O.center)--(W);
 \pendtikz[N,O,S]
+
 \endnumbering
 
 
