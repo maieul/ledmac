@@ -11284,6 +11284,15 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\hyperlinkformatR}
+% \cs{hyperlinkformatR} command is to be used to have both a internal hyperlink, a format and a \cs{Rlineflag}, when indexing.
+%    \begin{macrocode}
+\newcommand{\hyperlinkformatR}[3]{%
+  \hyperlinkformat{#1}{#2}{#3\Rlineflag}%
+}%
+
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\get@edindex@hyperref}
 % \begin{macro}{\@edindex@hyperref}
 % \changes{v1.12.5}{2014/08/31}{Debug \cs{edindex} when \Lpack{hyperref} is not load}
@@ -11302,9 +11311,16 @@
     }%
     \IfSubStr{\temp@}{|}%
       {\get@index@command#1+%
-      \gdef\@edindex@hyperref{|\@index@parenthesis %
-        hyperlinkformat{\@index@command}
-        {\edindexlab\thelabidx}}}%
+      \ifledRcol%
+        \gdef\@edindex@hyperref{|\@index@parenthesis %space kept
+        hyperlinkformatR{\@index@command}%
+        {\edindexlab\thelabidx}}%
+      \else%
+        \gdef\@edindex@hyperref{|\@index@parenthesis %space kept
+        hyperlinkformat{\@index@command}%
+        {\edindexlab\thelabidx}}%
+      \fi%
+      }%
       {\get@index@command#1|+
        \ifledRcol%
         \gdef\@edindex@hyperref{|hyperlinkR{\edindexlab\thelabidx}}%
