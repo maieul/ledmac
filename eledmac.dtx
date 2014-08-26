@@ -2086,7 +2086,6 @@
 % \mpfnpos{familiar-critical}
 % \end{verbatim}
 % \section{Indexing}
-%
 % \DescribeMacro{\edindex}
 % \LaTeX\ provides the |\index|\marg{item} command for specifying that \meta{item}
 % and the current page number should be added to the raw index (\file{idx}) file.
@@ -10998,6 +10997,7 @@
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
 % \changes{v1.8.0}{2014/07/21}{If \Lpack{imakeidx} and \Lpack{hyperref} are loaded, adds hyperref in the index.}
+% \changes{v1.12.5}{2014/08/31}{Fix bugs with edindex containing spaces in arguments}
 % Here's some code for indexing using page \& line numbers.
 %
 % \begin{macro}{\ifeledmac@check@imakeidx@}
@@ -11228,7 +11228,7 @@
   \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
     \ifl@imakeidx%
       \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+        \IfSubStr[1]{{#2}}{|}{\get@index@command#2+}{\get@index@command#2|+}%
         \expandafter\imki@wrindexentry{#1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
         \expandafter\imki@wrindexentry{#1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
       \else%
@@ -11237,7 +11237,7 @@
       \fi%
     \else%
       \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+        \IfSubStr[1]{{#2}}{|}{\get@index@command#2+}{\get@index@command#2|+}%
         \expandafter\protected@write\@indexfile{}%
           {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
           }%
@@ -11278,7 +11278,7 @@
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
   \ifcsdef{hyperlink}%
-    {\IfSubStr{#1}{|}%
+    {\IfSubStr{{#1}}{|}%
       {\get@index@command#1+%
       \gdef\@edindex@hyperref{|\@index@parenthesis %
         hyperlinkformat{\@index@command}
@@ -11298,7 +11298,7 @@
 \AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
   \def\l@d@@wrindexhyp#1||\\{%
     \ifshowindexmark\@showidx{#1}\fi
-    \IfSubStr[1]{#1}{|}{\get@index@command#1+}{\get@index@command#1|+}%
+    \IfSubStr[1]{{#1}}{|}{\get@index@command#1+}{\get@index@command#1|+}%
       \if@edindex@fornote@%
          \protected@write\@auxout{}%
             {\string\@@wrindexm@m{\@idxfile}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}}%
