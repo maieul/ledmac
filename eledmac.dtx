@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10050}
+% \CheckSum{10064}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -2839,7 +2839,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/08/25 v1.12.4 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/08/31 v1.13.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2859,15 +2859,22 @@
 %
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifparapparatus@}
+% \begin{macro}{\ifnoquotation@}
+% \begin{macro}{\iflednopbinverse}
+% \begin{macro}{\ifparledgroup}
+% \begin{macro}{\ifwidthliketwocolumns}
+% \begin{macro}{\ifledsecnolinenumber}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % \changes{v0.4}{2004/02/29}{Added final/draft options}
+% \changes{v1.13.0}{2014/08/31}{Added widthliketwocolumns option}
 %    \begin{macrocode}
 \newif\ifledfinal
 \newif\ifparapparatus@
 \newif\ifnoquotation@
 \newif\iflednopbinverse
 \newif\ifparledgroup
+\newif\ifwidthliketwocolumns%
 \newif\ifledsecnolinenumber
 \parapparatus@false
 \DeclareOption{noquotation}{\noquotation@true}
@@ -2876,6 +2883,7 @@
 \DeclareOption{parapparatus}{\parapparatus@true}
 \DeclareOption{nopbinverse}{\lednopbinversetrue}
 \DeclareOption{ledsecnolinenumber}{\ledsecnolinenumbertrue}
+\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
 \ExecuteOptions{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
@@ -2887,6 +2895,11 @@
 \ProcessOptions*\relax
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % Loading package \emph{xargs} to declare commands with optional arguments. 
@@ -3400,6 +3413,9 @@
   \else
     \begingroup
     \initnumbering@sectcmd
+    \ifwidthliketwocolumns%
+       \csuse{setwidthliketwocolumns@\columns@position}%
+    \fi%
   \fi
   \gdef\eled@sections@@{}
   \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@num}{}{}\makeatother
@@ -3433,6 +3449,7 @@
 % input that require running the file through again to move everything
 % to the right place.
 % \changes{v0.7}{2005/02/24}{Changed \cs{endnumbering} for eledpar}
+% \changes{v1.12.5}{2014/08/31}{Allow to mix parallel columns and normal text when using \cs{pausenumbering}}
 %    \begin{macrocode}
 \def\endnumbering{%
   \ifnumbering
@@ -3457,6 +3474,7 @@
   \autoparfalse  
   \immediate\closeout\eled@sectioning@out
   \ifl@dpairing\else
+    \global\l@dnumpstartsL=\z@%
     \endgroup
   \fi
 }
@@ -3481,6 +3499,7 @@
 % by \cs{resumenumbering} to ensure that \cs{pausenumbering} was actually
 % invoked.
 % \changes{v0.7}{2005/02/24}{Changed \cs{resumenumbering} for eledpar}
+% \changes{v1.12.5}{2014/08/31}{Debug \cs{resumenumbering}}
 %    \begin{macrocode}
 \newcommand*{\resumenumbering}{%
   \ifnumbering
@@ -3490,8 +3509,13 @@
      \led@mess@SectionContinued{\the\section@num}%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
-     \begingroup
-     \initnumbering@sectcmd
+     \ifl@dpairing\else%
+        \begingroup%
+        \initnumbering@sectcmd%
+        \ifwidthliketwocolumns%
+          \csuse{setwidthliketwocolumns@\columns@position}%
+        \fi%
+     \fi%
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
@@ -5933,6 +5957,18 @@
     \vskip-\baselineskip%
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dolinehook}
+% \begin{macro}{\doinsidelinehook}
+% These hight level commands just redefine the low level commands. 
+% They have to be used be user, without \cs{makeatletter}.
+% \changes{v1.12.5}{2014/08/31}{Added \cs{dolinehook} and \cs{doinsidelinehook}}
+%    \begin{macrocode}
+\newcommand*{\dolinehook}[1]{\gdef\do@linehook{#1}}%
+\newcommand*{\doinsidelinehook}[1]{\gdef\do@insidelinehook{#1}}%
+
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\do@linehook}
 % \begin{macro}{\do@insidelinehook}

@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4593}
+% \CheckSum{4610}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -404,6 +404,8 @@
 % \setlength{\aftercolumseparator}{length}
 % \end{verbatim}
 % If you want to come back to the previous behavior, just set them with a negative value. 
+% \DescribeMacro{\widthliketwocolumns}
+% If you want to mix texts in columns and text without columns, you can horizontally align text in one column to text in two column with \cs{widthliketwocolumnstrue}. To reset this feature, just do \cs{widthliketwocolumnsfalse}.
 % \section{Facing pages}\label{pages}
 %
 % \DescribeEnv{pages}
@@ -799,7 +801,7 @@
 %      \endnumbering
 % \end{..side}
 % \end{verbatim}
-% \subsection{Parallel ledgroups and \Lpack{setspace} package}.
+% \subsection{Parallel ledgroups and \Lpack{setspace} package}
 % If you use the \Lpack{setspace} package and want your notes in parallel ledgroups ledgroups to be single-spaced (not half-spaced or double-spaced), just add to your preamble:
 % \begin{verbatim}
 % \let\parledgroupnotespacing\singlespacing
@@ -807,7 +809,6 @@
 % \emph{In effect, to have correct spacing, don't change the font size of your notes}.
 % \StopEventually{}
 %
-% \clearpage
 % \section{Sectioning commands}
 % \changes{v1.8.0}{2014/08/05}{New sectioning commands, as in eledmac.}
 % The standard sectioning commands of eledmac are available, and provide parallel sectionings, for both two-column and two-page layout.
@@ -854,7 +855,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2014/08/15 v1.8.2 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2014/08/31 v1.9.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -867,9 +868,18 @@
 \DeclareOption{shiftedverses}{\shiftedpstartstrue}
 \DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
 \DeclareOption{parledgroup}{\parledgrouptrue}
-\ProcessOptions
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifwidthliketwocolumns}
+% The \cs{widthliketwocolumns} option can be called both in eledpar and eledmac.
+% \changes{v1.9.0}{2014/08/31}{Added widthliketwocolumns option}
+%    \begin{macrocode}
+\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+\ProcessOptions%
+%    \end{macrocode}
 %  As noted above, much of the code is a duplication of the original
 % \Eledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
@@ -1077,6 +1087,7 @@
 % \begin{macro}{\resumenumberingR}
 % These are the right text equivalents of \cs{pausenumbering} and
 % \cs{resumenumbering}.
+% \changes{v1.8.3}{2014/08/31}{Debug \cs{resumenumberingR}}
 %    \begin{macrocode}
 \newcommand*{\pausenumberingR}{%
   \endnumberingR\global\numberingRtrue}
@@ -1087,7 +1098,8 @@
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
-     \initnumbering@sectcmd
+     \begingroup%
+     \initnumbering@sectcountR%
   \else
     \led@err@numberingShouldHaveStarted
      \endnumberingR
@@ -2800,6 +2812,7 @@
     \l@dlsn@te %space kept for backward compatibility
     {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
      \l@drsn@te}}
+
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\print@eledsectionL}
@@ -2825,7 +2838,26 @@
     \fi%
     \vskip\eledsection@correcting@skip%
 }
+
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\dolineLhook}
+% \begin{macro}{\dolineRhook}
+% \begin{macro}{\doinsidelineLhook}
+% \begin{macro}{\doinsidelineRhook}
+% \changes{v1.8.3}{2014/08/31}{Added \cs{dolineLhook}, \cs{dolineRhook}, \cs{doinsidelineLhook} and \cs{doinsidelineRhook}}
+% These hight level commands just redefine the low level commands. 
+% They have to be used be user, without \cs{makeatletter}.
+%    \begin{macrocode}
+\newcommand*{\dolineLhook}[1]{\gdef\do@lineLhook{#1}}%
+\newcommand*{\dolineRhook}[1]{\gdef\do@lineRhook{#1}}%
+\newcommand*{\doinsidelineLhook}[1]{\gdef\do@insidelineLhook{#1}}%
+\newcommand*{\doinsidelineRhook}[1]{\gdef\do@insidelineRhook{#1}}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \changes{v0.3}{2005/02/10}{Added \cs{do@lineLhook} and \cs{do@lineRhook}}
 % \changes{v1.4}{2013/07/11}{Added \cs{do@insidelineLhook} and \cs{do@insidelineRhook}}
@@ -4096,13 +4128,87 @@
       \let\l@duselanguage\xpg@set@language%
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
-% \end{macrocode}
+%    \end{macrocode}
 % That's it.
 %    \begin{macrocode}
 }}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\if@pstarts}
+% \begin{macro}{\@pstartstrue}
+% \begin{macro}{\@pstartsfalse}
+% \begin{macro}{\check@pstarts}
+% \cs{check@pstarts} returns \cs{@pstartstrue} if there are any unprocessed
+%  chunks.
+%    \begin{macrocode}
+\newif\if@pstarts
+\newcommand*{\check@pstarts}{%
+  \@pstartsfalse
+  \ifnum\l@dnumpstartsL>\l@dpscL
+    \@pstartstrue
+  \else
+    \ifnum\l@dnumpstartsR>\l@dpscR
+      \@pstartstrue
+    \fi
+  \fi
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\ifaraw@text}
+% \begin{macro}{\araw@texttrue}
+% \begin{macro}{\araw@textfalse}
+% \begin{macro}{\checkraw@text}
+% \cs{checkraw@text} checks whether the current Left or Right box is
+% void or not. If one or other is not void it sets \cs{araw@texttrue},
+% otherwise both are void and it sets \cs{araw@textfalse}. 
+%    \begin{macrocode} 
+\newif\ifaraw@text
+  \araw@textfalse
+\newcommand*{\checkraw@text}{%
+  \araw@textfalse
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}
+    \araw@texttrue
+  \else  
+    \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}
+      \araw@texttrue
+    \fi
+  \fi
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% 
+% 
+% \begin{macro}{\@writelinesinparL}
+% \begin{macro}{\@writelinesinparR}
+% These write the number of text lines in a chunk to the section files,
+% and then afterwards zero the counter.
+%    \begin{macrocode}
+\newcommand*{\@writelinesinparL}{%
+  \edef\next{%
+    \write\linenum@out{\string\@pend[\the\@donereallinesL]}}%
+  \next
+  \global\@donereallinesL \z@}
+\newcommand*{\@writelinesinparR}{%
+  \edef\next{%
+    \write\linenum@outR{\string\@pendR[\the\@donereallinesR]}}%
+  \next
+  \global\@donereallinesR \z@}
+
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
@@ -4334,79 +4440,105 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \begin{macro}{\if@pstarts}
-% \begin{macro}{\@pstartstrue}
-% \begin{macro}{\@pstartsfalse}
-% \begin{macro}{\check@pstarts}
-% \cs{check@pstarts} returns \cs{@pstartstrue} if there are any unprocessed
-%  chunks.
-%    \begin{macrocode}
-\newif\if@pstarts
-\newcommand*{\check@pstarts}{%
-  \@pstartsfalse
-  \ifnum\l@dnumpstartsL>\l@dpscL
-    \@pstartstrue
-  \else
-    \ifnum\l@dnumpstartsR>\l@dpscR
-      \@pstartstrue
-    \fi
-  \fi
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 %
-% \begin{macro}{\ifaraw@text}
-% \begin{macro}{\araw@texttrue}
-% \begin{macro}{\araw@textfalse}
-% \begin{macro}{\checkraw@text}
-% \cs{checkraw@text} checks whether the current Left or Right box is
-% void or not. If one or other is not void it sets \cs{araw@texttrue},
-% otherwise both are void and it sets \cs{araw@textfalse}. 
-%    \begin{macrocode} 
-\newif\ifaraw@text
-  \araw@textfalse
-\newcommand*{\checkraw@text}{%
-  \araw@textfalse
-  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}
-    \araw@texttrue
-  \else  
-    \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}
-      \araw@texttrue
-    \fi
-  \fi
-}
+% \begin{macro}{setwidthliketwocolumns@L}
+% \begin{macro}{setwidthliketwocolumns@C}
+% \begin{macro}{setwidthliketwocolumns@R}
+% These three commands are called in \cs{beginnumbering} in a \texbf{not parallel} 
+% typesetting, to fix the width and the position of the lines to be vertically aligned with parallel columns.
+% \begin{macrocode}
+\newcommand{\setwidthliketwocolumns@L}{%
+% Temporary dimension, initially equal to the standard hsize, i.e. text width
+%    \begin{macrocode}
+  \newdimen\temp%
+  \temp=\hsize%
+%    \end{macrocode}
+% Hsize : Left + Right width 
+%    \begin{macrocode}
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+%    \end{macrocode}
+% Now, calculating the remaining space 
+%    \begin{macrocode}
+  \advance\temp-\hsize%
+%    \end{macrocode}
+% And multiply the hsize by 2/3 of this space
+%    \begin{macrocode}
+  \multiply\temp by 2%
+  \divide\temp by 3%
+  \advance\hsize\temp%
+%    \end{macrocode}
+% And add a \hfill to put the number in the right place
+%\doinsidelinehook{\hfill}
+%    \begin{macrocode}
+  \renewcommand{\ledrlfill}{\hfill}%
+}%
 
 %    \end{macrocode}
-% \end{macro}
+%    \begin{macrocode}
+\newcommand{\setwidthliketwocolumns@C}{%
+% Temporary dimension, initially equal to the standard hsize, i.e. text width
+%    \end{macrocode}
+%    \begin{macrocode}
+  \newdimen\temp%
+  \temp=\hsize%
+% Hsize : Left + Right width 
+%    \end{macrocode}
+%    \begin{macrocode}
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+% Now, calculating the remaining space 
+%    \end{macrocode}
+%    \begin{macrocode}
+  \advance\temp-\hsize%
+%    \end{macrocode}
+% And multiply the hsize by 1/2 of this space
+%    \end{macrocode}
+%    \begin{macrocode}
+  \divide\temp by 2%
+  \advance\hsize\temp%
+%    \end{macrocode}
+% And add a \hfill to put the number in the right place
+%    \begin{macrocode}
+  \doinsidelinehook{\hfill}%
+  \renewcommand{\ledrlfill}{\hfill}%
+%    \end{macrocode}
+}%
+
+%    \begin{macrocode}
+
+\newcommand{\setwidthliketwocolumns@R}{%
+%    \end{macrocode}
+% Temporary dimension, initially equal to the standard hsize, i.e. text width
+%    \begin{macrocode}
+  \newdimen\temp%
+  \temp=\hsize%
+%    \end{macrocode}
+% Hsize : Left + Right width 
+%    \begin{macrocode}
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+%    \end{macrocode}
+% Now, calculating the remaining space 
+%    \begin{macrocode}
+  \advance\temp-\hsize%
+%    \end{macrocode}
+% And multiply the hsize by 2/3 of this space
+%    \begin{macrocode}
+  \multiply\temp by 2%
+  \divide\temp by 3%
+  \advance\hsize\temp%
+%    \end{macrocode}
+% And add a \hfill to put the number in the right place
+%    \begin{macrocode}
+  \doinsidelinehook{\hfill}%
+%    \end{macrocode}
+}%
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
 % 
-% 
-% \begin{macro}{\@writelinesinparL}
-% \begin{macro}{\@writelinesinparR}
-% These write the number of text lines in a chunk to the section files,
-% and then afterwards zero the counter.
-%    \begin{macrocode}
-\newcommand*{\@writelinesinparL}{%
-  \edef\next{%
-    \write\linenum@out{\string\@pend[\the\@donereallinesL]}}%
-  \next
-  \global\@donereallinesL \z@}
-\newcommand*{\@writelinesinparR}{%
-  \edef\next{%
-    \write\linenum@outR{\string\@pendR[\the\@donereallinesR]}}%
-  \next
-  \global\@donereallinesR \z@}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
 % \section{Parallel pages}
 %
 % This is considerably more complicated than parallel columns.
@@ -4425,8 +4557,6 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
-%
 % \begin{macro}{\Pages}
 % \changes{v1.12.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % The \cs{Pages} command results in the previous Left and
@@ -5111,7 +5241,7 @@
 \newskip\eledsection@correcting@skip
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}
+% \begin{macro}{\eled@sectioningR@out}
 % We save the sectioning commands of the right side in the \cs{eled@sectioningR@out} file.
 %    \begin{macrocode}
 \newwrite\eled@sectioningR@out
