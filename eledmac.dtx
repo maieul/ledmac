@@ -9355,10 +9355,20 @@
 % \subsubsection{Options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
+% \changes{v1.13.0}{2014/08/31}{\cs{settoggle@series} can take a optional arguments to reload series setup.}
 % \cs{settoggle@series}\marg{series}\marg{toggle}\marg{value} is a generic command to switch toggles for some series.
+
 %    \begin{macrocode}
-\newcommand{\settoggle@series}[3]{%
-    \def\do##1{\global\settoggle{#2@##1}{#3}}
+\newcommandx{\settoggle@series}[4][4]{%
+    \def\do##1{%
+      \global\settoggle{#2@##1}{#3}%
+      \ifstrequal{#4}{reload}%
+        {%
+        \csuse{foot\csuse{series@display##1}}{##1}%
+        \csuse{foot\csuse{series@displayX##1}}{##1}%
+        }%
+        {}%
+      }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
            }%
@@ -9502,8 +9512,22 @@
 \newhooktoggle@series{nonbreakableafternumber}
 \newhooktoggle@series{Xlemmadisablefontselection}
 \newhooktoggle@series{Xendlemmadisablefontselection}
-\newhooktoggle@series{Xnoteswidthliketwocolumns}%
-\newhooktoggle@series{notesXwidthliketwocolumns}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\newhooktoggle@series}
+% \changes{v1.13.0}{2014/08/31}{Add \cs{newhookcommand@toggle@reload}}
+% \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
+% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
+%    \begin{macrocode}
+\newcommand{\newhooktoggle@series@reload}[1]{%
+  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
+    \settoggle@series{##1}{#1}{##2}[reload]%
+    }%
+}%
+
+\newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
+\newhooktoggle@series@reload{notesXwidthliketwocolumns}%
+
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Old commands, kept for backward compatibility}
