@@ -7469,6 +7469,7 @@
 % \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetup}}
 %    \begin{macrocode}
 \newcommand*{\para@footsetup}[1]{{\csuse{Xnotefontsize@#1}
+  \setXnoteswidthliketwocolumns@{#1}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
@@ -7712,6 +7713,7 @@
 % note series letter.
 %    \begin{macrocode}
 \newcommand*{\para@footgroup}[1]{%
+  \setXnoteswidthliketwocolumns@{#1}%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -7727,6 +7729,7 @@
 % The minipage version.
 %    \begin{macrocode}
 \newcommand*{\mppara@footgroup}[1]{{%
+  \setXnoteswidthliketwocolumns@{#1}%
   \vskip\skip\@nameuse{mp#1footins}
   \ifl@dpairing\ifparledgroup%
     \leavevmode\marks\parledgroup@{begin}%
@@ -8732,6 +8735,7 @@
 % \changes{v1.13.0}{2014/08/31}{In \cs{para@footsetupX}, use \cs{columnwidth} instead of \cs{hsize}}
 %    \begin{macrocode}
 \newcommand*{\para@footsetupX}[1]{{\csuse{notefontsizeX@#1}
+  \setnotesXwidthliketwocolumns@{#1}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide\dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax%
@@ -8820,6 +8824,7 @@
 % \cs{para@footgroupX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\para@footgroupX}[1]{%
+  \setnotesXwidthliketwocolumns@{#1}%
   \unvbox\csname footins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
@@ -8828,6 +8833,7 @@
   \csuse{notefontsizeX@#1}
   \noindent\unhbox0\par}
 \newcommand*{\mppara@footgroupX}[1]{{%
+  \setnotesXwidthliketwocolumns@{#1}%
   \vskip\skip\@nameuse{mpfootins#1}
   \ifl@dpairing\ifparledgroup
     \leavevmode%
@@ -8857,7 +8863,43 @@
 % \end{macro}
 % \end{macro}
 %
-%
+% \section{Footnotes' width for two columns}
+% We define here some commands which have sense only with \Lpack{eledpar}, but must be called when defining notes paramaters.
+% These commands change the width of block notes to allow them to have the same size than two parallel columns.
+% \begin{macro}{setXnoteswidthliketwocolumns@}
+% \begin{macro}{setnotesXwidthliketwocolumns@}
+% These two commands are called at the begining of critical or familiar notes groups.
+% They set, if the option is enabled, the \cs{hsize}.
+%    \begin{macrocode}
+\newcommand{\setXnoteswidthliketwocolumns@}[1]{%
+  \global\let\hsize@fornote=\hsize%
+  \let\old@hsize=\hsize%
+  \iftoggle{Xnoteswidthliketwocolumns@#1}%
+    {%
+    \csuse{setwidthliketwocolumns@\columns@position}%
+    \global\let\hsize@fornote=\hsize%
+    }%
+    {}%
+  \let\hsize=\hsize@fornote%
+  \let\columnwidth=\hsize@fornote%
+}%
+
+\newcommand{\setnotesXwidthliketwocolumns@}[1]{%
+  \global\let\hsize@fornote=\hsize%
+  \let\old@hsize=\hsize%
+  \iftoggle{notesXwidthliketwocolumns@#1}%
+    {%
+    \csuse{setwidthliketwocolumns@\columns@position}%
+    \global\let\hsize@fornote=\hsize%
+    }%
+    {}%
+  \let\hsize=\hsize@fornote%
+  \let\columnwidth=\hsize@fornote%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Footnotes' order}
 % \begin{macro}{\fnpos}
 % \begin{macro}{\mpfnpos}
