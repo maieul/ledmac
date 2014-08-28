@@ -74,7 +74,7 @@ Suggestions and bug reports are welcome.
 
 Maïeul Rouquette is the only one maintainer. To help him in his work, please follow these rules:
 
-- Go to the [issues page](https://github.com/maieul/ledmac/issues);
+- Go to the [issues page](https://github.com/maieul/ledmac/issues).
 - Open *one issue by problem*, even if problems are similar.
 - Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.

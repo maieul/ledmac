@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10064}
+% \CheckSum{10093}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1277,7 +1277,7 @@
 % With \cs{beforesymlinenum}\oarg{s}\marg{l} you can add some space before the line symbol in a footnote. The default value is value set by \cs{beforenumberinfootnote}.
 % 
 % \DescribeMacro{\aftersymlinenum} 
-% With \cs{aftersymlinenum}\oarg{s}\marg{l} you can add some space before the line symbol in a footnote. The default value is value set by \cs{afternumberinfootnote}.
+% With \cs{aftersymlinenum}\oarg{s}\marg{l} you can add some space after the line symbol in a footnote. The default value is value set by \cs{afternumberinfootnote}.
 %
 % \DescribeMacro{\inplaceofnumber}
 % If no number or symbolic line number is printed, you can add a space, with \cs{inplaceofnumber}\oarg{s}\marg{l}. The default value is 1~em. 
@@ -1405,7 +1405,7 @@
 %\subsubsection{Options for block of notes}
 % \changes{v1.1}{2012/09/12}{New options for block of notes.}
 % \DescribeMacro{\txtbeforeXnotes}
-% You can add some text before  critical notes with \cs{textbeforeXnotes}\oarg{s}\marg{text}.
+% You can add some text before  critical notes with \cs{txtbeforeXnotes}\oarg{s}\marg{text}.
 %
 % \DescribeMacro{\beforeXnotes}
 % You can change the vertical space printed before the rule of the critical notes with \cs{beforeXnotes}\oarg{s}\marg{l}.
@@ -2040,7 +2040,7 @@
 % \DescribeMacro{\footnoteE}
 %    As well as the standard \LaTeX\ footnotes generated via \cs{footnote},
 % the package also provides
-% three series of additional footnotes called \cs{footnoteA} through
+% five series of additional footnotes called \cs{footnoteA} through
 % \cs{footnoteE}. These have the familiar marker in the text, and 
 % the marked text at the foot of the page can be formated using
 % any of the styles described for the critical footnotes. Note that
@@ -7777,7 +7777,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsubsection{Insertion of the footnotes separator}
+% \subsection{Insertion of the footnotes separator}
 %The command \cs{insertparafootsep}\marg{series} must be called at the beginning of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
 % \changes{v1.8.0}{2013/12/13}{Correct \cs{parafootsep} when using with ledgroup.}
@@ -11116,6 +11116,7 @@
 %
 % \changes{v1.5}{2013/07/11}{Correct indexing when the call is made in critical notes.}
 % \changes{v1.8.0}{2014/07/21}{If \Lpack{imakeidx} and \Lpack{hyperref} are loaded, adds hyperref in the index.}
+% \changes{v1.8.5}{2014/08/28}{Debug indexing in right column, with eledpar.}
 % Here's some code for indexing using page \& line numbers.
 %
 % \begin{macro}{\ifeledmac@check@imakeidx@}
@@ -11344,6 +11345,8 @@
 % \changes{v1.12.0}{2014/08/05}{Use correctly default index when \Lpack{imakeidx} is loaded.}
 %    \begin{macrocode}
   \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
+    \global\let\old@Rlineflag\Rlineflag%
+    \gdef\Rlineflag{}%
     \ifl@imakeidx%
       \if@edindex@fornote@%
         \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
@@ -11369,6 +11372,7 @@
       \fi%
      \fi%
   \endgroup
+  \global\let\Rlineflag\old@Rlineflag%
   \@esphack}
 %    \end{macrocode}
 % \end{macro}
@@ -11381,7 +11385,7 @@
 %
 % \subsection{Hyperref compatibility}
 % \begin{macro}{\hyperlinkformat}
-% \cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexding.
+% \cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexing.
 %    \begin{macrocode}
 \newcommand{\hyperlinkformat}[3]{%
   \ifstrempty{#1}%
@@ -11390,21 +11394,63 @@
   }}
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\hyperlinkR}
+% \cs{hyperlinkR} command is to be used to have both a internal hyperlink \cs{ledRflag}, when indexing.
+%    \begin{macrocode}
+\newcommand{\hyperlinkR}[2]{%
+ \hyperlink{#1}{#2\Rlineflag}%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\hyperlinkformatR}
+% \cs{hyperlinkformatR} command is to be used to have both a internal hyperlink, a format and a \cs{Rlineflag}, when indexing.
+%    \begin{macrocode}
+\newcommand{\hyperlinkformatR}[3]{%
+  \hyperlinkformat{#1}{#2}{#3\Rlineflag}%
+}%
+
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\get@edindex@hyperref}
 % \begin{macro}{\@edindex@hyperref}
+% \changes{v1.12.5}{2014/08/28}{Debug \cs{edindex} when \Lpack{hyperref} is not load}
 % \cs{get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, links to the point where the index was called (with \Lpack{hyperref}.
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
   \ifcsdef{hyperlink}%
-    {\IfSubStr{#1}{|}%
-      {\get@index@command#1+%
-      \gdef\@edindex@hyperref{|\@index@parenthesis %
-        hyperlinkformat{\@index@command}
-        {\edindexlab\thelabidx}}}%
-      {\get@index@command#1|+
-      \gdef\@edindex@hyperref{|hyperlink{\edindexlab\thelabidx}}}%
+%    \end{macrocode}
+% We have to disable spaces to work with a \Lpack{xstring} bug
+%    \begin{macrocode}
+    {%
+    \edef\temp@{%
+    \catcode`\ =9 %space need for catcode
+    #1%
+    \catcode`\ =10 % space need for catcode
     }%
-    {\gdef\@edindex@hyperref{}}%
+    \IfSubStr{\temp@}{|}%
+      {\get@index@command#1+%
+      \ifledRcol%
+        \gdef\@edindex@hyperref{|\@index@parenthesis %space kept
+        hyperlinkformatR{\@index@command}%
+        {\edindexlab\thelabidx}}%
+      \else%
+        \gdef\@edindex@hyperref{|\@index@parenthesis %space kept
+        hyperlinkformat{\@index@command}%
+        {\edindexlab\thelabidx}}%
+      \fi%
+      }%
+      {\get@index@command#1|+
+       \ifledRcol%
+        \gdef\@edindex@hyperref{|hyperlinkR{\edindexlab\thelabidx}}%
+       \else%
+        \gdef\@edindex@hyperref{|hyperlink{\edindexlab\thelabidx}}%
+       \fi%
+      }%
+    }%
+    {%
+    \gdef\@index@txt{#1}%
+    \gdef\@edindex@hyperref{}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -12193,10 +12239,11 @@
 % \begin{macro}{\l@dgobblearg}
 % |\l@dgobbledarg| replaces its delineated argument by |\relax|
 % (was |\verschwinden|).
-% |\l@dgobblearg|\marg{arg} replaces its argument by |\relax|.
+% |\l@dgobbleoptarg|\oarg{arg}\marg{arg} replaces these two arguments (first is optional) by |\relax|.
+% \changes{v1.18.5}{2014/08/28}{\cs{l@dgobblearg} becomes \cs{l@dgobbeloptarg}}
 %    \begin{macrocode}
 \def\l@dgobbledarg #1/{\relax}
-\newcommand*{\l@dgobblearg}[1]{\relax}
+\newcommand*{\l@dgobbleoptarg}[2][]{\relax}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -12341,10 +12388,11 @@
 % \begin{macro}{\l@dmodforedtext}
 % \begin{macro}{\l@drestoreforedtext}
 % Modify and restore various macros for when |\edtext| is used.
+% \changes{v1.18.5}{2014/08/28}{Debug optional arguments of \cs{Xfootnote} in tabular context}
 %    \begin{macrocode}
 \newcommand{\l@dmodforedtext}{%
   \let\edtext\relax
-  \def\do##1{\global\csletcs{##1footnote}{l@dgobblearg}}
+  \def\do##1{\global\csletcs{##1footnote}{l@dgobbleoptarg}}%
   \dolistloop{\@series}%
   \let\edindex\nulledindex
   \let\linenum\@gobble}
@@ -13565,6 +13613,7 @@
 % \begin{macro}{\@makeschapterhead}
 % \begin{macro}{\@sect}
 % \begin{macro}{\@ssect}
+% \changes{v1.18.5}{2014/08/28}{Debug \cs{eledchapter} in parallel with \Lpack{memoir}}
 % We have to patch \LaTeX, \Lclass{book} and \Lclass{memoir} sectioning commands in order to:
 % \begin{itemize}
 %  \item Disable \cs{edtext} inside.
@@ -13578,7 +13627,7 @@
 \catcode`\#=12 % Space NEEDS by \catcode
 \AtBeginDocument{%
 \patchcmd{\chapter}{\clearforchapter}{%
-  \ifnumbering\else%
+  \if@eled@sectioning\else%
     \clearforchapter
   \fi%
   }
