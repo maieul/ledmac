@@ -2438,7 +2438,11 @@
 % At the second run, you will see the formating.
 % And consequently, at the third run, you will see the table of contents. 
 %
-% For technical reason, the page break before \cs{elechapter} can't be add automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
+% For technical reason, the page break before \cs{elechapter} can't be added automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
+% \DescribeMacro{\noeledsec}
+% If you aren't going to have any \cs{eledxxx} commands, you can say \cs{noeledsec}
+% in your file, before the first \cs{beginnumbering}, to suppress the
+% generation of unneeded \file{.eledsec} file.
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
@@ -2839,7 +2843,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/08/28 v1.12.5 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/08/31 v1.12.6 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3401,9 +3405,11 @@
     \begingroup
     \initnumbering@sectcmd
   \fi
-  \gdef\eled@sections@@{}
-  \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@num}{}{}\makeatother
-  \immediate\openout\eled@sectioning@out=\jobname.eledsec\the\section@num\relax
+  \gdef\eled@sections@@{}%
+  \if@noeled@sec\else%
+    \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@num}{}{}\makeatother%
+    \immediate\openout\eled@sectioning@out=\jobname.eledsec\the\section@num\relax%
+  \fi%
 }
 \newcommand*{\initnumbering@reg}{%
   \global\pst@rtedLfalse
@@ -3455,7 +3461,9 @@
     \led@err@NumberingNotStarted
   \fi
   \autoparfalse  
-  \immediate\closeout\eled@sectioning@out
+  \if@noeled@sec\else%
+    \immediate\closeout\eled@sectioning@out%
+  \fi%
   \ifl@dpairing\else
     \endgroup
   \fi
@@ -13678,6 +13686,17 @@
 %    \begin{macrocode}
 \newwrite\eled@sectioning@out
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\noeledsec}
+% \changes{v1.12.6}{2014/08/31}{Add \cs{noeledsec} macro.}
+% \begin{macro}{\if@noeled@sec}
+% The boolean \cs{if@noeled@sec} is set to true when \cs{noeledsec} is called.
+% It is used to disable external file creation.
+%    \begin{macrocode}
+\newif\if@noeled@sec%
+\newcommand{\noeledsec}{\global\@noeled@sectrue}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\eledchapter}
 % \begin{macro}{\eledsection}
