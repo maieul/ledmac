@@ -4958,41 +4958,43 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\if@noneed@Footnote}
 % \begin{macro}{\flag@start}
 % \begin{macro}{\flag@end}
 % \changes{v1.12.3}{2014/08/15}{\cs{flag@start} and \cs{flag@end} are now defined only one time for eledmac and eledpar}
 % \changes{v1.12.3}{2014/08/15}{\cs{flag@start} send a error message when a \cs{edtext} is done without insert (note)}
+% \changes{v1.12.8}{2014/09/12}{\cs{flag@start} don't send a error message when a \cs{edtext} is done without insert (note) but have a endnote}
 % We enclose a lemma marked by \cs{edtext} in
 % \cs{flag@start} and \cs{flag@end}: these send the \cs{@ref}
 % command to the line-list file. \cs{edtext} is responsible for
 % setting the value of \cs{insert@count} appropriately; it
 % actually gets done by the various footnote macros.
 %    \begin{macrocode}
+\newif\if@noneed@Footnote%Bool to check if we have to print a error message
+
 \newcommand*{\flag@start}{%
   \ifledRcol%
     \edef\next{\write\linenum@outR{%
                   \string\@ref[\the\insert@countR][}}%
     \next%
     \ifnum\insert@countR<1%
-      \led@err@EdtextWithoutFootnote%
+      \if@noneed@Footnote\else%
+        \led@err@EdtextWithoutFootnote%
+      \fi%
     \fi%
   \else%
     \edef\next{\write\linenum@out{%
                   \string\@ref[\the\insert@count][}}%
     \next%
     \ifnum\insert@count<1%
-      \led@err@EdtextWithoutFootnote%
+      \if@noneed@Footnote\else%
+        \led@err@EdtextWithoutFootnote%
+      \fi%
     \fi%
   \fi}%
 
-\newcommand*{\flag@end}{%
-  \ifledRcol%
-    \write\linenum@outR{]}%
-  \else%
-    \write\linenum@out{]}%
-  \fi}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -5503,7 +5505,15 @@
        \flag@end}%
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }%
+  \global\@noneed@Footnotefalse%
   }
+
+\newcommand*{\flag@end}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -9287,6 +9297,7 @@
 %    \begin{macrocode}
 
     \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
+        \global\@noneed@Footnotetrue%
         \newcommand{\content}{##1}%
            \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
           {\ifnumberedpar@\l@d@nums\fi}%
@@ -10227,9 +10238,10 @@
 % \end{macro}
 % \begin{macro}{\wrap@edcrossref}
 % \changes{v1.12.1}{2014/08/06}{Fix spurious spaces.}
+% \changes{v1.12.7}{2014/09/07}{\cs{wrap@edcrossref} is now robust}
 % \cs{wrap@edcrossref} is called around all eledmac crossref commands, except those which start with x. It adds the hyperlink.
 %    \begin{macrocode}
-\newcommand{\wrap@edcrossref}[2]{%
+\newrobustcmd{\wrap@edcrossref}[2]{%
   \ifdef{\hyperlink}%
     {\hyperlink{#1}{#2}}%
     {#2}%
