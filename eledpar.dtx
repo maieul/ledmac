@@ -180,6 +180,7 @@
 % \changes{v1.8.2}{2014/08/15}{Debug left and side note (bugs added by 1.8.0)}
 % \changes{v1.8.2}{2014/08/15}{Debug \cs{eledxxx} with some paper size}
 % \changes{v1.8.3}{2014/08/31}{Add \cs{noeledxxx}, as in eledmac}
+% \changes{v1.9.0}{2014/08/31}{Compatibility with \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -407,6 +408,10 @@
 % If you want to come back to the previous behavior, just set them with a negative value. 
 % \DescribeMacro{\widthliketwocolumns}
 % If you want to mix texts in columns and text without columns, you can horizontally align text in one column to text in two column with \cs{widthliketwocolumnstrue}. To reset this feature, just do \cs{widthliketwocolumnsfalse}.
+% 
+% \DescribeMacro{\Xnoteswidthliketwocolumns}
+% \DescribeMacro{\notesXwidthliketwocolumns}
+% In most case, you should use \cs{widthliketwocolumns} in combination with \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns} to align the critical/familiar footnotes with the two colums. \Lpack{eledmac} handbook for more details.
 % \section{Facing pages}\label{pages}
 %
 % \DescribeEnv{pages}
@@ -4442,15 +4447,24 @@
 
 \newlength{\aftercolumnseparator}%
 \setlength{\aftercolumnseparator}{-2pt}%
+
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
 % \begin{macro}{setwidthliketwocolumns@L}
+% \begin{macro}{setpositionliketwocolumns@L}
+% \begin{macro}{setnotepositionliketwocolumns@L}
 % \begin{macro}{setwidthliketwocolumns@C}
+% \begin{macro}{setpositionliketwocolumns@C}
+% \begin{macro}{setnotepositionliketwocolumns@C}
 % \begin{macro}{setwidthliketwocolumns@R}
-% These three commands are called in \cs{beginnumbering} in a \texbf{not parallel} 
-% typesetting, to fix the width and the position of the lines to be vertically aligned with parallel columns.
+% \begin{macro}{setpositionliketwocolumns@R}
+% \begin{macro}{setnotepositionliketwocolumns@R}
+% The \cs{setwidth…} macros are called in \cs{beginnumbering} in a \texbf{not parallel} 
+% typesetting, to fix the width  of the lines to be vertically aligned with parallel columns. They are also called at the begining of a notes' group, if some options are enabled.
+% The \cs{setposition…} macros are called in \cs{beginnumbering} in a \texbf{not parallel} to fix the position of the lines.
+% The \cs{setnoteposition…} macros are called \cs{xxxfootstart} in a \texbf{not parallel} to fix the position of notes block.
 % \begin{macrocode}
 \newcommand{\setwidthliketwocolumns@L}{%
 % Temporary dimension, initially equal to the standard hsize, i.e. text width
@@ -4472,12 +4486,23 @@
   \multiply\temp by 2%
   \divide\temp by 3%
   \advance\hsize\temp%
-%    \end{macrocode}
-% And add a \hfill to put the number in the right place
-%\doinsidelinehook{\hfill}
-%    \begin{macrocode}
+}%
+
+\newcommand{\setpositionliketwocolumns@L}{%
   \renewcommand{\ledrlfill}{\hfill}%
 }%
+
+\newcommand{\setnotespositionliketwocolumns@L}{%
+  \newdimen\temp%
+  \newdimen\tempa%
+  \temp=\hsize%
+  \tempa=\Lcolwidth%
+  \advance\tempa\Rcolwidth%
+  \advance\temp-\tempa%
+  \divide\temp by 4%
+  \rightskip=-\temp%
+}%
+
 
 %    \end{macrocode}
 %    \begin{macrocode}
@@ -4502,15 +4527,24 @@
 %    \begin{macrocode}
   \divide\temp by 2%
   \advance\hsize\temp%
-%    \end{macrocode}
-% And add a \hfill to put the number in the right place
-%    \begin{macrocode}
-  \doinsidelinehook{\hfill}%
-  \renewcommand{\ledrlfill}{\hfill}%
-%    \end{macrocode}
 }%
 
-%    \begin{macrocode}
+\newcommand{\setpositionliketwocolumns@C}{%
+  \doinsidelinehook{\hfill}%
+  \renewcommand{\ledrlfill}{\hfill}%
+}%
+
+\newcommand{\setnotespositionliketwocolumns@C}{%
+  \newdimen\temp%
+  \newdimen\tempa%
+  \temp=\hsize%
+  \tempa=\Lcolwidth%
+  \advance\tempa\Rcolwidth%
+  \advance\temp-\tempa%
+  \divide\temp by 2%
+  \leftskip=\temp%
+  \rightskip=-2\temp%
+}%
 
 \newcommand{\setwidthliketwocolumns@R}{%
 %    \end{macrocode}
@@ -4533,13 +4567,31 @@
   \multiply\temp by 2%
   \divide\temp by 3%
   \advance\hsize\temp%
-%    \end{macrocode}
-% And add a \hfill to put the number in the right place
-%    \begin{macrocode}
-  \doinsidelinehook{\hfill}%
-%    \end{macrocode}
 }%
+
+\newcommand{\setpositionliketwocolumns@R}{%
+  \doinsidelinehook{\hfill}%
+}%
+
+\newcommand{\setnotespositionliketwocolumns@R}{%
+  \newdimen\temp%
+  \newdimen\tempa%
+  \temp=\hsize%
+  \tempa=\Lcolwidth%
+  \advance\tempa\Rcolwidth%
+  \advance\temp-\tempa%
+  \divide\temp by 2%
+  \leftskip=\temp%
+  \rightskip=-1.75\temp%
+}%
+
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
