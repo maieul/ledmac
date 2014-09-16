@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10278}
+% \CheckSum{10286}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1482,7 +1482,7 @@
 % the trick. Page \pageref{nobreak} explains why this restriction
 % is necessary.}
 %
-% \changes{v1.13.0}{2014/09/15}{Add \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
+% \changes{v1.13.0}{2014/09/16}{Add \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
 % \DescribeMacro{Xnoteswidthliketwocolumns}\DescribeMacro{notesXwidthliketwocolumns}
 % If you use \Lpack{eledpar} \cs{columns} macro, you can call :
 % \begin{itemize}
@@ -2850,7 +2850,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/09/15 v1.13.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/09/16 v1.13.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2878,7 +2878,7 @@
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % \changes{v0.4}{2004/02/29}{Added final/draft options}
-% \changes{v1.13.0}{2014/09/15}{Added widthliketwocolumns option}
+% \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
 %    \begin{macrocode}
 \newif\ifledfinal
 \newif\ifparapparatus@
@@ -6898,6 +6898,10 @@
   \csuse{bhookXnote@#1}
   \csuse{Xnotefontsize@#1}
   \footsplitskips
+  \ifl@dpairing%
+    \csuse{setwidthliketwocolumns@\columns@position}%
+  \fi%
+  \setXnotespositionliketwocolumns@{#1}%
   \spaceskip=\z@skip \xspaceskip=\z@skip
   \csname #1footfmt\endcsname #2[#1]\egroup}
 %    \end{macrocode}
@@ -7254,6 +7258,9 @@
       }%
   \vskip\skip\csname #1footins\endcsname%
   \leftskip0pt \rightskip0pt
+  \ifl@dpairing\else%
+     \hsize=\old@hsize%
+  \fi%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
   \print@Xfootnoterule{#1}%%
@@ -7277,7 +7284,11 @@
 % contents of the footnote-insert box to the output page without
 % alteration.
 %    \begin{macrocode}
-\newcommand*{\normalfootgroup}[1]{{\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\unvbox\csname #1footins\endcsname}
+\newcommand*{\normalfootgroup}[1]{%
+  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}%
+  \unvbox\csname #1footins\endcsname%
+  \hsize=\old@hsize%
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -7742,14 +7753,15 @@
 % note series letter.
 %    \begin{macrocode}
 \newcommand*{\para@footgroup}[1]{%
-  \setXnoteswidthliketwocolumns@{#1}%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
-  \noindent\unhbox0\par}
+  \noindent\unhbox0\par%
+  \global\hsize=\old@hsize%
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -8351,6 +8363,10 @@
     \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
+    \ifl@dpairing%
+      \csuse{setwidthliketwocolumns@\columns@position}%
+    \fi%
+    \setnotesXpositionliketwocolumns@{#1}%
     \spaceskip=\z@skip \xspaceskip=\z@skip
     \csuse{\csuse{footnote@dir}}\if@RTL\else\noindent\leavevmode\fi\@nameuse{footfmt#1}{#1}{#2}\egroup}
 
@@ -8413,6 +8429,9 @@
   \vskip\skip\csname footins#1\endcsname%
   \leftskip=\z@
   \rightskip=\z@
+  \ifl@dpairing\else%
+     \hsize=\old@hsize%
+  \fi%
   \setnotesXwidthliketwocolumns@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
   \print@footnoteXrule{#1}%
@@ -8434,7 +8453,9 @@
 % insert box to the output page without alteration.
 %    \begin{macrocode}
 \newcommand*{\normalfootgroupX}[1]{%
-  \unvbox\@nameuse{footins#1}}
+  \unvbox\@nameuse{footins#1}%
+  \hsize=\old@hsize%
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -8787,7 +8808,7 @@
 % \begin{macro}{\para@footsetupX}
 % \cs{para@footsetupX}\marg{series}
 % \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetupX}}
-% \changes{v1.13.0}{2014/09/15}{In \cs{para@footsetupX}, use \cs{columnwidth} instead of \cs{hsize}}
+% \changes{v1.13.0}{2014/09/16}{In \cs{para@footsetupX}, use \cs{columnwidth} instead of \cs{hsize}}
 %    \begin{macrocode}
 \newcommand*{\para@footsetupX}[1]{{\csuse{notefontsizeX@#1}
   \setnotesXwidthliketwocolumns@{#1}%
@@ -8881,7 +8902,6 @@
 % \cs{para@footgroupX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\para@footgroupX}[1]{%
-  \setnotesXwidthliketwocolumns@{#1}%
   \unvbox\csname footins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
@@ -8927,14 +8947,19 @@
 % \section{Footnotes' width for two columns}
 % We define here some commands which make sense only with \Lpack{eledpar}, but must be called when defining notes paramaters.
 % These commands change the width of block notes to allow them to have the same size than two parallel columns.
+% \begin{macro}{\old@hsize}
 % \begin{macro}{\setXnoteswidthliketwocolumns@}
 % \begin{macro}{\setnotesXwidthliketwocolumns@}
 % These two commands are called at the beginning of critical or familiar notes groups.
 % They set, if the option is enabled, the \cs{hsize}. They are also called at the on the setup for paragraphed notes.
 %    \begin{macrocode}
+
+\newdimen\old@hsize%
+\old@hsize=\hsize%
+
 \newcommand{\setXnoteswidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
-  \let\old@hsize=\hsize%
+  \old@hsize=\hsize%
   \iftoggle{Xnoteswidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -8947,7 +8972,7 @@
 
 \newcommand{\setnotesXwidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
-  \let\old@hsize=\hsize%
+  \old@hsize=\hsize%
   \iftoggle{notesXwidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -8959,6 +8984,7 @@
 }%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\setXnotespositionliketwocolumns@}
@@ -9496,7 +9522,7 @@
 % \subsubsection{Options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
-% \changes{v1.13.0}{2014/09/15}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
+% \changes{v1.13.0}{2014/09/16}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
 % \cs{settoggle@series}\marg{series}\marg{toggle}\marg{value} is a generic command to switch toggles for some series.
 
 %    \begin{macrocode}
@@ -9656,7 +9682,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
-% \changes{v1.13.0}{2014/09/15}{Add \cs{newhookcommand@toggle@reload}}
+% \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
 % \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
 % but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
 %    \begin{macrocode}
