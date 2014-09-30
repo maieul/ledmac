@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10307}
+% \CheckSum{10311}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -208,7 +208,8 @@
 % \changes{v1.12.3}{2014/08/15}{Debug \cs{eledxxx} with some paper size}
 % \changes{v1.12.4}{2014/08/25}{Debug spurious page breaks before \cs{chapter} (bug added by 1.12.0)}
 % \changes{v1.13.1}{2014/09/25}{Debug quotation environment inside of a \cs{pstart} when preceded by a sectioning command.}
-% \changes{v1.13.1}{2014/09/25}{Combing back of page and line breaking penalties's management, deleted by error in v0.17.}
+% \changes{v1.13.1}{2014/09/25}{Coming back of page and line breaking penalties's management, deleted by error in v0.17.}
+% \changes{v1.13.2}{2014/09/30}{Fix bug with normal footnotes, added by v1.13.0.}
 % \changes{v1.x.0}{2013/11/24}{Compatibility with eledpar new tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -2863,7 +2864,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/09/25 v1.13.1 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/09/30 v1.13.2 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -6914,9 +6915,9 @@
   \setbox\notecontent=\vbox\bgroup%
     \csuse{bhookXnote@#1}%
     \csuse{Xnotefontsize@#1}%
-    \ifl@dpairing%
-      \csuse{setwidthliketwocolumns@\columns@position}%
-    \fi%
+    \ifl@dpairing\ifl@dpaging\else%
+      \setXnoteswidthliketwocolumns@{#1}%
+    \fi\fi%
     \setXnotespositionliketwocolumns@{#1}%
     \footsplitskips%
     \spaceskip=\z@skip \xspaceskip=\z@skip%
@@ -8392,9 +8393,9 @@
     \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
-    \ifl@dpairing%
-      \csuse{setwidthliketwocolumns@\columns@position}%
-    \fi%
+    \ifl@dpairing\ifl@dpaging\else%
+      \setnotesXwidthliketwocolumns@{#1}%
+    \fi\fi%
     \setnotesXpositionliketwocolumns@{#1}%
     \spaceskip=\z@skip \xspaceskip=\z@skip
     \csuse{\csuse{footnote@dir}}\if@RTL\else\parindent=\csuse{noteindentX@#1}\leavevmode\fi\@nameuse{footfmt#1}{#1}{#2}\egroup
