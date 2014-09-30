@@ -6855,36 +6855,18 @@
   \footsplitskips%
   \spaceskip=\z@skip \xspaceskip=\z@skip%
   \csname #1footfmt\endcsname #2[#1]\egroup
-  \iftoggle{Xbothsides@#1}
+  \iftoggle{Xbothsides@#1}%
 %   \end{macrocode}
 % For \Lpack{eledpar}, split too long notes, if needed.
 %   \begin{macrocode}
-      {\newbox\beforesplit
-      \newdimen\leftheight
-      \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname
-      \advance\leftheight by -\csname Xtotalh@#1\endcsname
-      \ifdim\leftheight>0pt
-        \ifdim\ht\notecontent>\leftheight
-            \splittopskip=0pt
-            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
-        \else
-            \setbox\beforesplit=\box\notecontent
-        \fi
-        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit
-        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit
-        \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup
-      \fi
-      \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox
-        \bgroup%
-          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
-          \unvbox\notecontent%
-        \egroup
-      }
-      {\insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup}
+      {\split@notes@forXbothsides{#1}}%
+      {\insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup}%
   }
 %    \end{macrocode}
 % \end{macro}
 %
+
+
 % \begin{macro}{\footsplitskips}
 % Some setup code that is common for a variety of the footnotes.
 % \changes{v0.7}{2005/02/18}{Added \cs{footsplitskips} for use in many
@@ -8318,28 +8300,9 @@
 %    \end{macrocode}
 % With \Lpack{eledpar}, if the note is too long, split it.
 %    \begin{macrocode}
-   \iftoggle{bothsidesX@#1}
-      {\newbox\beforesplit
-      \newdimen\leftheight
-      \advance\leftheight by \expandafter\dimen\csname footins#1\endcsname
-      \advance\leftheight by -\csname totalhX@#1\endcsname
-      \ifdim\leftheight>0pt
-        \ifdim\ht\notecontent>\leftheight
-            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
-        \else
-            \setbox\beforesplit=\box\notecontent
-        \fi
-        \global\advance \csname totalhX@#1\endcsname by \ht\beforesplit
-        \global\advance \csname totalhX@#1\endcsname by \dp\beforesplit
-        \insert\csname footins#1\endcsname\bgroup\unvbox\beforesplit\egroup
-      \fi
-      \global\expandafter\setbox\csname toolongX@#1\endcsname=\vbox
-        \bgroup%
-          \ifvoid\csname toolongX@#1\endcsname\else\expandafter\unvbox\csname toolongX@#1\endcsname\fi%
-          \unvbox\notecontent%
-        \egroup
-      }
-      {\insert\csname footins#1\endcsname\bgroup\unvbox\notecontent\egroup}  
+   \iftoggle{bothsidesX@#1}%
+      {\split@notes@forbothsidesX{#1}}%
+      {\insert\csname footins#1\endcsname\bgroup\unvbox\notecontent\egroup}%  
 }
 
 %    \end{macrocode}
@@ -8954,6 +8917,63 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \section{Splitting notes for eledpar}
+% Mettre ici une explication
+% \begin{macro}{\split@notes@forbothsidesX}
+% This macro split the critical notes when the option \cs{bothsidesX} is enabled. 
+%    \begin{macrocode}
+\newcommand{\split@notes@forbothsidesX}[1]{%
+\newbox\beforesplit%
+      \newdimen\leftheight%
+      \advance\leftheight by \expandafter\dimen\csname footins#1\endcsname%
+      \advance\leftheight by -\csname totalhX@#1\endcsname%
+      \ifdim\leftheight>0pt%
+        \ifdim\ht\notecontent>\leftheight%
+            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
+        \else%
+            \setbox\beforesplit=\box\notecontent%
+        \fi%
+        \global\advance \csname totalhX@#1\endcsname by \ht\beforesplit%
+        \global\advance \csname totalhX@#1\endcsname by \dp\beforesplit%
+        \insert\csname footins#1\endcsname\bgroup\unvbox\beforesplit\egroup%
+      \fi%
+      \global\expandafter\setbox\csname toolongX@#1\endcsname=\vbox%
+        \bgroup%
+          \ifvoid\csname toolongX@#1\endcsname\else\expandafter\unvbox\csname toolongX@#1\endcsname\fi%
+          \unvbox\notecontent%
+        \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\split@notes@forXbothsides}
+% This macro split the critical notes when the option \cs{Xbothsides} is enabled. 
+%    \begin{macrocode}
+\newcommand{\split@notes@forXbothsides}[1]{%
+\newbox\beforesplit%
+      \newdimen\leftheight%
+      \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
+      \advance\leftheight by -\csname Xtotalh@#1\endcsname%
+      \ifdim\leftheight>0pt%
+        \ifdim\ht\notecontent>\leftheight%
+            \splittopskip=0pt%
+            \setbox\beforesplit=\expandafter\vsplit\notecontent to \leftheight%
+        \else%
+            \setbox\beforesplit=\box\notecontent%
+        \fi%
+        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit%
+        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit%
+        \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup%
+      \fi%
+      \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox%
+        \bgroup%
+          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
+          \unvbox\notecontent%
+        \egroup%
+}%
+%   \end{macrocode}
+% \end{macro}
+
 % \section{Endnotes}
 % \changes{v1.8.1}{2013/12/15}{Debug endnotes when more than one series is used (change the position where tools for endnotes are defined).}
 % \label{endnotes}\relax
