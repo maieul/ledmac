@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10319}
+% \CheckSum{10286}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -11371,91 +11371,93 @@
 % \end{macro}
 %    The \Lpack{memoir} class provides more flexible indexing than the
 % standard classes. We need different code if the \Lpack{memoir}
-% class is being used.
-%
-%    \begin{macrocode}
-\@ifclassloaded{memoir}{%
-%    \end{macrocode}
-% \Lpack{memoir} is being used.
-% \changes{v0.4.1}{2003/03/29}{Let eledmac take advantage of memoir's indexing}
-% \changes{v1.14.0}{2014/10/21}{Let eledmac take advantage of imakeidx even when memoir class is used}
-%
-% \begin{macro}{\makeindex}
+% class is being used, except if \Lpack{imakeidx} is used.
 % \begin{macro}{\edindex}
+% \changes{v0.4.1}{2003/03/29}{Let eledmac take advantage of memoir's indexing}
 % \changes{v1.5}{2013/07/11}{Compatibility with \Lpack{imakeidx} package, and possibility to use multiple index with \cs{edindex}.}
+% \changes{v1.12.0}{2014/08/05}{Use correctly default index when \Lpack{imakeidx} is loaded.}
+% \changes{v1.14.0}{2014/10/21}{Let eledmac take advantage of imakeidx even when memoir class is used}
+% \subsection{Memoir compatibility}
+% \begin{macro}{\create@edindex@for@memoir}
+% \cs{create@edindex@for@memoir} define the \cs{edindex} command and related tool when:
+% \begin{enumerate}
+%   \item Memoir class is used.
+%   \item AND \Lpack{imakeidx} is not used.
+% \end{enumerate}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing. In this case |\edindex| has an optional 
 % argument. We use the hook provided in \Lpack{memoir} v1.61.
+%    \begin{macrocode}
+\def\create@edindex@for@memoir{
+%    \end{macrocode}
 %    \begin{macrocode}
   \g@addto@macro{\makememindexhook}{%
     \def\edindex{\@bsphack%
       \@ifnextchar [{\l@d@index}{\l@d@index[\jobname]}}}
   \newcommand{\edindex}[2][\jobname]{\@bsphack\@esphack}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\l@d@index}
 % |\l@d@index[file]| is the first stage of |\edindex|, handling the 
 % |idx| file. This a virtually a verbatim copy of \Lpack{memoir}'s |\@index|,
 % the change being calling |\l@dwrindexm@m| instead of |\@wrindexm@m|.
 %    \begin{macrocode}
-  \def\l@d@index[#1]{%
-    \@ifundefined{#1@idxfile}%
+  \def\l@d@index[##1]{%
+    \@ifundefined{##1@idxfile}%
     {\ifreportnoidxfile
-       \led@warn@NoIndexFile{#1}%
+       \led@warn@NoIndexFile{##1}%
      \fi
      \begingroup
      \@sanitize
      \@nowrindex}%
-    {\def\@idxfile{#1}%
+    {\def\@idxfile{##1}%
      \doedindexlabel
      \begingroup
      \@sanitize
      \l@d@wrindexm@m}}
 %    \end{macrocode}
 % \end{macro}
-%
+% 
 % \begin{macro}{\l@d@wrindexm@m}
 % \begin{macro}{\l@d@@wrindexhyp}
 % |\l@d@wrindexm@m{item}| writes the |idx| file name and the indexed
 % item to the |aux| file. These are almost verbatim copies of \Lpack{memoir}'s
 % |\@wrindexm@m| and |\@@wrindexhyp|.
 %    \begin{macrocode}
-  \newcommand{\l@d@wrindexm@m}[1]{\l@d@@wrindexhyp#1||\\}
-  \def\l@d@@wrindexhyp#1|#2|#3\\{%
-    \ifshowindexmark\@showidx{#1}\fi
-    \ifx\\#2\\%
+  \newcommand{\l@d@wrindexm@m}[1]{\l@d@@wrindexhyp##1||\\}
+  \def\l@d@@wrindexhyp##1|##2|##3\\{%
+    \ifshowindexmark\@showidx{##1}\fi
+    \ifx\\##2\\%
        \if@edindex@fornote@%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnotehyperpage}{\thestartpageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnotehyperpage}{\thestartpageline}}%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnotehyperpage}{\theendpageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnotehyperpage}{\theendpageline}}%
        \else%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|hyperpage}{\thepageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|hyperpage}{\thepageline}}%
        \fi%
     \else
-      \def\Hy@temp@A{#2}%
+      \def\Hy@temp@A{##2}%
       \ifx\Hy@temp@A\HyInd@ParenLeft
         \if@edindex@fornote@%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnotehyperpage{#2}}{\thestartpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnotehyperpage{##2}}{\thestartpageline}}%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnotehyperpage{#2}}{\theendpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnotehyperpage{##2}}{\theendpageline}}%
         \else%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|#2hyperpage}{\thepageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|##2hyperpage}{\thepageline}}%
         \fi%
       \else
         \if@edindex@fornote@%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnote{#2}}{\thestartpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnote{##2}}{\thestartpageline}}%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnote{#2}}{\theendpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnote{##2}}{\theendpageline}}%
         \else%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|#2}{\thepageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|##2}{\thepageline}}%
         \fi%
       \fi
     \fi
@@ -11464,15 +11466,55 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \end{macro}
 % That finishes the \Lpack{memoir}-specific code.
 %    \begin{macrocode}
-}{%
+}
 %    \end{macrocode}
-% \Lpack{memoir} is not being used, which makes life somewhat simpler.
-%
-% \begin{macro}{\makeindex}
-% \begin{macro}{\edindex}
+% \subsection{Normal setting}
+% \begin{macro}{\create@edindex@notfor@memoir}
+% \cs{create@edindex@notfor@memoir} define the \cs{edindex} command and related tool when:
+% \begin{enumerate}
+%   \item Memoir class is NOT used.
+%   \item OR \Lpack{imakeidx} is used.
+% \end{enumerate}
+%    \begin{macrocode}
+\def\create@edindex@notfor@memoir{
+%    \end{macrocode}
+% \begin{macro}{\@wredindex}
+% Write the index information to the \file{idx} file.
+%    \begin{macrocode}
+  \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
+    \global\let\old@Rlineflag\Rlineflag%
+    \gdef\Rlineflag{}%
+    \ifl@imakeidx%
+      \if@edindex@fornote@%
+        \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
+      \else%
+        \get@edindex@hyperref{##2}%
+        \imki@wrindexentry{##1}{\@index@txt\@edindex@hyperref}{\thepageline}%
+      \fi%
+    \else%
+      \if@edindex@fornote@%
+        \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \expandafter\protected@write\@indexfile{}%
+          {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
+          }%
+        \expandafter\protected@write\@indexfile{}%
+          {\string\indexentry{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}
+         }%
+      \else%
+        \protected@write\@indexfile{}%
+          {\string\indexentry{##2}{\thepageline}
+          }%
+      \fi%
+     \fi%
+  \endgroup
+  \global\let\Rlineflag\old@Rlineflag%
+  \@esphack}
+%    \end{macrocode}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing.
 %    \begin{macrocode}
@@ -11484,50 +11526,21 @@
     \@wredindex}}{}{}
   \newcommand{\edindex}[1]{\@bsphack\@esphack}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\@wredindex}
-% Write the index information to the \file{idx} file.
-% \changes{v1.12.0}{2014/08/05}{Use correctly default index when \Lpack{imakeidx} is loaded.}
 %    \begin{macrocode}
-  \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
-    \global\let\old@Rlineflag\Rlineflag%
-    \gdef\Rlineflag{}%
-    \ifl@imakeidx%
-      \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
-        \expandafter\imki@wrindexentry{#1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
-        \expandafter\imki@wrindexentry{#1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
-      \else%
-        \get@edindex@hyperref{#2}%
-        \imki@wrindexentry{#1}{\@index@txt\@edindex@hyperref}{\thepageline}%
-      \fi%
-    \else%
-      \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
-        \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
-          }%
-        \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}
-         }%
-      \else%
-        \protected@write\@indexfile{}%
-          {\string\indexentry{#2}{\thepageline}
-          }%
-      \fi%
-     \fi%
-  \endgroup
-  \global\let\Rlineflag\old@Rlineflag%
-  \@esphack}
+% That finishes the non-\Lpack{memoir} index code.
+}
 %    \end{macrocode}
 % \end{macro}
-%
-% That finishes the non-\Lpack{memoir} index code.
+% \end{macro}
+% \end{macro}
+% \subsection{Choose the good variant}
+% And now, call \cs{create@edindex@for@memoir} or \cs{create@edindex@notfor@memoir} depending of the use of \Lpack{memoir} and \Lpack{imakeidx}
 %    \begin{macrocode}
-}
-
+\@ifclassloaded{memoir}{%
+  \@ifpackageloaded{imakeidx}%
+    {\create@edindex@notfor@memoir}{\create@edindex@for@memoir}%
+  }%
+  {\create@edindex@notfor@memoir}%
 %    \end{macrocode}
 %
 % \subsection{Hyperref compatibility}
