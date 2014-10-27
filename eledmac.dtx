@@ -2921,6 +2921,26 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% Loading package \emph{xargs} to declare commands with optional arguments. 
+% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
+% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
+% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
+%  \begin{macrocode}
+\RequirePackage{xargs}
+\RequirePackage{etoolbox}
+\reserveinserts{32}
+\RequirePackage{suffix}
+\RequirePackage{xstring}
+\RequirePackage{ifluatex}
+\RequirePackage{ragged2e}
+%    \end{macrocode}
+% \begin{macro}{\if@RTL}
+% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
+% But we define it if the bidi package is not loaded.
+%    \begin{macrocode}
+\ifdef{\if@RTL}{}{\newif\if@RTL}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\showlemma}
 % \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
 % It depends on the option.
@@ -10369,7 +10389,7 @@
 %    \begin{macrocode}
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-  \ifcsdef{hypertarget}{\hypertarget{#1}{}}{}%
+  \ifdef{\hypertarget}{\hypertarget{#1}{}}{}%
   \@esphack}
 
 %    \end{macrocode}
@@ -11592,7 +11612,7 @@
 % \cs{get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, links to the point where the index was called (with \Lpack{hyperref}.
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
-  \ifcsdef{hyperlink}%
+  \ifdef{\hyperlink}%
 %    \end{macrocode}
 % We have to disable spaces to work with a \Lpack{xstring} bug
 %    \begin{macrocode}
