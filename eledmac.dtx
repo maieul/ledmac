@@ -2858,7 +2858,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/10/20 v1.13.4 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/10/27 v1.13.5 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2867,7 +2867,7 @@
 % \item Replace as many \cs{def}'s by \cs{newcommand}'s as possible
 % to avoid overwriting \LaTeX\ macros.
 %
-% \item Replace user-level TeX counts by \LaTeX\ counters.
+% \item Replace user-level \TeX\ counts by \LaTeX\ counters.
 %
 % \item Use the \LaTeX\ font handling mechanisms.
 %
@@ -2875,7 +2875,7 @@
 %
 % \end{itemize}
 %
-%
+% \subsection{Package options}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
@@ -2921,26 +2921,6 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% Loading package \emph{xargs} to declare commands with optional arguments. 
-% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
-% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
-% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
-%  \begin{macrocode}
-\RequirePackage{xargs}
-\RequirePackage{etoolbox}
-\reserveinserts{32}
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifluatex}
-\RequirePackage{ragged2e}
-%    \end{macrocode}
-% \begin{macro}{\if@RTL}
-% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
-% But we define it if the bidi package is not loaded.
-%    \begin{macrocode}
-\ifcsdef{if@RTL}{}{\newif\if@RTL}
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\showlemma}
 % \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
 % It depends on the option.
@@ -2954,34 +2934,22 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\linenumberlist}
-% The code for the \verb?\linenumberlist? mechanism was given to Peter Wilson by Wayne
-% Sullivan\index{Sullivan, Wayne} on 2004/02/11.
-%
-% Initialize it as \verb?\empty?
-% \changes{v0.3}{2004/02/14}{Added \cs{linenumberlist} mechanism}
-%    \begin{macrocode}
-\let\linenumberlist=\empty
-
+% \subsection{Packages loading}
+% Loading package \emph{xargs} to declare commands with optional arguments. 
+% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
+% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
+% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
+%  \begin{macrocode}
+\RequirePackage{xargs}
+\RequirePackage{etoolbox}
+\reserveinserts{32}
+\RequirePackage{suffix}
+\RequirePackage{xstring}
+\RequirePackage{ifluatex}
+\RequirePackage{ragged2e}
 %    \end{macrocode}
-% \end{macro}
 %
-% \begin{macro}{\@l@dtempcnta}
-% \begin{macro}{\@l@dtempcntb}
-% In imitation of \LaTeX, we create a couple of scratch counters.
-%
-% \LaTeX\ already defines \cs{@tempcnta} and \cs{@tempcntb} but Peter Wilson have
-% found in the past that it can be dangerous to use these (for example
-% one of the AMS packages did something nasty to the \Lpack{ccaption}
-% package's use of one of these).
-%    \begin{macrocode}
-\newcount\@l@dtempcnta \newcount\@l@dtempcntb
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
+% \subsection{Boolean flags}
 % \begin{macro}{\ifl@dmemoir}
 % Define a flag for if the \Lpack{memoir} class has been used.
 % \changes{v0.2}{2003/07/25}{Added \cs{ifl@dmemoir} for memoir class having been used}
@@ -2999,6 +2967,13 @@
 \newif\ifl@imakeidx
 \@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{\l@imakeidxfalse}
 %    \end{macrocode} 
+% \end{macro}
+% \begin{macro}{\if@RTL}
+% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
+% But we define it if the bidi package is not loaded.
+%    \begin{macrocode}
+\ifcsdef{if@RTL}{}{\newif\if@RTL}
+%    \end{macrocode}
 % \end{macro}
 % \subsection{Messages}
 %
@@ -3280,6 +3255,47 @@
   \eledmac@error{Imakeidx must be loaded before eledmac.}{\@ehd}%
 }%
 %    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Gobbling}
+% \changes{v1.14.0}{2014/10/27}{Provide \cs{\@gobblefour}}
+% \changes{v1.14.0}{2014/10/27}{Moves gobbling command}
+% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
+%  to avoid clash with the amsfonts package}
+% \begin{macro}{\@gobblethree}
+% \begin{macro}{\@gobblefour}
+%    \begin{macrocode}
+\providecommand*{\@gobblethree}[3]{}
+\providecommand*{\@gobblefour}[4]{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% Here, we define some commands which gobble their arguments.
+% \subsection{Miscellaneous commands}
+% \begin{macro}{\linenumberlist}
+% The code for the \verb?\linenumberlist? mechanism was given to Peter Wilson by Wayne
+% Sullivan\index{Sullivan, Wayne} on 2004/02/11.
+%
+% Initialize it as \verb?\empty?
+% \changes{v0.3}{2004/02/14}{Added \cs{linenumberlist} mechanism}
+%    \begin{macrocode}
+\let\linenumberlist=\empty
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@l@dtempcnta}
+% \begin{macro}{\@l@dtempcntb}
+% In imitation of \LaTeX, we create a couple of scratch counters.
+%
+% \LaTeX\ already defines \cs{@tempcnta} and \cs{@tempcntb} but Peter Wilson have
+% found in the past that it can be dangerous to use these (for example
+% one of the AMS packages did something nasty to the \Lpack{ccaption}
+% package's use of one of these).
+%    \begin{macrocode}
+\newcount\@l@dtempcnta \newcount\@l@dtempcntb
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
@@ -9164,7 +9180,6 @@
 % \end{macro}
 %
 % \begin{macro}{\endprint}
-% \begin{macro}{\@gobblethree}
 % \begin{macro}{\l@d@section}
 % The \cs{endprint} here is nearly identical in its
 % functioning to \cs{normalfootfmt}.
@@ -9173,20 +9188,17 @@
 % supply the section numbers from the main text; standard \Eledmac{} does
 % nothing with this information, but it's there if you want to write
 % custom macros to do something with it.
-% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
-%  to avoid clash with the amsfonts package}
+
 %    \begin{macrocode}
 \def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
       \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
-\providecommand*{\@gobblethree}[3]{}
-\providecommand*{\@gobblefour}[4]{}
 
 \let\l@d@section=\@gobble
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \end{macro}
+
 %
 % \begin{macro}{\setprintendlines}
 % The \cs{printendlines} macro is similar to \cs{printlines} but is
