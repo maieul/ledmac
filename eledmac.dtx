@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10316}
+% \CheckSum{10302}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -211,6 +211,7 @@
 % \changes{v1.13.1}{2014/09/25}{Coming back of page and line breaking penalties's management, deleted by error in v0.17.}
 % \changes{v1.13.2}{2014/09/30}{Fix bug with normal footnotes, added by v1.13.0.}
 % \changes{v1.13.3}{2014/10/04}{Fix extra spaces with paragraphed footnotes, added by v1.13.0.}
+% \changes{v1.13.4}{2014/10/20}{Fix bug with index when memoir class is used without hyperref}
 % \changes{v1.x.0}{2013/11/24}{Compatibility with eledpar new tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -295,7 +296,7 @@
 %  The \Eledmac{} package makes the
 % \edmac, \tabmac{} and \edstanza{} facilities available to authors 
 % who would prefer 
-% to use LaTeX. The principal functions provided by the package
+% to use \LaTeX. The principal functions provided by the package
 % are marginal line numbering and multiple series of
 % foot- and endnotes keyed to line numbers.
 %
@@ -2866,7 +2867,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/10/04 v1.13.3 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/10/27 v1.14.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2875,7 +2876,7 @@
 % \item Replace as many \cs{def}'s by \cs{newcommand}'s as possible
 % to avoid overwriting \LaTeX\ macros.
 %
-% \item Replace user-level TeX counts by \LaTeX\ counters.
+% \item Replace user-level \TeX\ counts by \LaTeX\ counters.
 %
 % \item Use the \LaTeX\ font handling mechanisms.
 %
@@ -2883,7 +2884,7 @@
 %
 % \end{itemize}
 %
-%
+% \subsection{Package options}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
@@ -2946,7 +2947,7 @@
 % The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
 % But we define it if the bidi package is not loaded.
 %    \begin{macrocode}
-\ifcsdef{if@RTL}{}{\newif\if@RTL}
+\ifdef{\if@RTL}{}{\newif\if@RTL}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\showlemma}
@@ -2962,34 +2963,22 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\linenumberlist}
-% The code for the \verb?\linenumberlist? mechanism was given to Peter Wilson by Wayne
-% Sullivan\index{Sullivan, Wayne} on 2004/02/11.
-%
-% Initialize it as \verb?\empty?
-% \changes{v0.3}{2004/02/14}{Added \cs{linenumberlist} mechanism}
-%    \begin{macrocode}
-\let\linenumberlist=\empty
-
+% \subsection{Packages loading}
+% Loading package \emph{xargs} to declare commands with optional arguments. 
+% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
+% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
+% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
+%  \begin{macrocode}
+\RequirePackage{xargs}
+\RequirePackage{etoolbox}
+\reserveinserts{32}
+\RequirePackage{suffix}
+\RequirePackage{xstring}
+\RequirePackage{ifluatex}
+\RequirePackage{ragged2e}
 %    \end{macrocode}
-% \end{macro}
 %
-% \begin{macro}{\@l@dtempcnta}
-% \begin{macro}{\@l@dtempcntb}
-% In imitation of \LaTeX, we create a couple of scratch counters.
-%
-% \LaTeX\ already defines \cs{@tempcnta} and \cs{@tempcntb} but Peter Wilson have
-% found in the past that it can be dangerous to use these (for example
-% one of the AMS packages did something nasty to the \Lpack{ccaption}
-% package's use of one of these).
-%    \begin{macrocode}
-\newcount\@l@dtempcnta \newcount\@l@dtempcntb
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
+% \subsection{Boolean flags}
 % \begin{macro}{\ifl@dmemoir}
 % Define a flag for if the \Lpack{memoir} class has been used.
 % \changes{v0.2}{2003/07/25}{Added \cs{ifl@dmemoir} for memoir class having been used}
@@ -3007,6 +2996,13 @@
 \newif\ifl@imakeidx
 \@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{\l@imakeidxfalse}
 %    \end{macrocode} 
+% \end{macro}
+% \begin{macro}{\if@RTL}
+% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
+% But we define it if the bidi package is not loaded.
+%    \begin{macrocode}
+\ifcsdef{if@RTL}{}{\newif\if@RTL}
+%    \end{macrocode}
 % \end{macro}
 % \subsection{Messages}
 %
@@ -3288,6 +3284,47 @@
   \eledmac@error{Imakeidx must be loaded before eledmac.}{\@ehd}%
 }%
 %    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Gobbling}
+% \changes{v1.14.0}{2014/10/27}{Provide \cs{\@gobblefour}}
+% \changes{v1.14.0}{2014/10/27}{Moves gobbling command}
+% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
+%  to avoid clash with the amsfonts package}
+% \begin{macro}{\@gobblethree}
+% \begin{macro}{\@gobblefour}
+%    \begin{macrocode}
+\providecommand*{\@gobblethree}[3]{}
+\providecommand*{\@gobblefour}[4]{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% Here, we define some commands which gobble their arguments.
+% \subsection{Miscellaneous commands}
+% \begin{macro}{\linenumberlist}
+% The code for the \verb?\linenumberlist? mechanism was given to Peter Wilson by Wayne
+% Sullivan\index{Sullivan, Wayne} on 2004/02/11.
+%
+% Initialize it as \verb?\empty?
+% \changes{v0.3}{2004/02/14}{Added \cs{linenumberlist} mechanism}
+%    \begin{macrocode}
+\let\linenumberlist=\empty
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@l@dtempcnta}
+% \begin{macro}{\@l@dtempcntb}
+% In imitation of \LaTeX, we create a couple of scratch counters.
+%
+% \LaTeX\ already defines \cs{@tempcnta} and \cs{@tempcntb} but Peter Wilson have
+% found in the past that it can be dangerous to use these (for example
+% one of the AMS packages did something nasty to the \Lpack{ccaption}
+% package's use of one of these).
+%    \begin{macrocode}
+\newcount\@l@dtempcnta \newcount\@l@dtempcntb
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
@@ -9198,6 +9235,7 @@
 
 % \section{Endnotes}
 % \changes{v1.8.1}{2013/12/15}{Debug endnotes when more than one series is used (change the position where tools for endnotes are defined).}
+% \changes{v1.14.0}{2014/10/20}{Debug spurious characters before endnotes.}
 % \label{endnotes}\relax
 %
 % \begin{macro}{\l@d@end}
@@ -9249,7 +9287,6 @@
 % \end{macro}
 %
 % \begin{macro}{\endprint}
-% \begin{macro}{\@gobblethree}
 % \begin{macro}{\l@d@section}
 % The \cs{endprint} here is nearly identical in its
 % functioning to \cs{normalfootfmt}.
@@ -9258,19 +9295,17 @@
 % supply the section numbers from the main text; standard \Eledmac{} does
 % nothing with this information, but it's there if you want to write
 % custom macros to do something with it.
-% \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
-%  to avoid clash with the amsfonts package}
+
 %    \begin{macrocode}
 \def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
       \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
-\providecommand*{\@gobblethree}[3]{}
 
 \let\l@d@section=\@gobble
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \end{macro}
+
 %
 % \begin{macro}{\setprintendlines}
 % The \cs{printendlines} macro is similar to \cs{printlines} but is
@@ -9590,7 +9625,7 @@
 % defined in the amsfonts package.}
 %    \begin{macrocode}
 
-    \global\csletcs{#1end}{@gobblethree}
+    \global\cslet{#1end}{\@gobblefour}
 %\end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
 
@@ -10456,7 +10491,7 @@
 %    \begin{macrocode}
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-  \ifcsdef{hypertarget}{\hypertarget{#1}{}}{}%
+  \ifdef{\hypertarget}{\hypertarget{#1}{}}{}%
   \@esphack}
 
 %    \end{macrocode}
@@ -11472,90 +11507,93 @@
 % \end{macro}
 %    The \Lpack{memoir} class provides more flexible indexing than the
 % standard classes. We need different code if the \Lpack{memoir}
-% class is being used.
-%
-%    \begin{macrocode}
-\@ifclassloaded{memoir}{%
-%    \end{macrocode}
-% \Lpack{memoir} is being used.
-% \changes{v0.4.1}{2003/03/29}{Let eledmac take advantage of memoir's indexing}
-%
-% \begin{macro}{\makeindex}
+% class is being used, except if \Lpack{imakeidx} is used.
 % \begin{macro}{\edindex}
+% \changes{v0.4.1}{2003/03/29}{Let eledmac take advantage of memoir's indexing}
 % \changes{v1.5}{2013/07/11}{Compatibility with \Lpack{imakeidx} package, and possibility to use multiple index with \cs{edindex}.}
+% \changes{v1.12.0}{2014/08/05}{Use correctly default index when \Lpack{imakeidx} is loaded.}
+% \changes{v1.14.0}{2014/10/27}{Let eledmac take advantage of imakeidx even when memoir class is used}
+% \subsection{Memoir compatibility}
+% \begin{macro}{\create@edindex@for@memoir}
+% \cs{create@edindex@for@memoir} define the \cs{edindex} command and related tool when:
+% \begin{enumerate}
+%   \item Memoir class is used.
+%   \item AND \Lpack{imakeidx} is not used.
+% \end{enumerate}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing. In this case |\edindex| has an optional 
 % argument. We use the hook provided in \Lpack{memoir} v1.61.
+%    \begin{macrocode}
+\def\create@edindex@for@memoir{
+%    \end{macrocode}
 %    \begin{macrocode}
   \g@addto@macro{\makememindexhook}{%
     \def\edindex{\@bsphack%
       \@ifnextchar [{\l@d@index}{\l@d@index[\jobname]}}}
   \newcommand{\edindex}[2][\jobname]{\@bsphack\@esphack}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\l@d@index}
 % |\l@d@index[file]| is the first stage of |\edindex|, handling the 
 % |idx| file. This a virtually a verbatim copy of \Lpack{memoir}'s |\@index|,
 % the change being calling |\l@dwrindexm@m| instead of |\@wrindexm@m|.
 %    \begin{macrocode}
-  \def\l@d@index[#1]{%
-    \@ifundefined{#1@idxfile}%
+  \def\l@d@index[##1]{%
+    \@ifundefined{##1@idxfile}%
     {\ifreportnoidxfile
-       \led@warn@NoIndexFile{#1}%
+       \led@warn@NoIndexFile{##1}%
      \fi
      \begingroup
      \@sanitize
      \@nowrindex}%
-    {\def\@idxfile{#1}%
+    {\def\@idxfile{##1}%
      \doedindexlabel
      \begingroup
      \@sanitize
      \l@d@wrindexm@m}}
 %    \end{macrocode}
 % \end{macro}
-%
+% 
 % \begin{macro}{\l@d@wrindexm@m}
 % \begin{macro}{\l@d@@wrindexhyp}
 % |\l@d@wrindexm@m{item}| writes the |idx| file name and the indexed
 % item to the |aux| file. These are almost verbatim copies of \Lpack{memoir}'s
 % |\@wrindexm@m| and |\@@wrindexhyp|.
 %    \begin{macrocode}
-  \newcommand{\l@d@wrindexm@m}[1]{\l@d@@wrindexhyp#1||\\}
-  \def\l@d@@wrindexhyp#1|#2|#3\\{%
-    \ifshowindexmark\@showidx{#1}\fi
-    \ifx\\#2\\%
+  \newcommand{\l@d@wrindexm@m}[1]{\l@d@@wrindexhyp##1||\\}
+  \def\l@d@@wrindexhyp##1|##2|##3\\{%
+    \ifshowindexmark\@showidx{##1}\fi
+    \ifx\\##2\\%
        \if@edindex@fornote@%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnotehyperpage}{\thestartpageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnotehyperpage}{\thestartpageline}}%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnotehyperpage}{\theendpageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnotehyperpage}{\theendpageline}}%
        \else%
           \protected@write\@auxout{}%
-           {\string\@@wrindexm@m{\@idxfile}{#1|hyperpage}{\thepageline}}%
+           {\string\@@wrindexm@m{\@idxfile}{##1|hyperpage}{\thepageline}}%
        \fi%
     \else
-      \def\Hy@temp@A{#2}%
+      \def\Hy@temp@A{##2}%
       \ifx\Hy@temp@A\HyInd@ParenLeft
         \if@edindex@fornote@%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnotehyperpage{#2}}{\thestartpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnotehyperpage{##2}}{\thestartpageline}}%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnotehyperpage{#2}}{\theendpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnotehyperpage{##2}}{\theendpageline}}%
         \else%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|#2hyperpage}{\thepageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|##2hyperpage}{\thepageline}}%
         \fi%
       \else
         \if@edindex@fornote@%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|(ledinnote{#2}}{\thestartpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|(ledinnote{##2}}{\thestartpageline}}%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|)ledinnote{#2}}{\theendpageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|)ledinnote{##2}}{\theendpageline}}%
         \else%
           \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1|#2}{\thepageline}}%
+            {\string\@@wrindexm@m{\@idxfile}{##1|##2}{\thepageline}}%
         \fi%
       \fi
     \fi
@@ -11564,15 +11602,55 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \end{macro}
 % That finishes the \Lpack{memoir}-specific code.
 %    \begin{macrocode}
-}{%
+}
 %    \end{macrocode}
-% \Lpack{memoir} is not being used, which makes life somewhat simpler.
-%
-% \begin{macro}{\makeindex}
-% \begin{macro}{\edindex}
+% \subsection{Normal setting}
+% \begin{macro}{\create@edindex@notfor@memoir}
+% \cs{create@edindex@notfor@memoir} define the \cs{edindex} command and related tool when:
+% \begin{enumerate}
+%   \item Memoir class is NOT used.
+%   \item OR \Lpack{imakeidx} is used.
+% \end{enumerate}
+%    \begin{macrocode}
+\def\create@edindex@notfor@memoir{
+%    \end{macrocode}
+% \begin{macro}{\@wredindex}
+% Write the index information to the \file{idx} file.
+%    \begin{macrocode}
+  \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
+    \global\let\old@Rlineflag\Rlineflag%
+    \gdef\Rlineflag{}%
+    \ifl@imakeidx%
+      \if@edindex@fornote@%
+        \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
+      \else%
+        \get@edindex@hyperref{##2}%
+        \imki@wrindexentry{##1}{\@index@txt\@edindex@hyperref}{\thepageline}%
+      \fi%
+    \else%
+      \if@edindex@fornote@%
+        \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \expandafter\protected@write\@indexfile{}%
+          {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
+          }%
+        \expandafter\protected@write\@indexfile{}%
+          {\string\indexentry{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}
+         }%
+      \else%
+        \protected@write\@indexfile{}%
+          {\string\indexentry{##2}{\thepageline}
+          }%
+      \fi%
+     \fi%
+  \endgroup
+  \global\let\Rlineflag\old@Rlineflag%
+  \@esphack}
+%    \end{macrocode}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing.
 %    \begin{macrocode}
@@ -11584,50 +11662,21 @@
     \@wredindex}}{}{}
   \newcommand{\edindex}[1]{\@bsphack\@esphack}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\@wredindex}
-% Write the index information to the \file{idx} file.
-% \changes{v1.12.0}{2014/08/05}{Use correctly default index when \Lpack{imakeidx} is loaded.}
 %    \begin{macrocode}
-  \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
-    \global\let\old@Rlineflag\Rlineflag%
-    \gdef\Rlineflag{}%
-    \ifl@imakeidx%
-      \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
-        \expandafter\imki@wrindexentry{#1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
-        \expandafter\imki@wrindexentry{#1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
-      \else%
-        \get@edindex@hyperref{#2}%
-        \imki@wrindexentry{#1}{\@index@txt\@edindex@hyperref}{\thepageline}%
-      \fi%
-    \else%
-      \if@edindex@fornote@%
-        \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
-        \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
-          }%
-        \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}
-         }%
-      \else%
-        \protected@write\@indexfile{}%
-          {\string\indexentry{#2}{\thepageline}
-          }%
-      \fi%
-     \fi%
-  \endgroup
-  \global\let\Rlineflag\old@Rlineflag%
-  \@esphack}
+% That finishes the non-\Lpack{memoir} index code.
+}
 %    \end{macrocode}
 % \end{macro}
-%
-% That finishes the non-\Lpack{memoir} index code.
+% \end{macro}
+% \end{macro}
+% \subsection{Choose the good variant}
+% And now, call \cs{create@edindex@for@memoir} or \cs{create@edindex@notfor@memoir} depending of the use of \Lpack{memoir} and \Lpack{imakeidx}
 %    \begin{macrocode}
-}
-
+\@ifclassloaded{memoir}{%
+  \@ifpackageloaded{imakeidx}%
+    {\create@edindex@notfor@memoir}{\create@edindex@for@memoir}%
+  }%
+  {\create@edindex@notfor@memoir}%
 %    \end{macrocode}
 %
 % \subsection{Hyperref compatibility}
@@ -11665,7 +11714,7 @@
 % \cs{get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, links to the point where the index was called (with \Lpack{hyperref}.
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
-  \ifcsdef{hyperlink}%
+  \ifdef{\hyperlink}%
 %    \end{macrocode}
 % We have to disable spaces to work with a \Lpack{xstring} bug
 %    \begin{macrocode}
@@ -11702,29 +11751,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \begin{macro}{\l@d@@wrindexhyp}
-% If the \Lpack{hyperref} package is not loaded, it doesn't make sense
-% to clutter up the index with hyperreffing things.
-%    \begin{macrocode}
-\AtBeginDocument{\@ifpackageloaded{hyperref}{}{%
-  \def\l@d@@wrindexhyp#1||\\{%
-    \ifshowindexmark\@showidx{#1}\fi
-    \IfSubStr[1]{#1}{|}{\get@index@command#1+}{\get@index@command#1|+}%
-      \if@edindex@fornote@%
-         \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}}%
-         \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}}%
-      \else%
-         \protected@write\@auxout{}%
-            {\string\@@wrindexm@m{\@idxfile}{#1}{\thepageline}}%
-      \fi%
-    \endgroup
-    \@esphack}}}
-
-
-%    \end{macrocode}
-% \end{macro}
+% \changes{v1.14.0}{2014/10/27}{Delete previous override of \cs{l@d@@wrindexhyp} at the beginning of a document when hyperref was not loaded.}
 %
 %
 % \section{Macro as environment}
