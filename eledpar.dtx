@@ -2735,6 +2735,15 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\ifprint@last@after@pendL}
+% \begin{macro}{\ifprint@last@after@pendR}
+% Two boolean set two true, when the time to print the last optional argument of a \cs{pend} will come.
+%    \begin{macrocode}
+\newif\ifprint@last@after@pendL%
+\newif\ifprint@last@after@pendR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Processing one line}
 %
 % For parallel texts we have to be able to process left and right lines
@@ -4749,10 +4758,18 @@
               \fi
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
-% we can onto the page. If not, repeat for the next line.
+% we can onto the page. If not, repeat for the next line. 
+% Check if we have to print the optional argument of the last pend.
+% Check if the page is full.
+% Check if the verse is splitted into two pages.
+% Check the handmade page breaks.
 %    \begin{macrocode}        
-              \checkpageL%
               \get@nextboxL%
+                  \ifprint@last@after@pendL%
+                     \csuse{after@pendL@\the\l@dpscL}%
+                     \global\csundef{after@pendL@\the\l@dpscL}%
+                   \fi%
+              \checkpageL%
               \checkverseL
               \checkpbL
             \repeat
@@ -4797,8 +4814,12 @@
                       \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
-              \checkpageR%
               \get@nextboxR%
+                  \ifprint@last@after@pendR%
+                     \csuse{after@pendR@\the\l@dpscR}%
+                     \global\csundef{after@pendR@\the\l@dpscR}%
+                   \fi%
+              \checkpageR%
               \checkverseR
               \checkpbR
             \repeat
@@ -5043,7 +5064,14 @@
   \else
     \l@dsamepagefalse
     \l@dpagefulltrue
-  \fi}
+  \fi%
+  \ifprint@last@after@pendL%
+     \l@dpagefulltrue%
+     \l@dsamepagefalse%
+     \print@last@after@pendLfalse%
+  \fi%
+  }%
+
 \newcommand*{\checkpageR}{%
   \l@dpagefulltrue
   \l@dsamepagetrue
@@ -5057,7 +5085,13 @@
   \else
     \l@dsamepagefalse
     \l@dpagefulltrue
-  \fi}
+  \fi%
+  \ifprint@last@after@pendR%
+     \l@dpagefulltrue%
+     \l@dsamepagefalse%
+     \print@last@after@pendRfalse%
+  \fi%    
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -5233,10 +5267,7 @@
       \else
 % Add the content of the optional argument of the last \cs{pend}.
 %     \begin{macrocode}
-         \l@dpagefulltrue
-         \l@dsamepagefalse%
-         \csuse{after@pendL@\the\l@dpscL}%
-         \global\csundef{after@pendL@\the\l@dpscL}%
+        \print@last@after@pendLtrue%
 %     \end{macrocode}
 %     \begin{macrocode}
       \fi
@@ -5279,10 +5310,7 @@
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
       \else
-        \l@dpagefulltrue%
-        \l@dsamepagefalse%
-        \csuse{after@pendR@\the\l@dpscR}%
-        \global\csundef{after@pendR@\the\l@dpscR}%
+          \print@last@after@pendRtrue%
       \fi
     \fi
   \fi}
