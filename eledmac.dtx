@@ -2858,7 +2858,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/10/27 v1.14.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/12/15 v1.14.1 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -13909,22 +13909,6 @@
   {}
   {}
 
-\patchcmd{\@sect}
-  {#8}
-  {#8%
-  \print@rightmargin@eledsection%
-  }
-  {}
-  {}
-
-\patchcmd{\@sect}
-  {\hskip #3\relax}
-  {\hskip #3\relax%
-  \print@leftmargin@eledsection%
-  }
-  {}
-  {}
-
 \pretocmd{\@ssect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext@showlemma%
@@ -13936,23 +13920,79 @@
   {\let\edtext=\old@edtext}
   {}
   {}
+  
+%    \end{macrocode}
+% \changes{v1.14.1}{2014/12/15}{Debug sectioning commands when using both \Lpack{handout} and \Lpack{hyperref} package.}
+% \Lpack{hyperref} redefines also \cs{@sect}. That's why, when manipulating arguments, we patch \cs{@sect} and similar only if \Lpack{hyperref} is not used. If used, we patch the \cs{NR} commands.
+%    \begin{macrocode}
+\@ifpackageloaded{nameref}{
 
-\patchcmd{\@ssect}
-  {#5}
-  {#5%
-  \print@rightmargin@eledsection%
-  }
-  {}
-  {}
-
-\patchcmd{\@ssect}
-  {\hskip #1}
-  {\hskip #1%
-  \print@leftmargin@eledsection%
-  }
-  {}
-  {}
-}%
+  \patchcmd{\NR@sect}
+    {#8}
+    {#8%
+    \print@rightmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\NR@sect}
+    {\hskip #3\relax}
+    {\hskip #3\relax%
+    \print@leftmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\NR@ssect}
+    {#5}
+    {#5%
+    \print@rightmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\NR@ssect}
+    {\hskip #1}
+    {\hskip #1%
+    \print@leftmargin@eledsection%
+    }
+    {}
+    {}
+  }%
+  {
+  \patchcmd{\@sect}
+    {#8}
+    {#8%
+    \print@rightmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\@sect}
+    {\hskip #3\relax}
+    {\hskip #3\relax%
+    \print@leftmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\@ssect}
+    {#5}
+    {#5%
+    \print@rightmargin@eledsection%
+    }
+    {}
+    {}
+  
+  \patchcmd{\@ssect}
+    {\hskip #1}
+    {\hskip #1%
+    \print@leftmargin@eledsection%
+    }
+    {}
+    {}
+  }%
+}
 \catcode`\#=6 %Space NEEDS by \catcode
 %    \end{macrocode}
 % \end{macro}
