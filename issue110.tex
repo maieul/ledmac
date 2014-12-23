@@ -20,7 +20,32 @@
   }{#1}%
 }
 
-
+\newif\if@edtext
+\renewcommand{\edtext}[2]{\leavevmode
+  \@edtexttrue
+  \begingroup
+    \global\renewcommand{\@tag}{\no@expands #1}%%
+    \set@line
+    \global\insert@count=0
+    \ignorespaces #2\relax
+    \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@start}%
+       {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+       }%
+  \endgroup
+  \showlemma{#1}%
+  \ifx\end@lemmas\empty \else
+    \gl@p\end@lemmas\to\x@lemma
+    \x@lemma
+    \global\let\x@lemma=\relax
+  \fi
+  \@ifundefined{xpg@main@language}{%if not polyglossia
+       \flag@end}%
+       {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+       }%
+  \global\@noneed@Footnotefalse%
+  \@edtextfalse
+  }
 
 
 \newcommand{\sameword}[1]{%
@@ -30,7 +55,9 @@
 	  \xdef\sw@num{0}%
 	\else%
 	  \gl@p\sw@list\to\@tempb%
-      \xright@appenditem{\@tempb}\to\sw@@list%
+      \if@edtext%
+        \xright@appenditem{\@tempb}\to\sw@@list%
+      \fi%
       \global\let\@tempb=\undefined%
 	  %
 	\fi%
@@ -87,7 +114,7 @@
 \beginnumbering
 
 \pstart
-Tertia est – supposito, quod sint passiones totius coniuncti, cum non insint toti nisi ratione partium –, cui parti corporis uel animae debeant attribui, \sameword{aut} utrum uegetatiuae \sameword{aut} sensitiuae \edtext{\sameword{aut}}{\Afootnote{sncf}}
+Tertia est – supposito, quod sint passiones totius coniuncti, cum non insint toti nisi ratione partium –, cui parti corporis uel animae debeant attribui, \sameword{aut} utrum uegetatiuae \sameword{aut} \sameword{aut} sensitiuae \edtext{\sameword{aut}}{\Afootnote{sncf}}
 intellectiuae.
 
 
