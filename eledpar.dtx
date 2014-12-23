@@ -181,6 +181,7 @@
 % \changes{v1.8.2}{2014/08/15}{Debug \cs{eledxxx} with some paper sizes}
 % \changes{v1.8.3}{2014/08/31}{Add \cs{noeledxxx}, as in eledmac}
 % \changes{v1.9.0}{2014/09/16}{Compatibility with \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
+% \changes{v1.10.0}{2014/12/22}{Restore critical notes in \cs{eledsection} in parallel columns (bug added in 1.8.2).}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -2817,7 +2818,7 @@
   \hb@xt@ \Lcolwidth{%
     \affixline@num
     \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-      {}%
+      {\add@inserts\affixside@note}%
       {\print@lineL}}%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
@@ -2847,8 +2848,7 @@
 % \begin{macro}{\print@eledsectionL}
 % \cs{print@eledsectionL} is for line with macro code.
 %    \begin{macrocode}
-\def\print@eledsectionL{%
-    \add@inserts\affixside@note%
+\def\print@eledsectionL{%%
     \addtocounter{pstartL}{-1}%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
@@ -2934,7 +2934,7 @@
   \hb@xt@ \Rcolwidth{%
     \affixline@numR%
     \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-     {}%
+     {\add@insertsR\affixside@noteR}%
      {\print@lineR}%
   }%
   \add@penaltiesR
@@ -2956,16 +2956,13 @@
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta  %space kept for backward compatibility
-    \add@insertsR%
-    \affixside@noteR%
+    \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
 \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }
 
 \def\print@eledsectionR{%
-    \add@insertsR%
-    \affixside@noteR%
     \addtocounter{pstartR}{-1}%
     \initnumbering@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
