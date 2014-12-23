@@ -212,6 +212,7 @@
 % \changes{v1.13.2}{2014/09/30}{Fix bug with normal footnotes, added by v1.13.0.}
 % \changes{v1.13.3}{2014/10/04}{Fix extra spaces with paragraphed footnotes, added by v1.13.0.}
 % \changes{v1.13.4}{2014/10/20}{Fix bug with index when memoir class is used without hyperref}
+% \changes{v1.15.0}{2014/22/15}{Fix bug with footnotes layout when using some options of the geometry package (bug add by v1.13.0).}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -606,7 +607,7 @@
 %
 %
 % \section{Numbering text lines and paragraphs}
-%
+% \subsection{Numbering text lines}
 % \DescribeMacro{\beginnumbering}
 % \DescribeMacro{\endnumbering}
 % Each section of numbered text must be preceded by
@@ -638,6 +639,7 @@
 % number of sections (at the expense of multiplying the number of
 % external files that are generated).
 %
+% \subsection{Paragraphs}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % Within a numbered section, each paragraph of numbered text must
@@ -693,9 +695,14 @@
 % begins again.\par}
 % \egend
 %
-% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}\label{pstart:optionalarg}
+% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}
+% \changes{v1.15.0}{2014/12/22}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}\label{pstart:optionalarg}
+% \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
+% You can use the two commands \cs{AtEveryPstart} and \cs{AtEveryPend}.
+% Their arguments will be printed before the beginnings of every \cs{pstart} / after the ends of every \cs{pend}.
+%
 % Both \cs{pstart} and \cs{pend} can take a optional argument, in brackets. 
-% Its content will be printed before the beginning of the \cs{pstart} / after the end of the \cs{pend}.
+% Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
 % If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
 %
 % This feature is not needed for normal use of \Lpack{eledmac}, but it is needed when using verse (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
@@ -2858,7 +2865,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/12/17 v1.14.2 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2014/12/22 v1.15.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -4863,6 +4870,7 @@
 %    \begin{macrocode}
   \begingroup
     \let\@ref=\dummy@ref
+    \let\@lopL\@gobble
     \let\page@action=\relax
     \let\sub@action=\relax
     \let\set@line@action=\relax
@@ -5081,6 +5089,7 @@
 %
 % \begin{macro}{\startsub}
 % \begin{macro}{\endsub}
+% \changes{v1.15.0}{2014/12/22}{Restore subline feature (disabled by inadvertance in v1.8.0}.}
 % \cs{startsub} and \cs{endsub}
 % turn sub-lineation on and off, by writing
 % appropriate instructions to the line-list file.  When
@@ -5748,6 +5757,7 @@
 % \end{macro}
 %
 % \begin{macro}{\pstart}
+% \begin{macro}{\AtEveryPstart}
 % \changes{v1.6.1}{2013/10/27}{Spurious space in \cs{pstart}.}
 % \changes{v1.12.0}{2014/08/05}{New optional argument for \cs{pstart}, to execute code before it.}
 % \begin{macro}{\numberpstarttrue}
@@ -5769,6 +5779,9 @@
 % \changes{v1.13.1}{2014/09/25}{Add \cs{l@dzeropenalties} in \cs{pstart}}
 %    \begin{macrocode}
 
+\newcommand{\AtEveryPstart}[1]{\xdef\at@every@pstart{\noindent\unexpanded{#1}}}%
+\xdef\at@every@pstart{}%
+
 \newcounter{pstart}
 \renewcommand{\thepstart}{{\bfseries\@arabic\c@pstart}. }
 \newif\ifnumberpstart
@@ -5776,7 +5789,7 @@
 \newif\iflabelpstart
 \labelpstartfalse
 \newcommandx*{\pstart}[1][1]{%
-  \ifstrempty{#1}{}{\noindent#1}%
+  \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -5812,6 +5825,7 @@
   \l@dzeropenalties%
   }
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5866,11 +5880,21 @@
    \fi%
   \@oldnobreak%
   \addtocounter{pstart}{1}%
-  \ifstrempty{#1}{}{\noindent#1}%
+  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 }
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\AtEveryPend}
+% \begin{macro}{\at@every@pend}
+%    \begin{macrocode}
+
+\newcommand{\AtEveryPend}[1]{\xdef\at@every@pend{\noindent\unexpanded{#1}}}%
+\xdef\at@every@pend{}%
+
+%    \end{macrocode}
+%  \end{macro}
+%  \end{macro}
 %
 % \begin{macro}{\l@dzeropenalties}
 % A macro to zero penalties for \cs{pend}.
@@ -6898,7 +6922,7 @@
          \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@list%Know the language of lemma  
          \global\advance\insert@count \@ne%
     \fi%
-    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@list%Know the language of lemma
+    \xright@appenditem{{\csxdef{footnote@lang}{\expandonce\languagename}}}\to\inserts@list%Know the language of lemma
     \global\advance\insert@count \@ne%
    }%
    {%
@@ -6909,7 +6933,7 @@
          \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@listR%Know the language of lemma  
          \global\advance\insert@countR \@ne%
     \fi
-    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@listR%Know the language of lemma
+    \xright@appenditem{{\csxdef{footnote@lang}{\expandonce\languagename}}}\to\inserts@listR%Know the language of lemma
     \global\advance\insert@countR \@ne%
    }%
 }
@@ -8343,7 +8367,7 @@
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
   \gdef\@tag{#1}%
-    \xright@appenditem{\noexpand\vl@dbfnote{{\csexpandonce{@tag}}}{\@thefnmark}}%
+    \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
@@ -8552,8 +8576,8 @@
 %    \begin{macrocode}
 \newcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
-    \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
-    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
+    \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
@@ -9011,11 +9035,11 @@
 %    \begin{macrocode}
 
 \newdimen\old@hsize%
-\old@hsize=\hsize%
+\old@hsize=\linewidth%
 
 \newcommand{\setXnoteswidthliketwocolumns@}[1]{%
-  \global\let\hsize@fornote=\hsize%
-  \old@hsize=\hsize%
+  \global\let\hsize@fornote=\linewidth%
+  \global\old@hsize=\linewidth%
   \iftoggle{Xnoteswidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -9028,7 +9052,7 @@
 
 \newcommand{\setnotesXwidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
-  \old@hsize=\hsize%
+  \global\old@hsize=\linewidth%
   \iftoggle{notesXwidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -9447,7 +9471,7 @@
                 \footnoteoptions@[R]{##1}{true}%
                 \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
 \noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@listR
+                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
                 \footnoteoptions@[R]{##1}{false}%
                 \global\advance\insert@countR \@ne%
             \else%
@@ -9460,7 +9484,7 @@
                 \footnoteoptions@{##1}{true}%
                 \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
 \noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
+                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
                 \global\advance\insert@count \@ne%
                 \footnoteoptions@{##1}{false}%
             \fi
@@ -9486,7 +9510,7 @@
             \stepcounter{footnote#1}%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
             \csuse{@footnotemark#1}%
-            \csuse{vfootnote#1}{#1}{\csexpandonce{content}}\m@mmf@prepare%
+            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
         \endgroup%
     }
 %    \end{macrocode}
@@ -9513,7 +9537,7 @@
         \newcommand{\content}{##1}%
            \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
           {\ifnumberedpar@\l@d@nums\fi}%
-           {\ifnumberedpar@\csexpandonce{@tag}\fi}{\csexpandonce{content}}{#1}}}\ignorespaces%
+           {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
         }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
@@ -10838,11 +10862,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\expandonce\content}}%
                          \to\inserts@listR
       \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -10853,11 +10877,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\expandonce\content}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -10868,11 +10892,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\expandonce\content}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
