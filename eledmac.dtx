@@ -5845,6 +5845,11 @@
 \def\sameword@inedtext#1{%
   \unless\ifledRcol@%
 %     \end{macrocode}
+% First, calculate the occurrences of the word in the current line
+%     \begin{macrocode}
+      \numdef{\prev@line}{\the\absline@num-1}%
+      \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@num @\the\section@num}-\csuse{sw@#1@\prev@line @\the\section@num}}%
+%     \end{macrocode}
 % Just a security.
 %     \begin{macrocode}
       \ifx\sw@list@inedtext\empty%
@@ -5855,17 +5860,26 @@
 %     \begin{macrocode}
         \gl@p\sw@list@inedtext\to\the@sw%
       \fi%
-        \showwordrank{#1}{\the@sw}%
+%     \end{macrocode}
+% And so, print the rank, but only if there is more than one occurrence of the word in the current line.
+%     \begin{macrocode}
+      \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
 %     \end{macrocode}
 % And the same for right side.
 %     \begin{macrocode}
   \else%
+      \numdef{\prev@line}{\the\absline@numR-1}%
+      \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
       \ifx\sw@list@inedtextR\empty%
         \def\the@sw{999}%
       \else%
         \gl@p\sw@list@inedtextR\to\the@sw%
       \fi%
-        \showwordrank{#1}{\the@sw}%
+        \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
   \fi%
 }%
 %     \end{macrocode}
