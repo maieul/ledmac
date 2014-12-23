@@ -4418,7 +4418,10 @@
   \list@clear{\line@list}%
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
-  \list@clear{\actions@list}}
+  \list@clear{\actions@list}%
+  \list@clear{\sw@list}%
+  \list@clear{\sw@list@inedtext}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5728,6 +5731,32 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Lemma's disambiguation}
+% The mechanism to count occurrence of a same word in a same line is quite complex, because, when \LaTeX\ read a command between a \cs{pstart} and a \cs{pend}, it does not know the line number.
+% 
+% The general mechanism is the following:
+% \begin{itemize}
+%    \item \textbf{At the first run}, each \cs{sameword} command advance an \Lpack{etoolbox} counter whose name contains the argument of the \cs{sameword} commands.
+%    \item This counter, associated with the argument of \cs{sameword} is stored (\cs{@sw} command) in the auxiliary file of the current \Lpack{eledmac} section (\the \verb+.1+, \verb+.2+… file).
+%    \item \texbf{When this auxiliary file is read at the second run}, different things are done:
+%    \begin{itemize}
+%        \item For each couple \cs{sameword}'s argument / absolute line number, a counter is defined. Its value corresponds to the number of time the \verb+\sameword{argument}+  was called between the beginning of lineation and the end of the lines. We also stores the same datas for the previous absolute line number, even if the previous number does not have \verb+\sameword{argument}+.    
+%        \item A \cs{sw@list} list is filled with the values stored in the auxiliary file. But we transform these values before : 
+%    \end{itemize}
+%  \item At the second run, when the \cs{sameword} commands is called, new things happen. We read the first element of the \cs{sw@list}, delete it from this list, and, if we are inside a \cs{edtext} command, we store it in a \cs{sw@list@inedtext} list.
+%  \item At the second run, when the critical notes are built, the \cs{sameword@inedtext} command is  used instead of \cs{sameword}. Then, we  read the next value of  \cs{sw@list@inedtext} list and delete it from this list.  We send it to the \cs{showwordrank} to be printed after the lemma, but only if the current line has more than one value for the argument of \cs{sameword}.  In other case, we just print the lemma, without digit.
+%  \end{itemize}
+% \end{itemize} 
+
+% \begin{macro}{\sw@list}
+% \begin{macro}{\sw@list@inedtext}
+% So, first, the lists.
+%    \begin{macrocode}
+\list@create{\sw@list}%
+\list@create{\sw@list@inedtext}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Paragraph decomposition and reassembly}
 % \label{paragraph}\relax
 %
