@@ -1198,6 +1198,25 @@
 % \end{verbatim}
 %
 %
+% \subsection{Identical words and lemma's disambiguation}
+% \changes{v1.15.0}{2014/12/22}{New tools to prevent lemma's ambiguity}
+% Sometime, the same word appears twice (or more) in the same line.
+% \Lpack{eledmac} provides a tools to make references in notes not ambiguous.
+% The lemma will be followed by a position's digit if there is more than one occurrence in a line.
+%
+% \DescribeMacro{\sameword} To use this tool, you have to mark all occurrence of the potentially ambiguous term by the \cs{sameword} command:
+%   \begin{verbatim}
+%   lupus \sameword{aut} canis \edtext{\sameword{aut}{\Afootnote{et}}} felix
+%   \end{verbatim} 
+% In the previous example, the \verb+aut+ will be followed, in critical note, by a \verb+2+ if it's printed in the same line as the first \verb+aut+, but won't be followed if it's printed in a different line. The number is printed only at the second run.
+%
+% \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the digit is printed. The default value is
+% \begin{verbatim}
+%\newcommand{\showwordrank}[2]{%
+%  #1\textsuperscript{#2}%
+%}
+% \end{verbatim}
+%
 % \subsection{Alternate footnote formatting}
 % If you just launch into \Eledmac{} using the commands outlined
 % above, you will get a standard layout for your text and notes.  You
@@ -2999,7 +3018,7 @@
 % The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
 % But we define it if the bidi package is not loaded.
 %    \begin{macrocode}
-\ifcsdef{if@RTL}{}{\newif\if@RTL}
+\ifdef{\if@RTL}{}{\newif\if@RTL}
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Messages}
@@ -4399,7 +4418,10 @@
   \list@clear{\line@list}%
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
-  \list@clear{\actions@list}}
+  \list@clear{\actions@list}%
+  \list@clear{\sw@list}%
+  \list@clear{\sw@list@inedtext}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4875,6 +4897,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
+    \let\@sw\@gobbletwo%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
@@ -5283,15 +5306,6 @@
 % a different kind of note. It is preferable for your footnote macros
 % to store and recall this kind of information if they need it.
 %
-% \phantomsection\label{parallel}An example where some `memory' of line numbers
-% might be required is where there are several variant readings
-% per line of text, and you do not wish the line number to be repeated
-% for each lemma in the notes.  After the first occurrence of the line
-% number, you might want the symbol `$\parallel$' instead of further
-% occurrences, for instance.  This can easily be done by a macro like
-% \cs{printlines}, if it saves the last value of \cs{l@d@nums} that \emph{it}
-% saw, and then performs a simple conditional test to see whether to print
-% a number or a~`$\parallel$'.
 %
 % \subsection{{\tt \protect\bslash edtext} and {\tt \protect\bslash critext}
 %  themselves}
@@ -5438,6 +5452,7 @@
   \let\edlabel=\@gobble 
   \let\setline=\@gobble \let\advanceline=\@gobble
   \let\critext=\dummy@text
+  \let\sameword\sameword@inedtext%
   \let\edtext=\dummy@edtext
   \l@dtabnoexpands
   \morenoexpands}
@@ -5453,6 +5468,14 @@
 \newcommand{\@tag}{}
 %  \end{macrocode}
 % \end{macro}
+% \begin{macro}{\if@edtext@}
+% \changes{v1.15.0}{2014/12/22}{New boolean \cs{if@edtext@}.}
+% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}). 
+% That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
+%    \begin{macrocode}
+\newif\if@edtext@%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\critext}
 % Now we begin \cs{critext} itself. The definition requires a \verb"/" after
 % the arguments: this eliminates the possibility of problems about
@@ -5467,6 +5490,7 @@
 % horizontal mode.
 %    \begin{macrocode}
 \long\def\critext#1#2/{\leavevmode
+  \@edtext@true%
 %    \end{macrocode}
 %
 % \begin{macro}{\@tag}
@@ -5547,6 +5571,7 @@
        \flag@end}%
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }
+  \@edtext@false%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5556,6 +5581,7 @@
 % \begin{macro}{\edtext}
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode
+  \@edtext@true%
   \begingroup
     \global\renewcommand{\@tag}{\no@expands #1}%%
     \set@line
@@ -5577,6 +5603,7 @@
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }%
   \global\@noneed@Footnotefalse%
+  \@edtext@false%
   }
 
 \newcommand*{\flag@end}{%
@@ -5706,6 +5733,172 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Lemma's disambiguation}
+% The mechanism to count occurrence of a same word in a same line is quite complex, because, when \LaTeX\ read a command between a \cs{pstart} and a \cs{pend}, it does not know the line number.
+% 
+% The general mechanism is the following:
+% \begin{itemize}
+%    \item \textbf{At the first run}, each \cs{sameword} command advance an \Lpack{etoolbox} counter whose name contains the argument of the \cs{sameword} commands.
+%    \item This counter, associated with the argument of \cs{sameword} is stored (\cs{@sw} command) in the auxiliary file of the current \Lpack{eledmac} section (\the \verb+.1+, \verb+.2+… file).
+%    \item \texbf{When this auxiliary file is read at the second run}, different things are done:
+%    \begin{itemize}
+%        \item For each couple \cs{sameword}'s argument / absolute line number, a counter is defined. Its value corresponds to the number of time the \verb+\sameword{argument}+  was called between the beginning of lineation and the end of the lines. We also stores the same datas for the previous absolute line number, even if the previous number does not have \verb+\sameword{argument}+.    
+%        \item A \cs{sw@list} list is filled with the values stored in the auxiliary file. But we transform these values before : 
+%    \end{itemize}
+%  \item At the second run, when the \cs{sameword} commands is called, new things happen. We read the first element of the \cs{sw@list}, delete it from this list, and, if we are inside a \cs{edtext} command, we store it in a \cs{sw@list@inedtext} list.
+%  \item At the second run, when the critical notes are built, the \cs{sameword@inedtext} command is  used instead of \cs{sameword}. Then, we  read the next value of  \cs{sw@list@inedtext} list and delete it from this list.  We send it to the \cs{showwordrank} to be printed after the lemma, but only if the current line has more than one value for the argument of \cs{sameword}.  In other case, we just print the lemma, without digit.
+%  \end{itemize}
+% \end{itemize} 
+
+% \begin{macro}{\sw@list}
+% \begin{macro}{\sw@list@inedtext}
+% So, first, the lists.
+%    \begin{macrocode}
+\list@create{\sw@list}%
+\list@create{\sw@list@inedtext}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\sameword}
+% The hight level macro \cs{sameword}, used by editor.
+%    \begin{macrocode}
+\newcommand{\sameword}[1]{%
+%    \end{macrocode}
+% First, increase the counter corresponding to the argument.
+%    \begin{macrocode}
+    \unless\ifledRcol%
+      \csnumgdef{sw@#1}{\csuse{sw@#1}+1}%
+%    \end{macrocode}
+% Then, writes it's values to the numbered file
+%    \begin{macrocode}
+      \protected@write\linenum@out{}{\string\@sw{#1}{\csuse{sw@#1}}}%
+%    \end{macrocode}
+% At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
+%    \begin{macrocode}
+    \unless\ifx\sw@list\empty%
+      \gl@p\sw@list\to\@tempb%
+      \if@edtext@%
+        \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+      \fi%
+      \global\let\@tempb=\undefined%
+    \fi%
+% \end{macrocode}
+% Do the same thing if we are in the right columns.
+% \begin{macrocode}
+  \else%
+    \csnumgdef{sw@#1@R}{\csuse{sw@#1@R}+1}%
+    \protected@write\linenum@outR{}{\string\@sw{#1}{\csuse{sw@#1@R}}}%
+    \unless\ifx\sw@listR\empty%
+      \gl@p\sw@listR\to\@tempb%
+      \if@edtext@%
+        \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+      \fi%
+      \global\let\@tempb=\undefined%
+    \fi%
+  \fi%
+% \end{macrocode}
+% In any case, print the word.
+% \begin{macrocode}
+  #1%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@sw}
+% The command printed in the auxiliary files. 
+%    \begin{macrocode}
+\newcommand{\@sw}[2]{%
+  \unless\ifledRcol%
+%    \end{macrocode}
+% First, define a counter which store the second argument as value for a tcouple absolute line number/first argument
+%    \begin{macrocode}
+    \csxdef{sw@#1@\the\absline@num @\the\section@num}{#2}%
+%    \end{macrocode}
+% If a such argument was not defined for previous line, define it.
+%    \begin{macrocode}
+    \numdef{\prev@line}{\the\absline@num-1}%
+    \ifcsundef{sw@#1@\prev@line @\the\section@num}{%
+      \csnumgdef{sw@#1@\prev@line @\the\section@num}{#2-1}%
+     }{}%
+%    \end{macrocode}
+% Then, calculate the position of the word in the line, and put it in \cs{sw@list}.
+%    \begin{macrocode}
+    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@num}}%
+    \xright@appenditem{\the@sw}\to\sw@list%
+%    \end{macrocode}
+% And do the same thing for the right side.
+%    \begin{macrocode}
+  \else%
+    \csxdef{sw@#1@\the\absline@numR @\the\section@numR @R}{#2}%
+    \numdef{\prev@line}{\the\absline@numR-1}%
+    \ifcsundef{sw@#1@\prev@line @\the\section@numR @R}{%
+      \csnumgdef{sw@#1@\prev@line @\the\section@numR @R}{#2-1}%
+     }{}%
+    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+    \xright@appenditem{\the@sw}\to\sw@listR%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\sameword@inedtext}
+% The command calls when \cs{sameword} is called in a edtext.
+%     \begin{macrocode}
+\def\sameword@inedtext#1{%
+  \unless\ifledRcol@%
+%     \end{macrocode}
+% First, calculate the occurrences of the word in the current line
+%     \begin{macrocode}
+      \ifcsdef{sw@#1@\the\absline@num @\the\section@num}{%
+        \numdef{\prev@line}{\the\absline@num-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@num @\the\section@num}-\csuse{sw@#1@\prev@line @\the\section@num}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+%     \end{macrocode}
+% Just a security.
+%     \begin{macrocode}
+      \ifx\sw@list@inedtext\empty%
+        \def\the@sw{999}%
+      \else%
+%     \end{macrocode}
+% But in many case, at this step, we should have a content in the list \cs{\sw@list@inedtext}, which contains the reference for edtext.
+%     \begin{macrocode}
+        \gl@p\sw@list@inedtext\to\the@sw%
+      \fi%
+%     \end{macrocode}
+% And so, print the rank, but only if there is more than one occurrence of the word in the current line.
+%     \begin{macrocode}
+      \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
+%     \end{macrocode}
+% And the same for right side.
+%     \begin{macrocode}
+  \else%
+      \ifcsdef{sw@#1@\the\absline@numR @\the\section@numR @R}{%
+        \numdef{\prev@line}{\the\absline@numR-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+      \ifx\sw@list@inedtextR\empty%
+        \def\the@sw{999}%
+      \else%
+        \gl@p\sw@list@inedtextR\to\the@sw%
+      \fi%
+        \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
+  \fi%
+}%
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\showwordrank}
+%     \begin{macrocode}
+% And finally, the way the rank will be printed.
+\newcommand{\showwordrank}[2]{%
+  #1\textsuperscript{#2}%
+}%
+%     \end{macrocode}
+% \end{macro}
+
 % \section{Paragraph decomposition and reassembly}
 % \label{paragraph}\relax
 %
