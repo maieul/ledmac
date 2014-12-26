@@ -1819,6 +1819,7 @@
   \print@Xfootnoterule{#1}%%
   \vskip\csuse{afterXrule@#1}%
   \noindent\leavevmode}
+
 \newcommand*{\para@vfootnote}[2]{%
   \insert\csname #1footins\endcsname
   \bgroup
@@ -1829,7 +1830,17 @@
       \noindent\csname #1footfmt\endcsname#2[#1]}%
     \setbox0=\hbox{\unvxh0[#1]}%
     \dp0=0pt
-    \ht0=\csname #1footfudgefactor\endcsname\wd0
+    \newdimen\theoricalheight%
+    \theoricalheight=\csname #1footfudgefactor\endcsname\wd0%
+    \newdimen\maxcumulatedheight%
+    \maxcumulatedheight=\expandafter\dimen\csname #1footins\endcsname%
+    \ifdim\dimexpr\csname Xtotalh@#1\endcsname+\theoricalheight\relax>\maxcumulatedheight% does we override, with this entries, the maximum?
+      \theoricalheight=\dimexpr\maxcumulatedheight-\csname Xtotalh@#1\endcsname\relax%
+      \global\csname Xtotalh@#1\endcsname=\maxcumulatedheight%
+    \else%
+      \global\advance\csname Xtotalh@#1\endcsname by \theoricalheight%
+    \fi%
+    \ht0=\theoricalheight%
     \if@RTL\noindent \leavevmode\fi\box0%
     \penalty0
   \egroup}
