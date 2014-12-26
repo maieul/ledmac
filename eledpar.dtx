@@ -181,6 +181,8 @@
 % \changes{v1.8.2}{2014/08/15}{Debug \cs{eledxxx} with some paper sizes}
 % \changes{v1.8.3}{2014/08/31}{Add \cs{noeledxxx}, as in eledmac}
 % \changes{v1.9.0}{2014/09/16}{Compatibility with \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
+% \changes{v1.10.0}{2014/12/22}{Restore critical notes in \cs{eledsection} in parallel columns (bug added in 1.8.2).}
+% \changes{v1.10.0}{2014/12/22}{Compatibility with \cs{AtEveryPstart} and \cs{AtEveryPend}}
 % \changes{v1.x.0}{2013/11/24}{New tools to allow to long notes be splitted between two side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -877,7 +879,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2014/09/30 v1.9.1 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2014/12/22 v1.10.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -1454,6 +1456,8 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
+\list@create{\sw@listR}%
+\list@create{\sw@list@inedtextR}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -1508,6 +1512,8 @@
     \list@clear{\actions@listR}%
     \list@clear{\linesinpar@listR}%
     \list@clear{\linesonpage@listR}
+    \list@clear{\sw@listR}%
+    \list@clear{\sw@list@inedtextR}%
   \else
     \list@clearing@reg
     \list@clear{\linesinpar@listL}%
@@ -1970,10 +1976,12 @@
 %    \begin{macrocode}
   \begingroup
     \let\@ref=\dummy@ref
+    \let\@lopR\@gobble
     \let\page@action=\relax
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
+    \let\@sw\@gobbletwo%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
@@ -2262,6 +2270,7 @@
 %
 %    \begin{macrocode}
 \long\def\critext#1#2/{\leavevmode
+  \@edtext@true%
   \begingroup
     \renewcommand{\@tag}{\no@expands #1}%
     \set@line
@@ -2283,6 +2292,7 @@
        \flag@end}%
        {\if@RTL\flag@start\else\flag@end\fi% be careful on the direction of writing with polyglossia
        }
+  \@edtext@false%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2291,6 +2301,7 @@
 % And similarly for \cs{edtext}.
 %    \begin{macrocode}
 \renewcommand{\edtext}[2]{\leavevmode
+  \@edtext@true%
   \begingroup%
     \renewcommand{\@tag}{\no@expands #1}%
     \set@line%
@@ -2312,6 +2323,7 @@
        \flag@end}%
        {\if@RTL\flag@start\else\flag@end\fi% be careful on the direction of writing with polyglossia
        }%
+   \@edtext@false%
 }
 
 %    \end{macrocode}
@@ -2611,7 +2623,7 @@
 % Dump the optional arguments
 %    \begin{macrocode}
   \ifstrempty{#1}%
-    {}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
     {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
   }
 %    \end{macrocode}
@@ -2657,7 +2669,7 @@
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
    \ifstrempty{#1}%
-     {}
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
      {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
   }
 %    \end{macrocode}
@@ -2704,7 +2716,7 @@
 % Dump content of the optional argument.
 %    \begin{macrocode}
   \ifstrempty{#1}%
-    {}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
     {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
   }
 %    \end{macrocode}
@@ -2734,7 +2746,7 @@
   \fi%    
   \parledgroup@beforenotes@save{R}%
   \ifstrempty{#1}%
-    {}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
     {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
 }
 
@@ -2742,6 +2754,15 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\ifprint@last@after@pendL}
+% \begin{macro}{\ifprint@last@after@pendR}
+% Two boolean set two true, when the time to print the last optional argument of a \cs{pend} will come.
+%    \begin{macrocode}
+\newif\ifprint@last@after@pendL%
+\newif\ifprint@last@after@pendR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Processing one line}
 %
 % For parallel texts we have to be able to process left and right lines
@@ -2824,7 +2845,7 @@
   \hb@xt@ \Lcolwidth{%
     \affixline@num
     \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-      {}%
+      {\add@inserts\affixside@note}%
       {\print@lineL}}%
   \add@penaltiesL
   \global\advance\@donereallinesL\@ne
@@ -2854,8 +2875,7 @@
 % \begin{macro}{\print@eledsectionL}
 % \cs{print@eledsectionL} is for line with macro code.
 %    \begin{macrocode}
-\def\print@eledsectionL{%
-    \add@inserts\affixside@note%
+\def\print@eledsectionL{%%
     \addtocounter{pstartL}{-1}%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
@@ -2941,7 +2961,7 @@
   \hb@xt@ \Rcolwidth{%
     \affixline@numR%
     \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-     {}%
+     {\add@insertsR\affixside@noteR}%
      {\print@lineR}%
   }%
   \add@penaltiesR
@@ -2963,16 +2983,13 @@
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta  %space kept for backward compatibility
-    \add@insertsR%
-    \affixside@noteR%
+    \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
 \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }
 
 \def\print@eledsectionR{%
-    \add@insertsR%
-    \affixside@noteR%
     \addtocounter{pstartR}{-1}%
     \initnumbering@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
@@ -3587,8 +3604,13 @@
 % label, storing it in \cs{label@refs}. Finally it defines the
 % label to be \cs{empty} so that any future check will turn up
 % the fact that it has been used.
+% \changes{v1.10.0}{2014/12/22}{Prevent some bugs with cross-referencing when using \cs{autopar} in parallel texts.}
 %    \begin{macrocode}
-\renewcommand*{\edlabel}[1]{\@bsphack
+\renewcommand*{\edlabel}[1]{%
+  \ifl@dpairing\ifautopar%
+    \strut%
+  \fi\fi%
+  \@bsphack%
   \ifledRcol
     \write\linenum@outR{\string\@lab}%
     \ifx\labelref@listR\empty
@@ -3756,11 +3778,11 @@
   \ifnumberedpar@
   \gdef\@tag{#1}%
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\csexpandonce{@tag}}}{\@thefnmark}}%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\csexpandonce{@tag}}}{\@thefnmark}}%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -3784,8 +3806,8 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly[R]}%      
-      \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
@@ -3795,8 +3817,8 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly}%    
-      \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -4677,6 +4699,8 @@
 % \begin{macro}{\Pages}
 % \changes{v1.8.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % \changes{v1.8.3}{2014/08/31}{Debug blank pages when using optional argument in the last \cs{pend}.}
+% \changes{v1.10.0}{2014/12/22}{Debug bad pages splitting when no optional argument is used in last \cs{pend} (bug added by v.1.8.3).}
+% \changes{v1.10.0}{2014/12/22}{Debug bad parallele pages synchroniszation when an \cs{edtext} is between two pages.}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
@@ -4783,7 +4807,7 @@
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
               \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
-              \csuse{before@pstartL@\the\l@dpscL}
+              \csuse{before@pstartL@\the\l@dpscL}%
               \global\csundef{before@pstartL@\the\l@dpscL}
               \do@lineL
               \xifinlist{\the\l@dpscL}{\eled@sections@@}
@@ -4798,10 +4822,18 @@
               \fi
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
-% we can onto the page. If not, repeat for the next line.
+% we can onto the page. If not, repeat for the next line. 
+% Check if we have to print the optional argument of the last pend.
+% Check if the page is full.
+% Check if the verse is splitted into two pages.
+% Check the handmade page breaks.
 %    \begin{macrocode}        
-              \checkpageL%
               \get@nextboxL%
+                  \ifprint@last@after@pendL%
+                     \csuse{after@pendL@\the\l@dpscL}%
+                     \global\csundef{after@pendL@\the\l@dpscL}%
+                   \fi%
+              \checkpageL%
               \checkverseL
               \checkpbL
             \repeat
@@ -4835,7 +4867,7 @@
 {            \loop\ifl@dsamepage%
               \initnumbering@sectcountR
               \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
-              \csuse{before@pstartR@\the\l@dpscR}
+              \csuse{before@pstartR@\the\l@dpscR}%
               \global\csundef{before@pstartR@\the\l@dpscR}
               \do@lineR
               \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
@@ -4848,8 +4880,12 @@
                       \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
-              \checkpageR%
               \get@nextboxR%
+                  \ifprint@last@after@pendR%
+                     \csuse{after@pendR@\the\l@dpscR}%
+                     \global\csundef{after@pendR@\the\l@dpscR}%
+                   \fi%
+              \checkpageR%
               \checkverseR
               \checkpbR
             \repeat
@@ -5095,7 +5131,14 @@
   \else
     \l@dsamepagefalse
     \l@dpagefulltrue
-  \fi}
+  \fi%
+  \ifprint@last@after@pendL%
+     \l@dpagefullfalse%
+     \l@dsamepagefalse%
+     \print@last@after@pendLfalse%
+  \fi%
+  }%
+
 \newcommand*{\checkpageR}{%
   \l@dpagefulltrue
   \l@dsamepagetrue
@@ -5109,7 +5152,13 @@
   \else
     \l@dsamepagefalse
     \l@dpagefulltrue
-  \fi}
+  \fi%
+  \ifprint@last@after@pendR%
+     \l@dpagefullfalse%
+     \l@dsamepagefalse%
+     \print@last@after@pendRfalse%
+  \fi%    
+  }%
 
 %    \end{macrocode}
 % \end{macro}
@@ -5285,10 +5334,7 @@
       \else
 % Add the content of the optional argument of the last \cs{pend}.
 %     \begin{macrocode}
-         \l@dpagefulltrue
-         \l@dsamepagefalse%
-         \csuse{after@pendL@\the\l@dpscL}%
-         \global\csundef{after@pendL@\the\l@dpscL}%
+        \print@last@after@pendLtrue%
 %     \end{macrocode}
 %     \begin{macrocode}
       \fi
@@ -5331,10 +5377,7 @@
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
       \else
-        \l@dpagefulltrue%
-        \l@dsamepagefalse%
-        \csuse{after@pendR@\the\l@dpscR}%
-        \global\csundef{after@pendR@\the\l@dpscR}%
+          \print@last@after@pendRtrue%
       \fi
     \fi
   \fi}
