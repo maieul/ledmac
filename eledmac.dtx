@@ -6436,7 +6436,7 @@
 %
 % First, page number changes, which will generally be the most common
 % actions. If we're restarting lineation on each page, this is where it
-% happens.
+% happens. If the \Lpack{eledpar} option  \cs{Xbothsides} or \cs{bothsidesX} is called, we reinsert the line number.
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
@@ -6444,6 +6444,7 @@
          \global\line@num=\z@ \global\subline@num=\z@
          \resetprevline@
        \fi
+       \reinsert@notes%
 %    \end{macrocode}
 %
 % Next, we handle
@@ -9449,6 +9450,52 @@
         \egroup%
 }%
 %   \end{macrocode}
+% \end{macro}
+
+% 
+% The \cs{reinsert@notes} macro is called at the begining of each page in \cs{Pages}.
+% It reinserts the too long content of the notes of the previous page in the new page (options \cs{Xbothsides} and \cs{bothsidesX}. In not parallel pages, it's called at each pages.
+% \begin{macro}{\reinsert@notes}
+%    \begin{macrocode}
+\newcommand{\reinsert@notes}{%
+    \renewcommand{\do}[1]{%
+    \iftoggle{Xbothsides@##1}{%
+        \global\csname Xtotalh@##1\endcsname=0pt%
+        \ifdim\ht\csname Xtoolong@##1\endcsname>\expandafter\dimen\csname##1footins\endcsname%
+          \global\advance\csname Xtotalh@##1\endcsname by \expandafter\dimen\csname##1footins\endcsname%
+          \newbox\notecontent%
+          \splittopskip=0pt%
+          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@##1\endcsname to \dimen\csname##1footins\endcsname%
+          \insert\csname ##1footins\endcsname\bgroup\unvbox\notecontent\egroup%
+        \else%
+          \ifdim\ht\csname Xtoolong@##1\endcsname>0pt%
+            \global\advance\csname Xtotalh@##1\endcsname by \ht\csname Xtoolong@##1\endcsname%
+            \global\advance\csname Xtotalh@##1\endcsname by \dp\csname Xtoolong@##1\endcsname%
+            \insert\csname ##1footins\endcsname\bgroup\unvbox\csname Xtoolong@##1\endcsname\egroup%
+          \fi%
+        \fi%
+        }{}%
+    \iftoggle{bothsidesX@##1}{%
+        \global\csname totalhX@##1\endcsname=0pt%
+        \ifdim\ht\csname toolongX@##1\endcsname>\expandafter\dimen\csname footins##1\endcsname%
+          \global\advance\csname totalhX@##1\endcsname by \expandafter\dimen\csname footins##1\endcsname%
+          \newbox\notecontent%
+          \splittopskip=0pt%
+          \setbox\notecontent=\expandafter\vsplit\csname toolongX@##1\endcsname to \dimen\csname footins##1\endcsname%
+          \insert\csname footins##1\endcsname\bgroup\unvbox\notecontent\egroup%
+        \else%
+          \ifdim\ht\csname toolongX@##1\endcsname>0pt%
+            \global\advance\csname totalhX@##1\endcsname by \ht\csname toolongX@##1\endcsname%
+            \global\advance\csname totalhX@##1\endcsname by \dp\csname toolongX@##1\endcsname%
+            \insert\csname footins##1\endcsname\bgroup\unvbox\csname toolongX@##1\endcsname\egroup%
+          \fi%
+        \fi%
+        }{}%
+    }%
+    \dolistloop{\@series}%
+}%
+
+%    \end{macrocode}
 % \end{macro}
 
 % \section{Endnotes}

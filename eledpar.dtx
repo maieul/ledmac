@@ -3129,6 +3129,7 @@
       \ifbypage@R
         \global\line@numR \z@  \global\subline@numR \z@
       \fi
+      \reinsert@notes%
     \else
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
@@ -3538,50 +3539,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Footnotes on both side}
-% The \cs{reinsert@notes} macro is called at the begining of each page in \cs{Pages}.
-% It reinserts the too long content of the notes of the previous page in the new page (options \cs{Xbothsides} and \cs{bothsidesX}
-% \begin{macro}{\reinsert@notes}
-%    \begin{macrocode}
-\newcommand{\reinsert@notes}{
-    \renewcommand{\do}[1]{
-    \iftoggle{Xbothsides@##1}{
-        \global\csname Xtotalh@##1\endcsname=0pt
-        \ifdim\ht\csname Xtoolong@##1\endcsname>\expandafter\dimen\csname##1footins\endcsname
-          \global\advance\csname Xtotalh@##1\endcsname by \expandafter\dimen\csname##1footins\endcsname
-          \newbox\notecontent
-          \splittopskip=0pt%
-          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@##1\endcsname to \dimen\csname##1footins\endcsname
-          \insert\csname ##1footins\endcsname\bgroup\unvbox\notecontent\egroup
-        \else
-          \ifdim\ht\csname Xtoolong@##1\endcsname>0pt
-            \global\advance\csname Xtotalh@##1\endcsname by \ht\csname Xtoolong@##1\endcsname
-            \global\advance\csname Xtotalh@##1\endcsname by \dp\csname Xtoolong@##1\endcsname
-            \insert\csname ##1footins\endcsname\bgroup\unvbox\csname Xtoolong@##1\endcsname\egroup
-          \fi
-        \fi
-        }{}
-    \iftoggle{bothsidesX@##1}{
-        \global\csname totalhX@##1\endcsname=0pt
-        \ifdim\ht\csname toolongX@##1\endcsname>\expandafter\dimen\csname footins##1\endcsname
-          \global\advance\csname totalhX@##1\endcsname by \expandafter\dimen\csname footins##1\endcsname
-          \newbox\notecontent
-          \splittopskip=0pt%
-          \setbox\notecontent=\expandafter\vsplit\csname toolongX@##1\endcsname to \dimen\csname footins##1\endcsname
-          \insert\csname footins##1\endcsname\bgroup\unvbox\notecontent\egroup
-        \else
-          \ifdim\ht\csname toolongX@##1\endcsname>0pt
-            \global\advance\csname totalhX@##1\endcsname by \ht\csname toolongX@##1\endcsname
-            \global\advance\csname totalhX@##1\endcsname by \dp\csname toolongX@##1\endcsname
-            \insert\csname footins##1\endcsname\bgroup\unvbox\csname toolongX@##1\endcsname\egroup
-          \fi
-        \fi
-        }{}
-    }
-    \dolistloop{\@series}
-}
-%    \end{macrocode}
-% \end{macro}
 % \section{Cross referencing}
 % \label{xref}\relax
 %
@@ -4852,12 +4809,11 @@
 %    \end{macrocode}
 % Reset to zero the left-page line count,  clear the page to get onto the facing
 % (odd, right) page, and reinitialize the accumulated dimension of interline correction for notes in parallel ledgroup,
-% and reinsert too long notes.
 %    \begin{macrocode}
             \numpagelinesL \z@
             \parledgroup@correction@notespacing@init
             \clearl@dleftpage
-            \reinsert@notes }%
+             }%
 %    \end{macrocode}
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
@@ -4901,7 +4857,7 @@
 % text processing.
 %    \begin{macrocode}
             \clearl@drightpage
-            \reinsert@notes}
+     }%
 %    \end{macrocode}
 % More to do? If there is we have to get the number of lines for the next
 % pair of pages before starting to output them.
