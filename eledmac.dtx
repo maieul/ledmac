@@ -5774,16 +5774,16 @@
 % \begin{macro}{\sameword}
 % The hight level macro \cs{sameword}, used by editor.
 %    \begin{macrocode}
-\newcommand{\sameword}[1]{\leavevmode%
+\newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
 %    \end{macrocode}
 % First, increase the counter corresponding to the argument.
 %    \begin{macrocode}
     \unless\ifledRcol%
-      \csnumgdef{sw@#1}{\csuse{sw@#1}+1}%
+      \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
 %    \end{macrocode}
 % Then, writes it's values to the numbered file
 %    \begin{macrocode}
-      \protected@write\linenum@out{}{\string\@sw{#1}{\csuse{sw@#1}}}%
+      \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
 %    \end{macrocode}
 % At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
 %    \begin{macrocode}
@@ -5792,6 +5792,8 @@
       \if@edtext@%
         \unless\if@lemmacommand@%
           \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtext}{}%
         \fi%
       \fi%
       \global\let\@tempb=\undefined%
@@ -5800,13 +5802,15 @@
 % Do the same thing if we are in the right columns.
 % \begin{macrocode}
   \else%
-    \csnumgdef{sw@#1@R}{\csuse{sw@#1@R}+1}%
-    \protected@write\linenum@outR{}{\string\@sw{#1}{\csuse{sw@#1@R}}}%
+    \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
+    \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
     \unless\ifx\sw@listR\empty%
       \gl@p\sw@listR\to\@tempb%
       \if@edtext@%
         \unless\if@lemmacommand@%
           \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtextR}{}%
         \fi%
       \fi%
       \global\let\@tempb=\undefined%
@@ -5815,7 +5819,7 @@
 % \end{macrocode}
 % In any case, print the word.
 % \begin{macrocode}
-  #1%
+  #2%
 }%
 %    \end{macrocode}
 % \end{macro}
