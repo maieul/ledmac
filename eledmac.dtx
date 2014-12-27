@@ -1210,6 +1210,16 @@
 %   \end{verbatim} 
 % In the previous example, the \verb+aut+ will be followed, in critical note, by a \verb+2+ if it's printed in the same line as the first \verb+aut+, but won't be followed if it's printed in a different line. The number is printed only at the second run.
 %
+% If you use the \cs{lemma} commands, \Lpack{eledmac} assumes that the word marked by \cs{sameword} is not also present in \cs{lemma}.
+% However, if it is really present, you must use this method:
+% \begin{itemize}
+%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the first optional argument `[inlemma]`.
+%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
+% \end{itemize} 
+% Like this :
+% \begin{verbatim}
+%   \edtext{\sameword[inlemma]{sw}}{\lemma{\sameword{sw} some lemma}\Afootnote{some note}}
+% \end{verbatim}
 % \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the digit is printed. The default value is
 % \begin{verbatim}
 %\newcommand{\showwordrank}[2]{%
@@ -5572,6 +5582,7 @@
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }
   \@edtext@false%
+  \@lemmacommand@false%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5604,6 +5615,7 @@
        }%
   \global\@noneed@Footnotefalse%
   \@edtext@false%
+  \@lemmacommand@false%
   }
 
 \newcommand*{\flag@end}{%
@@ -5671,10 +5683,20 @@
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
 %    \begin{macrocode}
-\newcommand*{\lemma}[1]{\global\renewcommand{\@tag}{\no@expands #1}}
+\newcommand*{\lemma}[1]{%
+  \global\@lemmacommand@true%
+  \global\renewcommand{\@tag}{\no@expands #1}}%
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\if@lemmacommand@}
+% \changes{v1.15.0}{2014/12/22}{New boolean \cs{iflemmacommand@}.}
+% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}) when a \cs{lemma} command is called. 
+% That is useful for some commands which can have a different behavior if the lemma in note is different to the lemma in main text.
+%    \begin{macrocode}
+\newif\if@lemmacommand@%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Substitute line numbers}
 %
 % \begin{macro}{\linenum}
@@ -5762,23 +5784,27 @@
 % \begin{macro}{\sameword}
 % The hight level macro \cs{sameword}, used by editor.
 %    \begin{macrocode}
-\newcommand{\sameword}[1]{%
+\newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
 %    \end{macrocode}
 % First, increase the counter corresponding to the argument.
 %    \begin{macrocode}
     \unless\ifledRcol%
-      \csnumgdef{sw@#1}{\csuse{sw@#1}+1}%
+      \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
 %    \end{macrocode}
 % Then, writes it's values to the numbered file
 %    \begin{macrocode}
-      \protected@write\linenum@out{}{\string\@sw{#1}{\csuse{sw@#1}}}%
+      \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
 %    \end{macrocode}
 % At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
 %    \begin{macrocode}
     \unless\ifx\sw@list\empty%
       \gl@p\sw@list\to\@tempb%
       \if@edtext@%
-        \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtext}{}%
+        \fi%
       \fi%
       \global\let\@tempb=\undefined%
     \fi%
@@ -5786,12 +5812,16 @@
 % Do the same thing if we are in the right columns.
 % \begin{macrocode}
   \else%
-    \csnumgdef{sw@#1@R}{\csuse{sw@#1@R}+1}%
-    \protected@write\linenum@outR{}{\string\@sw{#1}{\csuse{sw@#1@R}}}%
+    \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
+    \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
     \unless\ifx\sw@listR\empty%
       \gl@p\sw@listR\to\@tempb%
       \if@edtext@%
-        \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtextR}{}%
+        \fi%
       \fi%
       \global\let\@tempb=\undefined%
     \fi%
@@ -5799,7 +5829,7 @@
 % \end{macrocode}
 % In any case, print the word.
 % \begin{macrocode}
-  #1%
+  #2%
 }%
 %    \end{macrocode}
 % \end{macro}
