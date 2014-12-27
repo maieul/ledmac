@@ -5572,6 +5572,7 @@
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }
   \@edtext@false%
+  \@lemmacommand@false%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5604,6 +5605,7 @@
        }%
   \global\@noneed@Footnotefalse%
   \@edtext@false%
+  \@lemmacommand@false%
   }
 
 \newcommand*{\flag@end}{%
@@ -5671,10 +5673,20 @@
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
 %    \begin{macrocode}
-\newcommand*{\lemma}[1]{\global\renewcommand{\@tag}{\no@expands #1}}
+\newcommand*{\lemma}[1]{%
+  \global\@lemmacommand@true%
+  \global\renewcommand{\@tag}{\no@expands #1}}%
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\if@lemmacommand@}
+% \changes{v1.15.0}{2014/12/22}{New boolean \cs{iflemmacommand@}.}
+% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}) when a \cs{lemma} command is called. 
+% That is useful for some commands which can have a different behavior if the lemma in note is different to the lemma in main text.
+%    \begin{macrocode}
+\newif\if@lemmacommand@%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Substitute line numbers}
 %
 % \begin{macro}{\linenum}
@@ -5778,7 +5790,9 @@
     \unless\ifx\sw@list\empty%
       \gl@p\sw@list\to\@tempb%
       \if@edtext@%
-        \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \fi%
       \fi%
       \global\let\@tempb=\undefined%
     \fi%
@@ -5791,7 +5805,9 @@
     \unless\ifx\sw@listR\empty%
       \gl@p\sw@listR\to\@tempb%
       \if@edtext@%
-        \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \fi%
       \fi%
       \global\let\@tempb=\undefined%
     \fi%
