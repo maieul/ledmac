@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10308}
+% \CheckSum{10615}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -207,11 +207,12 @@
 % \changes{v1.12.3}{2014/08/15}{Debug left and right notes (bugs added by 1.12.0)}
 % \changes{v1.12.3}{2014/08/15}{Debug \cs{eledxxx} with some paper size}
 % \changes{v1.12.4}{2014/08/25}{Debug spurious page breaks before \cs{chapter} (bug added by 1.12.0)}
-% \changes{v1.13.1}{2014/09/25}{Debug quotation environment inside of a \cs{pstart} when preceded by a sectioning command.}
+% \changes{v1.13.1}{2014/09/25}{Debug quotation environment inside of a \cs{pstart} preceded by a sectioning command.}
 % \changes{v1.13.1}{2014/09/25}{Coming back of page and line breaking penalties's management, deleted by error in v0.17.}
 % \changes{v1.13.2}{2014/09/30}{Fix bug with normal footnotes, added by v1.13.0.}
 % \changes{v1.13.3}{2014/10/04}{Fix extra spaces with paragraphed footnotes, added by v1.13.0.}
 % \changes{v1.13.4}{2014/10/20}{Fix bug with index when memoir class is used without hyperref}
+% \changes{v1.15.0}{2014/22/15}{Fix bug with footnotes layout when using some options of the geometry package (bug add by v1.13.0).}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -605,8 +606,8 @@
 % edited text.
 %
 %
-% \section{Numbering text lines and paragraphs}
-%
+% \section{Text lines and paragraphs numbering}
+% \subsection{Text lines numbering}
 % \DescribeMacro{\beginnumbering}
 % \DescribeMacro{\endnumbering}
 % Each section of numbered text must be preceded by
@@ -638,6 +639,7 @@
 % number of sections (at the expense of multiplying the number of
 % external files that are generated).
 %
+% \subsection{Paragraphs}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % Within a numbered section, each paragraph of numbered text must
@@ -693,9 +695,14 @@
 % begins again.\par}
 % \egend
 %
-% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}\label{pstart:optionalarg}
+% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}
+% \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}\label{pstart:optionalarg}
+% \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
+% You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
+% Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
+%
 % Both \cs{pstart} and \cs{pend} can take a optional argument, in brackets. 
-% Its content will be printed before the beginning of the \cs{pstart} / after the end of the \cs{pend}.
+% Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
 % If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
 %
 % This feature is not needed for normal use of \Lpack{eledmac}, but it is needed when using verse (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
@@ -1190,6 +1197,35 @@
 % \newcommandx{\testimonia}[2][1,usedefault]{\Cfootnote[#1]{#2}}
 % \end{verbatim}
 %
+%
+% \subsection{Disambiguation of identical words in the apparatus}
+% \changes{v1.15.0}{2015/01/12}{New tools to prevent ambiguous references in lemma}
+% Sometimes, the same word occurss twice (or more time) in the same line.
+% \Lpack{eledmac} provides  tools to disambuigate references in  the critical notes.
+% The lemma will be followed by a reference number if a given word occurs more that once in the same line.
+%
+% \DescribeMacro{\sameword} To use this tool, you have to mark every occurrence of the potentially ambiguous term with the \cs{sameword} command:
+%   \begin{verbatim}
+%   lupus \sameword{aut} canis \edtext{\sameword{aut}{\Afootnote{et}}} felix
+%   \end{verbatim} 
+% In this example, \verb+aut+ will be followed, in the critical note, by the exponant \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
+%
+% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not already found in \cs{lemma}.
+% However, if it is actually found in it, you must use this method:
+% \begin{itemize}
+%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[inlemma]`.
+%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
+% \end{itemize} 
+% Like this :
+% \begin{verbatim}
+%   \edtext{\sameword[inlemma]{sw}}{\lemma{\sameword{sw} some lemma}\Afootnote{some note}}
+% \end{verbatim}
+% \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the number is printed. The default value is
+% \begin{verbatim}
+%\newcommand{\showwordrank}[2]{%
+%  #1\textsuperscript{#2}%
+%}
+% \end{verbatim}
 %
 % \subsection{Alternate footnote formatting}
 % If you just launch into \Eledmac{} using the commands outlined
@@ -2460,7 +2496,7 @@
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
 % However, if you use a package that redefines these environments, these redefinitions won't be available inside the numbering section.
-% You must open the quotation environments inside a \cs{start}-\cs{pend} block, not outside. 
+% You must open any quotation environments inside a \cs{start}-\cs{pend} block, not outside. 
 % A quotation environment MUST not be opened immediately after a \cs{pstart} 
 % and MUST not be closed immediately before a \cs{pend}.
 %
@@ -2858,7 +2894,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2014/12/17 v1.14.2 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/01/12 v1.15.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2954,10 +2990,10 @@
 
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Packages loading}
+% \subsection{Loading packages}
 % Loading package \emph{xargs} to declare commands with optional arguments. 
 % \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
-% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
+% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings, \emph{ifluatex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragged for paragraphed notes.
 % \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
 %  \begin{macrocode}
 \RequirePackage{xargs}
@@ -2990,9 +3026,9 @@
 % \end{macro}
 % \begin{macro}{\if@RTL}
 % The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
-% But we define it if the bidi package is not loaded.
+% But we define it as well if the \Lpack{bidi} package is not loaded.
 %    \begin{macrocode}
-\ifcsdef{if@RTL}{}{\newif\if@RTL}
+\ifdef{\if@RTL}{}{\newif\if@RTL}
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Messages}
@@ -3278,7 +3314,7 @@
 % \end{macro}
 %
 % \subsection{Gobbling}
-% \changes{v1.14.0}{2014/10/27}{Provide \cs{\@gobblefour}}
+% \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Moves gobbling command}
 % \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
 %  to avoid clash with the amsfonts package}
@@ -4392,7 +4428,10 @@
   \list@clear{\line@list}%
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
-  \list@clear{\actions@list}}
+  \list@clear{\actions@list}%
+  \list@clear{\sw@list}%
+  \list@clear{\sw@list@inedtext}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4561,7 +4600,7 @@
     \page@num=#1\relax
     \last@page@num=#1\relax
     \def\next@page@num{#1}%
-    \listcsxadd{normal@page@break}{\the\absline@num}
+    \listxadd{\normal@page@break}{\the\absline@num}
   \fi}
 
 %    \end{macrocode}
@@ -4863,10 +4902,12 @@
 %    \begin{macrocode}
   \begingroup
     \let\@ref=\dummy@ref
+    \let\@lopL\@gobble
     \let\page@action=\relax
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
+    \let\@sw\@gobbletwo%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
@@ -4994,8 +5035,8 @@
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
   \IfStrEq{\led@pb@setting}{after}%
-    {\xifinlistcs{\the\absline@num}{l@prev@nopb}%
-      {\xifinlistcs{\the\absline@num}{normal@page@break}%
+    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
+      {\xifinlist{\the\absline@num}{\normal@page@break}%
         {\numgdef{\@next@page}{\thepage+1}%
         \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
       }%
@@ -5005,8 +5046,8 @@
   {}%
   \IfStrEq{\led@pb@setting}{before}%
     {\numdef{\next@absline}{\the\absline@num+1}%
-    \xifinlistcs{\next@absline}{l@prev@nopb}%
-      {\xifinlistcs{\the\absline@num}{normal@page@break}%
+    \xifinlist{\next@absline}{\l@prev@nopb}%
+      {\xifinlist{\the\absline@num}{\normal@page@break}%
         {\numgdef{\nc@page}{\c@page+1}%
         \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
         }%
@@ -5081,6 +5122,7 @@
 %
 % \begin{macro}{\startsub}
 % \begin{macro}{\endsub}
+% \changes{v1.15.0}{2015/01/12}{Restore subline feature (disabled by mistake in v1.8.0).}
 % \cs{startsub} and \cs{endsub}
 % turn sub-lineation on and off, by writing
 % appropriate instructions to the line-list file.  When
@@ -5274,15 +5316,6 @@
 % a different kind of note. It is preferable for your footnote macros
 % to store and recall this kind of information if they need it.
 %
-% \phantomsection\label{parallel}An example where some `memory' of line numbers
-% might be required is where there are several variant readings
-% per line of text, and you do not wish the line number to be repeated
-% for each lemma in the notes.  After the first occurrence of the line
-% number, you might want the symbol `$\parallel$' instead of further
-% occurrences, for instance.  This can easily be done by a macro like
-% \cs{printlines}, if it saves the last value of \cs{l@d@nums} that \emph{it}
-% saw, and then performs a simple conditional test to see whether to print
-% a number or a~`$\parallel$'.
 %
 % \subsection{{\tt \protect\bslash edtext} and {\tt \protect\bslash critext}
 %  themselves}
@@ -5429,6 +5462,7 @@
   \let\edlabel=\@gobble 
   \let\setline=\@gobble \let\advanceline=\@gobble
   \let\critext=\dummy@text
+  \let\sameword\sameword@inedtext%
   \let\edtext=\dummy@edtext
   \l@dtabnoexpands
   \morenoexpands}
@@ -5444,6 +5478,14 @@
 \newcommand{\@tag}{}
 %  \end{macrocode}
 % \end{macro}
+% \begin{macro}{\if@edtext@}
+% \changes{v1.15.0}{2015/01/12}{New boolean \cs{if@edtext@}.}
+% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}). 
+% That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
+%    \begin{macrocode}
+\newif\if@edtext@%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\critext}
 % Now we begin \cs{critext} itself. The definition requires a \verb"/" after
 % the arguments: this eliminates the possibility of problems about
@@ -5458,6 +5500,7 @@
 % horizontal mode.
 %    \begin{macrocode}
 \long\def\critext#1#2/{\leavevmode
+  \@edtext@true%
 %    \end{macrocode}
 %
 % \begin{macro}{\@tag}
@@ -5538,6 +5581,8 @@
        \flag@end}%
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }
+  \@edtext@false%
+  \global\@lemmacommand@false%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -5547,6 +5592,7 @@
 % \begin{macro}{\edtext}
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode
+  \@edtext@true%
   \begingroup
     \global\renewcommand{\@tag}{\no@expands #1}%%
     \set@line
@@ -5568,6 +5614,8 @@
        {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
        }%
   \global\@noneed@Footnotefalse%
+  \@edtext@false%
+  \global\@lemmacommand@false%
   }
 
 \newcommand*{\flag@end}{%
@@ -5635,10 +5683,20 @@
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
 %    \begin{macrocode}
-\newcommand*{\lemma}[1]{\global\renewcommand{\@tag}{\no@expands #1}}
+\newcommand*{\lemma}[1]{%
+  \global\@lemmacommand@true%
+  \global\renewcommand{\@tag}{\no@expands #1}}%
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\if@lemmacommand@}
+% \changes{v1.15.0}{2015/01/12}{New boolean \cs{iflemmacommand@}.}
+% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}) when a \cs{lemma} command is called. 
+% That is useful for some commands which can have a different behavior if the lemma in the note is different from the lemma in the main text.
+%    \begin{macrocode}
+\newif\if@lemmacommand@%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Substitute line numbers}
 %
 % \begin{macro}{\linenum}
@@ -5697,6 +5755,180 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Lemma disambiguation}
+% The mechanism which counts the occurrence of a same word in a same line is quite complex, because, when \LaTeX\ reads a command between a \cs{pstart} and a \cs{pend}, it does not know yet which are the line numbers.
+% 
+% The general mechanism is the following:
+% \begin{itemize}
+%    \item \textbf{At the first run}, each \cs{sameword} command increments an \Lpack{etoolbox} counter the name of which contains the argument of the \cs{sameword} commands.
+%    \item Then this counter, associated with the argument of \cs{sameword} is stored (\cs{@sw} command) in the auxiliary file of the current \Lpack{eledmac} section (the \verb+.1+, \verb+.2+… file).
+%    \item \textbf{When this auxiliary file is read at the second run}, different operations are achieved:
+%    \begin{itemize}
+%        \item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
+%        \item A \cs{sw@list} list is filled with the values stored in the auxiliary file. But before doing this we transform these values : we substract from them the number stored for the paired \cs{sameword} argument and previous absolute line number.
+%    \end{itemize}
+%  \item At the second run, when the \cs{sameword} command is called, new operations happen. We first read the first element of the \cs{sw@list}, then delete it from this list, and, if we are inside a \cs{edtext} command, we store it in a \cs{sw@list@inedtext} list.
+%  \item At the second run, when the critical notes are built, the \cs{sameword@inedtext} command is  used instead of \cs{sameword}. Then, we  read the next value of  \cs{sw@list@inedtext} list and remove it from this list.  We send it to the \cs{showwordrank} to be printed after the lemma, but only if the current line has more than one value for the argument of \cs{sameword}.  Otherwise, we just print the lemma, with no number.
+%  
+% \end{itemize} 
+
+% \begin{macro}{\sw@list}
+% \begin{macro}{\sw@list@inedtext}
+% So, first, the lists.
+%    \begin{macrocode}
+\list@create{\sw@list}%
+\list@create{\sw@list@inedtext}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\sameword}
+% The hight level macro \cs{sameword}, used by the editor.
+%    \begin{macrocode}
+\newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
+%    \end{macrocode}
+% First, increament the counter corresponding to the argument.
+%    \begin{macrocode}
+    \unless\ifledRcol%
+      \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
+%    \end{macrocode}
+% Then, write its value to the numbered file
+%    \begin{macrocode}
+      \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
+%    \end{macrocode}
+% At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
+%    \begin{macrocode}
+    \unless\ifx\sw@list\empty%
+      \gl@p\sw@list\to\@tempb%
+      \if@edtext@%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtext%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtext}{}%
+        \fi%
+      \fi%
+      \global\let\@tempb=\undefined%
+    \fi%
+% \end{macrocode}
+% Do the same thing if we are in the right columns.
+% \begin{macrocode}
+  \else%
+    \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
+    \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
+    \unless\ifx\sw@listR\empty%
+      \gl@p\sw@listR\to\@tempb%
+      \if@edtext@%
+        \unless\if@lemmacommand@%
+          \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
+        \else%
+          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtextR}{}%
+        \fi%
+      \fi%
+      \global\let\@tempb=\undefined%
+    \fi%
+  \fi%
+% \end{macrocode}
+% In any case, print the word.
+% \begin{macrocode}
+  #2%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@sw}
+% The command printed in the auxiliary files. 
+%    \begin{macrocode}
+\newcommand{\@sw}[2]{%
+  \unless\ifledRcol%
+%    \end{macrocode}
+% First, define a counter which store the second argument as value for a each paired absolute line number/first argument
+%    \begin{macrocode}
+    \csxdef{sw@#1@\the\absline@num @\the\section@num}{#2}%
+%    \end{macrocode}
+% If  such argument was not defined for the preceding line, define it.
+%    \begin{macrocode}
+    \numdef{\prev@line}{\the\absline@num-1}%
+    \ifcsundef{sw@#1@\prev@line @\the\section@num}{%
+      \csnumgdef{sw@#1@\prev@line @\the\section@num}{#2-1}%
+     }{}%
+%    \end{macrocode}
+% Then, calculate the position of the word in the line, and put it in \cs{sw@list}.
+%    \begin{macrocode}
+    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@num}}%
+    \xright@appenditem{\the@sw}\to\sw@list%
+%    \end{macrocode}
+% And do the same thing for the right side.
+%    \begin{macrocode}
+  \else%
+    \csxdef{sw@#1@\the\absline@numR @\the\section@numR @R}{#2}%
+    \numdef{\prev@line}{\the\absline@numR-1}%
+    \ifcsundef{sw@#1@\prev@line @\the\section@numR @R}{%
+      \csnumgdef{sw@#1@\prev@line @\the\section@numR @R}{#2-1}%
+     }{}%
+    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+    \xright@appenditem{\the@sw}\to\sw@listR%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\sameword@inedtext}
+% The command called when \cs{sameword} is called in a edtext.
+%    \begin{macrocode}
+\def\sameword@inedtext#1{%
+  \unless\ifledRcol@%
+%    \end{macrocode}
+% First, calculate the number of occurrences of the word in the current line
+%    \begin{macrocode}
+      \ifcsdef{sw@#1@\the\absline@num @\the\section@num}{%
+        \numdef{\prev@line}{\the\absline@num-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@num @\the\section@num}-\csuse{sw@#1@\prev@line @\the\section@num}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+%    \end{macrocode}
+% Just a precaution.
+%    \begin{macrocode}
+      \ifx\sw@list@inedtext\empty%
+        \def\the@sw{999}%
+      \else%
+%    \end{macrocode}
+% But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for edtext.
+%    \begin{macrocode}
+        \gl@p\sw@list@inedtext\to\the@sw%
+      \fi%
+%    \end{macrocode}
+% Then, print the rank, but only if there is more than one occurrence of the word in the current line.
+%    \begin{macrocode}
+      \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
+%    \end{macrocode}
+% And the same for right side.
+%    \begin{macrocode}
+  \else%
+      \ifcsdef{sw@#1@\the\absline@numR @\the\section@numR @R}{%
+        \numdef{\prev@line}{\the\absline@numR-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+      \ifx\sw@list@inedtextR\empty%
+        \def\the@sw{999}%
+      \else%
+        \gl@p\sw@list@inedtextR\to\the@sw%
+      \fi%
+        \ifnumgreater{\sw@atthisline}{1}%
+          {\showwordrank{#1}{\the@sw}}%
+          {#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\showwordrank}
+%    \begin{macrocode}
+% Finally, the way the rank will be printed.
+\newcommand{\showwordrank}[2]{%
+  #1\textsuperscript{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
+
 % \section{Paragraph decomposition and reassembly}
 % \label{paragraph}\relax
 %
@@ -5748,6 +5980,7 @@
 % \end{macro}
 %
 % \begin{macro}{\pstart}
+% \begin{macro}{\AtEveryPstart}
 % \changes{v1.6.1}{2013/10/27}{Spurious space in \cs{pstart}.}
 % \changes{v1.12.0}{2014/08/05}{New optional argument for \cs{pstart}, to execute code before it.}
 % \begin{macro}{\numberpstarttrue}
@@ -5769,6 +6002,9 @@
 % \changes{v1.13.1}{2014/09/25}{Add \cs{l@dzeropenalties} in \cs{pstart}}
 %    \begin{macrocode}
 
+\newcommand{\AtEveryPstart}[1]{\xdef\at@every@pstart{\noindent\unexpanded{#1}}}%
+\xdef\at@every@pstart{}%
+
 \newcounter{pstart}
 \renewcommand{\thepstart}{{\bfseries\@arabic\c@pstart}. }
 \newif\ifnumberpstart
@@ -5776,7 +6012,7 @@
 \newif\iflabelpstart
 \labelpstartfalse
 \newcommandx*{\pstart}[1][1]{%
-  \ifstrempty{#1}{}{\noindent#1}%
+  \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -5812,6 +6048,7 @@
   \l@dzeropenalties%
   }
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5866,11 +6103,21 @@
    \fi%
   \@oldnobreak%
   \addtocounter{pstart}{1}%
-  \ifstrempty{#1}{}{\noindent#1}%
+  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 }
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\AtEveryPend}
+% \begin{macro}{\at@every@pend}
+%    \begin{macrocode}
+
+\newcommand{\AtEveryPend}[1]{\xdef\at@every@pend{\noindent\unexpanded{#1}}}%
+\xdef\at@every@pend{}%
+
+%    \end{macrocode}
+%  \end{macro}
+%  \end{macro}
 %
 % \begin{macro}{\l@dzeropenalties}
 % A macro to zero penalties for \cs{pend}.
@@ -6001,7 +6248,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, deleted by version 0.17!}
+% \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, mistakenly deleted in version 0.17!}
 % \begin{macro}{\print@line}
 %    \begin{macrocode}
 % \cs{print@line} is for normal line, i. e line without sectioning command.
@@ -6892,13 +7139,13 @@
 \newcommandx*{\footnotelang@poly}[1][1=L,usedefault]{%
    \ifstrequal{#1}{L}{%
     \if@RTL%
-        \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@list%Know the language of lemma
+        \xright@appenditem{{\csxdef{footnote@dir}{@RTLtrue}}}\to\inserts@list%Know the language used in the lemma
         \global\advance\insert@count \@ne%
     \else
          \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@list%Know the language of lemma  
          \global\advance\insert@count \@ne%
     \fi%
-    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@list%Know the language of lemma
+    \xright@appenditem{{\csxdef{footnote@lang}{\expandonce\languagename}}}\to\inserts@list%Know the language of lemma
     \global\advance\insert@count \@ne%
    }%
    {%
@@ -6909,7 +7156,7 @@
          \xright@appenditem{{\csxdef{footnote@dir}{@RTLfalse}}}\to\inserts@listR%Know the language of lemma  
          \global\advance\insert@countR \@ne%
     \fi
-    \xright@appenditem{{\csxdef{footnote@lang}{\csexpandonce{languagename}}}}\to\inserts@listR%Know the language of lemma
+    \xright@appenditem{{\csxdef{footnote@lang}{\expandonce\languagename}}}\to\inserts@listR%Know the language of lemma
     \global\advance\insert@countR \@ne%
    }%
 }
@@ -8343,7 +8590,7 @@
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
   \gdef\@tag{#1}%
-    \xright@appenditem{\noexpand\vl@dbfnote{{\csexpandonce{@tag}}}{\@thefnmark}}%
+    \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
@@ -8552,8 +8799,8 @@
 %    \begin{macrocode}
 \newcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
-    \protected@csxdef{thisfootnote}{\csuse{thefootnote#1}}%
-    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\csexpandonce{thisfootnote}}}%
+    \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
@@ -8838,10 +9085,11 @@
 %    The following macros set footnotes as one paragraph.
 % 
 % \begin{macro}{\footparagraphX}
+% \changes{v1.15.0}{2015/01/12}{Correct bug with paragraphed familiar footnotes setting.}
 % \cs{footparagraphX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footparagraphX}[1]{%
-  \csgdef{series@displayX#1}{paragraph}
+  \csgdef{series@displayX#1}{paragraphX}%
   \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
@@ -9011,11 +9259,11 @@
 %    \begin{macrocode}
 
 \newdimen\old@hsize%
-\old@hsize=\hsize%
+\old@hsize=\linewidth%
 
 \newcommand{\setXnoteswidthliketwocolumns@}[1]{%
-  \global\let\hsize@fornote=\hsize%
-  \old@hsize=\hsize%
+  \global\let\hsize@fornote=\linewidth%
+  \global\old@hsize=\linewidth%
   \iftoggle{Xnoteswidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -9028,7 +9276,7 @@
 
 \newcommand{\setnotesXwidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
-  \old@hsize=\hsize%
+  \global\old@hsize=\linewidth%
   \iftoggle{notesXwidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -9447,7 +9695,7 @@
                 \footnoteoptions@[R]{##1}{true}%
                 \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
 \noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@listR
+                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
                 \footnoteoptions@[R]{##1}{false}%
                 \global\advance\insert@countR \@ne%
             \else%
@@ -9460,7 +9708,7 @@
                 \footnoteoptions@{##1}{true}%
                 \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
 \noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\csexpandonce{@tag}}{\csexpandonce{content}}}}\to\inserts@list
+                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
                 \global\advance\insert@count \@ne%
                 \footnoteoptions@{##1}{false}%
             \fi
@@ -9486,7 +9734,7 @@
             \stepcounter{footnote#1}%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
             \csuse{@footnotemark#1}%
-            \csuse{vfootnote#1}{#1}{\csexpandonce{content}}\m@mmf@prepare%
+            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
         \endgroup%
     }
 %    \end{macrocode}
@@ -9513,7 +9761,7 @@
         \newcommand{\content}{##1}%
            \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
           {\ifnumberedpar@\l@d@nums\fi}%
-           {\ifnumberedpar@\csexpandonce{@tag}\fi}{\csexpandonce{content}}{#1}}}\ignorespaces%
+           {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
         }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
@@ -10838,11 +11086,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\expandonce\content}}%
                          \to\inserts@listR
       \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dlsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dlsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -10853,11 +11101,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\expandonce\content}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@drsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@drsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -10868,11 +11116,11 @@
   \newcommand{\content}{#1}%
   \ifnumberedpar@
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\expandonce\content}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dcsnote{\csexpandonce{content}}}%
+      \xright@appenditem{\noexpand\vl@dcsnote{\expandonce\content}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -11501,7 +11749,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% That finishes the \Lpack{memoir}-specific code.
+% This finishes the \Lpack{memoir}-specific code.
 %    \begin{macrocode}
 }
 %    \end{macrocode}
@@ -11567,8 +11815,8 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \subsection{Choose the good variant}
-% And now, call \cs{create@edindex@for@memoir} or \cs{create@edindex@notfor@memoir} depending of the use of \Lpack{memoir} and \Lpack{imakeidx}
+% \subsection{Choose the right variant}
+% Then call \cs{create@edindex@for@memoir} or \cs{create@edindex@notfor@memoir} depending on the use of \Lpack{memoir} and \Lpack{imakeidx}
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
   \@ifpackageloaded{imakeidx}%
@@ -11649,7 +11897,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \changes{v1.14.0}{2014/10/27}{Delete previous override of \cs{l@d@@wrindexhyp} at the beginning of a document when hyperref was not loaded.}
+% \changes{v1.14.0}{2014/10/27}{Delete previous override of \cs{l@d@@wrindexhyp} at the beginning of a document when hyperref is not loaded.}
 %
 %
 % \section{Macro as environment}
@@ -13914,7 +14162,7 @@
   
 %    \end{macrocode}
 % \changes{v1.14.1}{2014/12/15}{Debug sectioning commands when using both \Lpack{handout} and \Lpack{hyperref} package.}
-% \Lpack{hyperref} redefines also \cs{@sect}. That's why, when manipulating arguments, we patch \cs{@sect} and similar only if \Lpack{hyperref} is not used. If used, we patch the \cs{NR} commands.
+% \Lpack{hyperref} also redefines  \cs{@sect}. That's why, when manipulating arguments, we patch \cs{@sect} and the same only if \Lpack{hyperref} is not used. If it is, we patch the \cs{NR} commands.
 %    \begin{macrocode}
 \@ifpackageloaded{nameref}{
 
@@ -14267,10 +14515,10 @@
 % The \cs{led@nopb} adds the absolute line number in the \cs{prev@nopb} list.
 % The \cs{led@nopbnum} adds the argument in the \cs{prev@nopb} list.
 %    \begin{macrocode}
-\newcommand{\led@pb}{\listcsxadd{l@prev@pb}{\the\absline@num}}
-\newcommand{\led@pbnum}[1]{\listcsxadd{l@prev@pb}{#1}}
-\newcommand{\led@nopb}{\listcsxadd{l@prev@nopb}{\the\absline@num}}
-\newcommand{\led@nopbnum}[1]{\listcsxadd{l@prev@nopb}{#1}}
+\newcommand{\led@pb}{\listxadd{\l@prev@pb}{\the\absline@num}}
+\newcommand{\led@pbnum}[1]{\listxadd{\l@prev@pb}{#1}}
+\newcommand{\led@nopb}{\listxadd{\l@prev@nopb}{\the\absline@num}}
+\newcommand{\led@nopbnum}[1]{\listxadd{\l@prev@nopb}{#1}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -14290,20 +14538,20 @@
 % The \cs{led@check@pb} and \cs{led@check@nopb} are called before or after each line. 
 % They check if a page break must occur, depending on the current line and on the content of \cs{l@pb}.
 %    \begin{macrocode}
-\newcommand{\led@check@pb}{\xifinlistcs{\the\absline@num}{l@prev@pb}{\pagebreak[4]}{}}
+\newcommand{\led@check@pb}{\xifinlist{\the\absline@num}{\l@prev@pb}{\pagebreak[4]}{}}
 \newcommand{\led@check@nopb}{%
     \IfStrEq{\led@pb@setting}{before}{%
-      \xifinlistcs{\the\absline@num}{l@prev@nopb}%
+      \xifinlist{\the\absline@num}{\l@prev@nopb}%
          {\numdef{\abs@prevline}{\the\absline@num-1}%
-         \xifinlistcs{\abs@prevline}{normal@page@break}%
+         \xifinlist{\abs@prevline}{\normal@page@break}%
            {\nopagebreak[4]\enlargethispage{\baselineskip}}%
            {}}%
          {}}%
        {}%
      {}%
     \IfStrEq{\led@pb@setting}{after}{%
-      \xifinlistcs{\the\absline@num}{l@prev@nopb}{%
-        \xifinlistcs{\the\absline@num}{normal@page@break}%
+      \xifinlist{\the\absline@num}{\l@prev@nopb}{%
+        \xifinlist{\the\absline@num}{\normal@page@break}%
           {\nopagebreak[4]\enlargethispage{\baselineskip}}%
             {}%
 }%
