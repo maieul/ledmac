@@ -8519,42 +8519,36 @@
 % if \Lclass{memoir} is used the modifications have already been made.
 % \changes{v0.4.1}{2004/03/25}{Only change \cs{@footnotetext} and
 %                           \cs{@footnotemark} if memoir not used}
-% We do it only at the begining of the document, to let time to biblatex to make its patches, also when using memoir (because \cs{patchcmd} replace only the first occurence of the pattern).
-%    \begin{macrocode}
-\AtBeginDocument{
 %    \end{macrocode}
 %    \begin{macrocode}
-	\@ifclassloaded{memoir}{}{%
+\@ifclassloaded{memoir}{}{%
 %    \end{macrocode}
 % \begin{macro}{\@footnotetext}
 % Add \cs{m@mmf@prepare} at the end of \cs{@footnotetext}.
 %    \begin{macrocode}
-	\let\l@dold@footnotetext\@footnotetext
-	\renewcommand{\@footnotetext}[1]{%
-	  \l@dold@footnotetext{#1}%
-	  \m@mmf@prepare}
+\apptocmd{\@footnotetext}{\m@mmf@prepare}{}{}
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\@footnotemark}
 % Modify \cs{@footnotemark} to cater for adjacent \cs{footnote}s.
 %    \begin{macrocode}
-	\renewcommand*{\@footnotemark}{%
-	  \leavevmode
-	  \ifhmode
-	    \edef\@x@sf{\the\spacefactor}%
-	    \m@mmf@check
-	    \nobreak
-	  \fi
-	  \@makefnmark
-	  \m@mmf@prepare
-	  \ifhmode\spacefactor\@x@sf\fi
-	  \relax}
+\renewcommand*{\@footnotemark}{%
+  \leavevmode
+  \ifhmode
+    \edef\@x@sf{\the\spacefactor}%
+    \m@mmf@check
+    \nobreak
+  \fi
+  \@makefnmark
+  \m@mmf@prepare
+  \ifhmode\spacefactor\@x@sf\fi
+  \relax}
 %    \end{macrocode}
 % \end{macro}
 % Finished the modifications for the non-memoir case.
 %    \begin{macrocode}
-	}
+}
 
 %    \end{macrocode}
 %
@@ -8565,20 +8559,17 @@
 % different forms for when in numbered or regular text.
 % \changes{v0.5}{2004/04/03}{Enabled regular \cs{footnote} in numbered text}
 %    \begin{macrocode}
-	\let\l@doldold@footnotetext\@footnotetext
-	\renewcommand{\@footnotetext}[1]{%
-	  \ifnumberedpar@
-	    \edtext{}{\l@dbfnote{#1}}%
-	  \else
-	    \l@doldold@footnotetext{#1}%
-	  \fi}
+\let\l@doldold@footnotetext\@footnotetext
+\pretocmd{\@footnotetext}{%
+  \ifnumberedpar@
+    \edtext{}{\l@dbfnote{#1}}%
+  \else
+  }{}{}
+\apptocmd{\@footnotetext}{\fi}{}{}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
-% End of the \cs{AtBeginDocument}.
-%    \begin{macrocode}
-}
 %    \end{macrocode}
 % \begin{macro}{\l@dbfnote}
 % \begin{macro}{\vl@dbfnote}
