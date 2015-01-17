@@ -2143,7 +2143,7 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% If the \Lclass{memoir} class or the \Lpack{imakeidx} package is used then the macro takes an optional
+% If the \Lclass{memoir} class or the \Lpack{imakeidx} or \Lpack{indextools} package is used then the macro takes an optional
 % argument, which is the name of a raw index file. For example
 % |\edindex[line]{item}| will use |line.idx| as the raw file instead of
 % |\jobname.idx|.
@@ -2152,9 +2152,9 @@
 %
 % Be careful with the order of package loading and index declaration. You must use this order:
 % \begin{enumerate}
-%     \item Load \Lpack{imakeidx}.
+%     \item Load \Lpack{imakeidx} or \Lpack{indextools} .
 %     \item Load \Lpack{eledmac}.
-%   \item Declare the index with the macro \cs{makeindex} of \Lpack{imakeidx}.
+%   \item Declare the index with the macro \cs{makeindex} of \Lpack{imakeidx}/\Lpack{indextools}.
 % \end{enumerate}
 % \DescribeMacro{\pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
@@ -3021,7 +3021,18 @@
 % Define a flag for if the \Lpack{imakeidx} package has been used.
 %    \begin{macrocode}
 \newif\ifl@imakeidx
-\@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{\l@imakeidxfalse}
+\@ifpackageloaded{imakeidx}{\l@imakeidxtrue}{}%False is the default value
+%    \end{macrocode} 
+% \end{macro}
+% \begin{macro}{\ifl@indextools}
+% Define a flag for if the \Lpack{indextools} package has been used.
+%    \begin{macrocode}
+\newif\ifl@indextools%
+\@ifpackageloaded{indextools}{%
+  \l@indextoolstrue%
+  \l@imakeidxtrue%
+  \let\imki@wrindexentry\indtl@wrindexentry%
+  }{}%False is the default value. We consider indextools as a variant of imakeidx. That's why we set `l@imakeidx` to true. We also let \imki@wrindexentry to \indtl@wrindexentry
 %    \end{macrocode} 
 % \end{macro}
 % \begin{macro}{\if@RTL}
@@ -3309,6 +3320,13 @@
 %    \begin{macrocode}
 \newcommand{\led@error@ImakeidxAfterEledmac}{%
   \eledmac@error{Imakeidx must be loaded before eledmac.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@IndextoolsAfterEledmac}
+%    \begin{macrocode}
+\newcommand{\led@error@IndextoolsAfterEledmac}{%
+  \eledmac@error{Indextools must be loaded before eledmac.}{\@ehd}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11535,19 +11553,18 @@
 % \changes{v1.8.5}{2014/08/28}{Debug indexing in right column, with eledpar.}
 % Here's some code for indexing using page \& line numbers.
 %
-% \begin{macro}{\ifeledmac@check@imakeidx@}
-% First, ensure that \Lpack{imakeidx} is loaded \emph{before} \Lpack{eledmac}.
+% First, ensure that \Lpack{imakeidx} or \Lpack{indextools} is loaded \emph{before} \Lpack{eledmac}.
 % \changes{v1.12.0}{2014/08/05}{Ensure that \Lpack{imakeidx} is loaded \emph{before} \Lpack{eledmac}}
 %    \begin{macrocode}
-\newif\ifeledmac@after@imakeidx@
-\@ifpackageloaded{imakeidx}{\eledmac@after@imakeidx@true}{}
 \AtBeginDocument{%
-  \ifeledmac@after@imakeidx@\else%
+  \unless\ifl@imakeidx%
     \@ifpackageloaded{imakeidx}{\led@error@ImakeidxAfterEledmac}{}%
-  \fi
+  \fi%
+  \unless\ifl@indextools%
+    \@ifpackageloaded{indextools}{\led@error@indextoolsAfterEledmac}{}%
+  \fi%
 }
 %    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\pagelinesep}
 % \begin{macro}{\edindexlab}
 % \begin{macro}{\c@labidx}
@@ -11641,7 +11658,7 @@
 % \end{macro}
 %    The \Lpack{memoir} class provides more flexible indexing than the
 % standard classes. We need different code if the \Lpack{memoir}
-% class is being used, except if \Lpack{imakeidx} is used.
+% class is being used, except if \Lpack{imakeidx} or \Lpack{indextools} is used.
 % \begin{macro}{\edindex}
 % \changes{v0.4.1}{2003/03/29}{Let eledmac take advantage of memoir's indexing}
 % \changes{v1.5}{2013/07/11}{Compatibility with \Lpack{imakeidx} package, and possibility to use multiple index with \cs{edindex}.}
@@ -11653,6 +11670,7 @@
 % \begin{enumerate}
 %   \item Memoir class is used.
 %   \item AND \Lpack{imakeidx} is not used.
+%   \item AND \Lpack{indextools} is not used.
 % \end{enumerate}
 % Need to add the definition of |\edindex| to |\makeindex|, and initialise
 % |\edindex| to do nothing. In this case |\edindex| has an optional 
@@ -11747,6 +11765,7 @@
 % \begin{enumerate}
 %   \item Memoir class is NOT used.
 %   \item OR \Lpack{imakeidx} is used.
+%   \item OR \Lpack{indextools} is used.
 % \end{enumerate}
 %    \begin{macrocode}
 \def\create@edindex@notfor@memoir{
@@ -11808,7 +11827,12 @@
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
   \@ifpackageloaded{imakeidx}%
-    {\create@edindex@notfor@memoir}{\create@edindex@for@memoir}%
+    {\create@edindex@notfor@memoir}%
+    {%
+     \@ifpackageloaded{indextools}%
+      {\create@edindex@notfor@memoir}%      
+      {\create@edindex@for@memoir}%
+     }%
   }%
   {\create@edindex@notfor@memoir}%
 %    \end{macrocode}
