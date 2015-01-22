@@ -8542,16 +8542,14 @@
 % if \Lclass{memoir} is used the modifications have already been made.
 % \changes{v0.4.1}{2004/03/25}{Only change \cs{@footnotetext} and
 %                           \cs{@footnotemark} if memoir not used}
+%    \end{macrocode}
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{}{%
 %    \end{macrocode}
 % \begin{macro}{\@footnotetext}
 % Add \cs{m@mmf@prepare} at the end of \cs{@footnotetext}.
 %    \begin{macrocode}
-\let\l@dold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
-  \l@dold@footnotetext{#1}%
-  \m@mmf@prepare}
+\apptocmd{\@footnotetext}{\m@mmf@prepare}{}{}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -8584,17 +8582,17 @@
 % different forms for when in numbered or regular text.
 % \changes{v0.5}{2004/04/03}{Enabled regular \cs{footnote} in numbered text}
 %    \begin{macrocode}
-\let\l@doldold@footnotetext\@footnotetext
-\renewcommand{\@footnotetext}[1]{%
+\pretocmd{\@footnotetext}{%
   \ifnumberedpar@
     \edtext{}{\l@dbfnote{#1}}%
   \else
-    \l@doldold@footnotetext{#1}%
-  \fi}
+  }{}{}
+\apptocmd{\@footnotetext}{\fi}{}{}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
+%    \end{macrocode}
 % \begin{macro}{\l@dbfnote}
 % \begin{macro}{\vl@dbfnote}
 % \verb?\l@dbfnote? adds the footnote to the insert list, and
@@ -8605,14 +8603,15 @@
 %    \begin{macrocode}
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
-  \gdef\@tag{#1}%
+  \gdef\@tag{#1\relax}%
     \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
                        \to\inserts@list
     \global\advance\insert@count \@ne
   \fi\ignorespaces}
 \newcommand{\vl@dbfnote}[2]{%
   \def\@thefnmark{#2}%
-  \l@doldold@footnotetext{#1}}
+  \@footnotetext{#1}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
