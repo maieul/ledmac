@@ -3091,6 +3091,12 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@edtextoutsidepstart}
+%    \begin{macrocode}
+\newcommand*{\led@err@edtextoutsidepstart}{%
+  \eledmac@error{\string\edtext\space outside numbered paragraph (\pstart…\pend)}{\@ehc}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@mess@NotesChanged}
 %    \begin{macrocode}
 \newcommand*{\led@mess@NotesChanged}{%
@@ -5520,7 +5526,7 @@
 % skip them.
 %
 % When executed, \cs{critext} first ensures that we're in
-% horizontal mode.
+% horizontal mode. 
 %    \begin{macrocode}
 \long\def\critext#1#2/{\leavevmode
   \@edtext@true%
@@ -5618,31 +5624,35 @@
 % \begin{macro}{\edtext}
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode
-  \@edtext@true%
-  \begingroup%
-    \global\renewcommand{\@tag}{\no@expands #1}%
-    \set@line%
-    \ifledRcol \global\insert@countR \z@% 
-    \else      \global\insert@count \z@ \fi%
-    \ignorespaces #2\relax%
-    \@ifundefined{xpg@main@language}{%if not polyglossia
-       \flag@start}%
-       {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-       }%
-  \endgroup%
-  \showlemma{#1}%
-  \ifx\end@lemmas\empty \else%
-    \gl@p\end@lemmas\to\x@lemma%
-    \x@lemma%
-    \global\let\x@lemma=\relax%
+  \ifnumberedpar@%
+      \@edtext@true%
+      \begingroup%
+        \global\renewcommand{\@tag}{\no@expands #1}%
+        \set@line%
+        \ifledRcol \global\insert@countR \z@% 
+        \else      \global\insert@count \z@ \fi%
+        \ignorespaces #2\relax%
+        \@ifundefined{xpg@main@language}{%if not polyglossia
+           \flag@start}%
+           {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+           }%
+      \endgroup%
+      \showlemma{#1}%
+      \ifx\end@lemmas\empty \else%
+        \gl@p\end@lemmas\to\x@lemma%
+        \x@lemma%
+        \global\let\x@lemma=\relax%
+      \fi%
+      \@ifundefined{xpg@main@language}{%if not polyglossia
+           \flag@end}%
+           {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+           }%
+      \global\@noneed@Footnotefalse%
+       \@edtext@false%
+       \global\@lemmacommand@false%
+  \else%
+  \led@err@edtextoutsidepstart%
   \fi%
-  \@ifundefined{xpg@main@language}{%if not polyglossia
-       \flag@end}%
-       {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-       }%
-  \global\@noneed@Footnotefalse%
-   \@edtext@false%
-   \global\@lemmacommand@false%
 }%
 
 \newcommand*{\flag@end}{%
