@@ -2721,10 +2721,14 @@
 \newcommand{\@continue@notes}{%
     \renewcommand{\do}[1]{%
     \iftoggle{Xbothsides@##1}{%
-        \@continue@Xnotes@normal{##1}%
+        \ifcsstring{series@display##1}{paragraph}%
+          {\@continue@Xnotes@paragraph{##1}}%
+          {\@continue@Xnotes@normal{##1}}%
         }{}%
     \iftoggle{bothsidesX@##1}{%
-        \@continue@notesX@normal{##1}%
+        \ifcsstring{series@displayX##1}{paragraph}%
+          {\@continue@notesX@paragraph{##1}}%
+          {\@continue@notesX@normal{##1}}%
         }{}%
     }%
     \dolistloop{\@series}%
@@ -3267,7 +3271,6 @@
 \newcommand*{\l@ddodoreinxtrafeet}{%
   \doreinxtrafeeti
   \doreinxtrafeetii%
-  \@continue@notes@formac%
   }%
 
 \newcommand*{\doreinxtrafeetii}{%
@@ -3282,7 +3285,10 @@
 }
 
 \@ifclassloaded{memoir}{%
-  \g@addto@macro{\m@mdoextrafeet}{\l@ddoxtrafeet}%
+  \g@addto@macro{\m@mdoextrafeet}{%
+    \l@ddoxtrafeet%
+    \@continue@notes@formac%
+    }%
   \g@addto@macro{\m@mdodoreinextrafeet}{\l@ddodoreinxtrafeet}%
   }{%
   \gdef\@makecol{\l@d@makecol}%
