@@ -2683,40 +2683,48 @@
 }%
 
 
+\newcommand{\@continue@Xnotes@normal}[1]{%
+        \global\csname Xtotalh@#1\endcsname=0pt%
+        \ifdim\ht\csname Xtoolong@#1\endcsname>\expandafter\dimen\csname#1footins\endcsname%
+          \global\advance\csname Xtotalh@#1\endcsname by \expandafter\dimen\csname#1footins\endcsname%
+          \newbox\notecontent%
+          \footsplitskips%
+          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@#1\endcsname to \dimen\csname#1footins\endcsname%
+          \insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup%
+        \else%
+          \ifdim\ht\csname Xtoolong@#1\endcsname>0pt%
+            \global\advance\csname Xtotalh@#1\endcsname by \ht\csname Xtoolong@#1\endcsname%
+            \global\advance\csname Xtotalh@#1\endcsname by \dp\csname Xtoolong@#1\endcsname%
+            \insert\csname #1footins\endcsname\bgroup\unvbox\csname Xtoolong@#1\endcsname\egroup%
+          \fi%
+        \fi%
+}%
+
+
+\newcommand{\@continue@notesX@normal}[1]{%
+        \global\csname totalhX@#1\endcsname=0pt%
+        \ifdim\ht\csname toolongX@#1\endcsname>\expandafter\dimen\csname footins#1\endcsname%
+          \global\advance\csname totalhX@#1\endcsname by \expandafter\dimen\csname footins#1\endcsname%
+          \newbox\notecontent%
+          \footsplitskips%
+          \setbox\notecontent=\expandafter\vsplit\csname toolongX@#1\endcsname to \dimen\csname footins#1\endcsname%
+          \insert\csname footins#1\endcsname\bgroup\unvbox\notecontent\egroup%
+        \else%
+          \ifdim\ht\csname toolongX@#1\endcsname>0pt%
+            \global\advance\csname totalhX@#1\endcsname by \ht\csname toolongX@#1\endcsname%
+            \global\advance\csname totalhX@#1\endcsname by \dp\csname toolongX@#1\endcsname%
+            \insert\csname footins#1\endcsname\bgroup\unvbox\csname toolongX@#1\endcsname\egroup%
+          \fi%
+        \fi%
+}%
 
 \newcommand{\@continue@notes}{%
     \renewcommand{\do}[1]{%
     \iftoggle{Xbothsides@##1}{%
-        \global\csname Xtotalh@##1\endcsname=0pt%
-        \ifdim\ht\csname Xtoolong@##1\endcsname>\expandafter\dimen\csname##1footins\endcsname%
-          \global\advance\csname Xtotalh@##1\endcsname by \expandafter\dimen\csname##1footins\endcsname%
-          \newbox\notecontent%
-          \footsplitskips%
-          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@##1\endcsname to \dimen\csname##1footins\endcsname%
-          \insert\csname ##1footins\endcsname\bgroup\unvbox\notecontent\egroup%
-        \else%
-          \ifdim\ht\csname Xtoolong@##1\endcsname>0pt%
-            \global\advance\csname Xtotalh@##1\endcsname by \ht\csname Xtoolong@##1\endcsname%
-            \global\advance\csname Xtotalh@##1\endcsname by \dp\csname Xtoolong@##1\endcsname%
-            \insert\csname ##1footins\endcsname\bgroup\unvbox\csname Xtoolong@##1\endcsname\egroup%
-          \fi%
-        \fi%
+        \@continue@Xnotes@normal{##1}%
         }{}%
     \iftoggle{bothsidesX@##1}{%
-        \global\csname totalhX@##1\endcsname=0pt%
-        \ifdim\ht\csname toolongX@##1\endcsname>\expandafter\dimen\csname footins##1\endcsname%
-          \global\advance\csname totalhX@##1\endcsname by \expandafter\dimen\csname footins##1\endcsname%
-          \newbox\notecontent%
-          \footsplitskips%
-          \setbox\notecontent=\expandafter\vsplit\csname toolongX@##1\endcsname to \dimen\csname footins##1\endcsname%
-          \insert\csname footins##1\endcsname\bgroup\unvbox\notecontent\egroup%
-        \else%
-          \ifdim\ht\csname toolongX@##1\endcsname>0pt%
-            \global\advance\csname totalhX@##1\endcsname by \ht\csname toolongX@##1\endcsname%
-            \global\advance\csname totalhX@##1\endcsname by \dp\csname toolongX@##1\endcsname%
-            \insert\csname footins##1\endcsname\bgroup\unvbox\csname toolongX@##1\endcsname\egroup%
-          \fi%
-        \fi%
+        \@continue@notesX@normal{##1}%
         }{}%
     }%
     \dolistloop{\@series}%
