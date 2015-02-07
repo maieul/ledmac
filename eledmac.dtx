@@ -5102,7 +5102,7 @@
 % setting the value of \cs{insert@count} appropriately; it
 % actually gets done by the various footnote macros.
 %    \begin{macrocode}
-\newif\if@noneed@Footnote%Bool to check if we have to print a error message
+\newif\if@noneed@Footnote%
 
 \newcommand*{\flag@start}{%
   \ifledRcol%
@@ -5346,8 +5346,8 @@
 % to store and recall this kind of information if they need it.
 %
 %
-% \subsection{{\tt \protect\bslash edtext} and {\tt \protect\bslash critext}
-%  themselves}
+% \subsection{{\tt \protect\bslash edtext} (and {\tt \protect\bslash critext})
+%  itself}
 %
 % The various note-generating macros might want to request that
 % commands be executed not at once, but in close connection with the
@@ -5367,7 +5367,7 @@
 % \cs{end@lemmas} by using \cs{xleft@appenditem}.
 % (Anything that needs to be done at
 % the \emph{start} of the lemma may be handled using \cs{aftergroup}, since
-% the commands specified within \cs{critext}'s second argument are
+% the commands specified within \cs{edtext}'s second argument are
 % executed within a group that ends just before the lemma is added to
 % the main text.)
 %
@@ -5377,7 +5377,7 @@
 % no use is currently made of \cs{end@lemmas} or of the \cs{aftergroup}
 % trick. The general
 % approach would be to define a macro to be used within the second
-% argument of \cs{critext} that would add the appropriate command to
+% argument of \cs{edtext} that would add the appropriate command to
 % \cs{end@lemmas}.
 %
 % Commands that are added to this list should always take care
@@ -5390,10 +5390,10 @@
 %
 % \begin{macro}{\dummy@text}
 % We now need to define a number of macros that allow us to weed out
-% nested instances of \cs{critext}, and other problematic macros, from
+% nested instances of \cs{edtext}, and other problematic macros, from
 % our lemma. This is similar to what we did in reading the line-list
 % file using \cs{dummy@ref} and various redefinitions---and that's
-% because nested \cs{critext} macros create nested \cs{@ref} entries
+% because nested \cs{edtext} macros create nested \cs{@ref} entries
 % in the line-list file.
 %
 % Here's a macro that takes the same arguments as
@@ -5454,7 +5454,7 @@
 % We also need to eliminate all \Eledmac{} macros like \cs{edlabel} and
 % \cs{setline} that write things to auxiliary files: that writing
 % should be done only once. And we make
-% \cs{critext} itself, if it appears within its own
+% \cs{edtext} itself, if it appears within its own
 % argument, do nothing but copy its first argument.
 %
 % Finally, we execute \cs{morenoexpands}. The version of
@@ -5465,11 +5465,11 @@
 % standard \Eledmac{} code. If you define your own
 % \cs{morenoexpands}, you must be very careful about spaces: if the
 % macro adds any spaces to the text when it runs, extra space
-% will appear in the main text when \cs{critext} is used.
+% will appear in the main text when \cs{edtext} is used.
 %
 % (A related problem, not addressed by these two macros,
 % is that of characters whose category code is changed by any
-% the macros used in the arguments to \cs{critext}. Since the
+% the macros used in the arguments to \cs{edtext}. Since the
 % category codes are set when the arguments are scanned, macros
 % that depend on changing them will not work. We have most often
 % encountered this with characters that are made `active' within
@@ -5526,49 +5526,62 @@
 % text, it seems more appropriate to pay attention to spaces than to
 % skip them.
 %
-% When executed, \cs{critext} first ensures that we're in
-% horizontal mode. 
+% Since v.1.17, \cs{critext} only refers to \cs{edtext}.
 %    \begin{macrocode}
-\long\def\critext#1#2/{\leavevmode
-  \@edtext@true%
-%    \end{macrocode}
-%
-% \begin{macro}{\@tag}
-% Our normal lemma is just argument \verb"#1"; but that argument could have
-% further invocations of \cs{critext} within it. We get a copy of the
-% lemma without any \cs{critext} macros within it by temporarily redefining
-% \cs{critext} to just copy its first argument and ignore the other,
-% and then expand \verb"#1" into \cs{@tag}, our lemma.
-%
-% This is done within a group that starts here, in order to get the
-% original \cs{critext} restored; within this group we've also turned
-% off the expansion of those control sequences commonly found within text
-% that can cause trouble for us.
-%    \begin{macrocode}
-  \begingroup
-    \global\renewcommand{\@tag}{\no@expands #1}%%
+\long\def\critext#1#2/{\edtext{#1}{#2}}%
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{v0.4}{2004/02/29}{Added \cs{showlemma} to \cs{edtext} (and \cs{critext})}
+% \changes{v1.4}{2012/11/16}{Compatibility of \cs{edtext} (and \cs{critext}) with the right-to-left direction (with Polyglossia).}
+% \begin{macro}{\edtext}
+% When executed, \cs{edtext} first ensures that we're in
+% horizontal mode. 
+%    \begin{macrocode}
+\newcommand{\edtext}[2]{\leavevmode%
+%    \end{macrocode}
+% Then, check if we are in a numbered paragraph (\cs{pstart}…\cs{pend}).. 
+%    \begin{macrocode}
+  \ifnumberedpar@%
+%    \end{macrocode}
+% We switch the \cs{@edtext@} flag,
+% to let know to other commands that we are in a  \cs{edtext}.
+%    \begin{macrocode}
+      \@edtext@true%
+%    \end{macrocode}
+% \begin{macro}{\@tag}
+% Our normal lemma is just argument \verb"#1"; but that argument could have
+% further invocations of \cs{edtext} within it. We get a copy of the
+% lemma without any \cs{edtext} macros within it by temporarily redefining
+% \cs{edtext} to just copy its first argument and ignore the other,
+% and then expand \verb"#1" into \cs{@tag}, our lemma.
+%
+% This is done within a group that starts here, in order to get the
+% original \cs{edtext} restored; within this group we've also turned
+% off the expansion of those control sequences commonly found within text
+% that can cause trouble for us.
+%    \begin{macrocode}
+      \begingroup%
+        \global\renewcommand{\@tag}{\no@expands #1}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\l@d@nums}
 % \phantomsection\label{nums}
 % Prepare more data for the benefit of note-generating macros: the line
 % references and font specifier for this lemma go to \cs{l@d@nums}.
 %    \begin{macrocode}
-    \set@line
+        \set@line%
 %    \end{macrocode}
 % \end{macro}
-%
 % \cs{insert@count} will be altered by the note-generating macros:
 % it counts the number of deferred footnotes or other insertions
-% generated by this instance of \cs{critext}. 
+% generated by this instance of \cs{edtext}. 
 % If we are in a right column (eledpar), we use \cs{insert@countR} 
 % instead of \cs{insert@count}.
 %    \begin{macrocode}
-    \ifledRcol \global\insert@countR \z@%
-    \else      \global\insert@count \z@ \fi%
+        \ifledRcol \global\insert@countR \z@% 
+        \else      \global\insert@count \z@ \fi%
 %    \end{macrocode}
-%
 % Now process the note-generating macros in argument \verb"#2"
 % (i.e., \cs{Afootnote}, \cs{lemma}, etc.). \cs{ignorespaces} is here to
 % skip over any spaces that might appear at the start of \verb"#2";
@@ -5577,9 +5590,8 @@
 % \cs{ignorespaces} as well, to skip any spaces between macros when
 % several are used in series.
 %    \begin{macrocode}
-    \ignorespaces #2\relax
+        \ignorespaces #2\relax%
 %    \end{macrocode}
-%
 % Finally, we're ready to admit the first argument into the current
 % paragraph.
 %
@@ -5590,12 +5602,12 @@
 % within the expansion of \verb"#2" above, or in \cs{aftergroup}
 % commands within that expansion.
 %    \begin{macrocode}
-   \@ifundefined{xpg@main@language}{%if not polyglossia
-       \flag@start}%
-       {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-       }
-  \endgroup
-  \showlemma{#1}%
+        \@ifundefined{xpg@main@language}{%if not polyglossia
+           \flag@start}%
+           {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+           }%
+      \endgroup%
+      \showlemma{#1}%
 %    \end{macrocode}
 %
 % Finally, we add any insertions that are
@@ -5605,40 +5617,6 @@
 % not above.
 %
 %    \begin{macrocode}
-  \ifx\end@lemmas\empty \else
-    \gl@p\end@lemmas\to\x@lemma
-    \x@lemma
-    \global\let\x@lemma=\relax
-  \fi
-  \@ifundefined{xpg@main@language}{%if not polyglossia
-       \flag@end}%
-       {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-       }
-  \@edtext@false%
-  \global\@lemmacommand@false%
-  }
-%    \end{macrocode}
-% \end{macro}
-%
-% \changes{v0.4}{2004/02/29}{Added \cs{showlemma} to \cs{edtext} (and \cs{critext})}
-% \changes{v1.4}{2012/11/16}{Compatibility of \cs{edtext} (and \cs{critext}) with the right-to-left direction (with Polyglossia).}
-% \begin{macro}{\edtext}
-%    \begin{macrocode}
-\newcommand{\edtext}[2]{\leavevmode
-  \ifnumberedpar@%
-      \@edtext@true%
-      \begingroup%
-        \global\renewcommand{\@tag}{\no@expands #1}%
-        \set@line%
-        \ifledRcol \global\insert@countR \z@% 
-        \else      \global\insert@count \z@ \fi%
-        \ignorespaces #2\relax%
-        \@ifundefined{xpg@main@language}{%if not polyglossia
-           \flag@start}%
-           {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-           }%
-      \endgroup%
-      \showlemma{#1}%
       \ifx\end@lemmas\empty \else%
         \gl@p\end@lemmas\to\x@lemma%
         \x@lemma%
@@ -5648,9 +5626,20 @@
            \flag@end}%
            {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
            }%
+%    \end{macrocode}
+% We switch to false some flag.
+% \begin{itemize}
+%    \item The one that checks having footnotes inside a \cs{edtext}.
+%    \item The one that says we are inside a \cs{edtext}.
+%    \item The one that says we are inside à \cs{@lemma}.
+% \end{itemize}
+%    \begin{macrocode}
       \global\@noneed@Footnotefalse%
-       \@edtext@false%
-       \global\@lemmacommand@false%
+      \@edtext@false%
+      \global\@lemmacommand@false%
+%    \end{macrocode}
+% If we are outside of a numbered paragraph,
+% we send error message and print the first argument.
   \else%
   \showlemma{#1} (\textbf{\textsc{Edtext outside numbered paragraph}})\led@err@edtextoutsidepstart%
   \fi%
