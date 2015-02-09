@@ -1830,17 +1830,7 @@
       \noindent\csname #1footfmt\endcsname#2[#1]}%
     \setbox0=\hbox{\unvxh0[#1]}%
     \dp0=0pt
-    \newdimen\theoricalheight%
-    \theoricalheight=\csname #1footfudgefactor\endcsname\wd0%
-    \newdimen\maxcumulatedheight%
-    \maxcumulatedheight=\expandafter\dimen\csname #1footins\endcsname%
-    \ifdim\dimexpr\csname Xtotalh@#1\endcsname+\theoricalheight\relax>\maxcumulatedheight% does we override, with this entries, the maximum?
-      \theoricalheight=\dimexpr\maxcumulatedheight-\csname Xtotalh@#1\endcsname\relax%
-      \global\csname Xtotalh@#1\endcsname=\maxcumulatedheight%
-    \else%
-      \global\advance\csname Xtotalh@#1\endcsname by \theoricalheight%
-    \fi%
-    \ht0=\theoricalheight%
+    \ht0=\csname #1footfudgefactor\endcsname\wd0
     \if@RTL\noindent \leavevmode\fi\box0%
     \penalty0
   \egroup}
@@ -1880,21 +1870,16 @@
   }}%
   #3\penalty-10 }
 \newcommand*{\para@footgroup}[1]{%
-  \unvbox\csname #1footins\endcsname
+  \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
-  \csuse{Xnotefontsize@#1}%
-  \newbox\notecontent%
-  \setbox\notecontent=\vbox{\noindent\unhbox0\par}%
-  \footsplitskips%
-  \newbox\beforesplit%
-  \setbox\beforesplit=\vsplit\notecontent to \dimen\csname #1footins\endcsname%
-  \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\copy\notecontent%
-  \unvbox\beforesplit%
+  \csuse{Xnotefontsize@#1}
+  \noindent\unhbox0\par%
   \global\hsize=\old@hsize%
   }%
+
 
 
 \newcommand*{\mppara@footgroup}[1]{{%
@@ -2485,7 +2470,7 @@
     \setbox0=\hbox{\unvxh0[#1]}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
-    \box0
+    \unhbox0
     \penalty0
   \egroup}
 \newcommand*{\mppara@vfootnoteX}[2]{%
@@ -2660,6 +2645,29 @@
 }%
 
 \newcommand{\split@notes@forXbothsides}[1]{%
+      \newbox\beforesplit%
+      \newdimen\leftheight%
+      \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
+      \advance\leftheight by -\csname Xtotalh@#1\endcsname%
+      \ifdim\leftheight>0pt%
+        \ifdim\ht\notecontent>\leftheight%
+            \footsplitskips%
+            \setbox\beforesplit=\vsplit\notecontent to \leftheight%
+        \else%
+            \setbox\beforesplit=\box\notecontent%
+        \fi%
+        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit%
+        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit%
+        \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup%
+      \fi%
+      \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox%
+        \bgroup%
+          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
+          \unvbox\notecontent%
+        \egroup%
+}%
+
+\newcommand{\split@notes@forXbothsides@paragraphed}[1]{%
       \newbox\beforesplit%
       \newdimen\leftheight%
       \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
