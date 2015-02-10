@@ -1823,6 +1823,8 @@
   \noindent\leavevmode}
 
 \newcommand*{\para@vfootnote}[2]{%
+    \newdimen\old@baselineskip%
+    \old@baselineskip=\baselineskip%
     \csuse{bhookXnote@#1}%
     \csuse{Xnotefontsize@#1}%
     \footsplitskips%
@@ -1835,7 +1837,6 @@
     \newdimen\maxcumulatedheight%
     \maxcumulatedheight=\expandafter\dimen\csname #1footins\endcsname%
     \ifdim\dimexpr\csname Xtotalh@#1\endcsname+\theoricalheight\relax>\maxcumulatedheight% does we override, with this entries, the maximum?
-       \newcount\toto
        \newbox\notecontent%
        \newbox\noteline%
        \setbox\notecontent=\vbox{\noindent \unhbox0}%
@@ -2662,7 +2663,7 @@
           \unvbox\notecontent%
         \egroup%
 }%
-
+%591,021567-(492,0598+86,66353+9)
 \newcommand{\split@notes@forXpara}[1]{%
       \unless\ifvoid\notecontent%
         \setbox\noteline=\vsplit\notecontent to \baselineskip%
@@ -2672,9 +2673,8 @@
         \ht\noteline=\baselineskip%
         \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
         \global\expandafter\advance\csname Xtotalh@#1\endcsname by \baselineskip%
-          \ifdim\dimexpr \pagetotal+\csname Xtotalh@#1\endcsname+3\baselineskip<\pagegoal%
-          \eledmac@warning{\the\pagegoal \the\pagetotal ; \the\csname Xtotalh@#1\endcsname}%
-          \split@notes@forXpara{#1}%
+          \ifdim\dimexpr \pagetotal+\old@baselineskip+\csname Xtotalh@#1\endcsname+2\baselineskip<\pagegoal%
+            \split@notes@forXpara{#1}%
         \fi%
      \fi%
 }%
@@ -3268,6 +3268,7 @@
 }%
 
 \gdef\l@d@makecol{%
+   \eledmac@warning{s, \thepage ; , \the\pagetotal ; \the\ht\Afootins}
   \l@ddofootinsert
   \m@m@makecolfloats
   \m@m@makecoltext
