@@ -1564,6 +1564,7 @@
    }%
 }
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
+  \eledmac@warning{ici \the\pagegoal ici \the\pagegoal}
   \newbox\notecontent%
   \setbox\notecontent=\vbox\bgroup%
     \csuse{bhookXnote@#1}%
@@ -1579,6 +1580,7 @@
   \iftoggle{Xbothsides@#1}%
       {\split@notes@forXbothsides{#1}}%
       {\insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup}%
+    \eledmac@warning{ici \the\pagegoal}
   }
 
 \newcommand*{\footsplitskips}{%
@@ -1821,19 +1823,37 @@
   \noindent\leavevmode}
 
 \newcommand*{\para@vfootnote}[2]{%
-  \insert\csname #1footins\endcsname
-  \bgroup
-    \csuse{bhookXnote@#1}
-    \csuse{Xnotefontsize@#1}
-    \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \csuse{bhookXnote@#1}%
+    \csuse{Xnotefontsize@#1}%
+    \footsplitskips%
+    \setbox0=\vbox{\hsize=\maxdimen%
       \noindent\csname #1footfmt\endcsname#2[#1]}%
     \setbox0=\hbox{\unvxh0[#1]}%
-    \dp0=0pt
-    \ht0=\csname #1footfudgefactor\endcsname\wd0
-    \if@RTL\noindent \leavevmode\fi\box0%
-    \penalty0
-  \egroup}
+    \dp0=0pt%
+    \newdimen\theoricalheight%
+    \theoricalheight=\csname #1footfudgefactor\endcsname\wd0%
+    \newdimen\maxcumulatedheight%
+    \maxcumulatedheight=\expandafter\dimen\csname #1footins\endcsname%
+    \ifdim\dimexpr\csname Xtotalh@#1\endcsname+\theoricalheight\relax>\maxcumulatedheight% does we override, with this entries, the maximum?
+       \newcount\toto
+       \newbox\notecontent%
+       \newbox\noteline%
+       \setbox\notecontent=\vbox{\noindent \unhbox0}%
+       \split@notes@forXpara{#1}%
+    \else%
+      \ifdim\dimexpr\theoricalheight+\pagetotal>\pagegoal%
+        \noindent\split@notes@forXpara{#1}%
+      \else%
+        \global\advance\csname Xtotalh@#1\endcsname by \theoricalheight%
+        \ht0=\theoricalheight%
+          \insert\csname #1footins\endcsname%
+ 		  \bgroup%
+             \if@RTL\noindent \leavevmode\fi\box0%
+             \egroup%
+          \fi%
+      \fi%
+      \penalty0%
+}
 
 \newcommand*{\mppara@vfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
@@ -2644,30 +2664,34 @@
         \egroup%
 }%
 
-\newcommand{\split@notes@forXbothsides}[1]{%
-      \newbox\beforesplit%
-      \newdimen\leftheight%
-      \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
-      \advance\leftheight by -\csname Xtotalh@#1\endcsname%
-      \ifdim\leftheight>0pt%
-        \ifdim\ht\notecontent>\leftheight%
-            \footsplitskips%
-            \setbox\beforesplit=\vsplit\notecontent to \leftheight%
-        \else%
-            \setbox\beforesplit=\box\notecontent%
+\newcommand{\split@notes@forXpara}[1]{%
+      \global\advance\toto by 1%
+      \unless\ifvoid\notecontent%
+        \setbox\noteline=\vsplit\notecontent to \baselineskip%
+        \setbox\noteline=\vbox{\hsize=\maxdimen\noindent\unvbox\noteline}%
+        \setbox\noteline=\hbox{\unvxh\noteline[#1]\hskip-\csuse{afternote@#1}\ }%
+        \dp\noteline=0pt%
+        \ht\noteline=\baselineskip%
+        \insert\csname #1footins\endcsname{\box\noteline}%
+        \newdimen\oldpg
+        \oldpg=\pagegoal
+        \advance\oldpg by -\baselineskip
+        \pagegoal=\oldpg
+        \global\expandafter\advance\csname Xtotalh@#1\endcsname by \baselineskip%
+        %\ifdim\csname Xtotalh@#1\endcsname<\maxcumulatedheight%
+          \ifdim\dimexpr \pagetotal+\baselineskip+12pt\relax<\pagegoal%
+         % \eledmac@warning{\expandafter\the\csname Xtotalh@#1\endcsname\the\toto}%
+          \ifnum\toto<9%
+          \eledmac@warning{\the\toto\space \the\pagegoal \the\pagetotal}%
+          \split@notes@forXpara{#1}%
+          \fi
         \fi%
-        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit%
-        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit%
-        \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup%
-      \fi%
-      \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox%
-        \bgroup%
-          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
-          \unvbox\notecontent%
-        \egroup%
+      %\fi%
+     \fi%
 }%
 
-\newcommand{\split@notes@forXbothsides@paragraphed}[1]{%
+
+\newcommand{\split@notes@forXbothsides}[1]{%
       \newbox\beforesplit%
       \newdimen\leftheight%
       \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
