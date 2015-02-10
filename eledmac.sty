@@ -2683,9 +2683,9 @@
         \ifnotesX@notemoreplace%
           \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
         \else%
-	        \global\expandafter\setbox\csname toolongX@#1\endcsname=\vbox%
+	        \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox%
 	        \bgroup%
-	          \ifvoid\csname toolongX@#1\endcsname\else\expandafter\unvbox\csname toolongX@#1\endcsname\fi%
+	          \ifvoid\csname Xtoolong@#1\endcsname\else\expandafter\unvbox\csname Xtoolong@#1\endcsname\fi%
 	          \box\noteline%
 	        \egroup%
         \fi%
@@ -2695,7 +2695,7 @@
           \else%
             \global\notesX@notemoreplacefalse%
           \fi%
-            \split@notes@forXpara{#1}%
+		 \split@notes@forXpara{#1}%
      \fi%
 }%
 
@@ -2725,27 +2725,17 @@
 
 
 \newcommand{\@continue@Xnotes@paragraph}[1]{%
-        \global\csname Xtotalh@#1\endcsname=0pt%
-        \ifdim\ht\csname Xtoolong@#1\endcsname>\expandafter\dimen\csname#1footins\endcsname%
-          \global\advance\csname Xtotalh@#1\endcsname by \expandafter\dimen\csname#1footins\endcsname%
-          \newbox\notecontent%
-          \footsplitskips%
-          \setbox\notecontent=\expandafter\vsplit\csname Xtoolong@#1\endcsname to \dimen\csname#1footins\endcsname%
-          \insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup%
-        \else%
-          \ifdim\ht\csname Xtoolong@#1\endcsname>0pt%
-            \global\advance\csname Xtotalh@#1\endcsname by \ht\csname Xtoolong@#1\endcsname%
-            \global\advance\csname Xtotalh@#1\endcsname by \dp\csname Xtoolong@#1\endcsname%
-            \setbox0=\vbox{%
-              \hsize=\maxdimen%
-              \noindent\unvbox\csname Xtoolong@#1\endcsname%
-              }%
-            \setbox0=\hbox{\unvxh0[#1]}%
-            \dp0=\z@%
-            \ht0=\csname #1footfudgefactor\endcsname\wd0%
-            \insert\csname #1footins\endcsname\bgroup\box0\egroup%
-          \fi%
-        \fi%
+ \parindent=0pt\global\csname Xtotalh@#1\endcsname=0pt%
+ \pagegoal\vsize%
+ \ifvoid\csname Xtoolong@#1\endcsname\else%
+ \global\let\old@baselineskip=\baselineskip%
+    \csuse{Xnotefontsize@#1}%
+ \setbox\notecontent=\vbox{%
+   \unvbox\csname Xtoolong@#1\endcsname\removehboxes}%
+       \global\notesX@notemoreplacetrue%
+       \split@notes@forXpara{#1}%
+       \global\notesX@notemoreplacefalse%
+ \fi%
 }%
 
 \newcommand{\@continue@Xnotes@normal}[1]{%
@@ -3282,9 +3272,9 @@
 \providecommand{\m@m@makecolintro}{}
 
 \gdef\@continue@notes@formac{%
-  \unless\ifl@dprintingpages%
+%%\unless\ifl@dprintingpages%
     \@continue@notes%
-  \fi%
+%%\fi%
 }%
 
 \gdef\l@d@makecol{%
