@@ -1848,11 +1848,10 @@
         \ht0=\theoricalheight%
           \insert\csname #1footins\endcsname%
  		  \bgroup%
-             \if@RTL\noindent \leavevmode\fi\box0%
+             \if@RTL\noindent \leavevmode\fi\box0\penalty0%
              \egroup%
           \fi%
-      \fi%
-      \penalty0%
+      \fi%%
 }
 
 \newcommand*{\mppara@vfootnote}[2]{%
@@ -1890,6 +1889,7 @@
   }}%
   #3\penalty-10 }
 \newcommand*{\para@footgroup}[1]{%
+  \eledmac@warning{hauteur \the\ht\Afootins}%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -2672,17 +2672,11 @@
         \setbox\noteline=\hbox{\unvxh\noteline[#1]\hskip-\csuse{afternote@#1}\ }%
         \dp\noteline=0pt%
         \ht\noteline=\baselineskip%
-        \insert\csname #1footins\endcsname{\box\noteline}%
-        \newdimen\oldpg
-        \oldpg=\pagegoal
-        \advance\oldpg by -\baselineskip
-        \pagegoal=\oldpg
+        \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
         \global\expandafter\advance\csname Xtotalh@#1\endcsname by \baselineskip%
-        %\ifdim\csname Xtotalh@#1\endcsname<\maxcumulatedheight%
-          \ifdim\dimexpr \pagetotal+\baselineskip+12pt\relax<\pagegoal%
-         % \eledmac@warning{\expandafter\the\csname Xtotalh@#1\endcsname\the\toto}%
-          \ifnum\toto<9%
-          \eledmac@warning{\the\toto\space \the\pagegoal \the\pagetotal}%
+          \ifdim\dimexpr \pagetotal+\csname Xtotalh@#1\endcsname+3\baselineskip<\pagegoal%
+          \ifnum\toto<12%
+          \eledmac@warning{\the\toto\space \the\pagegoal \the\pagetotal ; \the\csname Xtotalh@#1\endcsname}%
           \split@notes@forXpara{#1}%
           \fi
         \fi%
