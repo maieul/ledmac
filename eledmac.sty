@@ -1840,7 +1840,9 @@
        \newbox\notecontent%
        \newbox\noteline%
        \setbox\notecontent=\vbox{\noindent \unhbox0}%
+       \global\notesX@notemoreplacetrue%
        \split@notes@forXpara{#1}%
+       \global\notesX@notemoreplacefalse%
     \else%
       \ifdim\dimexpr\theoricalheight+\pagetotal>\pagegoal%
         \noindent\split@notes@forXpara{#1}%
@@ -2669,6 +2671,7 @@
         \egroup%
 }%
 %591,021567-(492,0598+86,66353+9)
+\newif\ifnotesX@notemoreplace%
 \newcommand{\split@notes@forXpara}[1]{%
       \unless\ifvoid\notecontent%
         \setbox\noteline=\vsplit\notecontent to \baselineskip%
@@ -2677,11 +2680,22 @@
         \setbox\noteline=\hbox to \hsize{\unhbox\noteline}%
         \dp\noteline=0pt%
         \ht\noteline=\baselineskip%
-        \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
+        \ifnotesX@notemoreplace%
+          \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
+        \else%
+	        \global\expandafter\setbox\csname toolongX@#1\endcsname=\vbox%
+	        \bgroup%
+	          \ifvoid\csname toolongX@#1\endcsname\else\expandafter\unvbox\csname toolongX@#1\endcsname\fi%
+	          \box\noteline%
+	        \egroup%
+        \fi%
         \global\expandafter\advance\csname Xtotalh@#1\endcsname by \baselineskip%
           \ifdim\dimexpr \pagetotal+\old@baselineskip+\csname Xtotalh@#1\endcsname+2\baselineskip<\pagegoal%
+            \global\notesX@notemoreplacetrue%
+          \else%
+            \global\notesX@notemoreplacefalse%
+          \fi%
             \split@notes@forXpara{#1}%
-        \fi%
      \fi%
 }%
 
