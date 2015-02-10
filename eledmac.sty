@@ -1896,7 +1896,12 @@
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
-  \noindent\unhbox0\par%
+  \setbox0=\vbox{\noindent\unhbox0\par}%
+%Ce système est à conditionner en fonction de la taille de toolong
+  \splittopskip=\z@\nointerlineskip%
+  \vsplit0 to \dimexpr\ht0-\baselineskip\relax%
+  \setbox0=\hbox to \hsize{\unvxh0[#1]\hskip-\csuse{afternote@#1}}%
+  \box0%
   \global\hsize=\old@hsize%
   }%
 
@@ -2669,6 +2674,7 @@
         \setbox\noteline=\vsplit\notecontent to \baselineskip%
         \setbox\noteline=\vbox{\hsize=\maxdimen\noindent\unvbox\noteline}%
         \setbox\noteline=\hbox{\unvxh\noteline[#1]\hskip-\csuse{afternote@#1}\ }%
+        \setbox\noteline=\hbox to \hsize{\unhbox\noteline}%
         \dp\noteline=0pt%
         \ht\noteline=\baselineskip%
         \insert\csname #1footins\endcsname{\nointerlineskip\box\noteline\penalty0}%
