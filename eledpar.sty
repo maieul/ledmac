@@ -1,0 +1,2476 @@
+%%
+%% This is file `eledpar.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% eledpar.dtx  (with options: `code')
+%% 
+%%   Author: Author: Peter Wilson ; Herries Press herries dot press at earthlink dot net ; Maïeul Rouquette maieul at maieul dot net
+%%   Copyright 2004, 2005 Peter R. Wilson
+%%  2011- Maïeul Rouquette
+%%   This work may be distributed and/or modified under the
+%%   conditions of the LaTeX Project Public License, either
+%%   version 1.3 of this license or (at your option) any
+%%   later version.
+%%   The latest version of the license is in
+%%      http://www.latex-project.org/lppl.txt
+%%   and version 1.3 or later is part of all distributions of
+%%   LaTeX version 2003/06/01 or later.
+%% 
+%%   This work has the LPPL maintenance status "maintained".
+%% 
+%%   This work consists of the files listed in the README file.
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{eledpar}[2015/02/13 v1.11.1 eledmac extension for parallel texts]%
+
+\newif\ifshiftedpstarts
+\let\shiftedversestrue\shiftedpstartstrue
+\let\shiftedversesfalse\shiftedpstartsfalse
+\DeclareOption{shiftedverses}{\shiftedpstartstrue}
+\DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
+\DeclareOption{parledgroup}{\parledgrouptrue}
+\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
+\ProcessOptions%
+  \l@dpairingfalse
+  \l@dpagingfalse
+  \ledRcolfalse
+\newdimen\Lcolwidth
+  \Lcolwidth=0.45\textwidth
+\newdimen\Rcolwidth
+  \Rcolwidth=0.45\textwidth
+
+\newcommand{\eledpar@error}[2]{\PackageError{eledpar}{#1}{#2}}
+\newcommand*{\led@err@TooManyPstarts}{%
+  \eledpar@error{Too many \string\pstart\space without printing.
+                Some text will be lost}{\@ehc}}
+\newcommand*{\led@err@BadLeftRightPstarts}[2]{%
+  \eledpar@error{The numbers of left (#1) and right (#2)
+                \string\pstart s do not match}{\@ehc}}
+\newcommand*{\led@err@LeftOnRightPage}{%
+  \eledpar@error{The left page has ended on a right page}{\@ehc}}
+\newcommand*{\led@err@RightOnLeftPage}{%
+  \eledpar@error{The right page has ended on a left page}{\@ehc}}
+\newcount\section@numR
+  \section@numR=\z@
+  \pst@rtedLfalse
+\newif\ifpst@rtedR
+  \pst@rtedRfalse
+
+\newcommand*{\beginnumberingR}{%
+  \ifnumberingR
+    \led@err@NumberingStarted
+    \endnumberingR
+  \fi
+  \global\l@dnumpstartsR \z@
+  \global\pst@rtedRfalse
+  \global\numberingRtrue
+  \global\advance\section@numR \@ne
+  \global\absline@numR \z@
+  \gdef\normal@page@breakR{}
+  \gdef\l@prev@pbR{}
+  \gdef\l@prev@nopbR{}
+  \global\line@numR \z@
+  \global\@lockR \z@
+  \global\sub@lockR \z@
+  \global\sublines@false
+  \global\let\next@page@numR\relax
+  \global\let\sub@change\relax
+  \message{Section \the\section@numR R }%
+  \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
+  \l@dend@stuff
+  \setcounter{pstartR}{1}
+  \begingroup
+  \initnumbering@sectcountR
+  \gdef\eled@sectionsR@@{}%
+  \if@noeled@sec\else%
+    \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@numR R}{}{}\makeatother%
+    \immediate\openout\eled@sectioningR@out=\jobname.eledsec\the\section@numR R\relax%
+  \fi%
+}
+\def\endnumberingR{%
+  \ifnumberingR
+    \global\numberingRfalse
+    \normal@pars
+    \ifl@dpairing
+      \global\pst@rtedRfalse
+    \else
+      \ifx\insertlines@listR\empty\else
+        \global\noteschanged@true
+      \fi
+      \ifx\line@listR\empty\else
+        \global\noteschanged@true
+      \fi
+    \fi
+    \ifnoteschanged@
+      \led@mess@NotesChanged
+    \fi
+  \else
+    \led@err@NumberingNotStarted
+  \fi
+  \endgroup
+  \if@noeled@sec\else%
+    \immediate\closeout\eled@sectioningR@out%
+  \fi%
+  }
+
+\newcounter{chapterR}
+\newcounter{sectionR}
+\newcounter{subsectionR}
+\newcounter{subsubsectionR}
+\newcommand{\initnumbering@sectcountR}{
+    \let\c@chapter\c@chapterR
+    \let\c@section\c@sectionR
+    \let\c@subsection\c@subsectionR
+    \let\c@subsubsection\c@subsubsectionR
+}
+\newcommand*{\pausenumberingR}{%
+  \endnumberingR\global\numberingRtrue}
+\newcommand*{\resumenumberingR}{%
+  \ifnumberingR
+     \global\pst@rtedRtrue
+     \global\advance\section@numR \@ne
+     \led@mess@SectionContinued{\the\section@numR R}%
+     \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
+     \l@dend@stuff
+     \begingroup%
+     \initnumbering@sectcountR%
+  \else
+    \led@err@numberingShouldHaveStarted
+     \endnumberingR
+     \beginnumberingR
+  \fi}
+
+\newcommand*{\memorydumpL}{%
+  \endnumbering
+  \numberingtrue
+  \global\pst@rtedLtrue
+  \global\advance\section@num \@ne
+     \led@mess@SectionContinued{\the\section@num}%
+  \line@list@stuff{\jobname.\extensionchars\the\section@num}%
+  \l@dend@stuff}
+\newcommand*{\memorydumpR}{%
+  \endnumberingR
+  \numberingRtrue
+  \global\pst@rtedRtrue
+  \global\advance\section@numR \@ne
+     \led@mess@SectionContinued{\the\section@numR R}%
+  \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
+  \l@dend@stuff}
+
+\newif\ifbypage@R
+\newif\ifbypstart@R
+  \bypage@Rfalse
+  \bypstart@Rfalse
+\newcommand*{\lineationR}[1]{{%
+  \ifnumbering
+    \led@err@LineationInNumbered
+  \else
+    \def\@tempa{#1}\def\@tempb{page}%
+    \ifx\@tempa\@tempb
+        \global\bypage@Rtrue
+        \global\bypstart@Rfalse
+    \else
+       \def\@tempb{pstart}%
+       \ifx\@tempa\@tempb
+           \global\bypage@Rfalse
+           \global\bypstart@Rtrue
+       \else
+           \def@tempb{section}
+           \ifx\@tempa\@tempb
+           \global\bypage@Rfalse
+           \global\bypstart@Rfalse
+           \else
+             \led@warn@BadLineation
+        \fi
+       \fi
+    \fi
+  \fi}}
+\WithSuffix\newcommand\lineation*[1]{%
+  \lineation{#1}%
+  \lineationR{#1}%
+}%
+\newcount\line@marginR
+\renewcommand*{\linenummargin}[1]{{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne
+    \ifledRcol
+      \global\line@marginR=\@l@dtempcntb
+    \else
+      \global\line@margin=\@l@dtempcntb
+    \fi
+  \fi}}
+\line@marginR=\@ne
+
+\newcounter{firstlinenumR}
+  \setcounter{firstlinenumR}{5}
+\newcounter{linenumincrementR}
+  \setcounter{linenumincrementR}{5}
+\newcounter{firstsublinenumR}
+  \setcounter{firstsublinenumR}{5}
+\newcounter{sublinenumincrementR}
+  \setcounter{sublinenumincrementR}{5}
+
+\providecommand*{\firstlinenum}{}
+\providecommand*{\linenumincrement}{}
+\providecommand*{\firstsublinenum}{}
+\providecommand*{\sublinenumincrement}{}
+\renewcommand*{\firstlinenum}[1]{%
+  \ifledRcol \setcounter{firstlinenumR}{#1}%
+  \else      \setcounter{firstlinenum}{#1}%
+  \fi}
+\renewcommand*{\linenumincrement}[1]{%
+  \ifledRcol \setcounter{linenumincrementR}{#1}%
+  \else      \setcounter{linenumincrement}{#1}%
+  \fi}
+\renewcommand*{\firstsublinenum}[1]{%
+  \ifledRcol \setcounter{firstsublinenumR}{#1}%
+  \else      \setcounter{firstsublinenum}{#1}%
+  \fi}
+\renewcommand*{\sublinenumincrement}[1]{%
+  \ifledRcol \setcounter{sublinenumincrementR}{#1}%
+  \else      \setcounter{sublinenumincrement}{#1}%
+  \fi}
+\WithSuffix\newcommand\firstlinenum*[1]{\setcounter{firstlinenumR}{#1}\setcounter{firstlinenum}{#1}}
+\WithSuffix\newcommand\linenumincrement*[1]{\setcounter{linenumincrementR}{#1}\setcounter{linenumincrement}{#1}}
+\WithSuffix\newcommand\firstsublinenum*[1]{\setcounter{subfirstlinenumR}{#1}\setcounter{subfirstlinenum}{#1}}
+\WithSuffix\newcommand\sublinenumincrement*[1]{\setcounter{sublinenumincrementR}{#1}\setcounter{sublinenumincrement}{#1}}
+\newcommand*{\Rlineflag}{R}
+
+\newcommand*{\linenumrepR}[1]{\@arabic{#1}}
+\newcommand*{\sublinenumrepR}[1]{\@arabic{#1}}
+
+\newcommand*{\leftlinenumR}{%
+  \l@dlinenumR
+  \kern\linenumsep}
+\newcommand*{\rightlinenumR}{%
+  \kern\linenumsep
+  \l@dlinenumR}
+\newcommand*{\l@dlinenumR}{%
+  \numlabfont\linenumrepR{\line@numR}\Rlineflag%
+  \ifsublines@
+    \ifnum\subline@num>\z@
+      \unskip\fullstop\sublinenumrepR{\subline@numR}%
+    \fi
+  \fi}
+
+\newcount\line@numR
+\newcount\subline@numR
+\newcount\absline@numR
+
+\list@create{\line@listR}
+\list@create{\insertlines@listR}
+\list@create{\actionlines@listR}
+\list@create{\actions@listR}
+\list@create{\sw@listR}%
+\list@create{\sw@list@inedtextR}%
+
+\list@create{\linesinpar@listL}
+\list@create{\linesinpar@listR}
+\list@create{\maxlinesinpar@list}
+
+\newcount\page@numR
+
+\renewcommand*{\read@linelist}[1]{%
+  \ifledRcol
+    \list@clear{\line@listR}%
+    \list@clear{\insertlines@listR}%
+    \list@clear{\actionlines@listR}%
+    \list@clear{\actions@listR}%
+    \list@clear{\linesinpar@listR}%
+    \list@clear{\linesonpage@listR}
+    \list@clear{\sw@listR}%
+    \list@clear{\sw@list@inedtextR}%
+  \else
+    \list@clearing@reg
+    \list@clear{\linesinpar@listL}%
+    \list@clear{\linesonpage@listL}%
+  \fi
+  \list@clear{\maxlinesinpar@list}
+  \get@linelistfile{#1}%
+  \endgroup
+  \ifledRcol
+    \global\page@numR=\m@ne
+    \ifx\actionlines@listR\empty
+      \gdef\next@actionlineR{1000000}%
+    \else
+      \gl@p\actionlines@listR\to\next@actionlineR
+      \gl@p\actions@listR\to\next@actionR
+    \fi
+  \else
+    \global\page@num=\m@ne
+    \ifx\actionlines@list\empty
+      \gdef\next@actionline{1000000}%
+    \else
+      \gl@p\actionlines@list\to\next@actionline
+      \gl@p\actions@list\to\next@action
+    \fi
+  \fi}
+
+\newcommand{\@nl@regR}{%
+  \ifx\l@dchset@num\relax \else
+    \advance\absline@numR \@ne
+    \set@line@action
+    \let\l@dchset@num\relax
+    \advance\absline@numR \m@ne
+    \advance\line@numR \m@ne%   % do we need this?
+  \fi
+  \advance\absline@numR \@ne
+  \ifx\next@page@numR\relax \else
+    \page@action
+    \let\next@page@numR\relax
+  \fi
+  \ifx\sub@change\relax \else
+    \ifnum\sub@change>\z@
+      \sublines@true
+    \else
+      \sublines@false
+    \fi
+    \sub@action
+    \let\sub@change\relax
+  \fi
+  \ifcase\@lockR
+  \or
+    \@lockR \tw@
+  \or\or
+    \@lockR \z@
+  \fi
+  \ifcase\sub@lockR
+  \or
+    \sub@lockR \tw@
+  \or\or
+    \sub@lockR \z@
+  \fi
+  \ifsublines@
+    \ifnum\sub@lockR<\tw@
+      \advance\subline@numR \@ne
+    \fi
+  \else
+    \ifnum\@lockR<\tw@
+      \advance\line@numR \@ne \subline@numR \z@
+    \fi
+  \fi}
+
+\renewcommand*{\@nl}[2]{%
+  \fix@page{#1}%
+  \ifledRcol
+    \@nl@regR
+  \else
+    \@nl@reg
+  \fi}
+
+\newcount\last@page@numR
+  \last@page@numR=-10000
+\renewcommand*{\fix@page}[1]{%
+  \ifledRcol
+    \ifnum #1=\last@page@numR
+    \else
+      \ifbypage@R
+        \line@numR \z@ \subline@numR \z@
+      \fi
+      \page@numR=#1\relax
+      \last@page@numR=#1\relax
+      \def\next@page@numR{#1}%
+    \fi
+  \else
+    \ifnum #1=\last@page@num
+    \else
+      \ifbypage@
+        \line@num \z@ \subline@num \z@
+      \fi
+      \page@num=#1\relax
+      \last@page@num=#1\relax
+      \def\next@page@num{#1}%
+      \listxadd{\normal@page@break}{\the\absline@num}
+    \fi
+  \fi}
+
+\renewcommand*{\@adv}[1]{%
+  \ifsublines@
+    \ifledRcol
+      \advance\subline@numR by #1\relax
+      \ifnum\subline@numR<\z@
+        \led@warn@BadAdvancelineSubline
+        \subline@numR \z@
+      \fi
+    \else
+      \advance\subline@num by #1\relax
+      \ifnum\subline@num<\z@
+        \led@warn@BadAdvancelineSubline
+        \subline@num \z@
+      \fi
+    \fi
+  \else
+    \ifledRcol
+      \advance\line@numR by #1\relax
+      \ifnum\line@numR<\z@
+        \led@warn@BadAdvancelineLine
+        \line@numR \z@
+      \fi
+    \else
+      \advance\line@num by #1\relax
+      \ifnum\line@num<\z@
+        \led@warn@BadAdvancelineLine
+        \line@num \z@
+      \fi
+    \fi
+  \fi
+  \set@line@action}
+
+\renewcommand*{\@set}[1]{%
+  \ifledRcol
+    \ifsublines@
+      \subline@numR=#1\relax
+    \else
+      \line@numR=#1\relax
+    \fi
+    \set@line@action
+  \else
+    \ifsublines@
+      \subline@num=#1\relax
+    \else
+      \line@num=#1\relax
+    \fi
+    \set@line@action
+  \fi}
+
+\renewcommand*{\l@d@set}[1]{%
+  \ifledRcol
+    \line@numR=#1\relax
+    \advance\line@numR \@ne
+    \def\l@dchset@num{#1}
+  \else
+    \line@num=#1\relax
+    \advance\line@num \@ne
+    \def\l@dchset@num{#1}
+  \fi}
+\let\l@dchset@num\relax
+
+\renewcommand*{\page@action}{%
+  \ifledRcol
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \xright@appenditem{\next@page@numR}\to\actions@listR
+  \else
+    \xright@appenditem{\the\absline@num}\to\actionlines@list
+    \xright@appenditem{\next@page@num}\to\actions@list
+  \fi}
+\renewcommand*{\set@line@action}{%
+  \ifledRcol
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \ifsublines@
+       \@l@dtempcnta=-\subline@numR
+    \else
+       \@l@dtempcnta=-\line@numR
+    \fi
+    \advance\@l@dtempcnta by -5000\relax
+    \xright@appenditem{\the\@l@dtempcnta}\to\actions@listR
+  \else
+    \xright@appenditem{\the\absline@num}\to\actionlines@list
+    \ifsublines@
+       \@l@dtempcnta=-\subline@num
+    \else
+       \@l@dtempcnta=-\line@num
+    \fi
+    \advance\@l@dtempcnta by -5000\relax
+    \xright@appenditem{\the\@l@dtempcnta}\to\actions@list
+  \fi}
+
+\renewcommand*{\sub@action}{%
+  \ifledRcol
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \ifsublines@
+      \xright@appenditem{-1001}\to\actions@listR
+    \else
+      \xright@appenditem{-1002}\to\actions@listR
+    \fi
+  \else
+    \xright@appenditem{\the\absline@num}\to\actionlines@list
+    \ifsublines@
+      \xright@appenditem{-1001}\to\actions@list
+    \else
+      \xright@appenditem{-1002}\to\actions@list
+    \fi
+  \fi}
+
+\newcount\@lockR
+\newcount\sub@lockR
+
+\newcommand*{\do@lockonR}{%
+  \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@listR
+    \ifnum\sub@lockR=\z@
+      \sub@lockR \@ne
+    \else
+      \ifnum\sub@lockR=\thr@@
+        \sub@lockR \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@listR
+    \ifnum\@lockR=\z@
+      \@lockR \@ne
+    \else
+      \ifnum\@lockR=\thr@@
+        \@lockR \@ne
+      \fi
+    \fi
+  \fi}
+
+\renewcommand*{\do@lockon}{%
+  \ifx\next\lock@off
+    \global\let\lock@off=\skip@lockoff
+  \else
+    \ifledRcol
+      \do@lockonR
+    \else
+      \do@lockonL
+    \fi
+  \fi}
+
+\newcommand{\do@lockoffR}{%
+  \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+  \ifsublines@
+    \xright@appenditem{-1006}\to\actions@listR
+    \ifnum\sub@lockR=\tw@
+      \sub@lockR \thr@@
+    \else
+      \sub@lockR \z@
+    \fi
+  \else
+    \xright@appenditem{-1004}\to\actions@listR
+    \ifnum\@lockR=\tw@
+      \@lockR \thr@@
+    \else
+      \@lockR \z@
+    \fi
+  \fi}
+
+\renewcommand*{\do@lockoff}{%
+  \ifledRcol
+    \do@lockoffR
+  \else
+    \do@lockoffL
+  \fi}
+\global\let\lock@off=\do@lockoff
+
+\providecommand*{\n@num}{}
+\renewcommand*{\n@num}{%
+  \ifledRcol
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \xright@appenditem{-1007}\to\actions@listR
+  \else
+    \n@num@reg
+  \fi}
+
+\newcount\insert@countR
+\renewcommand*{\@ref}[2]{%
+  \ifledRcol
+    \global\insert@countR=#1\relax
+    \loop\ifnum\insert@countR>\z@
+      \xright@appenditem{\the\absline@numR}\to\insertlines@listR
+      \global\advance\insert@countR \m@ne
+    \repeat
+  \begingroup
+    \let\@ref=\dummy@ref
+    \let\@lopR\@gobble
+    \let\page@action=\relax
+    \let\sub@action=\relax
+    \let\set@line@action=\relax
+    \let\@lab=\relax
+    \let\@sw\@gobbletwo%
+    #2
+    \global\endpage@num=\page@numR
+    \global\endline@num=\line@numR
+    \global\endsubline@num=\subline@numR
+  \endgroup
+    \xright@appenditem%
+      {\the\page@numR|\the\line@numR|%
+       \ifsublines@ \the\subline@numR \else 0\fi|%
+       \the\endpage@num|\the\endline@num|%
+       \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
+  #2
+  \else
+    \@ref@reg{#1}{#2}%
+  \fi}
+\providecommand*{\@pend}[1]{}
+\renewcommand*{\@pend}[1]{%
+  \ifbypstart@\global\line@num=0\fi%
+  \xright@appenditem{#1}\to\linesinpar@listL}
+\providecommand*{\@pendR}[1]{}
+\renewcommand*{\@pendR}[1]{%
+  \ifbypstart@R\global\line@numR=0\fi
+  \xright@appenditem{#1}\to\linesinpar@listR}
+
+\providecommand*{\@lopL}[1]{}
+\renewcommand*{\@lopL}[1]{%
+  \xright@appenditem{#1}\to\linesonpage@listL}
+\providecommand*{\@lopR}[1]{}
+\renewcommand*{\@lopR}[1]{%
+  \xright@appenditem{#1}\to\linesonpage@listR}
+
+\newwrite\linenum@outR
+\newif\iffirst@linenum@out@R
+  \first@linenum@out@Rtrue
+\newcommand*{\line@list@stuffR}[1]{%
+  \read@linelist{#1}%
+  \iffirst@linenum@out@R
+     \immediate\closeout\linenum@outR
+     \global\first@linenum@out@Rfalse
+     \immediate\openout\linenum@outR=#1
+  \else
+     \if@minipage%
+       \leavevmode%
+     \fi%
+     \closeout\linenum@outR%
+     \openout\linenum@outR=#1%
+  \fi}
+
+\newcommand*{\new@lineL}{%
+  \write\linenum@out{\string\@nl[\the\c@page][\thepage]}}
+\newcommand*{\new@lineR}{%
+  \write\linenum@outR{\string\@nl[\the\c@page][\thepage]}}
+\renewcommand*{\startsub}{\dimen0\lastskip
+  \ifdim\dimen0>0pt \unskip \fi
+  \ifledRcol \write\linenum@outR{\string\sub@on}%
+  \else      \write\linenum@out{\string\sub@on}%
+  \fi
+  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
+\def\endsub{\dimen0\lastskip
+  \ifdim\dimen0>0pt \unskip \fi
+  \ifledRcol \write\linenum@outR{\string\sub@off}%
+  \else      \write\linenum@out{\string\sub@off}%
+  \fi
+  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
+
+\renewcommand*{\advanceline}[1]{%
+  \ifledRcol \write\linenum@outR{\string\@adv[#1]}%
+  \else      \write\linenum@out{\string\@adv[#1]}%
+  \fi}
+\renewcommand*{\setline}[1]{%
+  \ifnum#1<\z@
+    \led@warn@BadSetline
+  \else
+    \ifledRcol \write\linenum@outR{\string\@set[#1]}%
+    \else      \write\linenum@out{\string\@set[#1]}%
+    \fi
+  \fi}
+\renewcommand*{\setlinenum}[1]{%
+  \ifnum#1<\z@
+    \led@warn@BadSetlinenum
+  \else
+    \ifledRcol \write\linenum@outR{\string\l@d@set[#1]}
+    \else      \write\linenum@out{\string\l@d@set[#1]} \fi
+  \fi}
+
+\renewcommand*{\startlock}{%
+  \ifledRcol \write\linenum@outR{\string\lock@on}%
+  \else      \write\linenum@out{\string\lock@on}%
+  \fi}
+\def\endlock{%
+  \ifledRcol \write\linenum@outR{\string\lock@off}%
+  \else      \write\linenum@out{\string\lock@off}%
+  \fi}
+
+\renewcommand*{\skipnumbering}{%
+  \ifledRcol \write\linenum@outR{\string\n@num}%
+             \advanceline{-1}%
+  \else
+    \skipnumbering@reg
+  \fi}
+
+
+\renewcommand*{\set@line}{%
+  \ifledRcol
+    \ifx\line@listR\empty
+      \global\noteschanged@true
+      \xdef\l@d@nums{000|000|000|000|000|000|\edfont@info}%
+    \else
+      \gl@p\line@listR\to\@tempb
+      \xdef\l@d@nums{\@tempb|\edfont@info}%
+      \global\let\@tempb=\undefined
+    \fi
+  \else
+    \ifx\line@list\empty
+      \global\noteschanged@true
+      \xdef\l@d@nums{000|000|000|000|000|000|\edfont@info}%
+    \else
+      \gl@p\line@list\to\@tempb
+      \xdef\l@d@nums{\@tempb|\edfont@info}%
+      \global\let\@tempb=\undefined
+    \fi
+  \fi}
+
+\newenvironment{pairs}{%}
+  \l@dpairingtrue
+  \l@dpagingfalse
+  \initnumbering@sectcmd
+  \at@begin@pairs%
+}{%
+  \l@dpairingfalse
+}
+
+\newcommand{\AtBeginPairs}[1]{\xdef\at@begin@pairs{#1}}%
+\def\at@begin@pairs{}%
+
+\newenvironment{pages}{%
+ \let\oldchapter\chapter
+ \let\chapter\chapterinpages
+  \l@dpairingtrue
+  \l@dpagingtrue
+  \initnumbering@sectcmd
+  \setlength{\Lcolwidth}{\textwidth}%
+  \setlength{\Rcolwidth}{\textwidth}%
+}{%
+  \l@dpairingfalse
+  \l@dpagingfalse
+  \let\chapter\oldchapter
+}
+\newcommand{\chapterinpages}{\thispagestyle{plain}%
+                    \global\@topnum\z@
+                    \@afterindentfalse
+                    \secdef\@chapter\@schapter}
+
+ \newif\ifinstanzaL
+ \newif\ifinstanzaR
+\newenvironment{Leftside}{%
+  \ledRcolfalse
+  \setcounter{pstartL}{1}
+  \let\pstart\pstartL
+  \let\thepstart\thepstartL
+  \let\pend\pendL
+  \let\memorydump\memorydumpL
+  \Leftsidehook
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
+}{
+    \Leftsidehookend}
+\newcommand*{\Leftsidehook}{}
+\newcommand*{\Leftsidehookend}{}
+\newcommand*{\Rightsidehook}{}
+\newcommand*{\Rightsidehookend}{}
+
+\newenvironment{Rightside}{%
+  \ledRcoltrue
+  \let\beginnumbering\beginnumberingR
+  \let\endnumbering\endnumberingR
+  \let\pausenumbering\pausenumberingR
+  \let\resumenumbering\resumenumberingR
+  \let\memorydump\memorydumpR
+  \let\thepstart\thepstartR
+  \let\pstart\pstartR
+  \let\pend\pendR
+  \let\ledpb\ledpbR
+  \let\lednopb\lednopbR
+  \let\lineation\lineationR
+  \Rightsidehook
+  \let\old@startstanza\@startstanza
+  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
+}{%
+  \ledRcolfalse
+  \Rightsidehookend
+}
+
+\newcount\num@linesR
+\newbox\one@lineR
+\newcount\par@lineR
+
+\newcounter{pstartL}
+\newcounter{pstartLold}
+\renewcommand{\thepstartL}{{\bfseries\@arabic\c@pstartL}. }
+\newcounter{pstartR}
+\newcounter{pstartRold}
+\renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
+
+\newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
+  \ifnumbering \else%
+    \led@err@PstartNotNumbered%
+    \beginnumbering%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pend%
+  \fi%
+  \ifpst@rtedL\else%
+      \setcounter{pstartLold}{\value{pstartL}}%
+    \list@clear{\inserts@list}%
+    \global\let\next@insert=\empty%
+     \global\pst@rtedLtrue%
+  \fi%
+  \begingroup\normal@pars%
+  \global\advance\l@dnumpstartsL \@ne%
+  \ifnum\l@dnumpstartsL>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsL=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup%
+  \ifautopar\else%
+    \ifnumberpstart%
+      \ifsidepstartnum%
+        \else%
+         \thepstartL%
+        \fi%
+       \fi%
+      \fi%
+  \hsize=\Lcolwidth%
+  \numberedpar@true%
+  \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartL\thepstartL}\fi%
+  \ifstrempty{#1}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
+  }
+\newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
+  \ifnumberingR \else%
+    \led@err@PstartNotNumbered%
+    \beginnumberingR%
+  \fi%
+  \ifnumberedpar@%
+    \led@err@PstartInPstart%
+    \pendR%
+  \fi%
+  \ifpst@rtedR\else%
+      \setcounter{pstartRold}{\value{pstartR}}%
+    \list@clear{\inserts@listR}%
+    \global\let\next@insertR=\empty%
+    \global\pst@rtedRtrue%
+  \fi%
+  \begingroup\normal@pars%
+  \global\advance\l@dnumpstartsR \@ne%
+  \ifnum\l@dnumpstartsR>\l@dc@maxchunks%
+    \led@err@TooManyPstarts%
+    \global\l@dnumpstartsR=\l@dc@maxchunks%
+  \fi%
+  \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
+    \ifautopar\else%
+      \ifnumberpstart%
+        \ifsidepstartnum\else%
+          \thepstartR%
+         \fi%
+        \fi%
+       \fi%
+  \hsize=\Rcolwidth%
+  \numberedpar@true%
+   \iflabelpstart\protected@edef\@currentlabel%
+       {\p@pstartR\thepstartR}\fi%
+   \ifstrempty{#1}%
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
+  }
+\newcommandx*{\pendL}[1][1]{%
+  \ifnumbering \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
+  \l@dzeropenalties%
+  \endgraf\global\num@lines=\prevgraf\egroup%
+  \global\par@line=0%
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+  \ifnumberpstart%
+    \addtocounter{pstartL}{1}%
+  \fi
+  \parledgroup@beforenotes@save{L}%
+  \ifstrempty{#1}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
+  }
+\newcommandx*{\pendR}[1][1]{%
+  \ifnumberingR \else%
+    \led@err@PendNotNumbered%
+  \fi%
+  \ifnumberedpar@ \else%
+    \led@err@PendNoPstart%
+  \fi%
+  \l@dzeropenalties%
+  \endgraf\global\num@linesR=\prevgraf\egroup%
+  \global\par@lineR=0%
+  \endgroup%
+  \ignorespaces%
+  \@oldnobreak%
+  \ifnumberpstart%
+    \addtocounter{pstartR}{1}%
+  \fi%
+  \parledgroup@beforenotes@save{R}%
+  \ifstrempty{#1}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
+}
+
+\newif\ifprint@last@after@pendL%
+\newif\ifprint@last@after@pendR%
+\newbox\l@dleftbox
+\newbox\l@drightbox
+
+\newcount\countLline
+  \countLline \z@
+\newcount\countRline
+  \countRline \z@
+
+\newcount\@donereallinesL
+\newcount\@donetotallinesL
+\newcount\@donereallinesR
+\newcount\@donetotallinesR
+
+\newcommand*{\do@lineL}{%
+  \advance\countLline \@ne
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineLhook
+   \l@demptyd@ta
+   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
+                           to\baselineskip}%
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
+  \unvbox\one@line \global\setbox\one@line=\lastbox
+  \getline@numL
+  \ifnum\@lock>\@ne%
+    \inserthangingsymboltrue%
+  \else%
+    \inserthangingsymbolfalse%
+  \fi
+  \setbox\l@dleftbox
+  \hb@xt@ \Lcolwidth{%
+    \affixline@num
+    \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      {\add@inserts\affixside@note}%
+      {\print@lineL}}%
+  \add@penaltiesL
+  \global\advance\@donereallinesL\@ne
+  \global\advance\@donetotallinesL\@ne
+\else
+  \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+  \global\advance\@donetotallinesL\@ne
+\fi}
+
+\def\print@lineL{%
+    \affixpstart@numL%
+    \l@dld@ta %space kept for backward compatibility
+    \add@inserts\affixside@note%
+    \l@dlsn@te %space kept for backward compatibility
+    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+     \l@drsn@te}}
+
+\def\print@eledsectionL{%%
+    \addtocounter{pstartL}{-1}%
+    \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+    \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
+    \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscL}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscL}%
+    \if@RTL%
+      \hspace{-3\paperwidth}%
+    {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
+    \else%
+      \hspace{3\paperwidth}%
+    {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
+    \fi%
+    \vskip\eledsection@correcting@skip%
+}
+
+\newcommand*{\dolineLhook}[1]{\gdef\do@lineLhook{#1}}%
+\newcommand*{\dolineRhook}[1]{\gdef\do@lineRhook{#1}}%
+\newcommand*{\doinsidelineLhook}[1]{\gdef\do@insidelineLhook{#1}}%
+\newcommand*{\doinsidelineRhook}[1]{\gdef\do@insidelineRhook{#1}}%
+
+\newcommand*{\do@lineLhook}{}
+\newcommand*{\do@lineRhook}{}
+\newcommand*{\do@insidelineLhook}{}
+\newcommand*{\do@insidelineRhook}{}
+
+\newcommand*{\do@lineR}{%
+  \ledRcol@true%
+  \advance\countRline \@ne
+  \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
+  {\vbadness=10000
+   \splittopskip=\z@
+   \do@lineRhook
+   \l@demptyd@ta
+   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
+                           to\baselineskip}%
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
+  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox
+  \getline@numR
+  \ifnum\@lockR>\@ne%
+    \inserthangingsymbolRtrue
+  \else%
+    \inserthangingsymbolRfalse%
+  \fi%
+  \setbox\l@drightbox
+  \hb@xt@ \Rcolwidth{%
+    \affixline@numR%
+    \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
+     {\add@insertsR\affixside@noteR}%
+     {\print@lineR}%
+  }%
+  \add@penaltiesR
+  \global\advance\@donereallinesR\@ne
+  \global\advance\@donetotallinesR\@ne
+\else
+  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
+  \global\advance\@donetotallinesR\@ne
+\fi
+\ledRcol@false%
+}
+
+\def\print@lineR{%
+    \affixpstart@numR%
+    \l@dld@ta  %space kept for backward compatibility
+    \add@insertsR\affixside@noteR%
+    \l@dlsn@te  %space kept for backward compatibility
+\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+     \l@drsn@te
+  }
+
+\def\print@eledsectionR{%
+    \addtocounter{pstartR}{-1}%
+    \initnumbering@sectcountR%
+    \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
+    \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
+    \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
+    \@eled@sectioningtrue%
+    \csuse{eled@sectioning@\the\l@dpscR R}%
+    \@eled@sectioningfalse%
+    \global\csundef{eled@sectioning@\the\l@dpscR R}%
+    \if@RTL%
+      \hspace{-\paperwidth}%
+    {\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
+    \else%
+      \hspace{\paperwidth}%
+    {\new@lineR \hbox{\l@dunhbox@line{\one@lineR}}}%
+    \fi%
+    \vskip\eledsection@correcting@skip
+}
+\newcommand*{\getline@numR}{%
+  \global\advance\absline@numR \@ne
+  \do@actionsR
+  \do@ballastR
+\ifledgroupnotesR@\else\ifnumberline
+  \ifsublines@
+    \ifnum\sub@lockR<\tw@
+      \global\advance\subline@numR \@ne
+    \fi
+  \else
+    \ifnum\@lockR<\tw@
+      \global\advance\line@numR \@ne
+      \global\subline@numR \z@
+    \fi
+  \fi
+\fi
+\fi
+}
+\newcommand*{\getline@numL}{%
+    \global\advance\absline@num \@ne
+  \do@actions
+  \do@ballast
+\ifledgroupnotesL@\else\ifnumberline
+  \ifsublines@
+     \ifnum\sub@lock<\tw@
+       \global\advance\subline@num \@ne
+     \fi
+  \else
+     \ifnum\@lock<\tw@
+       \global\advance\line@num \@ne
+       \global\subline@num \z@
+     \fi
+  \fi
+\fi
+\fi
+}
+
+\newcommand*{\do@ballastR}{\global\ballast@count=\z@
+  \begingroup
+    \advance\absline@numR \@ne
+    \ifnum\next@actionlineR=\absline@numR
+      \ifnum\next@actionR>-1001
+        \global\advance\ballast@count by -\c@ballast
+       \fi
+     \fi
+  \endgroup}
+\newcommand*{\do@actions@fixedcodeR}{%
+  \ifcase\@l@dtempcnta%
+  \or%                     % 1001
+    \global\sublines@true
+  \or%                     % 1002
+    \global\sublines@false
+  \or%                     % 1003
+    \global\@lockR=\@ne
+  \or%                     % 1004
+    \ifnum\@lockR=\tw@
+      \global\@lockR=\thr@@
+    \else
+      \global\@lockR=\z@
+    \fi
+  \or%                     % 1005
+     \global\sub@lockR=\@ne
+  \or%                     % 1006
+    \ifnum\sub@lockR=\tw@
+      \global\sub@lockR=\thr@@
+    \else
+      \global\sub@lockR=\z@
+    \fi
+  \or%                     % 1007
+    \l@dskipnumbertrue
+  \else
+    \led@warn@BadAction
+  \fi}
+
+\newcommand*{\do@actionsR}{%
+  \global\let\do@actions@nextR=\relax
+  \@l@dtempcntb=\absline@numR
+  \ifnum\@l@dtempcntb<\next@actionlineR\else
+    \ifnum\next@actionR>-1001\relax
+      \global\page@numR=\next@actionR
+      \ifbypage@R
+        \global\line@numR \z@  \global\subline@numR \z@
+      \fi
+    \else
+      \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -5001\relax
+        \ifsublines@
+          \global\subline@numR=\@l@dtempcnta
+        \else
+          \global\line@numR=\@l@dtempcnta
+        \fi
+      \else
+        \@l@dtempcnta=-\next@actionR
+        \advance\@l@dtempcnta by -1000\relax
+        \do@actions@fixedcodeR
+      \fi
+    \fi
+    \ifx\actionlines@listR\empty
+      \gdef\next@actionlineR{1000000}%
+    \else
+      \gl@p\actionlines@listR\to\next@actionlineR
+      \gl@p\actions@listR\to\next@actionR
+      \global\let\do@actions@nextR=\do@actionsR
+    \fi
+  \fi
+  \do@actions@nextR}
+
+
+\providecommand*{\l@dcalcnum}[3]{%
+  \ifnum #1 > #2\relax
+    \@l@dtempcnta = #1\relax
+    \advance\@l@dtempcnta by -#2\relax
+    \divide\@l@dtempcnta by #3\relax
+    \multiply\@l@dtempcnta by #3\relax
+    \advance\@l@dtempcnta by #2\relax
+  \else
+    \@l@dtempcnta=#2\relax
+  \fi}
+
+\newcommand*{\ch@cksub@l@ckR}{%
+  \ifcase\sub@lockR
+  \or
+    \ifnum\sublock@disp=\@ne
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\sublock@disp=\tw@
+    \else
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\sublock@disp=\z@
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \fi}
+
+\newcommand*{\ch@ck@l@ckR}{%
+  \ifcase\@lockR
+  \or
+    \ifnum\lock@disp=\@ne
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\lock@disp=\tw@
+    \else
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \or
+    \ifnum\lock@disp=\z@
+      \@l@dtempcntb \z@  \@l@dtempcnta \@ne
+    \fi
+  \fi}
+
+\newcommand*{\f@x@l@cksR}{%
+  \ifcase\@lockR
+  \or
+    \global\@lockR \tw@
+  \or \or
+    \global\@lockR \z@
+  \fi
+  \ifcase\sub@lockR
+  \or
+    \global\sub@lockR \tw@
+  \or \or
+    \global\sub@lockR \z@
+  \fi}
+
+\newcommand*{\affixline@numR}{%
+\ifledgroupnotesR@\else\ifnumberline
+\ifl@dskipnumber
+  \global\l@dskipnumberfalse
+\else
+  \ifsublines@
+    \@l@dtempcntb=\subline@numR
+    \l@dcalcnum{\subline@numR}{\c@firstsublinenumR}{\c@sublinenumincrementR}%
+    \ch@cksub@lockR
+  \else
+    \@l@dtempcntb=\line@numR
+    \ifx\linenumberlist\empty
+      \l@dcalcnum{\line@numR}{\c@firstlinenumR}{\c@linenumincrementR}%
+    \else
+      \@l@dtempcnta=\line@numR
+      \edef\rem@inder{,\linenumberlist,\number\line@numR,}%
+        \edef\sc@n@list{\def\noexpand\sc@n@list
+        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
+      \sc@n@list\expandafter\sc@n@list\rem@inder|%
+        \ifx\rem@inder\empty\advance\@l@dtempcnta\@ne\fi
+     \fi
+     \ch@ck@l@ckR
+  \fi
+  \ifnum\@l@dtempcnta=\@l@dtempcntb
+    \if@twocolumn
+      \if@firstcolumn
+        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+      \else
+        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+      \fi
+    \else
+      \@l@dtempcntb=\line@marginR
+      \ifnum\@l@dtempcntb>\@ne
+        \advance\@l@dtempcntb by\page@numR
+      \fi
+      \ifodd\@l@dtempcntb
+        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+      \else
+        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+      \fi
+    \fi
+  \fi
+  \f@x@l@cksR
+\fi
+\fi
+\fi}
+
+\newcommand*{\affixpstart@numL}{%
+\ifsidepstartnum
+\if@twocolumn
+     \if@firstcolumn
+       \gdef\l@dld@ta{\llap{{\leftpstartnumL}}}%
+     \else
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
+     \fi
+    \else
+      \@l@dtempcntb=\line@margin
+     \ifnum\@l@dtempcntb>\@ne
+       \advance\@l@dtempcntb \page@num
+     \fi
+     \ifodd\@l@dtempcntb
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
+     \else
+       \gdef\l@dld@ta{\llap{{\leftpstartnumL}}}%
+     \fi
+    \fi
+\fi
+}
+\newcommand*{\affixpstart@numR}{%
+\ifsidepstartnum
+\if@twocolumn
+     \if@firstcolumn
+       \gdef\l@dld@ta{\llap{{\leftpstartnumR}}}%
+     \else
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
+     \fi
+    \else
+      \@l@dtempcntb=\line@marginR
+     \ifnum\@l@dtempcntb>\@ne
+       \advance\@l@dtempcntb \page@numR
+     \fi
+     \ifodd\@l@dtempcntb
+       \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
+     \else
+       \gdef\l@dld@ta{\llap{{\leftpstartnumR}}}%
+     \fi
+    \fi
+\fi
+}
+
+\newcommand*{\leftpstartnumL}{
+\ifpstartnum
+\thepstartL
+\kern\linenumsep\global\pstartnumfalse\fi
+}
+\newcommand*{\rightpstartnumL}{
+\ifpstartnum\kern\linenumsep
+\thepstartL
+\global\pstartnumfalse\fi
+}
+\newif\ifpstartnumR
+\pstartnumRtrue
+\newcommand*{\leftpstartnumR}{
+\ifpstartnumR
+\thepstartR
+\kern\linenumsep\global\pstartnumRfalse\fi
+}
+\newcommand*{\rightpstartnumR}{
+\ifpstartnumR\kern\linenumsep
+\thepstartR
+\global\pstartnumRfalse\fi
+}
+\list@create{\inserts@listR}
+\newcommand*{\add@insertsR}{%
+  \global\let\add@inserts@nextR=\relax
+  \ifx\inserts@listR\empty \else
+    \ifx\next@insertR\empty
+      \ifx\insertlines@listR\empty
+        \global\noteschanged@true
+        \gdef\next@insertR{100000}%
+      \else
+        \gl@p\insertlines@listR\to\next@insertR
+      \fi
+    \fi
+    \ifnum\next@insertR=\absline@numR
+      \gl@p\inserts@listR\to\@insertR
+      \@insertR
+      \global\let\@insertR=\undefined
+      \global\let\next@insertR=\empty
+      \global\let\add@inserts@nextR=\add@insertsR
+    \fi
+  \fi
+  \add@inserts@nextR}
+
+\newcommand*{\add@penaltiesL}{}
+\newcommand*{\add@penaltiesR}{}
+
+\newcommand*{\flush@notesR}{%
+  \@xloop
+    \ifx\inserts@listR\empty \else
+      \gl@p\inserts@listR\to\@insertR
+      \@insertR
+      \global\let\@insertR=\undefined
+  \repeat}
+
+\def\printlinesR#1|#2|#3|#4|#5|#6|#7|{\begingroup
+  \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
+  \ifl@d@pnum #1\fullstop\fi
+  \ifledplinenum \linenumr@p{#2}\Rlineflag\else \symplinenum\fi
+  \ifl@d@ssub \fullstop \sublinenumr@p{#3}\fi
+  \ifl@d@dash \endashchar\fi
+  \ifl@d@pnum #4\fullstop\fi
+  \ifl@d@elin \linenumr@p{#5}\Rlineflag\fi
+  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumr@p{#6}\fi
+\endgroup}
+
+\let\ledsavedprintlines\printlines
+
+\list@create{\labelref@listR}
+
+\renewcommand*{\edlabel}[1]{%
+  \ifl@dpairing\ifautopar%
+    \strut%
+  \fi\fi%
+  \@bsphack%
+  \ifledRcol
+    \write\linenum@outR{\string\@lab}%
+    \ifx\labelref@listR\empty
+      \xdef\label@refs{\zz@@@}%
+    \else
+      \gl@p\labelref@listR\to\label@refs
+    \fi
+    \ifvmode
+        \advancelabel@refs
+    \fi
+    \protected@write\@auxout{}%
+      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
+  \else
+    \write\linenum@out{\string\@lab}%
+    \ifx\labelref@list\empty
+      \xdef\label@refs{\zz@@@}%
+    \else
+      \gl@p\labelref@list\to\label@refs
+    \fi
+    \ifvmode
+        \advancelabel@refs
+    \fi
+  \protected@write\@auxout{}%
+    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
+  \fi
+  \@esphack}
+
+\def\l@dmake@labelsR#1|#2|#3|#4|#5{%
+  \expandafter\ifx\csname the@label#5\endcsname \relax\else
+    \led@warn@DuplicateLabel{#4}%
+  \fi
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\Rlineflag|#3|#4}%
+  \ignorespaces}
+\AtBeginDocument{%
+  \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
+}
+
+\renewcommand*{\@lab}{%
+  \ifledRcol
+    \xright@appenditem{\linenumr@p{\line@numR}|%
+      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi}%
+      \to\labelref@listR
+  \else
+    \xright@appenditem{\linenumr@p{\line@num}|%
+      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi}%
+      \to\labelref@list
+  \fi}
+
+\WithSuffix\newcommand\sidenotemargin*[1]{%
+  \l@dgetsidenote@margin{#1}
+  \global\sidenote@marginR=\@l@dtempcntb
+  \global\sidenote@margin=\@l@dtempcntb
+}
+\newcount\sidenote@marginR
+\global\sidenote@margin=\@ne
+
+
+\newcommand*{\affixside@noteR}{%
+    \def\sidenotecontent@{}%
+    \numgdef{\itemcount@}{0}%
+    \def\do##1{%
+        \ifnumequal{\itemcount@}{0}%
+            {%
+            \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
+            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            }%
+            \numgdef{\itemcount@}{\itemcount@+1}%
+    }%
+    \dolistloop{\l@dcsnotetext}%
+    \ifnumgreater{\itemcount@}{1}{\led@err@ManySidenotes}{}%
+  \gdef\@templ@d{}%
+  \gdef\@templ@n{\l@dcsnotetext\l@dcsnotetext@l\l@dcsnotetext@r}%
+  \ifx\@templ@d\@templ@n \else%
+    \if@twocolumn%
+      \if@firstcolumn%
+        \setl@dlp@rbox{##1}{\sidenotecontent@}%
+      \else%
+        \setl@drp@rbox{\sidenotecontent@}%
+      \fi%
+    \else%
+      \@l@dtempcntb=\sidenote@marginR%
+      \ifnum\@l@dtempcntb>\@ne%
+        \advance\@l@dtempcntb by\page@numR%
+      \fi%
+      \ifodd\@l@dtempcntb%
+        \setl@drp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@l}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyLeftnotes}{}%
+        \setl@dlp@rbox{\sidenotecontent@}%
+      \else%
+        \setl@dlp@rbox{\sidenotecontent@}%
+        \gdef\sidenotecontent@{}%
+        \numdef{\itemcount@}{0}%
+        \dolistloop{\l@dcsnotetext@r}%
+        \ifnumgreater{\itemcount@}{1}{\led@err@ManyRightnotes}{}%
+        \setl@drp@rbox{\sidenotecontent@}%
+      \fi%
+    \fi%
+  \fi%
+}
+
+\renewcommand{\l@dbfnote}[1]{%
+  \ifnumberedpar@
+  \gdef\@tag{#1\relax}%
+    \ifledRcol%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+                         \to\inserts@listR
+       \global\advance\insert@countR \@ne%
+    \else%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne%
+    \fi
+  \fi\ignorespaces}
+
+\renewcommand{\normalbfnoteX}[2]{%
+  \ifnumberedpar@
+    \ifledRcol%
+      \ifluatex
+          \footnotelang@lua[R]%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+        {}%
+        {\footnotelang@poly[R]}%
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+                         \to\inserts@listR
+       \global\advance\insert@countR \@ne%
+    \else%
+      \ifluatex
+          \footnotelang@lua%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+        {}%
+        {\footnotelang@poly}%
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne%
+    \fi
+  \fi\ignorespaces}
+
+
+\newif\ifinserthangingsymbolR
+\newcommand{\inserthangingsymbolL}{%
+\ifinserthangingsymbol%
+    \ifinstanzaL%
+        \hangingsymbol%
+    \fi%
+\fi}
+\newcommand{\inserthangingsymbolR}{%
+\ifinserthangingsymbolR%
+    \ifinstanzaR%
+        \hangingsymbol%
+    \fi%
+\fi}
+\newcommand{\correcthangingL}{%
+\ifl@dpaging\else%
+    \ifinstanzaL%
+        \ifinserthangingsymbol%
+            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
+        \fi%
+    \fi%
+\fi}
+
+\newcommand{\correcthangingR}{%
+\ifl@dpaging\else%
+    \ifinstanzaR%
+        \ifinserthangingsymbolR%
+            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
+        \fi%
+    \fi%
+\fi}
+  \chardef\next=\catcode`\&
+  \catcode`\&=\active
+
+\newenvironment{astanza}{%
+  \startstanzahook
+  \catcode`\&\active
+  \global\stanza@count\@ne\stanza@modulo\@ne
+  \ifnum\usenamecount{sza@0@}=\z@
+    \let\stanza@hang\relax
+    \let\endlock\relax
+  \else
+%%%    \interlinepenalty\@M % this screws things up, but I don't know why
+    \rightskip\z@ plus 1fil\relax
+  \fi
+  \ifnum\usenamecount{szp@0@}=\z@
+    \let\sza@penalty\relax
+  \fi
+  \def&{%
+    \endlock\mbox{}%
+    \sza@penalty
+    \global\advance\stanza@count\@ne
+    \@astanza@line}%
+  \def\&{%
+    \endlock\mbox{}
+    \pend
+    \endstanzaextra}%
+  \pstart
+  \@astanza@line
+}{}
+
+\newcommand*{\@astanza@line}{%
+  \ifnum\value{stanzaindentsrepetition}=0
+      \parindent=\csname sza@\number\stanza@count
+               @\endcsname\stanzaindentbase
+  \else
+      \parindent=\csname sza@\number\stanza@modulo
+               @\endcsname\stanzaindentbase
+      \managestanza@modulo
+  \fi
+  \par
+  \stanza@hang%\mbox{}%
+  \ignorespaces}
+
+  \catcode`\&=\next
+
+\providecommand*{\newnamebox}[1]{%
+  \expandafter\newbox\csname #1\endcsname}
+\providecommand*{\setnamebox}[1]{%
+  \expandafter\setbox\csname #1\endcsname}
+\providecommand*{\unhnamebox}[1]{%
+  \expandafter\unhbox\csname #1\endcsname}
+\providecommand*{\unvnamebox}[1]{%
+  \expandafter\unvbox\csname #1\endcsname}
+\providecommand*{\namebox}[1]{%
+                     \csname #1\endcsname}
+
+\providecommand*{\newnamecount}[1]{%
+  \expandafter\newcount\csname #1\endcsname}
+\providecommand*{\usenamecount}[1]{%
+                       \csname #1\endcsname}
+
+\newcount\l@dc@maxchunks
+\newcommand{\maxchunks}[1]{\l@dc@maxchunks=#1}
+  \maxchunks{5120}
+
+\newcount\l@dnumpstartsR
+
+\newcount\l@dpscL
+\newcount\l@dpscR
+
+\newcommand*{\l@dsetuprawboxes}{%
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \newnamebox{l@dLcolrawbox\the\@l@dtempcntb}
+    \newnamebox{l@dRcolrawbox\the\@l@dtempcntb}
+    \advance\@l@dtempcntb \m@ne
+  \repeat}
+
+\newcommand*{\l@dsetupmaxlinecounts}{%
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \newnamecount{l@dmaxlinesinpar\the\@l@dtempcntb}
+    \advance\@l@dtempcntb \m@ne
+  \repeat}
+\newcommand*{\l@dzeromaxlinecounts}{%
+  \begingroup
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \global\usenamecount{l@dmaxlinesinpar\the\@l@dtempcntb}=\z@
+    \advance\@l@dtempcntb \m@ne
+  \repeat
+  \endgroup}
+
+\AtBeginDocument{%
+  \l@dsetuprawboxes
+  \l@dsetupmaxlinecounts
+  \l@dzeromaxlinecounts
+  \l@dnumpstartsL=\z@
+  \l@dnumpstartsR=\z@
+  \l@dpscL=\z@
+  \l@dpscR=\z@}
+
+\newif\ifl@dusedbabel
+  \l@dusedbabelfalse
+\newcommand*{\l@dbbl@set@language}[1]{%
+  \edef\languagename{#1}%
+  \select@language{\languagename}%
+  \if@filesw
+    \protected@write\@auxout{}{\string\select@language{\languagename}}%
+    \addtocontents{toc}{\string\select@language{\languagename}}%
+    \addtocontents{lof}{\string\select@language{\languagename}}%
+    \addtocontents{lot}{\string\select@language{\languagename}}%
+  \fi}
+
+\providecommand{\selectlanguage}[1]{}
+\newcommand*{\l@duselanguage}[1]{}
+\gdef\theledlanguageL{}
+\gdef\theledlanguageR{}
+
+\AtBeginDocument{%
+  \@ifundefined{xpg@main@language}{%
+    \@ifundefined{bbl@main@language}{%
+    \l@dusedbabelfalse
+    \renewcommand*{\selectlanguage}[1]{}}{%
+    \l@dusedbabeltrue
+    \let\l@doldselectlanguage\selectlanguage
+    \let\l@doldbbl@set@language\bbl@set@language
+    \let\bbl@set@language\l@dbbl@set@language
+    \renewcommand{\selectlanguage}[1]{%
+      \l@doldselectlanguage{#1}%
+      \ifledRcol \gdef\theledlanguageR{#1}%
+      \else      \gdef\theledlanguageL{#1}%
+      \fi}
+    \renewcommand*{\l@duselanguage}[1]{%
+      \l@doldselectlanguage{#1}}
+    \gdef\theledlanguageL{\bbl@main@language}%
+    \gdef\theledlanguageR{\bbl@main@language}%
+    }%
+   }
+  {    \let\old@otherlanguage\otherlanguage%
+       \renewcommand{\otherlanguage}[2][]{%
+        \selectlanguage[#1]{#2}%
+        \ifledRcol  \gdef\theledlanguageR{#2}%
+        \else      \gdef\theledlanguageL{#2}%
+        \fi}%
+      \let\l@duselanguage\select@language%
+      \gdef\theledlanguageL{\xpg@main@language}%
+      \gdef\theledlanguageR{\xpg@main@language}%
+}}
+\newif\if@pstarts
+\newcommand*{\check@pstarts}{%
+  \@pstartsfalse
+  \ifnum\l@dnumpstartsL>\l@dpscL
+    \@pstartstrue
+  \else
+    \ifnum\l@dnumpstartsR>\l@dpscR
+      \@pstartstrue
+    \fi
+  \fi
+}
+
+\newif\ifaraw@text
+  \araw@textfalse
+\newcommand*{\checkraw@text}{%
+  \araw@textfalse
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}
+    \araw@texttrue
+  \else
+    \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}
+      \araw@texttrue
+    \fi
+  \fi
+}
+
+\newcommand*{\@writelinesinparL}{%
+  \edef\next{%
+    \write\linenum@out{\string\@pend[\the\@donereallinesL]}}%
+  \next
+  \global\@donereallinesL \z@}
+\newcommand*{\@writelinesinparR}{%
+  \edef\next{%
+    \write\linenum@outR{\string\@pendR[\the\@donereallinesR]}}%
+  \next
+  \global\@donereallinesR \z@}
+
+\newsavebox{\@eledsectionL}%
+\newsavebox{\@eledsectionR}%
+\newcommand*{\Columns}{%
+  \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
+  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
+    \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
+  \fi
+  \begingroup
+    \l@dzeropenalties
+    \endgraf\global\num@lines=\prevgraf
+            \global\num@linesR=\prevgraf
+    \global\par@line=\z@
+    \global\par@lineR=\z@
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \check@pstarts
+    \loop\if@pstarts
+        \global\pstartnumtrue
+        \global\pstartnumRtrue
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \checkraw@text
+{        \loop\ifaraw@text
+            \l@duselanguage{\theledlanguageL}%
+            \do@lineL
+            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {%
+                \ifdefstring{\@eledsectmark}{L}%
+                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  }{}%
+                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \savebox{\@eledsectionL}{\parbox[t][][t]{\Lcolwidth}{\vbox{}\print@eledsectionL}}%\vbox{}-> prevent alignment troubles with RTL language
+                }%
+                {}%
+            \l@duselanguage{\theledlanguageR}%
+            \do@lineR
+            \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {%
+                \ifdefstring{\@eledsectmark}{R}%
+                  {\csuse{eled@sectmark@\the\l@dpscR R}%
+                  }{}%
+                \global\csundef{eled@sectmark@\the\l@dpscR R}%
+                \savebox{\@eledsectionR}{\parbox[t][][t]{\Rcolwidth}{\vbox{}\print@eledsectionR}}}%\vbox{}-> prevent alignment troubles with RTL language
+                {}%
+          \hb@xt@ \hsize{%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+            \unhbox\l@dleftbox%
+            \ifhbox\@eledsectionL%
+               \usebox{\@eledsectionL}%
+            \fi%
+            \print@columnseparator%
+            \unhbox\l@drightbox%
+            \ifhbox\@eledsectionR%
+              \usebox{\@eledsectionR}%
+            \fi%
+            \ifdefstring{\columns@position}{R}{}{\hfill}%
+          }%
+          \checkraw@text
+          \checkverseL
+          \checkverseR
+          \checkpb@columns
+        \repeat}
+      \@writelinesinparL
+      \@writelinesinparR
+      \check@pstarts
+            \ifbypstart@
+           \write\linenum@out{\string\@set[1]}
+           \resetprevline@
+        \fi
+       \ifbypstart@R
+           \write\linenum@outR{\string\@set[1]}
+           \resetprevline@
+        \fi
+      \addtocounter{pstartL}{1}
+      \addtocounter{pstartR}{1}
+    \repeat
+    \flush@notes
+    \flush@notesR
+  \endgroup
+  \global\l@dpscL=\z@
+  \global\l@dpscR=\z@
+  \global\l@dnumpstartsL=\z@
+  \global\l@dnumpstartsR=\z@
+  \ignorespaces
+    \global\instanzaLfalse
+    \global\instanzaRfalse}
+
+\def\print@columnseparator{%
+  \ifdim\beforecolumnseparator<0pt%
+    \hfill%
+  \else%
+    \hspace{\beforecolumnseparator}%
+  \fi%
+  \columnseparator%
+  \ifdim\aftercolumnseparator<0pt%
+    \hfill%
+  \else%
+    \hspace{\beforecolumnseparator}%
+  \fi%
+}%
+
+\newcommand{\checkpb@columns}{%
+    \newif\if@pb
+    \newif\if@nopb
+    \IfStrEq{\led@pb@setting}{before}{
+    \numdef{\next@absline}{\the\absline@num+1}%
+    \numdef{\next@abslineR}{\the\absline@numR+1}%
+  \xifinlistcs{\next@absline}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\next@absline}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+    \IfStrEq{\led@pb@setting}{after}{
+  \xifinlistcs{\the\absline@num}{l@prev@pb}{\@pbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\@pbtrue}{}
+  \xifinlistcs{\the\absline@num}{l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\@nopbtrue}{}
+  }{}
+\if@nopb\nopagebreak[4]\enlargethispage{\baselineskip}\fi
+\if@pb\pagebreak[4]\fi
+}
+\newcommand*{\columnseparator}{%
+  \smash{\rule[-0.2\baselineskip]{\columnrulewidth}{1.05\baselineskip}}}
+\newdimen\columnrulewidth
+  \columnrulewidth=\z@
+
+\newcommand*{\columnsposition}[1]{%
+  \xdef\columns@position{#1}%
+  }%
+\xdef\columns@position{R}%
+\newlength{\beforecolumnseparator}%
+\setlength{\beforecolumnseparator}{-2pt}%
+
+\newlength{\aftercolumnseparator}%
+\setlength{\aftercolumnseparator}{-2pt}%
+
+\newcommand{\setwidthliketwocolumns@L}{%
+  \newdimen\temp%
+  \temp=\hsize%
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+  \advance\temp-\hsize%
+  \multiply\temp by 2%
+  \divide\temp by 3%
+  \advance\hsize\temp%
+}%
+
+\newcommand{\setpositionliketwocolumns@L}{%
+  \renewcommand{\ledrlfill}{\hfill}%
+}%
+
+\newcommand{\setnotespositionliketwocolumns@L}{%
+}%
+
+\newcommand{\setwidthliketwocolumns@C}{%
+  \newdimen\temp%
+  \temp=\hsize%
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+  \advance\temp-\hsize%
+  \divide\temp by 2%
+  \advance\hsize\temp%
+}%
+
+\newcommand{\setpositionliketwocolumns@C}{%
+  \doinsidelinehook{\hfill}%
+  \renewcommand{\ledrlfill}{\hfill}%
+}%
+
+\newcommand{\setnotespositionliketwocolumns@C}{%
+  \newdimen\temp%
+  \newdimen\tempa%
+  \temp=\hsize%
+  \tempa=\Lcolwidth%
+  \advance\tempa\Rcolwidth%
+  \advance\temp-\tempa%
+  \divide\temp by 2%
+  \leftskip=\temp%
+  \rightskip=-\temp%
+}%
+
+\newcommand{\setwidthliketwocolumns@R}{%
+  \newdimen\temp%
+  \temp=\hsize%
+  \hsize=\Lcolwidth%
+  \advance\hsize\Rcolwidth%
+  \advance\temp-\hsize%
+  \multiply\temp by 2%
+  \divide\temp by 3%
+  \advance\hsize\temp%
+}%
+
+\newcommand{\setpositionliketwocolumns@R}{%
+  \doinsidelinehook{\hfill}%
+}%
+
+\newcommand{\setnotespositionliketwocolumns@R}{%
+  \newdimen\temp%
+  \newdimen\tempa%
+  \temp=\hsize%
+  \tempa=\Lcolwidth%
+  \advance\tempa\Rcolwidth%
+  \advance\temp-\tempa%
+  \divide\temp by 2%
+  \leftskip=\temp%
+  \rightskip=-\temp%
+}%
+
+\newcount\numpagelinesL
+\newcount\numpagelinesR
+\newcount\l@dminpagelines
+
+\newcommand*{\Pages}{%
+ \l@dprintingpagestrue%
+  \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
+  \setcounter{pstartL}{\value{pstartLold}}
+  \setcounter{pstartR}{\value{pstartRold}}
+  \parledgroup@notespacing@set@correction
+  \typeout{}
+  \typeout{*************************** PAGES ***************************}
+  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
+    \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
+  \fi
+  \cleartol@devenpage
+  \begingroup
+    \l@dzeropenalties
+    \endgraf\global\num@lines=\prevgraf
+            \global\num@linesR=\prevgraf
+    \global\par@line=\z@
+    \global\par@lineR=\z@
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \writtenlinesLfalse
+    \writtenlinesRfalse
+    \check@pstarts
+    \loop\if@pstarts
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \getlinesfromparlistL
+      \getlinesfromparlistR
+      \l@dcalc@maxoftwo{\@cs@linesinparL}{\@cs@linesinparR}%
+          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
+      \check@pstarts
+    \repeat
+    \global\l@dpscL=\z@
+    \global\l@dpscR=\z@
+    \getlinesfrompagelistL
+    \getlinesfrompagelistR
+    \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
+        {\l@dminpagelines}%
+    \check@pstarts
+    \if@pstarts
+      \global\advance\l@dpscL \@ne
+      \global\advance\l@dpscR \@ne
+      \global\@donereallinesL=\z@
+      \global\@donetotallinesL=\z@
+      \global\@donereallinesR=\z@
+      \global\@donetotallinesR=\z@
+      \checkraw@text
+{        \loop\ifaraw@text
+          \checkpageL
+          \l@duselanguage{\theledlanguageL}%
+%%%          \begingroup
+{            \loop\ifl@dsamepage%
+              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+              \csuse{before@pstartL@\the\l@dpscL}%
+              \global\csundef{before@pstartL@\the\l@dpscL}
+              \do@lineL
+              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+                {\print@eledsectionL}%
+                {}%
+              \advance\numpagelinesL \@ne
+              \ifshiftedpstarts
+                      \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+              \else%
+                      \parledgroup@correction@notespacing{L}
+                      \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
+              \fi
+              \get@nextboxL%
+                  \ifprint@last@after@pendL%
+                     \csuse{after@pendL@\the\l@dpscL}%
+                     \global\csundef{after@pendL@\the\l@dpscL}%
+                   \fi%
+              \checkpageL%
+              \checkverseL
+              \checkpbL
+            \repeat
+            \ifl@dpagefull
+              \@writelinesonpageL{\the\numpagelinesL}%
+            \else
+              \@writelinesonpageL{1000}%
+            \fi
+            \numpagelinesL \z@
+            \parledgroup@correction@notespacing@init
+            \clearl@dleftpage }%
+          \checkpageR
+          \l@duselanguage{\theledlanguageR}%
+{            \loop\ifl@dsamepage%
+              \initnumbering@sectcountR
+              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+              \csuse{before@pstartR@\the\l@dpscR}%
+              \global\csundef{before@pstartR@\the\l@dpscR}
+              \do@lineR
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+                {\print@eledsectionR}%
+                {}%
+              \advance\numpagelinesR \@ne
+              \ifshiftedpstarts
+                      \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+              \else%
+                      \parledgroup@correction@notespacing{R}
+                      \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+              \fi
+              \get@nextboxR%
+                  \ifprint@last@after@pendR%
+                     \csuse{after@pendR@\the\l@dpscR}%
+                     \global\csundef{after@pendR@\the\l@dpscR}%
+                   \fi%
+              \checkpageR%
+              \checkverseR
+              \checkpbR
+            \repeat
+            \ifl@dpagefull
+              \@writelinesonpageR{\the\numpagelinesR}%
+            \else
+              \@writelinesonpageR{1000}%
+            \fi
+            \numpagelinesR=\z@
+            \parledgroup@correction@notespacing@init
+            \clearl@drightpage}
+          \checkraw@text
+          \ifaraw@text
+            \getlinesfrompagelistL
+            \getlinesfrompagelistR
+            \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
+                             {\l@dminpagelines}%
+          \fi
+        \repeat}
+    \fi
+    \flush@notes
+    \flush@notesR
+  \endgroup
+  \global\l@dpscL=\z@
+  \global\l@dpscR=\z@
+  \global\l@dnumpstartsL=\z@
+  \global\l@dnumpstartsR=\z@
+    \global\instanzaLfalse
+    \global\instanzaRfalse
+ \l@dprintingpagesfalse%
+  \ignorespaces}
+
+\newcommand*{\ledstrutL}{\strut}
+\newcommand*{\ledstrutR}{\strut}
+
+\providecommand{\cleartoevenpage}[1][\@empty]{%
+  \clearpage
+  \ifodd\c@page\hbox{}#1\clearpage\fi}
+\newcommand*{\cleartol@devenpage}{%
+  \ifdim\pagetotal<\topskip%  on an empty page
+  \else
+    \clearpage
+  \fi
+  \ifodd\c@page\hbox{}\clearpage\fi}
+\newcommand*{\clearl@dleftpage}{%
+  \clearpage
+  \ifodd\c@page\else
+    \led@err@LeftOnRightPage
+    \hbox{}%
+    \cleardoublepage
+  \fi}
+\newcommand*{\clearl@drightpage}{%
+  \clearpage
+  \ifodd\c@page
+    \led@err@RightOnLeftPage
+    \hbox{}%
+    \cleartoevenpage
+  \fi}
+
+\newcommand*{\getlinesfromparlistL}{%
+  \ifx\linesinpar@listL\empty
+    \gdef\@cs@linesinparL{0}%
+  \else
+    \gl@p\linesinpar@listL\to\@cs@linesinparL
+  \fi}
+\newcommand*{\getlinesfromparlistR}{%
+  \ifx\linesinpar@listR\empty
+    \gdef\@cs@linesinparR{0}%
+  \else
+    \gl@p\linesinpar@listR\to\@cs@linesinparR
+  \fi}
+
+\newcommand*{\getlinesfrompagelistL}{%
+  \ifx\linesonpage@listL\empty
+    \gdef\@cs@linesonpageL{1000}%
+  \else
+    \gl@p\linesonpage@listL\to\@cs@linesonpageL
+  \fi}
+\newcommand*{\getlinesfrompagelistR}{%
+  \ifx\linesonpage@listR\empty
+    \gdef\@cs@linesonpageR{1000}%
+  \else
+    \gl@p\linesonpage@listR\to\@cs@linesonpageR
+  \fi}
+
+\newcommand*{\@writelinesonpageL}[1]{%
+  \edef\next{\write\linenum@out{\string\@lopL{#1}}}%
+  \next}
+\newcommand*{\@writelinesonpageR}[1]{%
+  \edef\next{\write\linenum@outR{\string\@lopR{#1}}}%
+  \next}
+
+\newcommand*{\l@dcalc@maxoftwo}[3]{%
+  \ifnum #2>#1\relax
+    #3=#2\relax
+  \else
+    #3=#1\relax
+  \fi}
+\newcommand*{\l@dcalc@minoftwo}[3]{%
+  \ifnum #2<#1\relax
+    #3=#2\relax
+  \else
+    #3=#1\relax
+  \fi}
+
+\newif\ifl@dsamepage
+  \l@dsamepagetrue
+\newif\ifl@dpagefull
+
+\newcommand*{\checkpageL}{%
+  \l@dpagefulltrue
+  \l@dsamepagetrue
+  \check@goal
+  \ifdim\pagetotal<\ledthegoal
+    \ifnum\numpagelinesL<\l@dminpagelines
+    \else
+      \l@dsamepagefalse
+      \l@dpagefullfalse
+    \fi
+  \else
+    \l@dsamepagefalse
+    \l@dpagefulltrue
+  \fi%
+  \ifprint@last@after@pendL%
+     \l@dpagefullfalse%
+     \l@dsamepagefalse%
+     \print@last@after@pendLfalse%
+  \fi%
+  }%
+
+\newcommand*{\checkpageR}{%
+  \l@dpagefulltrue
+  \l@dsamepagetrue
+  \check@goal
+  \ifdim\pagetotal<\ledthegoal
+    \ifnum\numpagelinesR<\l@dminpagelines
+    \else
+      \l@dsamepagefalse
+      \l@dpagefullfalse
+    \fi
+  \else
+    \l@dsamepagefalse
+    \l@dpagefulltrue
+  \fi%
+  \ifprint@last@after@pendR%
+     \l@dpagefullfalse%
+     \l@dsamepagefalse%
+     \print@last@after@pendRfalse%
+  \fi%
+  }%
+
+\newcommand{\checkpbL}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@num}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@num}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@absline}{\the\absline@num+1}
+     \xifinlistcs{\next@absline}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@absline}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+
+\newcommand{\checkpbR}{
+   \IfStrEq{\led@pb@setting}{after}{
+     \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     }{}
+   \IfStrEq{\led@pb@setting}{before}{
+     \numdef{\next@abslineR}{\the\absline@numR+1}
+     \xifinlistcs{\next@abslineR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+   }{}
+}
+\newcommand{\checkverseL}{
+\ifinstanzaL
+  \iflednopbinverse
+    \ifinserthangingsymbol
+      \numgdef{\prev@abslineverse}{\the\absline@num-1}
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnum{\prev@abslineverse}}{}
+      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesL<3\ledpbnum{\prev@abslineverse}\fi}{}
+    \fi
+  \fi
+\fi
+}
+\newcommand{\checkverseR}{
+\ifinstanzaR
+  \iflednopbinverse
+    \ifinserthangingsymbolR
+      \numgdef{\prev@abslineverse}{\the\absline@numR-1}
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnumR{\prev@abslineverse}}{}
+      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesR<3\ledpbnumR{\prev@abslineverse}\fi}{}
+    \fi
+  \fi
+\fi
+}
+\newdimen\ledthegoal
+\ifshiftedpstarts
+       \newcommand*{\goalfraction}{0.95}
+\else
+       \newcommand*{\goalfraction}{0.9}
+\fi
+
+\newcommand*{\check@goal}{%
+  \ledthegoal=\goalfraction\pagegoal}
+
+\newif\ifwrittenlinesL
+\newif\ifwrittenlinesR
+
+\newcommand*{\get@nextboxL}{%
+  \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}% box is not empty
+  \else%                                      box is empty
+    \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
+      \parledgroup@notes@endL
+    \else
+      \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}=\@donetotallinesL
+        \parledgroup@notes@endL
+      \fi
+      \ifwrittenlinesL\else
+        \@writelinesinparL
+        \writtenlinesLtrue
+      \fi
+      \ifnum\l@dnumpstartsL>\l@dpscL
+        \writtenlinesLfalse
+         \ifbypstart@
+          \ifnum\value{pstartL}<\value{pstartLold}
+          \else
+            \global\line@num=0
+            \resetprevline@
+          \fi
+          \fi
+         \csuse{after@pendL@\the\l@dpscL}%
+         \global\csundef{after@pendL@\the\l@dpscL}%
+        \addtocounter{pstartL}{1}
+        \global\pstartnumtrue
+        \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
+                         {\the\@donetotallinesL}%
+                         {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
+        \global\@donetotallinesL \z@
+        \global\advance\l@dpscL \@ne
+        \parledgroup@notes@endL
+        \parledgroup@correction@notespacing@final{L}
+      \else
+        \print@last@after@pendLtrue%
+      \fi
+    \fi
+  \fi}
+\newcommand*{\get@nextboxR}{%
+  \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
+  \else%                                      box is empty
+    \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
+      \parledgroup@notes@endR
+    \else
+      \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
+        \parledgroup@notes@endR
+      \fi
+      \ifwrittenlinesR\else
+        \@writelinesinparR
+        \writtenlinesRtrue
+      \fi
+      \ifnum\l@dnumpstartsR>\l@dpscR
+        \writtenlinesRfalse
+        \ifbypstart@R
+            \ifnum\value{pstartR}<\value{pstartRold}
+            \else
+               \global\line@numR=0
+               \resetprevline@
+            \fi
+        \fi
+        \csuse{after@pendR@\the\l@dpscR}%
+        \global\csundef{after@pendR@\the\l@dpscR}%
+        \addtocounter{pstartR}{1}
+        \global\pstartnumRtrue
+        \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
+                         {\the\@donetotallinesR}%
+                         {\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
+        \global\@donetotallinesR \z@
+        \global\advance\l@dpscR \@ne
+        \parledgroup@notes@endR
+        \parledgroup@correction@notespacing@final{R}
+      \else
+          \print@last@after@pendRtrue%
+      \fi
+    \fi
+  \fi}
+
+\newcommand{\eledsectnotoc}[1]{\xdef\@eledsectnotoc{#1}}
+\eledsectnotoc{R}
+\newcommand{\eledsectmark}[1]{\xdef\@eledsectmark{#1}}
+\eledsectmark{L}
+\newskip\eledsection@correcting@skip
+\newwrite\eled@sectioningR@out
+\def\l@prev@pbR{}
+\def\l@prev@nopbR{}
+\newcommand{\ledpbR}{\write\linenum@outR{\string\led@pbR}}
+\newcommand{\ledpbnumR}[1]{\write\linenum@outR{\string\led@pbnumR{#1}}}
+\newcommand{\lednopbR}{\write\linenum@outR{\string\led@nopbR}}
+\newcommand{\lednopbnumR}[1]{\write\linenum@outR{\string\led@nopbnumR{#1}}}
+\newcommand{\led@pbR}{\listxadd{\l@prev@pbR}{\the\absline@numR}}
+\newcommand{\led@pbnumR}[1]{\listxadd{\l@prev@pbR}{#1}}
+\newcommand{\led@nopbR}{\listxadd{\l@prev@nopbR}{\the\absline@numR}}
+\newcommand{\led@nopbnumR}[1]{\listxadd{\l@prev@nopbR}{#1}}
+\newmarks\parledgroup@
+\newmarks\parledgroup@series
+\newmarks\parledgroup@type
+\newcommand{\parledgroup@notes@startL}{%
+  \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>0%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{footnoteX}{\csuse{bhooknoteX@\splitfirstmarks\parledgroup@series}}{}%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{Xfootnote}{\csuse{bhookXnote@\splitfirstmarks\parledgroup@series}}{}%
+  \fi%
+  \global\ledgroupnotesL@true%
+  \insert@noterule@ledgroup{L}%
+}
+\newcommand{\parledgroup@notes@startR}{%
+  \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>0%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{footnoteX}{\csuse{bhooknoteX@\splitfirstmarks\parledgroup@series}}{}%
+    \IfStrEq{\splitfirstmarks\parledgroup@type}{Xfootnote}{\csuse{bhookXnote@\splitfirstmarks\parledgroup@series}}{}%
+  \fi%
+  \global\ledgroupnotesR@true%
+  \insert@noterule@ledgroup{R}%
+}
+\newcommand{\parledgroup@notes@endL}{%
+  \global\ledgroupnotesL@false%
+}
+\newcommand{\parledgroup@notes@endR}{%
+  \global\ledgroupnotesR@false%
+}
+\newcommand{\insert@noterule@ledgroup}[1]{
+    \IfStrEq{\splitbotmarks\parledgroup@}{begin}{%
+      \IfStrEq{\splitbotmarks\parledgroup@type}{Xfootnote}{
+        \csuse{ifledgroupnotes#1@}
+          \vskip\skip\csuse{mp\splitbotmarks\parledgroup@series footins}
+          \csuse{\splitbotmarks\parledgroup@series footnoterule}
+        \fi
+        }
+        {}
+        \IfStrEq{\splitbotmarks\parledgroup@type}{footnoteX}{
+          \csuse{ifledgroupnotes#1@}
+           \vskip\skip\csuse{mpfootins\splitbotmarks\parledgroup@series}
+           \csuse{footnoterule\splitbotmarks\parledgroup@series}
+           \fi
+           }{}
+        }
+    {}
+}
+\newcommand{\parledgroupnotespacing}{}
+\dimdef{\parledgroup@notespacing@correction}{0pt}
+\newcommand{\parledgroup@notespacing@set@correction}{%
+  {\notefontsetup\parledgroupnotespacing\dimgdef{\temp@spacing}{\baselineskip}}%
+  \dimgdef{\parledgroup@notespacing@correction}{\baselineskip-\temp@spacing}%
+}
+\newcommand{\parledgroup@correction@notespacing@init}{
+  \dimdef{\parledgroup@notespacing@correction@accumulated}{0pt}
+  \dimdef{\parledgroup@notespacing@correction@modulo}{0pt}
+}
+\parledgroup@correction@notespacing@init
+\newcommand{\parledgroup@correction@notespacing@final}[1]{
+    \ifparledgroup
+    \vspace{\parledgroup@notespacing@correction@accumulated}
+    \parledgroup@correction@notespacing@init%
+    \ifstrequal{#1}{L}{
+        \numdef{\@checking}{\the\l@dpscL-1}
+    }{
+      \numdef{\@checking}{\the\l@dpscR-1}
+    }
+    \dimdef{\@beforenotes@current@diff}{\csuse{@parledgroup@beforenotes@\@checking L}-\csuse{@parledgroup@beforenotes@\@checking R}}%
+    \ifstrequal{#1}{L}%
+      {% Left
+      \ifdimgreater{\@beforenotes@current@diff}{0pt}{}{\vspace{-\@beforenotes@current@diff}}%
+      }%
+      {% Right
+      \ifdimgreater{\@beforenotes@current@diff}{0pt}{\vspace{\@beforenotes@current@diff}}{}
+      }%
+  \fi
+}
+\newcommand{\parledgroup@correction@notespacing}[1]{%
+    \csuse{ifledgroupnotes#1@}%
+      \vspace{-\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@accumulated}{\parledgroup@notespacing@correction@accumulated+\parledgroup@notespacing@correction}%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
+      \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}{\advance\numpagelinesL -\@ne%
+      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo-\baselineskip}%
+     }% mean greater than equal
+    \fi%
+}
+\dimdef\parledgroup@beforenotesL{0pt}
+\dimdef\parledgroup@beforenotesR{0pt}
+\newcommand{\parledgroup@beforenotes@save}[1]{
+  \ifparledgroup
+    \csdimgdef{@parledgroup@beforenotes@\the\csuse{l@dnumpstarts#1}#1}{\csuse{parledgroup@beforenotes#1}}
+    \csdimgdef{parledgroup@beforenotes#1}{0pt}
+  \fi
+}
+
+\endinput
+%%
+%% End of file `eledpar.sty'.
