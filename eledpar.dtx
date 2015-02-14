@@ -2285,6 +2285,46 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \section{Pstart numbers dumping and restoration}
+% While in \Lpack{eledmac} the footnotes are inserted in the same time as the \cs{pstart} …\cs{pend} are read, in \Lpack{eledpar} they are inserted when the \cs{Columns} or \cs{Pages} commands are called.
+% Consequently, if we do nothing, the value of the PstartL and PstartR counters are not the same in the main text and in the notes.
+% To solve this problem, we dump the values in two list (one by side) when processing \cs{pstart} and restore these at each \cs{pstart} when calling \cs{Columns} or \cs{Pages}. 
+
+% So, first step, creating the lists
+% \begin{macro}{\list@pstartL@pc}
+% \begin{macro}{\list@pstartR@pc}
+%    \begin{macrocode}
+\list@create{\list@pstartL@pc}%
+\list@create{\list@pstartR@pc}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% Two commands to dump current pstarts. 
+% We prefer two commands to one with argument indicating the side, 
+% because the commands are short, and so we save one test (or a \cs{csname} construction).
+% \begin{macro}{\dump@pstartL@pc} 
+% \begin{macro}{\dump@pstartR@pc}
+%    \begin{macrocode}
+\def\dump@pstartL@pc{\xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc}%
+\def\dump@pstartR@pc{\xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\restore@pstartL@pc} 
+% \begin{macro}{\restore@pstartR@pc}
+% And so, the commands to restore them
+%    \begin{macrocode}
+\def\restore@pstartL@pc{%
+  \gl@p\list@pstartL@pc\to\@temp%
+  \global\c@pstartL=\@temp%
+}%
+\def\restore@pstartR@pc{%
+  \gl@p\list@pstartR@pc\to\@temp%
+  \global\c@pstartR=\@temp% 
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Parallel environments}
 %
 % The initial set up for parallel processing is deceptively simple.
@@ -2485,15 +2525,13 @@
 % them to survive past the end of the paragraph.
 %
 % We have to have specific left and right \cs{pstart} when parallel processing;
-% among other things because of potential changes in the linewidth. The \verb|old| counters are used to have the good reset of the pstart counters at the begining of the \cs{Pages} command.
+% among other things because of potential changes in the linewidth. 
 % 
 %    \begin{macrocode}
 
 \newcounter{pstartL}
-\newcounter{pstartLold}
 \renewcommand{\thepstartL}{{\bfseries\@arabic\c@pstartL}. }
 \newcounter{pstartR}
-\newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
 \newcommandx*{\pstartL}[1][1]{%
@@ -2513,10 +2551,9 @@
   \fi%
 %    \end{macrocode}
 % If this is the first \cs{pstart} in a numbered section, clear any inserts
-% and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
+% and set \cs{ifpst@rtedL} to FALSE. 
 %    \begin{macrocode}
   \ifpst@rtedL\else%
-      \setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
     \global\let\next@insert=\empty%
      \global\pst@rtedLtrue%
@@ -2571,7 +2608,6 @@
     \pendR%
   \fi%
   \ifpst@rtedR\else%
-      \setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
     \global\let\next@insertR=\empty%
     \global\pst@rtedRtrue%
@@ -2635,6 +2671,7 @@
   \ignorespaces%
   \@oldnobreak%
   \ifnumberpstart%
+    \dump@pstartL@pc%
     \addtocounter{pstartL}{1}%
   \fi
   \parledgroup@beforenotes@save{L}%
@@ -2668,6 +2705,7 @@
   \ignorespaces%
   \@oldnobreak%
   \ifnumberpstart%
+    \dump@pstartR@pc%
     \addtocounter{pstartR}{1}%
   \fi%    
   \parledgroup@beforenotes@save{R}%
@@ -4218,8 +4256,6 @@
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
-  \setcounter{pstartL}{\value{pstartLold}}
-  \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
   \fi
@@ -4317,8 +4353,6 @@
            \write\linenum@outR{\string\@set[1]}
            \resetprevline@
         \fi
-      \addtocounter{pstartL}{1}
-      \addtocounter{pstartR}{1}
     \repeat
 %    \end{macrocode}
 % Having output all chunks, make sure all notes have been output,
@@ -4594,8 +4628,6 @@
 \newcommand*{\Pages}{%
  \l@dprintingpagestrue%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
-  \setcounter{pstartL}{\value{pstartLold}}
-  \setcounter{pstartR}{\value{pstartRold}}
   \parledgroup@notespacing@set@correction
   \typeout{}
   \typeout{*************************** PAGES ***************************}
@@ -4746,7 +4778,7 @@
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
 %    \begin{macrocode}
-          \checkpageR
+          \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
               \initnumbering@sectcountR
@@ -5191,11 +5223,8 @@
 %    \begin{macrocode}
         \writtenlinesLfalse
          \ifbypstart@
-          \ifnum\value{pstartL}<\value{pstartLold}
-          \else 
-            \global\line@num=0
-            \resetprevline@
-          \fi  
+            \global\line@num=0%
+            \resetprevline@%
           \fi
 % Add the content of the optional argument of the previous \cs{pend}.
 %     \begin{macrocode}
@@ -5204,7 +5233,6 @@
 %     \end{macrocode}
 % Increment the pstartL counter.
 %     \begin{macrocode}
-        \addtocounter{pstartL}{1}
         \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
                          {\the\@donetotallinesL}%
@@ -5244,15 +5272,11 @@
       \ifnum\l@dnumpstartsR>\l@dpscR
         \writtenlinesRfalse
         \ifbypstart@R
-            \ifnum\value{pstartR}<\value{pstartRold}
-            \else
-               \global\line@numR=0
-               \resetprevline@
-            \fi
+             \global\line@numR=0%
+             \resetprevline@%
         \fi
         \csuse{after@pendR@\the\l@dpscR}%
         \global\csundef{after@pendR@\the\l@dpscR}%
-        \addtocounter{pstartR}{1}
         \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
                          {\the\@donetotallinesR}%
