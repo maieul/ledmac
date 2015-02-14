@@ -2315,12 +2315,16 @@
 % And so, the commands to restore them
 %    \begin{macrocode}
 \def\restore@pstartL@pc{%
-  \gl@p\list@pstartL@pc\to\@temp%
-  \global\c@pstartL=\@temp%
+  \ifx\list@pstartL@pc\empty\else%
+    \gl@p\list@pstartL@pc\to\@temp%
+    \global\c@pstartL=\@temp%
+  \fi%
 }%
 \def\restore@pstartR@pc{%
-  \gl@p\list@pstartR@pc\to\@temp%
-  \global\c@pstartR=\@temp% 
+  \ifx\list@pstartR@pc\empty\else%
+    \gl@p\list@pstartR@pc\to\@temp%
+    \global\c@pstartR=\@temp% 
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -4697,9 +4701,12 @@
     \if@pstarts
 %    \end{macrocode}
 % Increment the chunk counts to get the first pair.
+% Restore also the value of public pstart counters.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne
       \global\advance\l@dpscR \@ne
+      \restore@pstartL@pc%
+      \restore@pstartR@pc%
 %    \end{macrocode}
 % We haven't processed any lines from these chunks yet, so zero the
 % respective line counts.
@@ -5237,14 +5244,18 @@
          \csuse{after@pendL@\the\l@dpscL}%
          \global\csundef{after@pendL@\the\l@dpscL}%
 %     \end{macrocode}
-% Increment the pstartL counter.
+% Check the number of lines
 %     \begin{macrocode}
-        \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
                          {\the\@donetotallinesL}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
+%     \end{macrocode}
+% Go to the next pstart
+%     \begin{macrocode}
         \global\advance\l@dpscL \@ne
+        \global\pstartnumtrue%
+        \restore@pstartL@pc%
 %    \end{macrocode}
 % Add notes of parallel ledgroup.
 %    \begin{macrocode}
@@ -5283,12 +5294,13 @@
         \fi
         \csuse{after@pendR@\the\l@dpscR}%
         \global\csundef{after@pendR@\the\l@dpscR}%
-        \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
                          {\the\@donetotallinesR}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
         \global\@donetotallinesR \z@
         \global\advance\l@dpscR \@ne
+        \global\pstartnumRtrue%
+        \restore@pstartR@pc%
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
       \else
