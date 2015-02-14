@@ -10118,7 +10118,7 @@
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
 % The printing of the lines number is shared in 
 % \cs{printlinefootnotenumbers}.
-% \changes{v1.17.1}{2015/02/13}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{boxfootnotenumbers}}
+% \changes{v1.17.1}{2015/02/13}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
    \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
@@ -10158,24 +10158,15 @@
                         \hspace{\csuse{aftersymlinenum@#2}}}%
                        }%
                        {%
-                        \printbeforenumberinfootnote{#2}%
-                        \csuse{Xnotenumfont@#2}%
-                        \boxfootnotenumbers{#1}{#2}%
-                        \printafternumberinfootnote{#2}%
+                        \printlinefootnotearea{#1}{#2}%
                         }%
                     }%
                     {%
-                    \printbeforenumberinfootnote{#2}%
-                    \csuse{Xnotenumfont@#2}%
-                    \boxfootnotenumbers{#1}{#2}%
-                    \printafternumberinfootnote{#2}%
+                    \printlinefootnotearea{#1}{#2}%
                     }%
               }%
               {%
-              \printbeforenumberinfootnote{#2}%
-              \csuse{Xnotenumfont@#2}%
-              \boxfootnotenumbers{#1}{#2}%
-              \printafternumberinfootnote{#2}%
+              \printlinefootnotearea{#1}{#2}%
               }%
               \csxdef{prevline#2}{\lineinfo@}%
            }%
@@ -10185,11 +10176,24 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\boxfootnotenumbers}
-% This macro boxes or not the line numbers, called via \cs{\printlinefootnotenumbers}.
-% The first arguments is line information, the second is the notes series (A, B, C. etc.)
-% The previous \cs{printlinefootnotenumbers} calls it, 
+% \begin{macro}{\printlinefootnotearea}
+% This macro prints the space before the line number, change the font, print the line number and the space after it.
+% It is called by \cs{\printlinefootnote}
 % depending of the options about repeating line numbers.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+%     \begin{macrocode}
+\newcommand{\printlinefootnotearea}[2]{%
+  \printbeforenumberinfootnote{#2}%
+  \csuse{Xnotenumfont@#2}%
+  \boxfootnotenumbers{#1}{#2}%
+  \printafternumberinfootnote{#2}%
+}%
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\boxfootnotenumbers}
+% This macro boxes or not the line numbers, depending of the user's setting.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+% The previous \cs{printlinefootnotearea} calls it.
 %     \begin{macrocode}
 \newcommand{\boxfootnotenumbers}[2]{%
   \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
@@ -10219,7 +10223,7 @@
 % \end{macro}
 % \begin{macro}{\printbeforenumberinfootnote}
 % This macro print the space, before the line number in footnote. 
-% It called by \cs{printlinefootnote}.
+% It is called by \cs{printlinefootnotearea}.
 % Its only argument is the series
 %    \begin{macrocode}
 \newcommand{\printbeforenumberinfootnote}[1]{%
@@ -10229,7 +10233,7 @@
 % \end{macro}
 % \begin{macro}{\printafternumberinfootnote}
 % This macro print the space, adding eventually a \cs{nobreak} after the line number in footnote. 
-% It called by \cs{printlinefootnote}.
+% It is called by \cs{printlinefootnotearea}.
 % Its only argument is the series
 %    \begin{macrocode}
 \newcommand{\printafternumberinfootnote}[1]{%
