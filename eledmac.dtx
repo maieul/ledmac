@@ -2905,7 +2905,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/02/09 v1.17.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/02/13 v1.17.1 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3445,6 +3445,9 @@
 % \begin{macro}{\ifl@dpaging}
 % \begin{macro}{\l@dpagingtrue}
 % \begin{macro}{\l@dpagingfalse}
+% \begin{macro}{\ifl@dprintingpages}
+% \begin{macro}{\l@dprintingpagestrue}
+% \begin{macro}{\l@dprintingpagesfalse}
 % \begin{macro}{\l@dpairingtrue}
 % \begin{macro}{\l@dpairingfalse}
 % \begin{macro}{\ifpst@rtedL}
@@ -3462,11 +3465,14 @@
 % \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from \Lpack{eledpar}}
 % \changes{v1.12.0}{2014/08/05}{Add \cs{ifledRcol@} for \Lpack{eledpar}}
 % \changes{v1.13.2}{2014/09/31}{Add \cs{ifl@dpaging} for \Lpack{eledpar}}
+% \changes{v1.17.1}{2015/02/13}{Add \cs{ifl@dprintingpages} for \Lpack{eledpar}}
 %    \begin{macrocode}
 \newif\ifl@dpairing
   \l@dpairingfalse
 \newif\ifl@dpaging%
   \l@dpagingfalse%
+\newif\ifl@dprintingpages%
+  \l@dprintingpagesfalse%
 \newif\ifpst@rtedL
   \pst@rtedLfalse
 \newcount\l@dnumpstartsL
@@ -3481,6 +3487,9 @@
 %    \begin{macrocode}
 \newif\ifnumberingR
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7358,17 +7367,18 @@
 %
 % \begin{macro}{\printpstart}
 % The \cs{printpstart} macro prints the pstart number for a note.
+% \changes{v1.17.1}{2015/02/13}{Debug \cs{pstartinfootnote} with parallel pages (eledpar)}
 %    \begin{macrocode}
 \newcommand{\printpstart}[0]{%
-    \ifl@dpairing%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages}}{%
         \ifledRcol%
             \thepstartR%
         \else%
             \thepstartL%
         \fi%
-    \else%
+    }{%
         \thepstart%
-    \fi%
+    }%
 }
 %    \end{macrocode}
 % 
