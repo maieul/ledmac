@@ -10116,6 +10116,9 @@
 % \begin{macro}{\printlinefootnote}
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
+% The printing of the lines number is shared in 
+% \cs{printlinefootnotenumbers}.
+% \changes{v1.17.1}{2015/02/13}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotenumbers}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
    \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
@@ -10157,17 +10160,11 @@
                        {%
                         \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
                         \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                            \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                            \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}}%
-                            {%
+                            \printlinefootnotenumbers{#1}{#2}%
+                            }{%
                             \hbox to \csuse{boxlinenum@#2}{%
-                              \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                                \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                      \hfill}%
+                              \printlinefootnotenumbers{#1}{#2}%
+                              \hfill}%
                             }%
                             \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
@@ -10175,17 +10172,12 @@
                     {%
                     \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
                     \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                        \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                        \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}}%
+                        \printlinefootnotenumbers{#1}{#2}%
+                        }%
                         {%
                         \hbox to \csuse{boxlinenum@#2}{%
-                            \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                            \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                        \hfill}%
+                          \printlinefootnotenumbers{#1}{#2}%
+                          \hfill}%
                         }%
                     \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
@@ -10193,17 +10185,11 @@
               {%
               \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
               \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                     \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                     \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+                     \printlinefootnotenumbers{#1}{#2}%
                      }%
                      {%
                      \hbox to \csuse{boxlinenum@#2}{%
-                         \ifboolexpr{%
- (togl{pstartinfootnote@#2} and bool{numberpstart})%
-  or togl{pstartinfootnoteeverytime@#2}}{\printpstart}{}%
-                         \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+                         \printlinefootnotenumbers{#1}{#2}%
                          \hfill}%
                      }%
               \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
@@ -10214,6 +10200,20 @@
      }%
    }%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printlinefootnotenumbers}
+% This macro print, if needed, the pstart number and the line number.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+% The previous \cs{printlinefootnote}  calls it depending of the options about not repeating line numbers.
+%    \begin{macrocode}
+\newcommand{\printlinefootnotenumbers}[2]{%
+  \ifboolexpr{%
+   (togl{pstartinfootnote@#2} and bool{numberpstart})%
+   or togl{pstartinfootnoteeverytime@#2}}%
+  {\printpstart}{}%
+  \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Output routine}
