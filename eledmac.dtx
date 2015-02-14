@@ -10118,7 +10118,7 @@
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
 % The printing of the lines number is shared in 
 % \cs{printlinefootnotenumbers}.
-% \changes{v1.17.1}{2015/02/13}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotenumbers}}
+% \changes{v1.17.1}{2015/02/13}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{boxfootnotenumbers}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
    \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
@@ -10159,39 +10159,19 @@
                        }%
                        {%
                         \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-                        \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                            \printlinefootnotenumbers{#1}{#2}%
-                            }{%
-                            \hbox to \csuse{boxlinenum@#2}{%
-                              \printlinefootnotenumbers{#1}{#2}%
-                              \hfill}%
-                            }%
-                            \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
+                        \boxfootnotenumbers{#1}{#2}%
+                        \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                         }%
                     }%
                     {%
                     \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-                    \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                        \printlinefootnotenumbers{#1}{#2}%
-                        }%
-                        {%
-                        \hbox to \csuse{boxlinenum@#2}{%
-                          \printlinefootnotenumbers{#1}{#2}%
-                          \hfill}%
-                        }%
+                    \boxfootnotenumbers{#1}{#2}%
                     \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
                     }%
               }%
               {%
               \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-              \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                     \printlinefootnotenumbers{#1}{#2}%
-                     }%
-                     {%
-                     \hbox to \csuse{boxlinenum@#2}{%
-                         \printlinefootnotenumbers{#1}{#2}%
-                         \hfill}%
-                     }%
+              \boxfootnotenumbers{#1}{#2}%
               \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
               }%
               \csxdef{prevline#2}{\lineinfo@}%
@@ -10202,10 +10182,28 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\boxfootnotenumbers}
+% This macro boxes or not the line numbers, called via \cs{\printlinefootnotenumbers}.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+% The previous \cs{printlinefootnotenumbers} calls it, 
+% depending of the options about repeating line numbers.
+%     \begin{macrocode}
+\newcommand{\boxfootnotenumbers}[2]{%
+  \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+       \printlinefootnotenumbers{#1}{#2}%
+     }%
+     {%
+       \hbox to \csuse{boxlinenum@#2}{%
+       \printlinefootnotenumbers{#1}{#2}%
+       \hfill}%
+     }%
+}%
+%     \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlinefootnotenumbers}
 % This macro print, if needed, the pstart number and the line number.
 % The first arguments is line information, the second is the notes series (A, B, C. etc.)
-% The previous \cs{printlinefootnote}  calls it depending of the options about not repeating line numbers.
+% The previous \cs{boxlinefootnote}  calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
   \ifboolexpr{%
