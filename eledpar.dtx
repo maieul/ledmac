@@ -2289,8 +2289,10 @@
 % While in \Lpack{eledmac} the footnotes are inserted in the same time as the \cs{pstart} …\cs{pend} are read, in \Lpack{eledpar} they are inserted when the \cs{Columns} or \cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the PstartL and PstartR counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \cs{pstart} and restore these at each \cs{pstart} when calling \cs{Columns} or \cs{Pages}. 
+% We also dump and restore the value of the boolean \cs{ifnumberpstart}.
 
-% So, first step, creating the lists
+% So, first step, creating the lists. 
+% Here, ``pc'' means ``public counters''.
 % \begin{macro}{\list@pstartL@pc}
 % \begin{macro}{\list@pstartR@pc}
 %    \begin{macrocode}
@@ -2305,8 +2307,16 @@
 % \begin{macro}{\dump@pstartL@pc} 
 % \begin{macro}{\dump@pstartR@pc}
 %    \begin{macrocode}
-\def\dump@pstartL@pc{\xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc}%
-\def\dump@pstartR@pc{\xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc}%
+\def\dump@pstartL@pc{%
+  \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
+  \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
+}%
+
+\def\dump@pstartR@pc{%
+  \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
+  \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
+}%
+
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2793,6 +2803,7 @@
 %                            some common code}
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
+  \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
   \advance\countLline \@ne
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
   {\vbadness=10000 
@@ -2908,6 +2919,7 @@
 % \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, added by v1.8.0 (?).}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
