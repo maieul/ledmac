@@ -1,27 +1,100 @@
 \documentclass{article}
 
-
+\usepackage{fontspec}
 
 \usepackage{eledmac,eledpar}
 
 
+\makeatletter
+\def\print@line{
+    \save@linecontent
+    \affixpstart@num%
+    \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta%
+        \add@inserts\affixside@note%
+        \l@dlsn@te
+        {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+        \l@drsn@te
+      }}%
+    \add@penalties%
+}
+
+\def\save@linecontent{
+	\setbox0=\copy\one@line
+	%\eledmac@warning{here}
+	\directlua{
+	local char = unicode.utf8.char
+	  local function nodeText(n)
+	    local t =  {}
+	    for x in node.traverse(n) do
+	      % glyph node
+	      if x.id == 37 then
+	        table.insert(t,char(x.char))
+	      % glue node
+	      elseif x.id == 10 and x.subtype == 0 then
+	        table.insert(t," ")
+	      end
+	    end
+	    return table.concat(t)
+	  end
+	  local n = tex.getbox(0)
+	  f:write("\the\line@num\space : "..nodeText(n.head),"\noexpand\n")
+	}
+}
+\Xlemmadisablefontselection[A]
+\newcommand{\save@notecontent}[4]{
+	   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
+   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
+   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
+   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+  % \meaning#2
+  \let\no@expands\relax
+  \edef\tag{#2}
+  \patchcmd{\tag}{\no@expands}{}{}{}
+	\directlua{ 
+	 n:write("\extractline@#1|-\extractendline@#1| \tag".."  ]#3".."\noexpand\n")
+	}
+}
+
+\let\old@normalfootfmt\normalfootfmt
+\renewcommandx{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
+  
+  \save@notecontent{#1}{#2}{#3}{#4}
+  \ledsetnormalparstuff%
+  \hangindent=\csuse{Xhangindent@#4}
+  \strut{\printlinefootnote{#1}{#4}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
+    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}\relax%
+  }}%
+  #3\strut\par}
+
+
+	 \directlua{
+	   f = io.open("\jobname.maintext","w") f:write(" ")
+	   n=io.open("\jobname.A","w")
+	    n:write(" ")
+	    }
 \begin{document}
 
 
         \beginnumbering
+       
             \pstart
-                Left side \edtext{paragraph}{\Afootnote{s}}. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph.
+                \textbf{Left} side \edtext{test paragraph}{\Afootnote{content}\edtext{s}{\Afootnote{b}}}. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. 
             \pend
 
 
 
             \pstart
-                Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph.
+                Other right side paragraph. \edtext{paragraph}{\Afootnote{s}} Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph. Other right side paragraph.
             \pend
         \endnumbering
 
 
-
+ \directlua{f:close() 
+ n:close()
+ }
 
 
 \end{document}
