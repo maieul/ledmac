@@ -31,7 +31,7 @@
              ]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage{graphicx,eledmac,eledpar}
+\usepackage{graphicx,eledmac,eledpar,metalogo}
 \makeatletter
   \@mparswitchfalse
 \makeatother
@@ -183,6 +183,7 @@
 % \changes{v1.10.0}{2015/01/12}{Restore critical notes in \cs{eledsection} in parallel columns (this bug was added in 1.8.2).}
 % \changes{v1.10.0}{2015/01/12}{Compatibility with \cs{AtEveryPstart} and \cs{AtEveryPend}}
 % \changes{v1.11.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
+% \changes{v1.11.1}{2015/02/13}{Compatibility with \LuaLaTeX RTL languages.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -234,7 +235,6 @@
 % \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
 % 
-% \listoffigures
 %
 %
 % \section{Introduction}
@@ -2555,6 +2555,9 @@
     \let\@oldnobreak\@nobreakfalse%
   \fi%
     \@nobreaktrue%
+  \ifluatex%
+    \xdef\l@luatextextdir@L{\the\luatextextdir}%
+  \fi%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
     \beginnumbering%
@@ -2613,6 +2616,9 @@
     \let\@oldnobreak\@nobreakfalse%
   \fi%
     \@nobreaktrue%
+  \ifluatex%
+    \xdef\l@luatextextdir@R{\the\luatextextdir}%
+  \fi%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
     \beginnumberingR%
@@ -2838,20 +2844,29 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\print@eledsectionL}
-% \cs{print@lineL} is for lines without a sectioning command.
+% \begin{macro}{\print@lineL}
+% \cs{print@lineL} is for lines without a sectioning command. See \Lpack{eledmac} definition of \cs{print@line} for handbook.
+% \changes{v1.17.1}{2015/02/13}{Compatibility with \LuaLaTeX RTL languages.}
 %    \begin{macrocode}
 \def\print@lineL{%
     \affixpstart@numL%
     \l@dld@ta %space kept for backward compatibility
     \add@inserts\affixside@note%
     \l@dlsn@te %space kept for backward compatibility
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{%
+            \do@insidelineLhook%
+            \ifluatex%
+              \luatextextdir\l@luatextextdir@L%
+            \fi%
+            \new@lineL%
+            \inserthangingsymbolL%
+            \l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
      \l@drsn@te}}
 
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\print@eledsectionL}
+% \changes{v1.17.1}{2015/02/13}{Compatibility with \LuaLaTeX RTL languages.}
 % \cs{print@eledsectionL} is for line with macro code.
 %    \begin{macrocode}
 \def\print@eledsectionL{%%
@@ -2861,15 +2876,16 @@
     \numdef{\temp@}{\l@dpscL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
+    \ifluatex%
+      \luatextextdir\l@luatextextdir@L%
+    \fi%
     \csuse{eled@sectioning@\the\l@dpscL}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscL}%
     \if@RTL%
-      \hspace{-3\paperwidth}%
-    {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
+      \vphantom{\hbox{\l@dunhbox@line{\one@line}} \new@line}%
     \else%
-      \hspace{3\paperwidth}%
-    {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
+      \vphantom{\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip\eledsection@correcting@skip%
 }
@@ -2960,12 +2976,20 @@
 %
 % \begin{macro}{\print@lineR}{}
 % \begin{macro}{\print@eledsectionR}{}
+% \changes{v1.17.1}{2015/02/13}{Compatibility with \LuaLaTeX RTL languages.}
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta  %space kept for backward compatibility
     \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
-\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+    \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{%
+       \do@insidelineRhook%
+       \new@lineR%
+       \inserthangingsymbolR%
+       \ifluatex%
+              \luatextextdir\l@luatextextdir@R%
+       \fi%
+       \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }
 
@@ -2977,16 +3001,13 @@
     \numdef{\temp@}{\l@dpscR-1}%
     \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
+    \ifluatex%
+      \luatextextdir\l@luatextextdir@R%
+    \fi%
     \csuse{eled@sectioning@\the\l@dpscR R}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscR R}%
-    \if@RTL%
-      \hspace{-\paperwidth}%
-    {\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
-    \else%
-      \hspace{\paperwidth}%
-    {\new@lineR \hbox{\l@dunhbox@line{\one@lineR}}}%
-    \fi%
+    \vphantom{\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
     \vskip\eledsection@correcting@skip
 }
 % \end{macro}
