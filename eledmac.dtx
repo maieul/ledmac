@@ -31,7 +31,7 @@
              ]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage{graphicx,eledmac}
+\usepackage{graphicx,eledmac,metalogo}
 \makeatletter
   \@mparswitchfalse
 \makeatother
@@ -6283,20 +6283,62 @@
 %
 % \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, mistakenly deleted in version 0.17!}
 % \begin{macro}{\print@line}
-%    \begin{macrocode}
 % \cs{print@line} is for normal line, i. e line without sectioning command.
+%    \begin{macrocode}
 \def\print@line{
+%    \end{macrocode}
+% Insert the pstart number in side, if we are in the first line of a pstart.
+%    \begin{macrocode}
     \affixpstart@num%
-    \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta%
+%    \end{macrocode}
+% The line will be boxed, to have the good width.
+%    \begin{macro}
+    \hb@xt@ \linewidth{%
+%    \end{macrocode}
+% User hook.
+%    \begin{macrocode}
+    \do@insidelinehook%
+%    \end{macrocode}
+% Left line number
+%    \begin{macrocode}
+    \l@dld@ta%
+%    \end{macrocode}
+% Restore marginal and footnotes.
+%     \begin{macrocode}
         \add@inserts\affixside@note%
+%    \end{macrocode}
+% Print left notes.
+%     \begin{macrocode}
         \l@dlsn@te
+%    \end{macrocode}
+% Boxes the line, write in the numbered file the information about new line.
+%    \begin{macrocode}
         {\ledllfill\hb@xt@ \wd\one@line{\new@line%
+%    \end{macrocode}
+% If we use \LuaLaTeX, then restore the direction.
+%    \begin{macrocode}
         \ifluatex%
           \luatextextdir\l@luatextextdir@L%
         \fi%
-        \inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+%    \end{macrocode}
+% Insert, if needed, the hanging symbol.
+%    \begin{macrocode}
+        \inserthangingsymbol %Space keept for backward compatibility
+%    \end{macrocode}
+% And so, print the line.
+        \l@dunhbox@line{\one@line}}%
+%   \end{macrocode}
+% Right line number
+%   \begin{macrocode}
+        \ledrlfill\l@drd@ta%
+%   \end{macrocode}
+% Print right notes.
+%   \begin{macrocode}
         \l@drsn@te
       }}%
+%   \end{macrocode}
+%   And reinsert penalties (for page breaking)...
+%   \begin{macrocode}
     \add@penalties%
 }
 %    \end{macrocode}
