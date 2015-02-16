@@ -46,18 +46,19 @@
    \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
    \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
    \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
-  % \meaning#2
+  {\let\edtext\dummy@edtext%
   \let\no@expands\relax
   \edef\tag{#2}
-  \patchcmd{\tag}{\no@expands}{}{}{}
+  \patchcmd{\tag}{\no@expands}{}{}{}{}
 	\directlua{ 
-	 n:write("\extractline@#1|-\extractendline@#1| \tag".."  ]#3".."\noexpand\n")
+	 s="\luaescapestring{\tag}"
+	 n:write("\extractline@#1|-\extractendline@#1| "..s.." ]#3\noexpand\n")
+	}
 	}
 }
 
 \let\old@normalfootfmt\normalfootfmt
 \renewcommandx{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
-  
   \save@notecontent{#1}{#2}{#3}{#4}
   \ledsetnormalparstuff%
   \hangindent=\csuse{Xhangindent@#4}
@@ -81,7 +82,7 @@
         \beginnumbering
        
             \pstart
-                \textbf{Left} side \edtext{test paragraph}{\Afootnote{content}\edtext{s}{\Afootnote{b}}}. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. 
+                \textbf{Left} side \edtext{test paragraph\edtext{word}{\Afootnote{c}}}{\Afootnote{content}}. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. Left side paragraph. 
             \pend
 
 
