@@ -1,10 +1,11 @@
 \documentclass{article}
 \usepackage[none]{hyphenat}
-
 \usepackage{fontspec}
-\newfontfamily\hebrewfont[]{Ezra SIL}
+\usepackage{libertine}
+
 \usepackage{eledmac,eledpar}
 
+\usepackage{dad}
 
 \makeatletter
 \def\print@line{
@@ -13,40 +14,37 @@
     \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta%
         \add@inserts\affixside@note%
         \l@dlsn@te
-        {\ledllfill\hb@xt@ \wd\one@line{\new@line        \ifluatex%
-          \luatextextdir\l@luatextextdir@L%
-        \fi\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+        {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
         \l@drsn@te
       }}%
     \add@penalties%
 }
 
 \def\save@linecontent{
-	\setbox0=\copy\one@line
-	%\eledmac@warning{here}
-	\directlua{
-	local char = unicode.utf8.char
-	  local function nodeText(n)
-	    local t =  {}
-	    for x in node.traverse(n) do
-	      % glyph node
-	      if x.id == 37 then
-	        a= x.char
-	        table.insert(t,char(a))
-	      % glue node
-	      elseif x.id == 10 and x.subtype == 0 then
-	        table.insert(t," ")
-	      end
-	    end
-	    return table.concat(t)
-	  end
-	  local n = tex.getbox(0)
-	  f:write("\the\line@num\space : "..nodeText(n.head),"\noexpand\n")
-	}
+    \setbox0=\copy\one@line
+    %\eledmac@warning{here}
+    \directlua{
+    local char = unicode.utf8.char
+      local function nodeText(n)
+        local t =  {}
+        for x in node.traverse(n) do
+          % glyph node
+          if x.id == 37 then
+            table.insert(t,char(x.char))
+          % glue node
+          elseif x.id == 10 and x.subtype == 0 then
+            table.insert(t," ")
+          end
+        end
+        return table.concat(t)
+      end
+      local n = tex.getbox(0)
+      f:write("\the\line@num\space : "..nodeText(n.head),"\noexpand\n")
+    }
 }
 \Xlemmadisablefontselection[A]
 \newcommand{\save@notecontent}[4]{
-	   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
+       \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
    \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
    \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
    \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
@@ -55,14 +53,15 @@
   \edef\tag{#2}
   \edef\content{\unexpanded{#3}}
   \patchcmd{\tag}{\no@expands}{}{}{}{}
-  \def\ignore##1{##1}
-  \let\textarabic\ignore
-	\directlua{ 
-	 l="\luaescapestring{\tag}"
-	 t="\luaescapestring{\content}"
-	 n:write("\extractline@#1|-\extractendline@#1| "..l.." ]"..t.."\noexpand\n")
-	}
-	}
+\def\ignore##1{##1}
+\let\textarabic\ignore
+\let\arab\ignore
+    \directlua{ 
+ l="\luaescapestring{\tag}"
+ t="\luaescapestring{\content}"
+ n:write("\extractline@#1|-\extractendline@#1| "..l.." ]"..t.."\noexpand\n")
+    }
+    }
 }
 
 \let\old@normalfootfmt\normalfootfmt
@@ -79,25 +78,39 @@
   #3\strut\par}
 
 
-	 \directlua{
-	   f = io.open("\jobname.maintext","w") f:write(" ")
-	   n=io.open("\jobname.A","w")
-	    n:write(" ")
-	    }
+     \directlua{
+       f = io.open("\jobname.maintext","w") f:write(" ")
+       n=io.open("\jobname.A","w")
+        n:write(" ")
+        }
 \begin{document}
-\newfontfamily\arabicfont[Script=Arabic,Scale=1.2]{Scheherazade}
-\newcommand{\textarabic}[1]{\bgroup\luatextextdir TRT\arabicfont #1\egroup}
-\bgroup
-        \beginnumbering
 
-            \pstart
-           
-   \edtext{s}{\Afootnote{\textarabic{ هَل}}}
-               هَل
-            \pend
-        \endnumbering
+L'arabe non vocalisé résiste bien à la conversion
+pdf$\rightarrow$text. Mais l'arabe vocalisé ne passe
+pas. Démonstration.
 
-\egroup
+\beginnumbering
+
+\pstart
+\eledsection*{Arabe non vocalisé}
+\pend
+
+\pstart
+Ἐρωτήματα· \edtext{εἰ}{\Afootnote{rest. Nikitas \arab{هل}: εἴρεον
+    V ἤρεον IRH}} ρήϊον ἀεὶ πληροῦσθαι ποτοῦ ἢ σιτοῦ.
+\pend
+
+\pstart
+\eledsection*{Arabe vocalisé}
+\pend
+
+\pstart
+Ἐρωτήματα· \edtext{εἰ}{\Afootnote{rest. Nikitas \arab{هَل}: εἴρεον
+    V ἤρεον IRH}} ρήϊον ἀεὶ πληροῦσθαι ποτοῦ ἢ σιτοῦ.
+\pend
+
+\endnumbering
+
  \directlua{f:close() 
  n:close()
  }
