@@ -53,10 +53,14 @@
   {\let\edtext\dummy@edtext%
   \let\no@expands\relax
   \edef\tag{#2}
+  \edef\content{\unexpanded{#3}}
   \patchcmd{\tag}{\no@expands}{}{}{}{}
+  \def\ignore##1{##1}
+  \let\textarabic\ignore
 	\directlua{ 
-	 s="\luaescapestring{\tag}"
-	 n:write("\extractline@#1|-\extractendline@#1| "..s.." ]#3\noexpand\n")
+	 l="\luaescapestring{\tag}"
+	 t="\luaescapestring{\content}"
+	 n:write("\extractline@#1|-\extractendline@#1| "..l.." ]"..t.."\noexpand\n")
 	}
 	}
 }
@@ -81,15 +85,15 @@
 	    n:write(" ")
 	    }
 \begin{document}
-\newfontfamily\arabicfont[Scale=1.2]{Scheherazade}
+\newfontfamily\arabicfont[Script=Arabic,Scale=1.2]{Scheherazade}
 \newcommand{\textarabic}[1]{\bgroup\luatextextdir TRT\arabicfont #1\egroup}
 \bgroup
         \beginnumbering
 
             \pstart
            
-   \edtext{s}{\textarabic{\Afootnote{ هَل}}}
-            
+   \edtext{s}{\Afootnote{\textarabic{ هَل}}}
+               هَل
             \pend
         \endnumbering
 
