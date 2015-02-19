@@ -31,7 +31,7 @@
              ]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage{graphicx,eledmac,eledpar}
+\usepackage{graphicx,eledmac,eledpar,metalogo}
 \makeatletter
   \@mparswitchfalse
 \makeatother
@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{4698}
+% \CheckSum{4766}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -183,6 +183,7 @@
 % \changes{v1.10.0}{2015/01/12}{Restore critical notes in \cs{eledsection} in parallel columns (this bug was added in 1.8.2).}
 % \changes{v1.10.0}{2015/01/12}{Compatibility with \cs{AtEveryPstart} and \cs{AtEveryPend}}
 % \changes{v1.11.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
+% \changes{v1.12.0}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -234,7 +235,6 @@
 % \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
 % 
-% \listoffigures
 %
 %
 % \section{Introduction}
@@ -872,7 +872,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/01/23 v1.11.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/02/16 v1.12.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) don't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shifted stop at every end of pages.
@@ -2285,6 +2285,60 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \section{Pstart numbers dumping and restoration}
+% While in \Lpack{eledmac} the footnotes are inserted in the same time as the \cs{pstart} …\cs{pend} are read, in \Lpack{eledpar} they are inserted when the \cs{Columns} or \cs{Pages} commands are called.
+% Consequently, if we do nothing, the value of the PstartL and PstartR counters are not the same in the main text and in the notes.
+% To solve this problem, we dump the values in two list (one by side) when processing \cs{pstart} and restore these at each \cs{pstart} when calling \cs{Columns} or \cs{Pages}. 
+% We also dump and restore the value of the boolean \cs{ifnumberpstart}.
+
+% So, first step, creating the lists. 
+% Here, ``pc'' means ``public counters''.
+% \begin{macro}{\list@pstartL@pc}
+% \begin{macro}{\list@pstartR@pc}
+%    \begin{macrocode}
+\list@create{\list@pstartL@pc}%
+\list@create{\list@pstartR@pc}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% Two commands to dump current pstarts. 
+% We prefer two commands to one with argument indicating the side, 
+% because the commands are short, and so we save one test (or a \cs{csname} construction).
+% \begin{macro}{\dump@pstartL@pc} 
+% \begin{macro}{\dump@pstartR@pc}
+%    \begin{macrocode}
+\def\dump@pstartL@pc{%
+  \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
+  \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
+}%
+
+\def\dump@pstartR@pc{%
+  \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
+  \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\restore@pstartL@pc} 
+% \begin{macro}{\restore@pstartR@pc}
+% And so, the commands to restore them
+%    \begin{macrocode}
+\def\restore@pstartL@pc{%
+  \ifx\list@pstartL@pc\empty\else%
+    \gl@p\list@pstartL@pc\to\@temp%
+    \global\c@pstartL=\@temp%
+  \fi%
+}%
+\def\restore@pstartR@pc{%
+  \ifx\list@pstartR@pc\empty\else%
+    \gl@p\list@pstartR@pc\to\@temp%
+    \global\c@pstartR=\@temp% 
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Parallel environments}
 %
 % The initial set up for parallel processing is deceptively simple.
@@ -2485,15 +2539,13 @@
 % them to survive past the end of the paragraph.
 %
 % We have to have specific left and right \cs{pstart} when parallel processing;
-% among other things because of potential changes in the linewidth. The \verb|old| counters are used to have the good reset of the pstart counters at the begining of the \cs{Pages} command.
+% among other things because of potential changes in the linewidth. 
 % 
 %    \begin{macrocode}
 
 \newcounter{pstartL}
-\newcounter{pstartLold}
 \renewcommand{\thepstartL}{{\bfseries\@arabic\c@pstartL}. }
 \newcounter{pstartR}
-\newcounter{pstartRold}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
 \newcommandx*{\pstartL}[1][1]{%
@@ -2503,6 +2555,9 @@
     \let\@oldnobreak\@nobreakfalse%
   \fi%
     \@nobreaktrue%
+  \ifluatex%
+    \xdef\l@luatextextdir@L{\the\luatextextdir}%
+  \fi%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
     \beginnumbering%
@@ -2513,10 +2568,9 @@
   \fi%
 %    \end{macrocode}
 % If this is the first \cs{pstart} in a numbered section, clear any inserts
-% and set \cs{ifpst@rtedL} to FALSE. Save the pstartL counter.
+% and set \cs{ifpst@rtedL} to FALSE. 
 %    \begin{macrocode}
   \ifpst@rtedL\else%
-      \setcounter{pstartLold}{\value{pstartL}}%
     \list@clear{\inserts@list}%
     \global\let\next@insert=\empty%
      \global\pst@rtedLtrue%
@@ -2562,6 +2616,9 @@
     \let\@oldnobreak\@nobreakfalse%
   \fi%
     \@nobreaktrue%
+  \ifluatex%
+    \xdef\l@luatextextdir@R{\the\luatextextdir}%
+  \fi%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
     \beginnumberingR%
@@ -2571,7 +2628,6 @@
     \pendR%
   \fi%
   \ifpst@rtedR\else%
-      \setcounter{pstartRold}{\value{pstartR}}%
     \list@clear{\inserts@listR}%
     \global\let\next@insertR=\empty%
     \global\pst@rtedRtrue%
@@ -2634,6 +2690,7 @@
   \endgroup%
   \ignorespaces%
   \@oldnobreak%
+  \dump@pstartL@pc%
   \ifnumberpstart%
     \addtocounter{pstartL}{1}%
   \fi
@@ -2667,9 +2724,10 @@
   \endgroup%
   \ignorespaces%
   \@oldnobreak%
+  \dump@pstartR@pc%  
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
-  \fi%    
+  \fi%  
   \parledgroup@beforenotes@save{R}%
   \ifstrempty{#1}%
     {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
@@ -2751,6 +2809,7 @@
 %                            some common code}
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
+  \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
   \advance\countLline \@ne
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
   {\vbadness=10000 
@@ -2785,20 +2844,29 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\print@eledsectionL}
-% \cs{print@lineL} is for lines without a sectioning command.
+% \begin{macro}{\print@lineL}
+% \cs{print@lineL} is for lines without a sectioning command. See \Lpack{eledmac} definition of \cs{print@line} for handbook.
+% \changes{v1.17.1}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 %    \begin{macrocode}
 \def\print@lineL{%
     \affixpstart@numL%
     \l@dld@ta %space kept for backward compatibility
     \add@inserts\affixside@note%
     \l@dlsn@te %space kept for backward compatibility
-    {\ledllfill\hb@xt@ \wd\one@line{\do@insidelineLhook\inserthangingsymbolL\new@lineL\l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+    {\ledllfill\hb@xt@ \wd\one@line{%
+            \do@insidelineLhook%
+            \ifluatex%
+              \luatextextdir\l@luatextextdir@L%
+            \fi%
+            \new@lineL%
+            \inserthangingsymbolL%
+            \l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
      \l@drsn@te}}
 
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\print@eledsectionL}
+% \changes{v1.17.1}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 % \cs{print@eledsectionL} is for line with macro code.
 %    \begin{macrocode}
 \def\print@eledsectionL{%%
@@ -2808,15 +2876,16 @@
     \numdef{\temp@}{\l@dpscL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
+    \ifluatex%
+      \luatextextdir\l@luatextextdir@L%
+    \fi%
     \csuse{eled@sectioning@\the\l@dpscL}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscL}%
     \if@RTL%
-      \hspace{-3\paperwidth}%
-    {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
+      \vphantom{\hbox{\l@dunhbox@line{\one@line}} \new@line}%
     \else%
-      \hspace{3\paperwidth}%
-    {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
+      \vphantom{\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip\eledsection@correcting@skip%
 }
@@ -2866,6 +2935,7 @@
 % \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, added by v1.8.0 (?).}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
@@ -2906,12 +2976,20 @@
 %
 % \begin{macro}{\print@lineR}{}
 % \begin{macro}{\print@eledsectionR}{}
+% \changes{v1.17.1}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta  %space kept for backward compatibility
     \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
-\correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{\do@insidelineRhook\inserthangingsymbolR\new@lineR\l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
+    \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{%
+       \do@insidelineRhook%
+       \new@lineR%
+       \inserthangingsymbolR%
+       \ifluatex%
+              \luatextextdir\l@luatextextdir@R%
+       \fi%
+       \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te
   }
 
@@ -2923,16 +3001,13 @@
     \numdef{\temp@}{\l@dpscR-1}%
     \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
+    \ifluatex%
+      \luatextextdir\l@luatextextdir@R%
+    \fi%
     \csuse{eled@sectioning@\the\l@dpscR R}%
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dpscR R}%
-    \if@RTL%
-      \hspace{-\paperwidth}%
-    {\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
-    \else%
-      \hspace{\paperwidth}%
-    {\new@lineR \hbox{\l@dunhbox@line{\one@lineR}}}%
-    \fi%
+    \vphantom{\hbox{\l@dunhbox@line{\one@lineR}} \new@lineR}%
     \vskip\eledsection@correcting@skip
 }
 % \end{macro}
@@ -4215,11 +4290,11 @@
 % Right texts being typeset in matching columns. There should
 % be equal numbers of chunks in the left and right texts.
 %
+% \changes{v1.11.2}{2015/02/16}{Add \cs{l@dprintingcolumnstrue}}
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
-  \setcounter{pstartL}{\value{pstartLold}}
-  \setcounter{pstartR}{\value{pstartRold}}
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
   \fi
@@ -4245,9 +4320,12 @@
 %    \end{macrocode}
 % Increment \cs{l@dpscL} and \cs{l@dpscR} which here count
 % the numbers of left and right chunks.
+% Also restore the value of the public pstart counters.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne
       \global\advance\l@dpscR \@ne
+      \restore@pstartL@pc%
+      \restore@pstartR@pc%
 %    \end{macrocode}
 % Check if there is text yet to be processed in at least one of
 % the two current chunks, and also whether the left and right languages 
@@ -4317,8 +4395,6 @@
            \write\linenum@outR{\string\@set[1]}
            \resetprevline@
         \fi
-      \addtocounter{pstartL}{1}
-      \addtocounter{pstartR}{1}
     \repeat
 %    \end{macrocode}
 % Having output all chunks, make sure all notes have been output,
@@ -4333,6 +4409,7 @@
   \global\l@dpscR=\z@
   \global\l@dnumpstartsL=\z@
   \global\l@dnumpstartsR=\z@
+  \l@dprintingcolumnsfalse%
   \ignorespaces
     \global\instanzaLfalse
     \global\instanzaRfalse}
@@ -4589,11 +4666,11 @@
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
 %
+% \changes{v1.11.2}{2015/02/16}{Add \cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
+ \l@dprintingpagestrue%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
-  \setcounter{pstartL}{\value{pstartLold}}
-  \setcounter{pstartR}{\value{pstartRold}}
   \parledgroup@notespacing@set@correction
   \typeout{}
   \typeout{*************************** PAGES ***************************}
@@ -4657,9 +4734,12 @@
     \if@pstarts
 %    \end{macrocode}
 % Increment the chunk counts to get the first pair.
+% Restore also the value of public pstart counters.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne
       \global\advance\l@dpscR \@ne
+      \restore@pstartL@pc%
+      \restore@pstartR@pc%
 %    \end{macrocode}
 % We haven't processed any lines from these chunks yet, so zero the
 % respective line counts.
@@ -4744,7 +4824,7 @@
 % Now do the same for the right text.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutR} to \cs{Pages}}
 %    \begin{macrocode}
-          \checkpageR
+          \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
               \initnumbering@sectcountR
@@ -4816,6 +4896,7 @@
   \global\l@dnumpstartsR=\z@
     \global\instanzaLfalse
     \global\instanzaRfalse
+ \l@dprintingpagesfalse%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -5184,29 +5265,30 @@
 %    \end{macrocode}
 % \changes{v0.11}{2012/06/11}{Pstart number can be printed in side}
 % There are still unprocessed boxes. Recalculate the maximum number of
-% lines needed, and move onto the next box (by incrementing \cs{l@dpscL}). If needed, restart the line numbering. Increment the pstartL counter.
+% lines needed, and move onto the next box (by incrementing \cs{l@dpscL}). If needed, restart the line numbering. 
 %    \begin{macrocode}
         \writtenlinesLfalse
          \ifbypstart@
-          \ifnum\value{pstartL}<\value{pstartLold}
-          \else 
-            \global\line@num=0
-            \resetprevline@
-          \fi  
+            \global\line@num=0%
+            \resetprevline@%
           \fi
 % Add the content of the optional argument of the previous \cs{pend}.
 %     \begin{macrocode}
          \csuse{after@pendL@\the\l@dpscL}%
          \global\csundef{after@pendL@\the\l@dpscL}%
 %     \end{macrocode}
+% Check the number of lines
 %     \begin{macrocode}
-        \addtocounter{pstartL}{1}
-        \global\pstartnumtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
                          {\the\@donetotallinesL}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
+%     \end{macrocode}
+% Go to the next pstart
+%     \begin{macrocode}
         \global\advance\l@dpscL \@ne
+        \global\pstartnumtrue%
+        \restore@pstartL@pc%
 %    \end{macrocode}
 % Add notes of parallel ledgroup.
 %    \begin{macrocode}
@@ -5240,21 +5322,18 @@
       \ifnum\l@dnumpstartsR>\l@dpscR
         \writtenlinesRfalse
         \ifbypstart@R
-            \ifnum\value{pstartR}<\value{pstartRold}
-            \else
-               \global\line@numR=0
-               \resetprevline@
-            \fi
+             \global\line@numR=0%
+             \resetprevline@%
         \fi
         \csuse{after@pendR@\the\l@dpscR}%
         \global\csundef{after@pendR@\the\l@dpscR}%
-        \addtocounter{pstartR}{1}
-        \global\pstartnumRtrue
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
                          {\the\@donetotallinesR}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
         \global\@donetotallinesR \z@
         \global\advance\l@dpscR \@ne
+        \global\pstartnumRtrue%
+        \restore@pstartR@pc%
         \parledgroup@notes@endR
         \parledgroup@correction@notespacing@final{R}
       \else

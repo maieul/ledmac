@@ -31,7 +31,7 @@
              ]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage{graphicx,eledmac}
+\usepackage{graphicx,eledmac,metalogo}
 \makeatletter
   \@mparswitchfalse
 \makeatother
@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10613}
+% \CheckSum{10599}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -215,6 +215,7 @@
 % \changes{v1.15.0}{2015/01/12}{Fix bug with footnotes layout when using some options of the geometry package (bug add by v1.13.0).}
 % \changes{v1.16.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
 % \changes{v1.16.0}{2015/01/23}{New \cs{stanzaindent} command.}
+% \changes{v1.18.0}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -320,7 +321,6 @@
 % \renewcommand{\numberline}[1]{#1~}
 % \tableofcontents
 %
-% \listoffigures
 %
 %
 % \section{Introduction}
@@ -642,6 +642,7 @@
 % external files that are generated).
 %
 % \subsection{Paragraphs}
+% \subsubsection{Basis}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % Within a numbered section, each paragraph of numbered text must
@@ -697,12 +698,8 @@
 % begins again.\par}
 % \egend
 %
+% \subsubsection{Content before specific \cs{pstart} and after \cs{pend}}\label{pstart:optionalarg}
 % \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}
-% \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}\label{pstart:optionalarg}
-% \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
-% You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
-% Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
-%
 % Both \cs{pstart} and \cs{pend} can take a optional argument, in brackets. 
 % Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
 % If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
@@ -710,7 +707,12 @@
 % This feature is not needed for normal use of \Lpack{eledmac}, but it is needed when using verse (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
 %
 % A \cs{noindent} is automatically added before this argument.
-%
+% \subsubsection{Content before every \cs{pstart} and after every \cs{pend}}
+% \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}
+% \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
+% You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
+% Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
+% \subsubsection{Producting automatically \cs{pstart}…\cs{pend}}
 % \DescribeMacro{\autopar}
 % You can use \cs{autopar} to avoid the nuisance of this paragraph markup
 % and still have every paragraph automatically numbered.  The scope of the
@@ -750,28 +752,26 @@
 % rites', \textit{TUGboat} \textbf{12} (1991),
 % pp.\,257--258.\protect\index{Beeton, Barbara Ann Neuhaus Friend}}
 %
-% \DescribeMacro{\firstlinenum}
-% \DescribeMacro{\linenumincrement}
-%    By default, \Eledmac{} numbers every 5th line. There are two counters,
-% \verb?firstlinenum? and \verb?linenumincrement?, that control this
-% behaviour; they can be changed using \cs{firstlinenum}\marg{num} and
-% \cs{linenumincrement}\marg{num}. \cs{firstlinenum} specifies the first 
-% line that will have a printed number, and \cs{linenumincrement} is 
-% the difference between succesive
-% numbered lines. For example, to start printing numbers at the first line
-% and to have every other line numbered: \\
-% \verb?\firstlinenum{1} \linenumincrement{2}?
-%
-% \DescribeMacro{\firstsublinenum}
-% \DescribeMacro{\sublinenumincrement}
-% There are similar commands, \cs{firstsublinenum}\marg{num} and 
-% \cs{sublinenumincrement}\marg{num} for controlling sub-line numbering.
-%
-% \DescribeMacro{\numberpstarttrue}You can use the command \cs{numberpstarttrue} to insert a number on every \cs{pstart}. To stop the numbering, you must use \cs{numberpstartfalse}. To reset the numebering of \cs{pstarts}, insert 
+% \subsubsection{Numbering paragraphs (\cs{pstart})}
+%\changes{v0.12}{2011/10/01}{Possibility to number \cs{pstart}.}
+% It is possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. 
+% You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. 
+% You can change the value of the pstart number by using \emph{after} \cs{beginnumbering}:
 % \begin{verbatim}
-%\setcounter{pstart}{0}
+% \setcounter{numberpstart}{value}
 % \end{verbatim}
+% On each \cs{beginnumbering} the numbering restarts.
+% \changes{v0.15}{2012/06/11}{Possibilty to print \cs{pstart} number in side.}
 %
+% With the \cs{sidepstartnumtrue} command, the number of \cs{pstart} will be printed in side. In this case, the line number will be not printed.
+%
+% \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue}.}
+% With the \cs{labelpstarttrue} command, a \cs{label} added just after  a \cs{pstart} will refer to the number of this pstart.
+% \subsubsection{Languages written in Right to Left}
+% If you use languages writtin in Right to Left, we \LuaLaTeX\ or \XeLaTeX,
+% you must switch text direction \cs{before} the \cs{pstart} command. 
+% \subsubsection{Memory limits}
+% \textbf{This paragraph is kept for history, but problem describes below should not come with \Lpack{eledmac}.}
 % \DescribeMacro{\pausenumbering}
 % \DescribeMacro{\resumenumbering}
 % \phantomsection\label{pause}\relax
@@ -824,17 +824,42 @@
 % and say \cs{memorybreak} between the relevant \cs{pend} and
 % \cs{pstart}.
 %
-%\changes{v0.12}{2011/10/01}{Possibility to number \cs{pstart}.}
-% It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. On each \cs{beginnumbering} the numbering restarts.
-% \changes{v0.15}{2012/06/11}{Possibilty to print \cs{pstart} number in side.}
-%
-% With the \cs{sidepstartnumtrue} command, the number of \cs{pstart} will be printed in side. In this case, the line number will be not printed.
-%
-% \changes{v1.1}{2012/09/25}{Add \cs{labelpstarttrue}.}
-% With the \cs{labelpstarttrue} command, a \cs{label} added just after  a \cs{pstart} will refer to the number of this pstart.
 % \subsection{Lineation commands}
+% \subsubsection{Disabling lineation}
 % \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
 % Line numbering can be disabled with  \cs{numberlinefalse}. It can be enabled again with \cs{numberlinetrue}.
+% \subsubsection{Setting lineation start and step}
+% \DescribeMacro{\firstlinenum}
+% \DescribeMacro{\linenumincrement}
+%    By default, \Eledmac{} numbers every 5th line. There are two counters,
+% \verb?firstlinenum? and \verb?linenumincrement?, that control this
+% behaviour; they can be changed using \cs{firstlinenum}\marg{num} and
+% \cs{linenumincrement}\marg{num}. \cs{firstlinenum} specifies the first 
+% line that will have a printed number, and \cs{linenumincrement} is 
+% the difference between succesive
+% numbered lines. For example, to start printing numbers at the first line
+% and to have every other line numbered: \\
+% \verb?\firstlinenum{1} \linenumincrement{2}?
+%
+% \DescribeMacro{\firstsublinenum}
+% \DescribeMacro{\sublinenumincrement}
+% There are similar commands, \cs{firstsublinenum}\marg{num} and 
+% \cs{sublinenumincrement}\marg{num} for controlling sub-line numbering.
+% \DescribeMacro{\linenumberlist}
+% You can define \cs{linenumberlist} to specify a non-uniform distribution
+% of printed line numbers. For example: \\
+% \verb?\def\linenumberlist{1,2,3,5,7,11,13,17,19,23,29}? \\
+% to have numbers printed on prime-numbered lines only. There must be
+% no spaces within the definition which consists of comma-separated decimal
+% numbers. The numbers can be in any order but it is easier to read if you
+% put them in numerical order. Either omitting the definition of
+% \cs{linenumberlist} or following the vacuous definition \\
+% \verb?\def\linenumberlist{}? \\
+% the standard numbering sequence is applied. The standard sequence
+% is that specified by the combination of the \texttt{firstlinenum},
+% \texttt{linenumincrement}, \texttt{firstsublinenum} and
+% \texttt{linenumincrement} counter values.
+% \subsubsection{Setting lineation reset}
 % \DescribeMacro{\lineation}
 % \changes{v1.0}{2012/09/15}{Debug in lineation command}
 % Lines can be numbered either by page, by pstart or by section; you specify
@@ -846,6 +871,7 @@
 % have to use the same lineation system. 
 % The package's standard setting is \verb"\lineation{section}". If the lineation is by pstart, the pstart number will be printed before the line number in the notes.
 %
+% \subsubsection{Setting line number margin}
 % \DescribeMacro{\linenummargin}
 % The command \cs{linenummargin}\meta{location} specifies the margin
 % where the line (or pstart) numbers will be printed. The permissable value
@@ -867,36 +893,7 @@
 % pair will apply the change to all the current paragraph).
 %
 %
-%
-% \DescribeMacro{\firstlinenum}
-% \DescribeMacro{\linenumincrement}
-% \DescribeMacro{\firstsublinenum}
-% \DescribeMacro{\sublinenumincrement}
-% In most cases, you will not want a number printed for every
-% single line of the text. Four \LaTeX{} \verb"counters" control
-% the printing of marginal numbers and they can be set by the
-% macros \cs{firstlinenum}\marg{num}, etc.
-% \cs{firstlinenum} specifies the number of the first line in a
-% section to number, and \cs{linenumincrement} is the increment
-% between numbered lines. \cs{firstsublinenum} and
-% \cs{sublinenumincrement} do the same for
-% sub-lines. Initially, all these are set to $5$ (e.g.,
-% \verb?\firstlinenum{5}?.
-%
-% \DescribeMacro{\linenumberlist}
-% You can define \cs{linenumberlist} to specify a non-uniform distribution
-% of printed line numbers. For example: \\
-% \verb?\def\linenumberlist{1,2,3,5,7,11,13,17,19,23,29}? \\
-% to have numbers printed on prime-numbered lines only. There must be
-% no spaces within the definition which consists of comma-separated decimal
-% numbers. The numbers can be in any order but it is easier to read if you
-% put them in numerical order. Either omitting the definition of
-% \cs{linenumberlist} or following the vacuous definition \\
-% \verb?\def\linenumberlist{}? \\
-% the standard numbering sequence is applied. The standard sequence
-% is that specified by the combination of the \texttt{firstlinenum},
-% \texttt{linenumincrement}, \texttt{firstsublinenum} and
-% \texttt{linenumincrement} counter values.
+% \subsubsection{Other settings}
 %
 % \DescribeMacro{\leftlinenum}
 % \DescribeMacro{\rightlinenum}
@@ -1294,6 +1291,8 @@
 % You can use \cs{nonumberinfootnote}\oarg{s} if you don't want to have the line number in a footnote. To cancel it, use \cs{nonumberinfootnote}\oarg{s}\verb+[false]+.
 %
 % \changes{v1.1}{2012/09/25}{Add \cs{pstartinfootnote} and \cs{onlypstartinfootnote}}
+% \changes{v1.18.0}{2015/02/16}{Add \cs{pstartinfootnoteeverytime}}
+% \changes{v1.18.0}{2015/02/16}{Debug \cs{onlypstartinfootnote} when using \cs{numberonlyfirstinline} and the current line number differs from the previous.}
 % \DescribeMacro{\pstartinfootnote}
 % You can use \cs{pstartinfootnote}\oarg{s} if you want to print the pstart number in the footnote, before the line and subline number. 
 % Use \cs{pstartinfootnote}\oarg{s}\verb+[false]+ to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
@@ -1302,6 +1301,12 @@
 %    \item If you use lineation by pstart, the option is enabled.
 %    \item If you use lineation by section or by page, the option is disabled.
 % \end{itemize}
+%
+% \DescribeMacro{\pstartinfootnoteeverytime}
+% By default, the pstart number is printed only in the part of text where you have called \cs{numberpstarttrue}.
+% We don't know why you would like to print the pstart number in the notes and not in the main text. 
+% However, if you want to do it, you can call  \cs{pstartinfootnoteeverytime}\oarg{s}. 
+% In this case, the pstart number will be printed every time in footnote.
 %
 % \DescribeMacro{\onlypstartinfootnote}
 % In combination with \cs{pstartinfootnote}, you can use \cs{onlypstartinfootnote}\oarg{s} if you want to print only the pstart number in the footnote, and not the line and subline number.
@@ -2725,127 +2730,6 @@
 %
 %
 %
-% \subsection{Notes for EDMAC users} \label{sec:lastuser}
-%
-% If you have never used \edmac, ignore this section. If you have used
-% \edmac{} and are starting on a completely new document, ignore this section.
-% Only read this section if you are converting an original \edmac{}
-% document to use \eledmac.
-%
-%    The package still provides the original \cs{text} command, but it is
-% (a) deprecated, and 
-% (b) its name has been changed\footnote{A name like \cs{text} is  likely to be defined by
-% other \LaTeX\ packages (it certainly is by the AMS packages) and it
-% seems sensible to try and avoid clashes with other definitions.} 
-% to \cs{critext}; 
-% use the \cs{edtext} macro instead. However, if you do
-% use \cs{critext} (the new name for \cs{text}), the following is a reminder.
-%
-%
-% \DescribeMacro{\critext}
-% Within numbered paragraphs, footnotes and endnotes are generated
-% by forms of the \cs{critext} macro:
-% \begin{verse}
-% \cs{critext}\marg{lemma}\meta{commands}\verb"/"
-% \end{verse}
-%
-%
-% The \meta{lemma} argument is the lemma in the main text: \cs{critext}
-% both prints this as part of the text, and makes it available to the
-% \meta{commands} you specify to generate notes. The \verb"/" at the
-% end terminates the command; it is part of the macro's definition so
-% that spaces after the macro will be treated as significant.
-%
-% For example:
-% \egstart
-% \begin{verbatim}
-% I saw my friend \critext{Smith}
-% \Afootnote{Jones C, D.}/
-% on Tuesday.
-% \end{verbatim}
-% \egmid
-% 1\enspace I saw my friend\\
-% 2\enspace Smith on Tuesday.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 2} Smith] Jones C, D.
-% \egend
-%
-% The lemma \verb"Smith" is printed as part of this sentence in
-% the text, and is also made available to the footnote
-% that specifies a variant, \verb"Jones C, D". The footnote macro
-% is supplied with the line number at which the lemma appears
-% in the main text.
-%
-% The \meta{lemma} may contain further \cs{critext} commands.
-%  Nesting makes
-% it possible to print an explanatory note on a long passage together with
-% notes on variants for individual words within the passage. For
-% example:
-% \egstart
-% \begin{verbatim}
-% \critext{I saw my friend
-%   \critext{Smith}{\Afootnote{Jones
-%   C, D.}/ on Tuesday.}
-%   \Bfootnote{The date was
-%   July 16, 1954.}
-% /
-% \end{verbatim}
-% \egmid
-% 1\enspace I saw my friend\\
-% 2\enspace Smith on Tuesday.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 2} Smith] Jones C, D.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 1--2} I saw my friend \\
-% Smith on Tuesday.] The\\ date was
-% July 16, 1954.
-% \egend
-%
-% However, \cs{critext} cannot handle overlapping but unnested
-% notes---for example, one note covering lines 10--15, and another
-% covering 12--18; a \cs{critext} that starts in the \meta{lemma}
-% argument of another \cs{critext} must end there, too. (The
-% \cs{lemma} and \cs{linenum} commands may be used to
-% generate overlapping notes if necessary.)
-%
-% The second argument of the \cs{critext} macro, \meta{commands},
-% is the same as the second argument to the \cs{edtext} macro.
-%
-%
-% It is possible to define aliases for \cs{critext}, which
-% can be easier to type. You can make a single character substitute
-% for \cs{critext} by saying this:
-% \begin{verbatim}
-% \catcode`\<=\active
-% \let<=\critext
-% \end{verbatim}
-%
-% Then you might say \verb"<{Smith}\variant{Jones}/". This of course
-% destroys the ability to use \verb"<" in any new macro definitions, so
-% long as it remains in effect; hence it should be used with care.
-%
-% Changing the character at the end of the command requires more work:
-% \begin{verbatim}
-% \catcode`\<=\active
-% \def\xtext#1#2>{\critext{#1}{#2}/}
-% \let<=\xtext
-% \end{verbatim}
-% This allows you to say \verb"<{Smith}\Afootnote{Jones}>".
-%
-% Aliases for \cs{critext}
-% of the first kind shown here also can't be nested---that is,
-% you can't use the alias in the text that forms the first argument
-% to \cs{critext}. (See section~\ref{text} to find out why.) Aliases of
-% the second kind may be nested without any problem.
-%
-%
-% If you really have to use |\critext| in any of the tabular or
-% array environments, then |\edtext| must not be used in the same
-% environment. If you use |\critext| in one of these environments
-% then you have to issue the declaration |\usingcritext| beforehand.
-% The declaration |\usingedtext| must be issued to revert to the
-% default assumption that |\edtext| will be used.
-%
 %
 % \StopEventually{}
 %
@@ -2905,7 +2789,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/02/09 v1.17.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/02/16 v1.18.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3445,6 +3329,12 @@
 % \begin{macro}{\ifl@dpaging}
 % \begin{macro}{\l@dpagingtrue}
 % \begin{macro}{\l@dpagingfalse}
+% \begin{macro}{\ifl@dprintingpages}
+% \begin{macro}{\l@dprintingpagestrue}
+% \begin{macro}{\l@dprintingpagesfalse}
+% \begin{macro}{\ifl@dprintingcolumns}
+% \begin{macro}{\l@dprintingcolumnstrue}
+% \begin{macro}{\l@dprintingcolumnsfalse}
 % \begin{macro}{\l@dpairingtrue}
 % \begin{macro}{\l@dpairingfalse}
 % \begin{macro}{\ifpst@rtedL}
@@ -3462,11 +3352,16 @@
 % \changes{v0.12}{2005/10/01}{Added \cs{ifledRcol} and \cs{ifnumberingR} for/from \Lpack{eledpar}}
 % \changes{v1.12.0}{2014/08/05}{Add \cs{ifledRcol@} for \Lpack{eledpar}}
 % \changes{v1.13.2}{2014/09/31}{Add \cs{ifl@dpaging} for \Lpack{eledpar}}
+% \changes{v1.18.0}{2015/02/16}{Add \cs{ifl@dprintingpages} and \cs{@dprintingcolumns} for \Lpack{eledpar}}
 %    \begin{macrocode}
 \newif\ifl@dpairing
   \l@dpairingfalse
 \newif\ifl@dpaging%
   \l@dpagingfalse%
+\newif\ifl@dprintingpages%
+  \l@dprintingpagesfalse%
+\newif\ifl@dprintingcolumns%
+  \l@dprintingcolumnsfalse%
 \newif\ifpst@rtedL
   \pst@rtedLfalse
 \newcount\l@dnumpstartsL
@@ -3481,6 +3376,12 @@
 %    \begin{macrocode}
 \newif\ifnumberingR
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6043,6 +5944,9 @@
 \labelpstartfalse
 \newcommandx*{\pstart}[1][1]{%
   \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
+  \ifluatex%
+    \edef\l@luatextextdir@L{\the\luatextextdir}%
+  \fi%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -6278,18 +6182,66 @@
 % \end{macro}
 % \end{macro}
 %
-% \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, mistakenly deleted in version 0.17!}
 % \begin{macro}{\print@line}
-%    \begin{macrocode}
+% \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, mistakenly deleted in version 0.17!}
+% \changes{v1.18.0}{2015/02/16}{Compatibility with \LuaLaTeX RTL languages.}
 % \cs{print@line} is for normal line, i. e line without sectioning command.
+%    \begin{macrocode}
 \def\print@line{
+%    \end{macrocode}
+% Insert the pstart number in side, if we are in the first line of a pstart.
+%    \begin{macrocode}
     \affixpstart@num%
-    \hb@xt@ \linewidth{\do@insidelinehook\l@dld@ta%
+%    \end{macrocode}
+% The line will be boxed, to have the good width.
+%    \begin{macrocode}
+    \hb@xt@ \linewidth{%
+%    \end{macrocode}
+% User hook.
+%    \begin{macrocode}
+    \do@insidelinehook%
+%    \end{macrocode}
+% Left line number
+%    \begin{macrocode}
+    \l@dld@ta%
+%    \end{macrocode}
+% Restore marginal and footnotes.
+%    \begin{macrocode}
         \add@inserts\affixside@note%
+%    \end{macrocode}
+% Print left notes.
+%    \begin{macrocode}
         \l@dlsn@te
-        {\ledllfill\hb@xt@ \wd\one@line{\new@line\inserthangingsymbol \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
+%    \end{macrocode}
+% Boxes the line, write in the numbered file the information about new line.
+%    \begin{macrocode}
+        {\ledllfill\hb@xt@ \wd\one@line{\new@line%
+%    \end{macrocode}
+% If we use \LuaLaTeX, then restore the direction.
+%    \begin{macrocode}
+        \ifluatex%
+          \luatextextdir\l@luatextextdir@L%
+        \fi%
+%    \end{macrocode}
+% Insert, if needed, the hanging symbol.
+%    \begin{macrocode}
+        \inserthangingsymbol %Space keept for backward compatibility
+%    \end{macrocode}
+% And so, print the line.
+%    \begin{macrocode}
+        \l@dunhbox@line{\one@line}}%
+%    \end{macrocode}
+% Right line number
+%    \begin{macrocode}
+        \ledrlfill\l@drd@ta%
+%    \end{macrocode}
+% Print right notes.
+%    \begin{macrocode}
         \l@drsn@te
       }}%
+%    \end{macrocode}
+%   And reinsert penalties (for page breaking)...
+%    \begin{macrocode}
     \add@penalties%
 }
 %    \end{macrocode}
@@ -6308,11 +6260,9 @@
     \@eled@sectioningfalse%
     \global\csundef{eled@sectioning@\the\l@dnumpstartsL}%
     \if@RTL%
-      \hspace{-3\paperwidth}%
-      {\hbox{\l@dunhbox@line{\one@line}}\new@line}%
+      \vphantom{\hbox{\l@dunhbox@line{\one@line}} \new@line}%
     \else%
-      \hspace{3\paperwidth}%
-      {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
+      \vphantom{\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip-\baselineskip%
 }
@@ -7358,17 +7308,18 @@
 %
 % \begin{macro}{\printpstart}
 % The \cs{printpstart} macro prints the pstart number for a note.
+% \changes{v1.18.0}{2015/02/16}{Debug \cs{pstartinfootnote} with parallel pages and columns (eledpar)}
 %    \begin{macrocode}
 \newcommand{\printpstart}[0]{%
-    \ifl@dpairing%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
         \ifledRcol%
             \thepstartR%
         \else%
             \thepstartL%
         \fi%
-    \else%
+    }{%
         \thepstart%
-    \fi%
+    }%
 }
 %    \end{macrocode}
 % 
@@ -9669,6 +9620,7 @@
     \newtoggle{numberonlyfirstinline@#1}%
     \newtoggle{numberonlyfirstintwolines@#1}%
     \newtoggle{onlypstartinfootnote@#1}%
+    \newtoggle{pstartinfootnoteeverytime@#1}%
     \newtoggle{pstartinfootnote@#1}%
     \csgdef{symlinenum@#1}{\symplinenum}%
     \newtoggle{nonumberinfootnote@#1}%
@@ -9824,7 +9776,7 @@
 % \begin{macro}{\firstseries}
 % \cs{seriesatbegin}\marg{s} changes the order of series, to put the series \meta{s} at the beginning of the list.
 % The series can be the result of a command.
-%   \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\seriesatbegin}[1]{
      \edef\series{#1}
      \def\new{}
@@ -9833,7 +9785,7 @@
     \dolistloop{\@series}
     \xdef\@series{\new}
 }
-%   \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\seriesatend}
 %  And \cs{seriesatend} moves the series to the end of the list.
@@ -10006,6 +9958,7 @@
 \newhooktoggle@series{numberonlyfirstintwolines}
 \newhooktoggle@series{nonumberinfootnote}
 \newhooktoggle@series{pstartinfootnote}
+\newhooktoggle@series{pstartinfootnoteeverytime}%
 \newhooktoggle@series{onlypstartinfootnote}
 \newhooktoggle@series{nonbreakableafternumber}
 \newhooktoggle@series{Xlemmadisablefontselection}
@@ -10088,6 +10041,9 @@
 % \begin{macro}{\printlinefootnote}
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the previous  options. Its first argument is the information about lines, its second is the series of the footnote.
+% The printing of the lines number is shared in 
+% \cs{printlinefootnotenumbers}.
+% \changes{v1.18.0}{2015/02/16}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
    \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
@@ -10127,53 +10083,88 @@
                         \hspace{\csuse{aftersymlinenum@#2}}}%
                        }%
                        {%
-                        \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-                        \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                            \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                            \printlines#1|}%
-                            {%
-                            \hbox to \csuse{boxlinenum@#2}{%
-                              \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                                \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                      \hfill}%
-                            }%
-                            \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
+                        \printlinefootnotearea{#1}{#2}%
                         }%
                     }%
                     {%
-                    \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-                    \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                        \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                        \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}}%
-                        {%
-                        \hbox to \csuse{boxlinenum@#2}{%
-                            \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                            \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                        \hfill}%
-                        }%
-                    \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
+                    \printlinefootnotearea{#1}{#2}%
                     }%
               }%
               {%
-              \hspace{\csuse{beforenumberinfootnote@#2}}\csuse{Xnotenumfont@#2}%
-              \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
-                     \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                     \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                     }%
-                     {%
-                     \hbox to \csuse{boxlinenum@#2}{%
-                         \iftoggle{pstartinfootnote@#2}{\printpstart}{}%
-                         \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
-                         \hfill}%
-                     }%
-              \iftoggle{nonbreakableafternumber@#2}{\nobreak}{}\hspace{\csuse{afternumberinfootnote@#2}}%
+              \printlinefootnotearea{#1}{#2}%
               }%
               \csxdef{prevline#2}{\lineinfo@}%
-                 }%
+           }%
         }%
      }%
    }%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printlinefootnotearea}
+% This macro prints the space before the line number, change the font, print the line number and the space after it.
+% It is called by \cs{printlinefootnote}
+% depending of the options about repeating line numbers.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+%     \begin{macrocode}
+\newcommand{\printlinefootnotearea}[2]{%
+  \printbeforenumberinfootnote{#2}%
+  \csuse{Xnotenumfont@#2}%
+  \boxfootnotenumbers{#1}{#2}%
+  \printafternumberinfootnote{#2}%
+}%
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\boxfootnotenumbers}
+% This macro boxes or not the line numbers, depending of the user's setting.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+% The previous \cs{printlinefootnotearea} calls it.
+%     \begin{macrocode}
+\newcommand{\boxfootnotenumbers}[2]{%
+  \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
+       \printlinefootnotenumbers{#1}{#2}%
+     }%
+     {%
+       \hbox to \csuse{boxlinenum@#2}{%
+       \printlinefootnotenumbers{#1}{#2}%
+       \hfill}%
+     }%
+}%
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printlinefootnotenumbers}
+% This macro print, if needed, the pstart number and the line number.
+% The first arguments is line information, the second is the notes series (A, B, C. etc.)
+% The previous \cs{boxlinefootnote}  calls it.
+%    \begin{macrocode}
+\newcommand{\printlinefootnotenumbers}[2]{%
+  \ifboolexpr{%
+   (togl{pstartinfootnote@#2} and bool{numberpstart})%
+   or togl{pstartinfootnoteeverytime@#2}}%
+  {\printpstart}{}%
+  \iftoggle{onlypstartinfootnote@#2}{}{\printlines#1|}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printbeforenumberinfootnote}
+% This macro print the space, before the line number in footnote. 
+% It is called by \cs{printlinefootnotearea}.
+% Its only argument is the series
+%    \begin{macrocode}
+\newcommand{\printbeforenumberinfootnote}[1]{%
+  \hspace{\csuse{beforenumberinfootnote@#1}}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printafternumberinfootnote}
+% This macro print the space, adding eventually a \cs{nobreak} after the line number in footnote. 
+% It is called by \cs{printlinefootnotearea}.
+% Its only argument is the series
+%    \begin{macrocode}
+\newcommand{\printafternumberinfootnote}[1]{%
+  \iftoggle{nonbreakableafternumber@#1}{\nobreak}{}%
+  \hspace{\csuse{afternumberinfootnote@#1}}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Output routine}
@@ -11260,9 +11251,9 @@
 %
 % \begin{macro}{\sidenotesep}
 % This macro is used to separate sidenotes of the same line.
-%   \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\sidenotesep}{, }
-%   \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\affixside@note}
 % This macro puts any moveable sidenote text into the left or right sidenote
@@ -11892,6 +11883,7 @@
 % \begin{macro}{\@edindex@hyperref}
 % \changes{v1.12.5}{2014/08/28}{Debug \cs{edindex} when \Lpack{hyperref} is not loaded}
 % \cs{get@edindex@hyperref} is to be used to define the \cs{@edindex@hyperref} macro, which, in index, links to the point where the index was called (with \Lpack{hyperref}.
+% \changes{v1.18.0}{2015/08/21}{Fix spurious space with \cs{edindex} when using \Lpack{imakeidx}/\Lpack{indextools} + hyperref.}
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
   \ifdef{\hyperlink}%
@@ -11916,7 +11908,7 @@
         {\edindexlab\thelabidx}}%
       \fi%
       }%
-      {\get@index@command#1|+
+      {\get@index@command#1|+%
        \ifledRcol%
         \gdef\@edindex@hyperref{|hyperlinkR{\edindexlab\thelabidx}}%
        \else%
@@ -14655,6 +14647,127 @@
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
 % \section{Some things to do when changing version}
+% \subsection{Migrating from edmac} \label{sec:lastuser}
+%
+% If you have never used \edmac, ignore this section. If you have used
+% \edmac{} and are starting on a completely new document, ignore this section.
+% Only read this section if you are converting an original \edmac{}
+% document to use \eledmac.
+%
+%    The package still provides the original \cs{text} command, but it is
+% (a) deprecated, and 
+% (b) its name has been changed\footnote{A name like \cs{text} is  likely to be defined by
+% other \LaTeX\ packages (it certainly is by the AMS packages) and it
+% seems sensible to try and avoid clashes with other definitions.} 
+% to \cs{critext}; 
+% use the \cs{edtext} macro instead. However, if you do
+% use \cs{critext} (the new name for \cs{text}), the following is a reminder.
+%
+%
+% \DescribeMacro{\critext}
+% Within numbered paragraphs, footnotes and endnotes are generated
+% by forms of the \cs{critext} macro:
+% \begin{verse}
+% \cs{critext}\marg{lemma}\meta{commands}\verb"/"
+% \end{verse}
+%
+%
+% The \meta{lemma} argument is the lemma in the main text: \cs{critext}
+% both prints this as part of the text, and makes it available to the
+% \meta{commands} you specify to generate notes. The \verb"/" at the
+% end terminates the command; it is part of the macro's definition so
+% that spaces after the macro will be treated as significant.
+%
+% For example:
+% \egstart
+% \begin{verbatim}
+% I saw my friend \critext{Smith}
+% \Afootnote{Jones C, D.}/
+% on Tuesday.
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.
+% \egend
+%
+% The lemma \verb"Smith" is printed as part of this sentence in
+% the text, and is also made available to the footnote
+% that specifies a variant, \verb"Jones C, D". The footnote macro
+% is supplied with the line number at which the lemma appears
+% in the main text.
+%
+% The \meta{lemma} may contain further \cs{critext} commands.
+%  Nesting makes
+% it possible to print an explanatory note on a long passage together with
+% notes on variants for individual words within the passage. For
+% example:
+% \egstart
+% \begin{verbatim}
+% \critext{I saw my friend
+%   \critext{Smith}{\Afootnote{Jones
+%   C, D.}/ on Tuesday.}
+%   \Bfootnote{The date was
+%   July 16, 1954.}
+% /
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 1--2} I saw my friend \\
+% Smith on Tuesday.] The\\ date was
+% July 16, 1954.
+% \egend
+%
+% However, \cs{critext} cannot handle overlapping but unnested
+% notes---for example, one note covering lines 10--15, and another
+% covering 12--18; a \cs{critext} that starts in the \meta{lemma}
+% argument of another \cs{critext} must end there, too. (The
+% \cs{lemma} and \cs{linenum} commands may be used to
+% generate overlapping notes if necessary.)
+%
+% The second argument of the \cs{critext} macro, \meta{commands},
+% is the same as the second argument to the \cs{edtext} macro.
+%
+%
+% It is possible to define aliases for \cs{critext}, which
+% can be easier to type. You can make a single character substitute
+% for \cs{critext} by saying this:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \let<=\critext
+% \end{verbatim}
+%
+% Then you might say \verb"<{Smith}\variant{Jones}/". This of course
+% destroys the ability to use \verb"<" in any new macro definitions, so
+% long as it remains in effect; hence it should be used with care.
+%
+% Changing the character at the end of the command requires more work:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \def\xtext#1#2>{\critext{#1}{#2}/}
+% \let<=\xtext
+% \end{verbatim}
+% This allows you to say \verb"<{Smith}\Afootnote{Jones}>".
+%
+% Aliases for \cs{critext}
+% of the first kind shown here also can't be nested---that is,
+% you can't use the alias in the text that forms the first argument
+% to \cs{critext}. (See section~\ref{text} to find out why.) Aliases of
+% the second kind may be nested without any problem.
+%
+%
+% If you really have to use |\critext| in any of the tabular or
+% array environments, then |\edtext| must not be used in the same
+% environment. If you use |\critext| in one of these environments
+% then you have to issue the declaration |\usingcritext| beforehand.
+% The declaration |\usingedtext| must be issued to revert to the
+% default assumption that |\edtext| will be used.
+%
 % \subsection{Migration from ledmac to eledmac}\label{migration}
 % In eledmac, some changes were made in the code to allow for easy customization.
 % This can cause problems for people who have made their own customizations. The next sections explain how to correct this.
@@ -14712,6 +14825,12 @@
 % In this case, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
 
 % The version 1.12.0 adds new best way to manage section title inside numbered text. Please read §~\ref{eledsection} (p.~\pageref{eledsection}).
+% \subsection{Migration to eledmac 17.1}
+% The version change the default behavior of \cs{pstartinfootnote}. 
+% Henceforth, the pstart will be printed if footnote only for the section of text where you have called \cs{numberpstarttrue}.
+
+% We don't see any reason to print it in other section. However, if you want to print the pstart number in all footnote, with or without \cs{numberpstarttrue}, you can use 
+% \cs{pstartinfootnoteeverytime}.
 % \clearpage
 % \bibliographystyle{alpha}
 % \phantomsection
