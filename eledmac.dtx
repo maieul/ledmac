@@ -10636,27 +10636,48 @@
 % 
 % \changes{v0.2.1}{2003/08/26}{Tweaked \cs{edlabel} to get correct page numbers}
 % \changes{v0.14}{2012/04/04}{Tweaked \cs{edlabel} to get correct line number if the command is first element of a paragraph.}
+% \changes{v1.18.0}{2015/02/16}{\cs{edlabel} is now defined only one time for both eledmac and eledpar}
+
 %    \begin{macrocode}
-\newcommand*{\edlabel}[1]{\@bsphack
-  \write\linenum@out{\string\@lab}%
-  \ifx\labelref@list\empty
-    \xdef\label@refs{\zz@@@}%
-  \else
-    \gl@p\labelref@list\to\label@refs
-  \ifvmode
-     \advancelabel@refs
-  \fi
-  \fi
+\newcommand*{\edlabel}[1]{%
+  \ifl@dpairing\ifautopar%
+    \strut%
+  \fi\fi%
+  \@bsphack%
+  \ifledRcol%
+    \write\linenum@outR{\string\@lab}%
+    \ifx\labelref@listR\empty%
+      \xdef\label@refs{\zz@@@}%
+    \else%
+      \gl@p\labelref@listR\to\label@refs%
+    \fi%
+    \ifvmode%
+        \advancelabel@refs%
+    \fi%
 %    \end{macrocode}
 % Use code from the kernel \cs{label} command to write the correct
 % page number (it seems possible that the original \edmac's \cs{page@num}
 % scheme might also have had problems in this area).
 % Also define an hypertarget if \Lpack{hyperref} package is loaded.
 %    \begin{macrocode}
+    \protected@write\@auxout{}%
+      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
+    \ifdef{\hypertarget}{\hypertarget{#1}{}}{}%
+  \else%
+    \write\linenum@out{\string\@lab}%
+    \ifx\labelref@list\empty%
+      \xdef\label@refs{\zz@@@}%
+    \else%
+      \gl@p\labelref@list\to\label@refs%
+    \fi%
+    \ifvmode%
+        \advancelabel@refs%
+    \fi%
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-  \ifdef{\hypertarget}{\hypertarget{#1}{}}{}%
-  \@esphack}
+    \ifdef{\hypertarget}{\hypertarget{#1}{}}{}%
+  \fi%
+\@esphack}%
 
 %    \end{macrocode}
 % \end{macro}
