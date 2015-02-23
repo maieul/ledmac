@@ -1,8 +1,12 @@
 .SUFFIXES: .tex
 
-all: .tex.pdf
+SRC= $(wildcard *.tex)
+OBJ= $(SRC:.tex=.pdf)
 
-.tex.pdf:
+all:$(OBJ)
+
+
+%.pdf: %.tex
 	latexmk $<
 
 lualatex-parallel-rtl.pdf: lualatex-parallel-rtl.tex
