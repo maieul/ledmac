@@ -1563,7 +1563,6 @@
     \global\advance\insert@countR \@ne%
    }%
 }
-
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \newbox\notecontent%
   \setbox\notecontent=\vbox\bgroup%
@@ -2047,19 +2046,10 @@
 \newcommand*{\twocolfootsetup}[1]{%
   \count\csname #1footins\endcsname 500
   \multiply\dimen\csname #1footins\endcsname \tw@}
-
-\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{
-  \newbox\notecontent%
-  \setbox\notecontent=\vbox\bgroup%
-    \csuse{Xnotefontsize@#1}%
-    \footsplitskips%
-    \csname #1footfmt\endcsname #2[#1]%
-    \egroup%
-  \iftoggle{Xbothsides@#1}%
-    {\split@notes@forXbothsides{#1}}%
-    {\insert\csname #1footins\endcsname\bgroup\unvbox\notecontent\egroup}%
-}
-
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
+  \csuse{Xnotefontsize@#1}
+  \footsplitskips
+  \csname #1footfmt\endcsname #2[#1]\egroup}
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\twocolfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
   \normal@pars
   \hsize \csuse{hsizetwocol@#4}
@@ -2670,23 +2660,19 @@
 }%
 
 \newcommand{\split@notes@forXbothsides}[1]{%
-      \newcount\factor%
-      \factor=\numexpr 1000/\count\csname#1footins\endcsname\relax%
-      \eledmac@warning{\the\factor}%
       \newbox\beforesplit%
       \newdimen\leftheight%
       \advance\leftheight by \expandafter\dimen\csname#1footins\endcsname%
-      \advance\leftheight by \csname Xtotalh@#1\endcsname%
-       \eledmac@warning{\the\ht\notecontent-\the\leftheight}
+      \advance\leftheight by -\csname Xtotalh@#1\endcsname%
       \ifdim\leftheight>0pt%
-        \ifdim \ht\notecontent>\leftheight%
+        \ifdim\ht\notecontent>\leftheight%
             \footsplitskips%
-            \setbox\beforesplit=\vsplit\notecontent to 0.5\leftheight%
+            \setbox\beforesplit=\vsplit\notecontent to \leftheight%
         \else%
             \setbox\beforesplit=\box\notecontent%
         \fi%
-        \global\advance \csname Xtotalh@#1\endcsname by 0.5\ht\beforesplit%
-        \global\advance \csname Xtotalh@#1\endcsname by 0.5\dp\beforesplit%
+        \global\advance \csname Xtotalh@#1\endcsname by \ht\beforesplit%
+        \global\advance \csname Xtotalh@#1\endcsname by \dp\beforesplit%
         \insert\csname #1footins\endcsname\bgroup\unvbox\beforesplit\egroup%
       \fi%
       \global\expandafter\setbox\csname Xtoolong@#1\endcsname=\vbox%
@@ -2745,7 +2731,7 @@
           \global\advance\csname totalhX@#1\endcsname by \expandafter\dimen\csname footins#1\endcsname%
           \newbox\notecontent%
           \footsplitskips%
-          \setbox\notecontent=\expandafter\vsplit\csname toolongX@#1\endcsname to 2\dimen\csname footins#1\endcsname%
+          \setbox\notecontent=\expandafter\vsplit\csname toolongX@#1\endcsname to \dimen\csname footins#1\endcsname%
           \insert\csname footins#1\endcsname\bgroup\unvbox\notecontent\egroup%
         \else%
           \ifdim\ht\csname toolongX@#1\endcsname>0pt%
