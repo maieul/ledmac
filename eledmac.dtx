@@ -10423,7 +10423,30 @@
 % \changes{v0.4.1}{2004/03/06}{Added \cs{@opxtrafeetii}}
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
-  \def\do##1{\ifvoid\csuse{##1footins}\else\csuse{##1footstart}{##1}\csuse{##1footgroup}{##1}\fi}
+  \def\do##1{%
+      \ifvoid\csuse{##1footins}\else%
+          \ifboolexpr{%
+            ((test {\ifcsstring{onlyXside@##1}{L}} and test{\ifnumodd{\c@page}})%
+            or%
+            (test {\ifcsstring{onlyXside@##1}{R}} and not test{\ifnumodd{\c@page}}))%
+            and  bool {l@dprintingpages}%
+            }{}% If we are parallele pages typesetting in Don't print only-left-pages note on right pages, and vice-versa.  
+            {%
+            \csuse{##1footstart}{##1}%
+            \csuse{##1footgroup}{##1}%
+            }%
+      \fi%
+      \ifcsstring{onlyXside@##1}{L}{%
+        \ifnumodd{\c@page}%
+          {\global\count\csname ##1footins\endcsname=0}%
+          {\global\count\csname ##1footins\endcsname=\csuse{default@##1footins}}%
+        }{}%
+      \ifcsstring{onlyXside@##1}{R}{%
+        \ifnumodd{\c@page}%
+          {\global\count\csname ##1footins\endcsname=\csuse{default@#1footins}}%
+          {\global\count\csname ##1footins\endcsname=0}%
+        }{}%
+    }%
   \dolistloop{\@series}}
 %    \end{macrocode}
 % \end{macro}
