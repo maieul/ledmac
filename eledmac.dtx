@@ -9362,9 +9362,46 @@
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
     \unvbox\@outputbox
-    \def\do##1{\ifvoid\csuse{footins##1}\else\csuse{footstart##1}{##1}\csuse{footgroup##1}{##1}\fi}
-    \dolistloop{\@series}%
-  }}
+  \def\do##1{%
+      \ifvoid\csuse{footins##1}\else%
+          \ifboolexpr{%
+            ((test {\ifcsstring{onlysideX@##1}{L}} and test{\ifnumodd{\c@page}})%
+            or%
+            (test {\ifcsstring{onlysideX@##1}{R}} and not test{\ifnumodd{\c@page}}))%
+            and  bool {l@dprintingpages}%
+            }% If we are parallel pages typesetting in Don't print only-left-pages note on right pages, and vice-versa.
+            {%
+            }%
+            {%
+            \csuse{footstart##1}{##1}%
+            \csuse{footgroup##1}{##1}%
+            }%
+      \fi%
+      \ifcsstring{onlysideX@##1}{L}{%
+        \ifnumodd{\c@page}%
+          {%
+            \global\count\csname footins##1\endcsname=0%
+            \global\skip\csname footins##1\endcsname=\csuse{beforenotesX@##1}%
+          }%
+          {%
+            \global\count\csname footins##1\endcsname=\csuse{default@footins##1}%
+            \global\skip\csname footins##1\endcsname=0pt%
+            }%
+        }{}%
+      \ifcsstring{onlysideX@##1}{R}{%
+        \ifnumodd{\c@page}%
+          {%
+            \global\count\csname footins##1\endcsname=\csuse{default@footins##1}%
+            \global\skip\csname footins##1\endcsname=0pt%
+            }%
+          {%
+            \global\count\csname footins##1\endcsname=0%
+            \global\skip\csname footins##1\endcsname=\csuse{beforenotesX@##1}%
+          }%
+        }{}%
+    }%
+  \dolistloop{\@series}}%
+  }%
 
 \newcommand{\doreinxtrafeeti}{%
   \def\do##1{\ifvoid\csuse{footins##1}\else\insert\csuse{footins##1}{\unvbox\csuse{footins##1}}\fi}%
