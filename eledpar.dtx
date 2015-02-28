@@ -184,6 +184,7 @@
 % \changes{v1.10.0}{2015/01/12}{Compatibility with \cs{AtEveryPstart} and \cs{AtEveryPend}}
 % \changes{v1.11.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
 % \changes{v1.12.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
+% \changes{v1.13.0}{2015/03/xx}{With parallel pages, long notes can now flow from Left to Right side and Right to Left side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -872,7 +873,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/02/27 v1.12.1 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/03/xx v1.13.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) doesn't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages.
@@ -4898,16 +4899,11 @@
 %
 % \begin{macro}{\cleartoevenpage}
 % \begin{macro}{\cleartol@devenpage}
-% \begin{macro}{\clearl@dleftpage}
-% \begin{macro}{\clearl@drightpage}
 % \cs{cleartoevenpage}, which is defined in the memoir class, 
 % is like \cs{clear(double)page} except that we 
 % end up on an even page.
 % \cs{cleartol@devenpage} is similar except that it first checks to see
 % if it is already on an empty page.
-% \cs{clearl@dleftpage} and \cs{clearl@drightpage} get us onto
-% an odd and even page, respectively, checking that we end up on
-% the immediately next page.
 %    \begin{macrocode}
 \providecommand{\cleartoevenpage}[1][\@empty]{%
   \clearpage
@@ -4918,6 +4914,20 @@
     \clearpage
   \fi
   \ifodd\c@page\hbox{}\clearpage\fi}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\clearl@dleftpage}
+% \begin{macro}{\clearl@drightpage}
+% \cs{clearl@dleftpage} and \cs{clearl@drightpage} get us onto
+% an odd and even page, respectively, checking that we end up on
+% the immediately next page.
+% Theses two commands use \cs{newpage} and not \cs{clearpage}. 
+% Because \cs{clearpage} prints all footnotes before the new page, even by adding new empty pages, while \cs{newpage} does not. 
+% And as we want notes started in left page continue in right page and vice-verse, we must use \cs{newpage} and not \cs{clearpage}
+% 
+% \changes{v1.13.0}{2015/03/xxx}{Use \cs{newpage} instead of \cs{clearpage}.}
+%    \begin{macrocode}
 \newcommand*{\clearl@dleftpage}{%
   \newpage%
   \ifodd\c@page\else
@@ -4925,6 +4935,7 @@
     \hbox{}%
     \cleardoublepage
   \fi}
+  
 \newcommand*{\clearl@drightpage}{%
   \newpage%
   \ifodd\c@page
@@ -4934,8 +4945,6 @@
   \fi}
 
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %
