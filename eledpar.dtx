@@ -3677,6 +3677,51 @@
   }{}%
 }%
 %    \end{macrocode}
+% And now, the same for familiar footnotes.
+%    \begin{macrocode}
+\newcommand\print@notesX@forpages[1]{%
+   \ifcsempty{onlysideX@#1}{%
+     \csuse{footstart#1}{#1}%
+     \csuse{footgroup#1}{#1}%
+   }%
+   {%
+     \ifboolexpr{%
+       ((test {\ifcsstring{onlysideX@#1}{L}} and not test{\ifnumodd{\c@page}})%
+       or%
+       (test {\ifcsstring{onlysideX@#1}{R}} and test{\ifnumodd{\c@page}}))%
+       }%
+      {%
+         \csuse{footstart#1}{#1}%
+         \csuse{footgroup#1}{#1}%
+         \global\count\csuse{footins#1}=0%
+         \global\skip\csuse{footins#1}=0pt%
+          \csuse{notefontsizeX@#1}%
+          \global\advance\dimen\csuse{footins#1} by -\baselineskip%
+       \global\boolfalse{keepforsideX@#1}%
+       }%
+       {%
+         \global\booltrue{keepforsideX@#1}%
+         \global\count\csuse{footins#1}=\csuse{default@footins#1}%
+         \global\skip\csuse{footins#1}=\csuse{beforeXnotes@#1}%
+         \bgroup%
+            \csuse{notefontsizeX@#1}%
+            \global\advance\dimen\csuse{footins#1} by \baselineskip%
+         \egroup%
+       }%
+     }%
+}%
+\newcommand{\correct@footinsX@box}[1]{%
+  \ifbool{keepforsideX@#1}{%
+      \csuse{notefontsizeX@#1}%
+      \splittopskip=0pt%
+      \global\setbox\csuse{footins#1}=\vbox{%
+        \vsplit\csuse{footins#1} to \dimexpr\ht\csuse{footins#1}-1pt\relax%
+        \vskip \dimexpr-0.5\baselineskip-\lineskip-0.5pt\relax%
+        \unvbox\csuse{footins#1}%
+      }%
+  }{}%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -4800,6 +4845,7 @@
 % The footnotes are printed in a different way that in normal \Lpack{eledmac}, as we could want to have notes only for one side.
 %    \begin{macrocode}
     \let\print@Xnotes\print@Xnotes@forpages%
+    \let\print@notesX\print@notesX@forpages%
 %    \end{macrocode}
 % Check if there are chunks to be processed.
 %    \begin{macrocode}

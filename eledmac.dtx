@@ -9364,53 +9364,36 @@
 % \end{macro}
 %
 % \section{Footnotes' output}
+% \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
 % \begin{macro}{\doreinxtrafeeti}
 % We have to add all the new kinds of familiar footnotes to the output
 % routine. These are the class 1 feet\index{class 1 feet}.
+% The normal way to add one series.
+% \cs{print@Xnotes} is changed by \Lpack{eledpar} when using \cs{Pages}.
+%    \begin{macrocode}
+\newcommand\print@notesX[1]{%
+  \csuse{footstart#1}{#1}%
+  \csuse{footgroup#1}{#1}%
+}%
+%    \end{macrocode}
+% We print all series of notes by looping on them. 
+% We check before printing them that there are not voided.
+% We also call \cs{correct@footinsX@box} if \Lpack{eledpar} is loaded. 
+% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox
-  \def\do##1{%
-      \ifvoid\csuse{footins##1}\else%
-          \ifboolexpr{%
-            ((test {\ifcsstring{onlysideX@##1}{L}} and test{\ifnumodd{\c@page}})%
-            or%
-            (test {\ifcsstring{onlysideX@##1}{R}} and not test{\ifnumodd{\c@page}}))%
-            and  bool {l@dprintingpages}%
-            }% If we are parallel pages typesetting in Don't print only-left-pages note on right pages, and vice-versa.
-            {%
-            }%
-            {%
-            \csuse{footstart##1}{##1}%
-            \csuse{footgroup##1}{##1}%
-            }%
-      \fi%
-      \ifcsstring{onlysideX@##1}{R}{%
-        \ifnumodd{\c@page}%If we are in right page, the next page will be left
-          {%
-            \global\count\csname footins##1\endcsname=0%
-            \global\skip\csname footins##1\endcsname=0pt%
-          }%
-          {%
-            \global\count\csname footins##1\endcsname=\csuse{default@footins##1}%
-            \global\skip\csname footins##1\endcsname=\csuse{beforenotesX@##1}%
-            }%
-        }{}%
-      \ifcsstring{onlysideX@##1}{L}{%
-        \ifnumodd{\c@page}%If we are in right page, the next page will be left
-          {%
-            \global\count\csname footins##1\endcsname=\csuse{default@footins##1}%
-            \global\skip\csname footins##1\endcsname=\csuse{beforenotesX@##1}%
-            }%
-          {%
-            \global\count\csname footins##1\endcsname=0%
-            \global\skip\csname footins##1\endcsname=0pt%
-          }%
-        }{}%
+    \unvbox\@outputbox%
+    \def\do##1{%
+    \ifvoid\csuse{footins##1}\else%
+        \ifdefined\correct@footinsX@box%
+           \correct@footinsX@box{##1}%
+        \fi%
+        \print@notesX{##1}%
+     \fi%
     }%
-  \dolistloop{\@series}}%
+    \dolistloop{\@series}}%
   }%
 
 \newcommand{\doreinxtrafeeti}{%
@@ -9419,6 +9402,7 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
