@@ -216,8 +216,8 @@
 % \changes{v1.16.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
 % \changes{v1.16.0}{2015/01/23}{New \cs{stanzaindent} command.}
 % \changes{v1.18.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
-% \changes{v1.19.0}{2015/03/xx}{\cs{maxhXnotes} and \cs{maxhnotesX} work now for both two and three columns setting.}
-% \changes{v1.19.0}{2015/03/xx}{Compatibility with \Lpack{eledpar} v.1.13.0.}
+% \changes{v1.19.0}{2015/03/01}{\cs{maxhXnotes} and \cs{maxhnotesX} work now for both two and three columns setting.}
+% \changes{v1.19.0}{2015/03/01}{Compatibility with \Lpack{eledpar} v.1.13.0.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1403,6 +1403,13 @@
 %
 % \DescribeMacro{\hangindentX}
 % For  familiar notes NOT paragraphed you can define an indent with \cs{Xhangindent}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make a distinction between a new note and a break in anote.
+%
+% \subsubsection{Notes only for one side}
+% \DescribeMacro{\onlyXside}
+% \DescribeMacro{\onlysideX}
+% If you use \Lpack{eledpar}, you could want have notes only for Left side or only for Right side.
+% Use \cs{onlyXside}\oarg{s}\marg{l} to set for critical notes, and \cs{onlysideX}\oarg{s}\marg{l} to set for familiar notes.
+% \marg{l} must be equal to \verb+L+ to have notes only on Left side and \verb+R+ to have notes only on Right side.
 %
 % \subsubsection{Arbitrary code at the beginninging of notes}
 % \changes{v1.1}{2012/09/25}{New hook to add arbitrary code at the beginning of the notes}
@@ -2792,7 +2799,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/03/xx v1.19.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/03/01 v1.19.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -7206,7 +7213,7 @@
 % \end{itemize}
 % \changes{v0.7}{2005/02/18}{Added \cs{footsplitskips} for use in many
 %              footnote styles}
-% \changes{v1.19.0}{2015/03/xx}{\cs{footsplitskips} doesn't set \cs{floatingpenalty} to \cs{@MM} when printing parallel pages.}
+% \changes{v1.19.0}{2015/03/01}{\cs{footsplitskips} doesn't set \cs{floatingpenalty} to \cs{@MM} when printing parallel pages.}
 %    \begin{macrocode}
 \newcommand*{\footsplitskips}{%
   \interlinepenalty=\interfootnotelinepenalty
@@ -7707,6 +7714,7 @@
   \expandafter\let\csname #1footnoterule\endcsname=%
                                              \normalfootnoterule
   \count\csname #1footins\endcsname=1000
+  \csxdef{default@#1footins}{1000}%Use to have note only for one side
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
   \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
 %    \end{macrocode}
@@ -7768,6 +7776,7 @@
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
   \expandafter\let\csname #1footgroup\endcsname=\para@footgroup
   \count\csname #1footins\endcsname=1000
+  \csxdef{default@#1footins}{1000}%Use to have note only for one side
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
   \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
   \para@footsetup{#1}
@@ -8230,6 +8239,7 @@
 %    \begin{macrocode}
 \newcommand*{\threecolfootsetup}[1]{%
   \count\csname #1footins\endcsname 333
+  \csxdef{default@#1footins}{333}%Use to have note only for one side
   \multiply\dimen\csname #1footins\endcsname \thr@@}
 %    \end{macrocode}
 % \end{macro}
@@ -8314,8 +8324,8 @@
 % box.  Here, we just print the \cs{line} which comes out of
 % \cs{rigidbalance} directly, without any re-boxing.
 %    \begin{macrocode}
-\newcommand*{\threecolfootgroup}[1]{{\notefontsetup
-  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
+\newcommand*{\threecolfootgroup}[1]{{\csuse{Xnotefontsize@#1}%
+  \noindent\csuse{txtbeforeXnotes@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}}
@@ -8392,6 +8402,7 @@
 %    \begin{macrocode}
 \newcommand*{\twocolfootsetup}[1]{%
   \count\csname #1footins\endcsname 500
+  \csxdef{default@#1footins}{500}%Use to have note only for one side
   \multiply\dimen\csname #1footins\endcsname \tw@}
 %    \end{macrocode}
 %    \begin{macrocode}
@@ -8419,7 +8430,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
-   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
+  \noindent\csuse{txtbeforeXnotes@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
   \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}}
@@ -8846,6 +8857,7 @@
   \expandafter\let\csname footgroup#1\endcsname=\normalfootgroupX
   \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
   \count\csname footins#1\endcsname=1000
+  \csxdef{default@footins#1}{1000}%Use to have note only for one side
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
 %    \end{macrocode}
@@ -8889,6 +8901,7 @@
 %    \begin{macrocode}
 \newcommand*{\twocolfootsetupX}[1]{%
   \count\csname footins#1\endcsname 500
+  \csxdef{default@footins#1}{500}%Use to have note only for one side
   \multiply\dimen\csname footins#1\endcsname by \tw@}
 \newcommand*{\mptwocolfootsetupX}[1]{%
   \count\csname mpfootins#1\endcsname 500
@@ -8998,6 +9011,7 @@
 %    \begin{macrocode}
 \newcommand*{\threecolfootsetupX}[1]{%
   \count\csname footins#1\endcsname 333
+  \csxdef{default@footins#1}{333}%Use to have note only for one side
   \multiply\dimen\csname footins#1\endcsname by \thr@@}
 \newcommand*{\mpthreecolfootsetupX}[1]{%
   \count\csname mpfootins#1\endcsname 333
@@ -9094,6 +9108,7 @@
   \expandafter\let\csname footgroup#1\endcsname=\para@footgroupX
   \expandafter\let\csname footnoterule#1\endcsname=\normalfootnoteruleX
   \count\csname footins#1\endcsname=1000
+  \csxdef{default@footins#1}{1000}%Use to have note only for one side
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
   \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
@@ -9349,17 +9364,37 @@
 % \end{macro}
 %
 % \section{Footnotes' output}
+% \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
 % \begin{macro}{\doreinxtrafeeti}
 % We have to add all the new kinds of familiar footnotes to the output
 % routine. These are the class 1 feet\index{class 1 feet}.
+% The normal way to add one series.
+% \cs{print@Xnotes} is changed by \Lpack{eledpar} when using \cs{Pages}.
+%    \begin{macrocode}
+\newcommand\print@notesX[1]{%
+  \csuse{footstart#1}{#1}%
+  \csuse{footgroup#1}{#1}%
+}%
+%    \end{macrocode}
+% We print all series of notes by looping on them. 
+% We check before printing them that there are not voided.
+% We also call \cs{correct@footinsX@box} if \Lpack{eledpar} is loaded. 
+% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox
-    \def\do##1{\ifvoid\csuse{footins##1}\else\csuse{footstart##1}{##1}\csuse{footgroup##1}{##1}\fi}
-    \dolistloop{\@series}%
-  }}
+    \unvbox\@outputbox%
+    \def\do##1{%
+    \ifvoid\csuse{footins##1}\else%
+        \ifdefined\correct@footinsX@box%
+           \correct@footinsX@box{##1}%
+        \fi%
+        \print@notesX{##1}%
+     \fi%
+    }%
+    \dolistloop{\@series}}%
+  }%
 
 \newcommand{\doreinxtrafeeti}{%
   \def\do##1{\ifvoid\csuse{footins##1}\else\insert\csuse{footins##1}{\unvbox\csuse{footins##1}}\fi}%
@@ -9367,6 +9402,7 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -9664,15 +9700,25 @@
     \csgdef{maxhXnotes@#1}{\ledfootinsdim}
     \newtoggle{Xnoteswidthliketwocolumns@#1}%
     \newtoggle{notesXwidthliketwocolumns@#1}%
+    \csgdef{onlysideX@#1}{}
+    \csgdef{onlyXside@#1}{}
 %    \end{macrocode}
 % \subsection{Create inserts, needed to add notes in foot}
 % Concerning inserts, see chapter 15 of the TeXBook by D. Knuth
 %    \begin{macrocode}
 
-    \expandafter\newinsert\csname mpfootins#1\endcsname
-    \expandafter\newinsert\csname footins#1\endcsname
-    \expandafter\newinsert\csname #1footins\endcsname
-    \expandafter\newinsert\csname mp#1footins\endcsname
+    \expandafter\newinsert\csname footins#1\endcsname%
+    \expandafter\newinsert\csname #1footins\endcsname%
+    \expandafter\newinsert\csname mpfootins#1\endcsname%
+    \expandafter\newinsert\csname mp#1footins\endcsname%
+%    \end{macrocode}
+% \subsection{Boolean flags for notes only for one side}
+% \Lpack{eledpar} allows to print notes only on one side.
+% We need boolean flags, set to true when a note series is not printed in one side
+% despite it contains something.
+%    \begin{macrocode}
+    \global\newbool{keepforXside@#1}%
+    \global\newbool{keepforsideX@#1}%
 %    \end{macrocode}
 % \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
@@ -9942,6 +9988,11 @@
 
 \newhookcommand@series{afterXrule}
 
+\newhookcommand@series{onlysideX}
+
+\newhookcommand@series{onlyXside}
+
+
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhookcommand@series@reload}
@@ -10125,20 +10176,20 @@
 % It is called by \cs{printlinefootnote}
 % depending of the options about repeating line numbers.
 % The first argument is line information, the second is the notes series (A, B, C. etc.)
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\printlinefootnotearea}[2]{%
   \printbeforenumberinfootnote{#2}%
   \csuse{Xnotenumfont@#2}%
   \boxfootnotenumbers{#1}{#2}%
   \printafternumberinfootnote{#2}%
 }%
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\boxfootnotenumbers}
 % Depending on the user settings, this macro will box line numbers (or not).
 % The first argument is line information, the second is the notes series (A, B, C. etc.)
 % The previous \cs{printlinefootnotearea} calls it.
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\boxfootnotenumbers}[2]{%
   \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
        \printlinefootnotenumbers{#1}{#2}%
@@ -10149,7 +10200,7 @@
        \hfill}%
      }%
 }%
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\printlinefootnotenumbers}
 % This macro prints, if needed, the pstart number and the line number.
@@ -10407,13 +10458,35 @@
 % \end{macro}
 %
 % \begin{macro}{\@opxtrafeetii}
-% The extra critical feet to be aded to the output.
+% \begin{macro}{\print@Xnotes}
+% The extra critical feet to be added to the output.
 % \changes{v0.4.1}{2004/03/06}{Added \cs{@opxtrafeetii}}
+% The normal way to add one series.
+% \cs{print@Xnotes} is changed by \Lpack{eledpar} when using \cs{Pages}.
+%    \begin{macrocode}
+\newcommand\print@Xnotes[1]{%
+  \csuse{#1footstart}{#1}%
+  \csuse{#1footgroup}{#1}%%
+}%
+%    \end{macrocode}
+% We print all series of notes by looping on them. 
+% We check before printing them that there are not voided.
+% We also call \cs{correct@Xfootins@box} if \Lpack{eledpar} is loaded. 
+% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
-  \def\do##1{\ifvoid\csuse{##1footins}\else\csuse{##1footstart}{##1}\csuse{##1footgroup}{##1}\fi}
-  \dolistloop{\@series}}
+  \def\do##1{%
+    \ifvoid\csuse{##1footins}\else%
+        \ifdefined\correct@Xfootins@box%
+           \correct@Xfootins@box{##1}%
+        \fi%
+        \print@Xnotes{##1}%
+     \fi%
+    }%
+  \dolistloop{\@series}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
