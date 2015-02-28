@@ -942,9 +942,9 @@
 %
 % \begin{macro}{\eledpar@error}
 % \changes{v1.8.2}{2014/08/15}{Errors specific to eledpar send to eledpar handbook}
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\eledpar@error}[2]{\PackageError{eledpar}{#1}{#2}}
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@err@TooManyPstarts}
 %    \begin{macrocode}
@@ -3584,7 +3584,99 @@
 %        \item Still remains the ``glue'' problem. We solve it by recreate a clean notes box. We split the one created by \TeX, to get the next line. Then, we create the new box, by accumulated the first part of the splitted box and the last part, adding some skip between them. That is done in \cs{correct@Xfootins@box} (or \cs{correct@footinsX@box} for familiar notes). 
 %     \end{itemize}
 % \end{itemize}
-%
+% The code to print critical notes, when processing \cs{Pages}
+%    \begin{macrocode}
+\newcommand\print@Xnotes@forpages[1]{%
+%    \end{macrocode}
+% First case: notes are for both side. Just print the notes start and the notes group
+%    \begin{macrocode}
+   \ifcsempty{onlyXside@#1}{%
+     \csuse{#1footstart}{#1}%
+     \csuse{#1footgroup}{#1}%
+   }%
+%    \end{macrocode}
+% Second case: notes are for only one side. 
+% First test if we are in a page where they must be printed.
+%    \begin{macrocode}
+   {%
+     \ifboolexpr{%
+       ((test {\ifcsstring{onlyXside@#1}{L}} and not test{\ifnumodd{\c@page}})%
+       or%
+       (test {\ifcsstring{onlyXside@#1}{R}} and test{\ifnumodd{\c@page}}))%
+       }%
+%    \end{macrocode}
+% If we are in a page where notes must be printed, print them.
+%    \begin{macrocode}
+      {%
+         \csuse{#1footstart}{#1}%
+         \csuse{#1footgroup}{#1}%
+%    \end{macrocode}
+% Then, say to not keep spaces for notes in the next page.
+%    \begin{macrocode}
+         \global\count\csuse{#1footins}=0%
+         \global\skip\csuse{#1footins}=0pt%
+%    \end{macrocode}
+% And also, allow one line less for notes in the next page.
+%    \begin{macrocode}
+          \csuse{Xnotefontsize@#1}%
+          \global\advance\dimen\csuse{#1footins} by -\baselineskip%
+%    \end{macrocode}
+% And so, we have printed notes. So we retains this fact.
+%    \begin{macrocode}
+       \global\boolfalse{keepforXside@#1}%
+       }%
+%    \end{macrocode}
+% In the case we are in a page where notes must NOT be printed.
+% First, retains we have not printed notes, despite we have them.
+%    \begin{macrocode}
+       {%
+         \global\booltrue{keepforXside@#1}%
+%    \end{macrocode}
+% Then restore normal place keeping for notes in the next page.
+%    \begin{macrocode}
+         \global\count\csuse{#1footins}=\csuse{default@#1footins}%
+         \global\skip\csuse{#1footins}=\csuse{beforeXnotes@#1}%
+%    \end{macrocode}
+% And last but not least, restore the normal lines number allowed by notes for the next page.
+%    \begin{macrocode}
+         \bgroup%
+            \csuse{Xnotefontsize@#1}%
+            \global\advance\dimen\csuse{#1footins} by \baselineskip%
+         \egroup%     
+%    \end{macrocode}
+%    \begin{macrocode}
+% End of \cs{print@Xnotes@forpages}.
+       }%
+     }%
+}%
+%    \end{macrocode}
+% Now, \cs{correct@Xfootins@box}, to fix problem of last line glued to the previous one.
+%    \begin{macrocode}
+\newcommand{\correct@Xfootins@box}[1]{%
+%    \end{macrocode}
+% We need to make correction only if we have not printed notes in the previous page,
+% despite there was not to be ``normally'' printed.
+%    \begin{macrocode}
+  \ifbool{keepforXside@#1}{%
+%    \end{macrocode}
+% Some setting needed to do the good splitting.
+%    \begin{macrocode}
+      \csuse{Xnotefontsize@#1}%
+      \splittopskip=0pt%
+%    \end{macrocode}
+% And now, split the last line, and push in the good place.
+%    \begin{macrocode}
+      \global\setbox\csuse{#1footins}=\vbox{%
+        \vsplit\csuse{#1footins} to \dimexpr\ht\csuse{#1footins}-1pt\relax%
+        \vskip \dimexpr-0.5\baselineskip-\lineskip-0.5pt\relax%
+        \unvbox\csuse{#1footins}%
+      }%
+%    \end{macrocode}
+% End of the macro.
+%    \begin{macrocode}
+  }{}%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -4705,6 +4797,10 @@
     \writtenlinesLfalse
     \writtenlinesRfalse
 %    \end{macrocode}
+% The footnotes are printed in a different way that in normal \Lpack{eledmac}, as we could want to have notes only for one side.
+%    \begin{macrocode}
+    \let\print@Xnotes\print@Xnotes@forpages%
+%    \end{macrocode}
 % Check if there are chunks to be processed.
 %    \begin{macrocode}
     \check@pstarts
@@ -5294,19 +5390,19 @@
             \resetprevline@%
           \fi
 % Add the content of the optional argument of the previous \cs{pend}.
-%     \begin{macrocode}
+%    \begin{macrocode}
          \csuse{after@pendL@\the\l@dpscL}%
          \global\csundef{after@pendL@\the\l@dpscL}%
-%     \end{macrocode}
+%    \end{macrocode}
 % Check the number of lines
-%     \begin{macrocode}
+%    \begin{macrocode}
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
                          {\the\@donetotallinesL}%
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
-%     \end{macrocode}
+%    \end{macrocode}
 % Go to the next pstart
-%     \begin{macrocode}
+%    \begin{macrocode}
         \global\advance\l@dpscL \@ne
         \global\pstartnumtrue%
         \restore@pstartL@pc%
@@ -5316,11 +5412,12 @@
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
       \else
+%    \end{macrocode}
 % Add the content of the optional argument of the last \cs{pend}.
-%     \begin{macrocode}
+%    \begin{macrocode}
         \print@last@after@pendLtrue%
-%     \end{macrocode}
-%     \begin{macrocode}
+%    \end{macrocode}
+%    \begin{macrocode}
       \fi
     \fi
   \fi}

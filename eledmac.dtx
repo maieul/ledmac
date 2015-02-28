@@ -9728,6 +9728,14 @@
     \expandafter\newinsert\csname mpfootins#1\endcsname%
     \expandafter\newinsert\csname mp#1footins\endcsname%
 %    \end{macrocode}
+% \subsection{Boolean flags for notes only for one side}
+% \Lpack{eledpar} allows to print notes only on one side.
+% We need boolean flags, set to true when a note series is not printed in one side
+% despite it contains something.
+%    \begin{macrocode}
+    \global\newbool{keepforXside@#1}%
+    \global\newbool{keepforsideX@#1}%
+%    \end{macrocode}
 % \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
@@ -10184,20 +10192,20 @@
 % It is called by \cs{printlinefootnote}
 % depending of the options about repeating line numbers.
 % The first argument is line information, the second is the notes series (A, B, C. etc.)
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\printlinefootnotearea}[2]{%
   \printbeforenumberinfootnote{#2}%
   \csuse{Xnotenumfont@#2}%
   \boxfootnotenumbers{#1}{#2}%
   \printafternumberinfootnote{#2}%
 }%
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\boxfootnotenumbers}
 % Depending on the user settings, this macro will box line numbers (or not).
 % The first argument is line information, the second is the notes series (A, B, C. etc.)
 % The previous \cs{printlinefootnotearea} calls it.
-%     \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\boxfootnotenumbers}[2]{%
   \ifdimequal{\csuse{boxlinenum@#2}}{0pt}{%
        \printlinefootnotenumbers{#1}{#2}%
@@ -10208,7 +10216,7 @@
        \hfill}%
      }%
 }%
-%     \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\printlinefootnotenumbers}
 % This macro prints, if needed, the pstart number and the line number.
@@ -10466,50 +10474,35 @@
 % \end{macro}
 %
 % \begin{macro}{\@opxtrafeetii}
-% The extra critical feet to be aded to the output.
+% \begin{macro}{\print@Xnotes}
+% The extra critical feet to be added to the output.
 % \changes{v0.4.1}{2004/03/06}{Added \cs{@opxtrafeetii}}
+% The normal way to add one series.
+% \cs{print@Xnotes} is changed by \Lpack{eledpar} when using \cs{Pages}.
+%    \begin{macrocode}
+\newcommand\print@Xnotes[1]{%
+  \csuse{#1footstart}{#1}%
+  \csuse{#1footgroup}{#1}%%
+}%
+%    \end{macrocode}
+% We print all series of notes by looping on them. 
+% We check before printing them that there are not voided.
+% We also call \cs{correct@Xfootins@box} if \Lpack{eledpar} is loaded. 
+% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
   \def\do##1{%
-      \ifvoid\csuse{##1footins}\else%
-          \ifboolexpr{%
-            ((test {\ifcsstring{onlyXside@##1}{L}} and test{\ifnumodd{\c@page}})%
-            or%
-            (test {\ifcsstring{onlyXside@##1}{R}} and not test{\ifnumodd{\c@page}}))%
-            and  bool {l@dprintingpages}%
-            }% If we are parallel pages typesetting in Don't print only-left-pages note on right pages, and vice-versa.
-            {%
-            }%
-            {%
-            \csuse{##1footstart}{##1}%
-            \csuse{##1footgroup}{##1}%
-            }%
-      \fi%
-      \ifcsstring{onlyXside@##1}{R}{%
-        \ifnumodd{\c@page}%If we are in right page, the next page will be left
-          {%
-            \global\count\csname ##1footins\endcsname=0%
-            \global\skip\csname ##1footins\endcsname=0pt%
-          }%
-          {%
-            \global\count\csname ##1footins\endcsname=\csuse{default@##1footins}%
-            \global\skip\csname ##1footins\endcsname=\csuse{beforeXnotes@##1}%
-            }%
-        }{}%
-      \ifcsstring{onlyXside@##1}{L}{%
-        \ifnumodd{\c@page}%If we are in right page, the next page will be left
-          {%
-            \global\count\csname ##1footins\endcsname=\csuse{default@##1footins}%
-            \global\skip\csname ##1footins\endcsname=\csuse{beforeXnotes@##1}%
-            }%
-          {%
-            \global\count\csname ##1footins\endcsname=0%
-            \global\skip\csname ##1footins\endcsname=0pt%
-          }%
-        }{}%
+    \ifvoid\csuse{##1footins}\else%
+        \ifdefined\correct@Xfootins@box%
+           \correct@Xfootins@box{##1}%
+        \fi%
+        \print@Xnotes{##1}%
+     \fi%
     }%
-  \dolistloop{\@series}}
+  \dolistloop{\@series}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 %
