@@ -897,6 +897,10 @@
 \ProvidesPackage{eledpar}[2015/03/01 v1.13.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
+% Few commands use \cs{xspace} command.
+%    \begin{macrocode}
+\RequirePackage{xspace}%
+%    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) doesn't make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages.
 % The \cs{shiftedverses} is kept for backward compatibility.
 % \begin{macro}{\ifshiftedpstarts}
@@ -2325,13 +2329,60 @@
     \global\newbool{keepforXside@#1}%
     \global\newbool{keepforsideX@#1}%
 %    \end{macrocode}
+% \subsubsection{Familiar footnote} without marks
 % The \cs{footnoteXnomk} commands are used to start a footnote displaying in the left side but call the notes on the right side.
-% Basically, they set the \cs{nomark@} toggle to true, and print the \cs{footnoteX}.
+% Basically, they sets the \cs{nomark@} toggle to true, calls the \cs{footnoteX}.
+% and add the footnote counter in the footnote counter list.
+%
+% So declare the list.
+%    \begin{macrocode}
+    \expandafter\list@create\csname footnote#1@mk\endcsname%
+%    \end{macrocode}
+% Then, declare the \cs{footnoteXnomk} command.
 %    \begin{macrocode}
     \expandafter\newcommand\csname footnote#1nomk\endcsname[1]{%
+%    \end{macrocode}
+% First step: just call the normal \cs{footnoteX}, saying that we don't want to print the mark.
+%    \begin{macrocode}
        \toggletrue{nomk@}%
        \csuse{footnote#1}{##1}%
        \togglefalse{nomk@}%
+%    \end{macrocode}
+% Second, and last, step: store the footnote counter in the footnote counters list.
+% We use some \cs{let}, because \cs{xright@appenditem} is difficult to use with \cs{expandafter}.
+%    \begin{macrocode}
+       \letcs{\@tmp}{footnote#1@mk}%
+       \global\xright@appenditem{\csuse{c@footnote#1}}%
+         \to\@tmp%
+       \global\cslet{footnote#1@mk}{\@tmp}%
+   }%
+%    \end{macrocode}
+% And now, declare the command which insert the footnotemark on the right side.
+%    \begin{macrocode}
+    \expandafter\newcommand\csname footnote#1mk\endcsname[1]{%
+%    \end{macrocode}
+% Get the first element of the footnote mark list.
+% As \cs{gl@p} is difficult to use with dynamic name macro, we use \cs{let} commands.
+%    \begin{macrocode}
+       \letcs{\@tmp}{footnote#1@mk}%
+       \gl@p\@tmp\to\@tmpa%
+       \global\cslet{footnote#1@mk}{\@tmp}%
+%    \end{macrocode}
+% Set the footnotecounter with it. 
+% For security, we make a backup of the previous value.
+%    \begin{macrocode}
+       \letcs{\old@footnote}{c@footnote#1}%
+       \setcounter{footnote#1}{\@tmpa}%
+%    \end{macrocode}
+% Define the footnote mark and print it
+%    \begin{macrocode}
+       \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+       \csuse{@footnotemark#1}%
+%    \end{macrocode}
+% Restore previous footnote counter, and eventually, add space.
+%    \begin{macrocode}
+       \setcounter{footnote#1}{\old@footnote}%
+       \xspace%
     }%
 %    \end{macrocode}
 % End of \cs{newseries@eledpar}.
