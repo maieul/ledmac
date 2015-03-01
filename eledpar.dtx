@@ -2283,7 +2283,51 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \subsection{Specific hooks and commands for notes}
+% The \Lpack{eledmac}'s \cs{newseries@}  initalize commands linked to notes series. 
+% However, to let \Lpack{eledmac} as light as possible, it does not define commands specific to \Lpack.
+% That is what doing \cs{newseries@eledpar}. The specific hooks are also defined here.
+% \begin{macro}{\newseries@eledpar}
+%    \begin{macrocode}
+\newcommand{\newseries@eledpar}[1]{%
+%    \end{macrocode}
+% \subsubsection{Create commands to memorize display options}
+%    \begin{macrocode}
+    \csgdef{onlysideX@#1}{}%
+    \csgdef{onlyXside@#1}{}%
+%    \end{macrocode}
+% \subsubsection{Boolean flags for notes only for one side}
+% \Lpack{eledpar} allows to print notes only on one side.
+% We need boolean flags, set to true when a note series is not printed in one side
+% despite it contains something.
+%    \begin{macrocode}
+    \global\newbool{keepforXside@#1}%
+    \global\newbool{keepforsideX@#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Create hooks}
+% Read the eledmac code handbook about \cs{newhookcommand@series}.
+% Here, we create hooks specific to \Lpack{eledpar}.
+%    \begin{macrocode}
+\newhookcommand@series{onlysideX}%
+
+\newhookcommand@series{onlyXside}%
+
+%    \end{macrocode}
+% \subsubsection{Init standards series (A,B,C,D,E,Z)}
+% \begin{macro}{\init@series@eledpar}
+% \cs{newseries@eledpar} is called by \cs{newseries@}.
+% However, this command is called before \Lpack{eledpar} is loaded.
+% Thus, we need to initiate specific series hook for eledpar.
+%    \begin{macrocode}
+\newcommand{\init@series@eledpar}{%
+  \def\do##1{\newseries@eledpar{##1}}%
+  \dolistloop{\@series}%
+}%
+\init@series@eledpar%
+%    \end{macrocode}
+% \end{macro}
 % \section{Pstart numbers dumping and restoration}
 % While in \Lpack{eledmac} the footnotes are inserted in the same time as the \cs{pstart} …\cs{pend} are read, in \Lpack{eledpar} they are inserted when the \cs{Columns} or \cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the PstartL and PstartR counters are not the same in the main text and in the notes.
