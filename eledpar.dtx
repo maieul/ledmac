@@ -5085,6 +5085,7 @@
 % Process the next (left) text line, adding it to the page. 
 % Eventually, adds the optional argument of pstart.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
+% \changes{v1.13.0}{2015/03/01}{Fixes bug the shiftedpstarts when pstart size difference is very important.}
 %    \begin{macrocode}
               \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
               \csuse{before@pstartL@\the\l@dpscL}%
@@ -5093,11 +5094,14 @@
               \xifinlist{\the\l@dpscL}{\eled@sections@@}
                 {\print@eledsectionL}%
                 {}%
-              \advance\numpagelinesL \@ne
               \ifshiftedpstarts
-                      \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+                      \ifdim\ht\l@dleftbox>0pt\hb@xt@%
+                        \hsize{\ledstrutL\unhbox\l@dleftbox}%
+                        \advance\numpagelinesL \@ne%
+                      \fi%
               \else%
                       \parledgroup@correction@notespacing{L}
+                      \advance\numpagelinesL \@ne%
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
               \fi
 %    \end{macrocode}
@@ -5151,12 +5155,15 @@
               \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
                 {\print@eledsectionR}%
                 {}%
-              \advance\numpagelinesR \@ne
               \ifshiftedpstarts
-                      \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+                      \ifdim\ht\l@drightbox>0pt%
+                        \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+                        \advance\numpagelinesR \@ne%
+                      \fi%
               \else%
                       \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
+                      \advance\numpagelinesR \@ne%
               \fi
               \get@nextboxR%
                   \ifprint@last@after@pendR%
