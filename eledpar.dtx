@@ -187,6 +187,7 @@
 % \changes{v1.11.0}{2015/01/23}{Compatibility of standard footnotes with some biblatex styles.}
 % \changes{v1.12.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
 % \changes{v1.13.0}{2015/03/01}{With parallel pages, long notes can now flow from Left to Right side and Right to Left side.}
+% \changes{v1.13.0}{2015/03/01}{Fix bug the shiftedpstarts when pstart size difference is very important.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -4968,6 +4969,7 @@
 % \changes{v1.8.3}{2014/08/31}{Debug blank pages when using optional argument in the last \cs{pend}.}
 % \changes{v1.10.0}{2015/01/12}{Debug wrong pages splitting when no optional argument is used in last \cs{pend} (bug was added in v.1.8.3).}
 % \changes{v1.10.0}{2015/01/12}{Debug wrong parallel pages synchronization when an \cs{edtext} falls accross two pages.}
+% \changes{v1.13.0}{2015/03/01}{When using shiftedpstarts option, a \cs{l@dleftbox} with a null height will advance the \cs{pagetotal} in any case.}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
@@ -5094,8 +5096,23 @@
                 {\print@eledsectionL}%
                 {}%
               \advance\numpagelinesL \@ne
+%    \end{macrocode}
+% When using shiftedpstarts option, a \cs{l@dleftbox} with a null height won't be printed.
+% That means we don't insert blank lines at the end of a left chunck lower than the corresponding right chunck.
+% However, a \cs{l@dleftbox} with a null height will advance the \cs{pagetotal} in any case. 
+% Because if we do not do it, the \cs{checkpageL} could let \cs{ifl@pagefull} to false,
+% and consequently a \cs{@lopL} equal to 1000 could be written in the numbered file,
+% even if in reality, all the lines need for the current pages has been printed.
+% \l@dleftbox
+%    \begin{macrocode}
               \ifshiftedpstarts
-                      \ifdim\ht\l@dleftbox>0pt\hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}\fi%
+                      \ifdim\ht\l@dleftbox>0pt\hb@xt@%
+                        \hsize{\ledstrutL\unhbox\l@dleftbox}%
+                      \else%
+                        \dimen0=\pagetotal%
+                        \advance\dimen0 by \baselineskip%
+                        \global\pagetotal=\dimen0%                       
+                      \fi%
               \else%
                       \parledgroup@correction@notespacing{L}
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
@@ -5153,7 +5170,13 @@
                 {}%
               \advance\numpagelinesR \@ne
               \ifshiftedpstarts
-                      \ifdim\ht\l@drightbox>0pt\hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}\fi%
+                      \ifdim\ht\l@drightbox>0pt\hb@xt@%
+                        \hsize{\ledstrutR\unhbox\l@drightbox}%
+                      \else%
+                        \dimen0=\pagetotal%
+                        \advance\dimen0 by \baselineskip%
+                        \global\pagetotal=\dimen0%
+                      \fi%
               \else%
                       \parledgroup@correction@notespacing{R}
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
