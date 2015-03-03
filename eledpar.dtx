@@ -477,11 +477,11 @@
 % Facing pages can use, of course, the \Lpack{eledmac} critical and familiar footnotes.
 % However, some specific points are to be taken in consideration.
 % \subsubsection{Notes size setting}
-% Since \Lpack{eledpar} v.~1.13.0, long notes in facing pages can flow from left page to right page and vice-verse.
+% Since \Lpack{eledpar} v.~1.13.0, long notes in facing pages can flow from left page to right page, and vice versa.
 % However, the default \Lpack{eledmac} setting of maximum size of notes is to greater than \cs{textheight}. That makes impossible long notes flowing through page.%
 % \footnote{That is also the case for \LaTeX normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical cause}.
 % We have not changed it, because we don't want to break compatibility with older version of \Lpack{eledmac}. 
-% So, you MUST changes the default setting via \cs{maxhXnotes} (for critical notes)\cs{maxhnotesX} (for familiar notes). These two commands are explained in \Lpack handbook (\ref{eledmac-maxhXnotes} p.~\pageref{eledmac-maxhXnotes}).
+% So, you MUST change the default setting via \cs{maxhXnotes} (for critical notes)\cs{maxhnotesX} (for familiar notes). These two commands are explained in \Lpack handbook (\ref{eledmac-maxhXnotes} p.~\pageref{eledmac-maxhXnotes}).
 % A good setting is:
 % \begin{verbatim}
 % \maxhXnotes{0.6\textheight}
@@ -490,13 +490,13 @@
 % \subsubsection{Notes only for one side}
 % \DescribeMacro{\onlyXside}
 % \DescribeMacro{\onlysideX}
-% You could want have notes only for Left side or only for Right side.
+% You could want notes on only one side (left or right).
 % Use \cs{onlyXside}\oarg{s}\marg{p} to set for critical notes, and \cs{onlysideX}\oarg{s}\marg{p} to set for familiar notes.
 % \marg{p} must be equal to \verb+L+ to have notes only on Left side and \verb+R+ to have notes only on Right side.
 % \subsubsection{Familiar notes called in right side, but printed in left side}
 % \DescribeMacro{\footnoteXnomk}
 % \DescribeMacro{\footnoteXmk}
-% Many time, the left side is less height than the right side.
+% Many times, the left side has less height.
 % We could want to call familiar notes in the right side but use the space available in the left side to print them.
 %
 % To do it, we call \cs{footnoteXnomk}\marg{notecontent} in the Left side. X is to be replaced by the series letter. We do this call after the word equivalent to the right side word after which we want to insert the footnote mark.
@@ -2336,7 +2336,7 @@
 % \end{macro}
 % \subsection{Specific hooks and commands for notes}
 % The \Lpack{eledmac}'s \cs{newseries@}  initalize commands linked to notes series. 
-% However, to let \Lpack{eledmac} as light as possible, it does not define commands specific to \Lpack.
+% However, to let \Lpack{eledmac} be as light as possible, it does not define commands specific to \Lpack.
 % That is what doing \cs{newseries@eledpar}. The specific hooks are also defined here.
 % \begin{macro}{\newseries@eledpar}
 %    \begin{macrocode}
@@ -2348,16 +2348,16 @@
     \csgdef{onlyXside@#1}{}%
 %    \end{macrocode}
 % \subsubsection{Boolean flags for notes only for one side}
-% \Lpack{eledpar} allows to print notes only on one side.
+% \Lpack{eledpar} allows printing notes only on one side.
 % We need boolean flags, set to true when a note series is not printed in one side
-% despite it contains something.
+% despite it containing something.
 %    \begin{macrocode}
     \global\newbool{keepforXside@#1}%
     \global\newbool{keepforsideX@#1}%
 %    \end{macrocode}
 % \subsubsection{Familiar footnote} without marks
 % The \cs{footnoteXnomk} commands are used to start a footnote displaying in the left side but call the notes on the right side.
-% Basically, they sets the \cs{nomark@} toggle to true, calls the \cs{footnoteX}.
+% Basically, they set the \cs{nomark@} toggle to true, calls the \cs{footnoteX}.
 % and add the footnote counter in the footnote counter list.
 %
 % So declare the list.
@@ -2383,7 +2383,7 @@
        \global\cslet{footnote#1@mk}{\@tmp}%
    }%
 %    \end{macrocode}
-% And now, declare the command which insert the footnotemark on the right side.
+% And now, declare the command which inserts the footnotemark on the right side.
 %    \begin{macrocode}
     \expandafter\newcommand\csname footnote#1mk\endcsname{%
 %    \end{macrocode}
@@ -3719,8 +3719,8 @@
 % \begin{macro}{\print@notesX@forpages}
 % \begin{macro}{\correct@footinsX@box}
 % The \cs{onlyXside} and \cs{onlysideX} hooks for \cs{Pages}
-% allow to have notes only for left pages or for right pages.
-% The implementation of such feature is delegated to \cs{print@Xnotes@forpages},
+% allow notes for only either left pages or right pages.
+% The implementation of such features is delegated to \cs{print@Xnotes@forpages},
 % which replaces \cs{print@Xnotes} inside \cs{Pages}. 
 % Here is general way we proceed\footnote{See \url{http://tex.stackexchange.com/a/230332/7712}.}:
 % \begin{itemize}
@@ -3728,9 +3728,9 @@
 %    \item If notes are for Left side, we do these prints only for even pages ; if notes are for right side, we do these prints only for odd pages.
 %    \item However, that is not enough. Because the problem is not only printing notes in specific pages only. It is also not keeping spaces  for notes in the pages where we don't want to print them. That means: if a left notes is too long by 160pt to be full printed in the left pages, we do not want to keep 160pt space for it in the next right page. 
 %    \item To solve this problem, we change the magnification factor associated with notes before going to the next page. If we will start a page where the notes should not been printed, the magnification couter is set to 0. We also set the notes skip to 0pt. Before starting a new page where these notes should be printed, we reset these counter and skip to their default values. (About these counter and skip, read \texbook\ p. 122-125).
-%    \item There still remains a last problem. This problem is quite complex to understand, so an example will be most useful. Suppose we allow 10 lines of note by page Suppose a long notes, of 25 lines, which needs three pages to be printed. Suppose it must be printed only on left pages, that is odd page. 
+%    \item There still remains a last problem. This problem is quite complex to understand, so an example will be most useful. Suppose we allow 10 lines of note by page Suppose a long note, of 25 lines, which needs three pages to be printed. Suppose it must be printed only on left pages, that is, odd pages. 
 %
-%     In p.~2, the 10 first lines of the notes are printed. Is p.~3, the box associated to the notes contains 10 lines. However, as we are in a right page, we don't void this box. So \TeX\ will keep its content for the next pages. However, in p.~4 it will also add one line in the footnote box, because in any case, \TeX adds some content in the box when preparing the output routines, even if there is yet content if this box from previous pages. So the lines in the note box at p.~4 will be $10+1=11$. There is one line which should not be. Further more, as the box size is for 10~lines and not for 11~lines, this last line will be glued to the previous one.
+%     In p.~2, the 10 first lines of the notes are printed. Is p.~3, the box associated to the notes contains 10 lines. However, as we are in a right page, we don't void this box. So \TeX\ will keep its content for the next pages. However, in p.~4 it will also add one line in the footnote box, because in any case, \TeX adds some content in the box when preparing the output routines, even if there is yet content if this box from previous pages. So the lines in the note box at p.~4 will be $10+1=11$. There is one line which should not be there. Furthermore, as the box size is for 10~lines and not for 11~lines, this last line will be glued to the previous one.
 % 
 %     To fix this double issue:
 %  \begin{itemize}
@@ -3775,18 +3775,18 @@
           \csuse{Xnotefontsize@#1}%
           \global\advance\dimen\csuse{#1footins} by -\baselineskip%
 %    \end{macrocode}
-% And so, we have printed notes. So we retains this fact.
+% And so, we have printed notes. So we retain this fact.
 %    \begin{macrocode}
        \global\boolfalse{keepforXside@#1}%
        }%
 %    \end{macrocode}
-% In the case we are in a page where notes must NOT be printed.
+% In case we are on a page where notes must NOT be printed.
 % First, retains we have not printed notes, despite we have them.
 %    \begin{macrocode}
        {%
          \global\booltrue{keepforXside@#1}%
 %    \end{macrocode}
-% Then restore normal place keeping for notes in the next page.
+% Then restore normal placekeeping for notes on the next page.
 %    \begin{macrocode}
          \global\count\csuse{#1footins}=\csuse{default@#1footins}%
          \global\skip\csuse{#1footins}=\csuse{beforeXnotes@#1}%
@@ -5098,11 +5098,11 @@
               \advance\numpagelinesL \@ne
 %    \end{macrocode}
 % When using shiftedpstarts option, a \cs{l@dleftbox} with a null height won't be printed.
-% That means we don't insert blank lines at the end of a left chunck lower than the corresponding right chunck.
+% That means we don't insert blank lines at the end of a left chunk lower than the corresponding right chunk.
 % However, a \cs{l@dleftbox} with a null height will advance the \cs{pagetotal} in any case. 
 % Because if we do not do it, the \cs{checkpageL} could let \cs{ifl@pagefull} to false,
 % and consequently a \cs{@lopL} equal to 1000 could be written in the numbered file,
-% even if in reality, all the lines need for the current pages has been printed.
+% even if in reality, all the lines need for the current pages have been printed.
 % \l@dleftbox
 %    \begin{macrocode}
               \ifshiftedpstarts
@@ -5279,7 +5279,7 @@
 % \begin{macro}{\clearl@drightpage}
 % \cs{clearl@dleftpage} and \cs{clearl@drightpage} get us onto
 % an odd and even page, respectively, checking that we end up on
-% the immediately next page.
+% the page immediately following.
 % Theses two commands use \cs{newpage} and not \cs{clearpage}. 
 % Because \cs{clearpage} prints all footnotes before the new page, even by adding new empty pages, while \cs{newpage} does not. 
 % And as we want notes started in left page continue in right page and vice-verse, we must use \cs{newpage} and not \cs{clearpage}
