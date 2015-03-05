@@ -1,18 +1,32 @@
 %% This file try to reconstruct a MWE example for paragraphed not from the TeXBook  
 % p. 398/399
+% Special insert
+\newinsert\normalfootins
+\skip\normalfootins=\skip\footins
+\dimen\normalfootins=0.2\vsize
+\count\footins=1000
 % Size of footins
 \dimen\footins=0.2\vsize
+\count\footins=0%
 % Specific output routine, which call \makefootnoteparagraph
 \def\pagecontents{\ifvoid\topins\else\unvbox\topins\fi
         \unvbox255
-        \ifvoid\footins\else % footnote info is present
+        \ifvoid\footins \else % footnote info is present
           \vskip\skip\footins \footnoterule \makefootnoteparagraph\fi
+        \ifvoid\normalfootins\else
+          \setbox0=\vbox{\unvbox\normalfootins}
+        \fi
         }
 
 % Here, some code for the ouput
 \def\makefootnoteparagraph{\unvbox\footins \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}
-  \baselineskip=\footnotebaselineskip\noindent\unhbox0\par}
+  \baselineskip=\footnotebaselineskip
+  \setbox0=\vbox{\noindent\unhbox0}
+  \vsplit0 to \ht\normalfootins%
+  \par%
+  \setbox1=\copy0%
+  }
 \def\makehboxofhboxes{\setbox0=\hbox{}
   \loop\setbox2=\lastbox \ifhbox2 \setbox0=\hbox{\box2\unhbox0}\repeat}
 \def\removehboxes{\setbox0=\lastbox
@@ -33,9 +47,14 @@
 
 % Here the \footnote redefined (for this MWE, I don't need any marks)
 \def\footnote#1{%
+  \setbox0=\hbox{%
+    #1\penalty-10\hskip\footglue} 
+  \dp0=0pt 
+  \ht0=\fudgefactor\wd0 
+  \setbox1=\copy0
   \insert\footins{\floatingpenalty=20000
-                \setbox0=\hbox{%
-  #1\penalty-10\hskip\footglue} \dp0=0pt \ht0=\fudgefactor\wd0 \box0}
+                \box0}
+  \insert\normalfootins{\unhbox1}
 }
 \footnote{s}\footnote{s}
 \footnote{Long note Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis, nibh quis luctus porttitor, metus metus accumsan erat, ac commodo ante lorem tempus velit. Nulla ut ex mi. Curabitur magna tortor, egestas quis convallis nec, venenatis non nibh. Aenean et lacinia elit. Aenean ornare fermentum tincidunt. Etiam sed metus ipsum. Nulla accumsan non justo at tincidunt. Integer sed est est. Nullam non velit diam. Proin ut ante risus. Fusce ac enim libero. Proin ac risus nec nisi semper viverra eu ut ligula. Nulla orci ligula, elementum vel auctor eu, suscipit ac mi. Duis in hendrerit nunc, vitae efficitur lectus. Nam tristique eros a lacus posuere, quis placerat sapien venenatis.
@@ -53,6 +72,6 @@ Etiam sit amet rhoncus nunc. Pellentesque fermentum mi elit, et posuere augue ul
 Suspendisse tempor ligula in elementum dignissim. Sed vehicula feugiat hendrerit. Curabitur ultricies massa eget dapibus laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed blandit eleifend nulla, vel feugiat lorem elementum at. Sed a magna sollicitudin, hendrerit lacus vitae, malesuada nibh. Sed commodo, justo vitae varius auctor, nisl purus lacinia enim, ut rutrum libero nisl ut odio. Phasellus vel massa diam. Nulla facilisi. Ut sagittis blandit volutpat.
 Morbi lobortis sollicitudin felis, at accumsan eros blandit eget. Donec venenatis, dolor eu tristique sagittis, diam arcu dignissim ligula, eget sagittis nulla arcu scelerisque nisl. Etiam ac lacus leo. Donec consequat diam quis risus venenatis sodales. Duis tempus nibh quis mi fermentum, eget dapibus diam elementum. Nunc eu ultrices odio. Vivamus in ipsum sapien. Aliquam erat volutpat. Nunc euismod eros volutpat massa ultrices porttitor. Ut scelerisque sit amet mi a tincidunt. Sed nec porta urna. Proin eu arcu eget felis euismod ultrices.
 }\footnote{s}
-s
+s\vfill\eject
 
 \bye
