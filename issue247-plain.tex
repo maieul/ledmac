@@ -1,0 +1,58 @@
+%% This file try to reconstruct a MWE example for paragraphed not from the TeXBook  
+% p. 398/399
+% Size of footins
+\dimen\footins=0.2\vsize
+% Specific output routine, which call \makefootnoteparagraph
+\def\pagecontents{\ifvoid\topins\else\unvbox\topins\fi
+        \unvbox255
+        \ifvoid\footins\else % footnote info is present
+          \vskip\skip\footins \footnoterule \makefootnoteparagraph\fi
+        }
+
+% Here, some code for the ouput
+\def\makefootnoteparagraph{\unvbox\footins \makehboxofhboxes
+  \setbox0=\hbox{\unhbox0 \removehboxes}
+  \baselineskip=\footnotebaselineskip\noindent\unhbox0\par}
+\def\makehboxofhboxes{\setbox0=\hbox{}
+  \loop\setbox2=\lastbox \ifhbox2 \setbox0=\hbox{\box2\unhbox0}\repeat}
+\def\removehboxes{\setbox0=\lastbox
+  \ifhbox0{\removehboxes}\unhbox0 \fi}
+
+% Here, the code for \getfactor
+{\catcode`p=12 \catcode`t=12
+          \csname expandafter\endcsname\gdef
+          \csname getfactor\endcsname#1pt{#1}
+}
+% Here, some setting for paragraphed footnote
+\newskip\footglue \footglue=1.5em plus.3em minus.3em
+              \newdimen\footnotebaselineskip \footnotebaselineskip=10pt
+              \dimen0=\footnotebaselineskip \multiply\dimen0 by 1024
+              \divide \dimen0 by \hsize \multiply\dimen0 by 64
+\xdef\fudgefactor{\expandafter\getfactor\the\dimen0 }
+
+
+% Here the \footnote redefined (for this MWE, I don't need any marks)
+\def\footnote#1{%
+  \insert\footins{\floatingpenalty=20000
+                \setbox0=\hbox{%
+  #1\penalty-10\hskip\footglue} \dp0=0pt \ht0=\fudgefactor\wd0 \box0}
+}
+\footnote{s}\footnote{s}
+\footnote{Long note Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis, nibh quis luctus porttitor, metus metus accumsan erat, ac commodo ante lorem tempus velit. Nulla ut ex mi. Curabitur magna tortor, egestas quis convallis nec, venenatis non nibh. Aenean et lacinia elit. Aenean ornare fermentum tincidunt. Etiam sed metus ipsum. Nulla accumsan non justo at tincidunt. Integer sed est est. Nullam non velit diam. Proin ut ante risus. Fusce ac enim libero. Proin ac risus nec nisi semper viverra eu ut ligula. Nulla orci ligula, elementum vel auctor eu, suscipit ac mi. Duis in hendrerit nunc, vitae efficitur lectus. Nam tristique eros a lacus posuere, quis placerat sapien venenatis.
+Nulla facilisi. Vivamus dapibus nunc neque, eget maximus neque accumsan nec. Fusce suscipit, sapien id pellentesque vestibulum, orci tortor efficitur felis, eget tempus ex augue euismod tortor. Praesent lobortis diam non orci accumsan, sit amet condimentum eros semper. Mauris vel quam non nulla egestas aliquet ornare eu ligula. Sed tristique ultrices sem imperdiet placerat. Maecenas rhoncus, magna sit amet efficitur tristique, elit odio semper magna, ut aliquet magna odio nec lectus. Nullam tristique dolor id purus lobortis placerat.
+Etiam sit amet rhoncus nunc. Pellentesque fermentum mi elit, et posuere augue ultricies nec. Curabitur vulputate, purus id molestie lacinia, nisl massa feugiat nunc, non consectetur mi nisi non mauris. Morbi blandit, odio a efficitur fringilla, nulla libero fermentum lectus, vel finibus odio felis eu sem. Nullam sit amet condimentum ligula. Nulla rutrum lacus eget ipsum laoreet elementum. Curabitur in molestie felis. Nunc ut malesuada orci.
+Suspendisse tempor ligula in elementum dignissim. Sed vehicula feugiat hendrerit. Curabitur ultricies massa eget dapibus laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed blandit eleifend nulla, vel feugiat lorem elementum at. Sed a magna sollicitudin, hendrerit lacus vitae, malesuada nibh. Sed commodo, justo vitae varius auctor, nisl purus lacinia enim, ut rutrum libero nisl ut odio. Phasellus vel massa diam. Nulla facilisi. Ut sagittis blandit volutpat.
+Morbi lobortis sollicitudin felis, at accumsan eros blandit eget. Donec venenatis, dolor eu tristique sagittis, diam arcu dignissim ligula, eget sagittis nulla arcu scelerisque nisl. Etiam ac lacus leo. Donec consequat diam quis risus venenatis sodales. Duis tempus nibh quis mi fermentum, eget dapibus diam elementum. Nunc eu ultrices odio. Vivamus in ipsum sapien. Aliquam erat volutpat. Nunc euismod eros volutpat massa ultrices porttitor. Ut scelerisque sit amet mi a tincidunt. Sed nec porta urna. Proin eu arcu eget felis euismod ultrices. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis, nibh quis luctus porttitor, metus metus accumsan erat, ac commodo ante lorem tempus velit. Nulla ut ex mi. Curabitur magna tortor, egestas quis convallis nec, venenatis non nibh. Aenean et lacinia elit. Aenean ornare fermentum tincidunt. Etiam sed metus ipsum. Nulla accumsan non justo at tincidunt. Integer sed est est. Nullam non velit diam. Proin ut ante risus. Fusce ac enim libero. Proin ac risus nec nisi semper viverra eu ut ligula. Nulla orci ligula, elementum vel auctor eu, suscipit ac mi. Duis in hendrerit nunc, vitae efficitur lectus. Nam tristique eros a lacus posuere, quis placerat sapien venenatis.
+Nulla facilisi. Vivamus dapibus nunc neque, eget maximus neque accumsan nec. Fusce suscipit, sapien id pellentesque vestibulum, orci tortor efficitur felis, eget tempus ex augue euismod tortor. Praesent lobortis diam non orci accumsan, sit amet condimentum eros semper. Mauris vel quam non nulla egestas aliquet ornare eu ligula. Sed tristique ultrices sem imperdiet placerat. Maecenas rhoncus, magna sit amet efficitur tristique, elit odio semper magna, ut aliquet magna odio nec lectus. Nullam tristique dolor id purus lobortis placerat.
+Etiam sit amet rhoncus nunc. Pellentesque fermentum mi elit, et posuere augue ultricies nec. Curabitur vulputate, purus id molestie lacinia, nisl massa feugiat nunc, non consectetur mi nisi non mauris. Morbi blandit, odio a efficitur fringilla, nulla libero fermentum lectus, vel finibus odio felis eu sem. Nullam sit amet condimentum ligula. Nulla rutrum lacus eget ipsum laoreet elementum. Curabitur in molestie felis. Nunc ut malesuada orci.
+Suspendisse tempor ligula in elementum dignissim. Sed vehicula feugiat hendrerit. Curabitur ultricies massa eget dapibus laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed blandit eleifend nulla, vel feugiat lorem elementum at. Sed a magna sollicitudin, hendrerit lacus vitae, malesuada nibh. Sed commodo, justo vitae varius auctor, nisl purus lacinia enim, ut rutrum libero nisl ut odio. Phasellus vel massa diam. Nulla facilisi. Ut sagittis blandit volutpat.
+Morbi lobortis sollicitudin felis, at accumsan eros blandit eget. Donec venenatis, dolor eu tristique sagittis, diam arcu dignissim ligula, eget sagittis nulla arcu scelerisque nisl. Etiam ac lacus leo. Donec consequat diam quis risus venenatis sodales. Duis tempus nibh quis mi fermentum, eget dapibus diam elementum. Nunc eu ultrices odio. Vivamus in ipsum sapien. Aliquam erat volutpat. Nunc euismod eros volutpat massa ultrices porttitor. Ut scelerisque sit amet mi a tincidunt. Sed nec porta urna. Proin eu arcu eget felis euismod ultrices.
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis, nibh quis luctus porttitor, metus metus accumsan erat, ac commodo ante lorem tempus velit. Nulla ut ex mi. Curabitur magna tortor, egestas quis convallis nec, venenatis non nibh. Aenean et lacinia elit. Aenean ornare fermentum tincidunt. Etiam sed metus ipsum. Nulla accumsan non justo at tincidunt. Integer sed est est. Nullam non velit diam. Proin ut ante risus. Fusce ac enim libero. Proin ac risus nec nisi semper viverra eu ut ligula. Nulla orci ligula, elementum vel auctor eu, suscipit ac mi. Duis in hendrerit nunc, vitae efficitur lectus. Nam tristique eros a lacus posuere, quis placerat sapien venenatis.
+Nulla facilisi. Vivamus dapibus nunc neque, eget maximus neque accumsan nec. Fusce suscipit, sapien id pellentesque vestibulum, orci tortor efficitur felis, eget tempus ex augue euismod tortor. Praesent lobortis diam non orci accumsan, sit amet condimentum eros semper. Mauris vel quam non nulla egestas aliquet ornare eu ligula. Sed tristique ultrices sem imperdiet placerat. Maecenas rhoncus, magna sit amet efficitur tristique, elit odio semper magna, ut aliquet magna odio nec lectus. Nullam tristique dolor id purus lobortis placerat.
+Etiam sit amet rhoncus nunc. Pellentesque fermentum mi elit, et posuere augue ultricies nec. Curabitur vulputate, purus id molestie lacinia, nisl massa feugiat nunc, non consectetur mi nisi non mauris. Morbi blandit, odio a efficitur fringilla, nulla libero fermentum lectus, vel finibus odio felis eu sem. Nullam sit amet condimentum ligula. Nulla rutrum lacus eget ipsum laoreet elementum. Curabitur in molestie felis. Nunc ut malesuada orci.
+Suspendisse tempor ligula in elementum dignissim. Sed vehicula feugiat hendrerit. Curabitur ultricies massa eget dapibus laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed blandit eleifend nulla, vel feugiat lorem elementum at. Sed a magna sollicitudin, hendrerit lacus vitae, malesuada nibh. Sed commodo, justo vitae varius auctor, nisl purus lacinia enim, ut rutrum libero nisl ut odio. Phasellus vel massa diam. Nulla facilisi. Ut sagittis blandit volutpat.
+Morbi lobortis sollicitudin felis, at accumsan eros blandit eget. Donec venenatis, dolor eu tristique sagittis, diam arcu dignissim ligula, eget sagittis nulla arcu scelerisque nisl. Etiam ac lacus leo. Donec consequat diam quis risus venenatis sodales. Duis tempus nibh quis mi fermentum, eget dapibus diam elementum. Nunc eu ultrices odio. Vivamus in ipsum sapien. Aliquam erat volutpat. Nunc euismod eros volutpat massa ultrices porttitor. Ut scelerisque sit amet mi a tincidunt. Sed nec porta urna. Proin eu arcu eget felis euismod ultrices.
+}\footnote{s}
+s
+
+\bye
