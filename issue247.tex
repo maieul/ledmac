@@ -1,9 +1,36 @@
 \documentclass{article}
 
 \makeatletter
+\newinsert\Alongfootins
 
 \newcommand*{\footlongparagraph}[1]{%
-  \footparagraph{#1}
+  \footparagraph{#1}%
+  \csgdef{series@display#1}{longparagraph}%
+  \count\csname #1footins\endcsname=0%
+  \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
+  \count\csname #1longfootins\endcsname=1000%
+  \dimen\csname #1longfootins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1longfootins\endcsname=\csuse{beforeXnotes@#1}%
+  \expandafter\let\csname v#1footnote\endcsname=\longpara@vfootnote
+}
+
+\newcommand*{\longpara@vfootnote}[2]{%
+    \csuse{bhookXnote@#1}
+    \csuse{Xnotefontsize@#1}
+    \footsplitskips
+    \setbox0=\vbox{\hsize=\maxdimen
+      \noindent\csname #1footfmt\endcsname#2[#1]}%
+    \setbox0=\hbox{\unvxh0[#1]}%
+    \dp0=0pt
+    \ht0=\csname #1footfudgefactor\endcsname\wd0
+  \insert\csname #1footins\endcsname
+    \bgroup
+      \if@RTL\noindent \leavevmode\fi\box0\penalty0
+    \egroup
+  \insert\csname #1footins\endcsname
+    \bgroup
+      \if@RTL\noindent \leavevmode\fi\unhbox0
+    \egroup
 }
 
 \makeatother
