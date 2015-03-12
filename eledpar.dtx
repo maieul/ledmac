@@ -5245,12 +5245,31 @@
     \global\instanzaLfalse
     \global\instanzaRfalse
  \l@dprintingpagesfalse%
- \newpage\null%Needed to prevent final notes overlap line number
+ \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\finish@Pages@notes}
+% This macro ensures that all long notes are printed at the end of \cs{Pages} typessetting, and that there is no more long notes for the next pages.
+%    \begin{macrocode}
+\newcommand{\finish@Pages@notes}{%
+  \def\do##1{%
+    \ifvoid\csuse{##1footins}%
+      \ifvoid\csuse{footins##1}\else%
+        \newpage\null%
+        \listbreak%
+      \fi%
+    \else%
+      \newpage\null%
+      \listbreak%
+    \fi%
+  }%
+  \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ledstrutL}
 % \begin{macro}{\ledstrutR}
 % Struts inserted into leftand right text lines.
