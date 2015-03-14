@@ -8,9 +8,9 @@
 \newcommand*{\footlongparagraph}[1]{%
   \footparagraph{#1}%
   \csgdef{series@display#1}{longparagraph}%
-  \count\csname #1footins\endcsname=0%
+  \count\csname #1footins\endcsname=1000%
   \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
-  \count\csname #1longfootins\endcsname=1000%
+  \count\csname #1longfootins\endcsname=0%
   \dimen\csname #1longfootins\endcsname=\csuse{maxhXnotes@#1}%
   \skip\csname #1longfootins\endcsname=\csuse{beforeXnotes@#1}%
   \expandafter\let\csname v#1footnote\endcsname=\longpara@vfootnote
@@ -37,8 +37,23 @@
 }
 
 
+
+
+\newcommand*{\unvxhlong}{%
+  \ifdim\ht0>0pt%
+    {\hsize=\maxdimen\vsplit0 to \baselineskip%
+    \global\setbox1=\lastbox}%
+    \box1%
+    \unvxhlong%
+  \fi%
+}
+\newbox\Atoolongpara
+\newbox\Btoolongpara
+\newbox\Ctoolongpara
+\newbox\Dtoolongpara
+\newbox\Etoolongpara
+\newbox\Ztoolongpara
 \newcommand*{\longpara@footgroup}[1]{%
-  \ifnum\c@page=1%
 	  \unvbox\csname #1footins\endcsname%
 	  \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
 	  \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -48,15 +63,50 @@
 	  \setbox0=\vbox{\noindent\unhbox0}%
 	  \footsplitskips%
 	  \vsplit0 to \ht\csuse{#1longfootins}%
-	  \global\setbox\csname #1footins\endcsname=\box0
+	  \ifvoid0\else%
+	    \global\setbox\csuse{#1toolongpara}=\box0%
+	  \fi%
 	  \setbox0=\vbox{\unvbox\csuse{#1longfootins}}%
 	  \global\hsize=\old@hsize%
-  \else%
-    \csuse{Xnotefontsize@#1}%
-    \footsplitskips%
-    \vsplit\csname #1footins\endcsname to \ht\csuse{#1longfootins}%
-  \fi%
   }%
+
+\gdef\l@d@makecol{%
+  \l@ddofootinsert
+  \m@m@makecolfloats
+  \m@m@makecoltext
+  \global \maxdepth \@maxdepth
+  \continue@longnote
+  }
+
+\newcommand{\unvxh@l}[1]{% 2th is optional for retro-compatibility
+  \setbox0=\vbox{\unvbox#1%
+    \global\setbox1=\lastbox}%
+  \unhbox1
+  \unskip            % remove \rightskip,
+  \unskip            % remove \parfillskip,
+  \unpenalty         % remove \penalty of 10000,
+  \space}   % but add the glue to go between the notes
+
+\def\continue@longnote{%
+  \def\do##1{
+    %\splittopskip=0pt%
+    %\splitmaxdepth=0pt%
+    \ifvoid\csuse{##1toolongpara}\else%
+      \setbox0=\box\csuse{##1toolongpara}
+      \csuse{Xnotefontsize@##1}%
+      \@whiledim\ht0>0pt\do{%
+        \vsplit0 to \baselineskip%
+        \setbox1=\lastbox%
+        \setbox1=\hbox{\unvxh@l1}%
+            \dp1=0pt%
+        \ht1=\csname ##1footfudgefactor\endcsname\wd1
+  	    \insert\csname##1footins\endcsname{\box1}%
+	  }%
+	  	  \unvbox0
+    \fi%
+ }%
+ \dolistloop{\@series}%
+}
 
 \newcounter{notes}
 \newcommand{\notes}{\textbf{\thenotes}}
