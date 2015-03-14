@@ -32,19 +32,22 @@
     \egroup
   \insert\csname #1longfootins\endcsname
     \bgroup
-      \if@RTL\noindent \leavevmode\fi\unhbox0\penalty0
+      \if@RTL\noindent \leavevmode\fi\noindent\csname #1footfmt\endcsname#2[#1]\penalty0
     \egroup
 }
 
 
 \newcommand*{\longpara@footgroup}[1]{%
-  sss\unvbox\csname #1footins\endcsname
+  \unvbox\csname #1footins\endcsname
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xnotefontsize@#1}
-  \noindent\unhbox0\par%
+  \setbox0=\vbox{\noindent\unhbox0}\par%
+  \footsplitskips
+  \vsplit0 to \ht\csuse{#1longfootins}
+  \global\setbox\csname #1footins\endcsname=\box0
   \global\hsize=\old@hsize%
   }%
 
