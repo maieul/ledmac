@@ -65,7 +65,7 @@
 %</driver>
 %
 % \fi
-% \CheckSum{4949}
+% \CheckSum{4970}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -922,7 +922,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/03/06 v1.13.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/03/12 v1.13.1 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -3720,6 +3720,8 @@
 % \begin{macro}{\correct@Xfootins@box}
 % \begin{macro}{\print@notesX@forpages}
 % \begin{macro}{\correct@footinsX@box}
+% \changes{v1.13.1}{2015/03/12}{Correct \cs{correct@footinsX@box} and \cs{correct@Xfootins@box}}
+% \changes{v1.13.1}{2015/03/12}{Call \cs{correct@footinsX@box} and \cs{correct@Xfootins@box} directly in \cs{print@notesX@forpages} and \cs{print@Xnotes@forpages}.}
 % The \cs{onlyXside} and \cs{onlysideX} hooks for \cs{Pages}
 % allow notes to be printed  either in left or right pages only.
 % The implementation of such features is delegated to \cs{print@Xnotes@forpages},
@@ -3768,9 +3770,10 @@
        (test {\ifcsstring{onlyXside@#1}{R}} and test{\ifnumodd{\c@page}}))%
        }%
 %    \end{macrocode}
-% If we are in a page where notes must be printed, print them.
+% If we are in a page where notes must be printed, print them, making box's correction before.
 %    \begin{macrocode}
       {%
+         \correct@Xfootins@box{#1}%
          \csuse{#1footstart}{#1}%
          \csuse{#1footgroup}{#1}%
 %    \end{macrocode}
@@ -3781,12 +3784,12 @@
 %    \end{macrocode}
 % And also, allow one line less for notes in the next page.
 %    \begin{macrocode}
-          \csuse{Xnotefontsize@#1}%
-          \global\advance\dimen\csuse{#1footins} by -\baselineskip%
+         \csuse{Xnotefontsize@#1}%
+         \global\advance\dimen\csuse{#1footins} by -\baselineskip%
 %    \end{macrocode}
 % Now we have printed the notes. So we put aside this fact.
 %    \begin{macrocode}
-       \global\boolfalse{keepforXside@#1}%
+         \global\boolfalse{keepforXside@#1}%
        }%
 %    \end{macrocode}
 % In case we are on a page where notes must NOT be printed.
@@ -3831,7 +3834,7 @@
 %    \begin{macrocode}
       \global\setbox\csuse{#1footins}=\vbox{%
         \vsplit\csuse{#1footins} to \dimexpr\ht\csuse{#1footins}-1pt\relax%
-        \vskip \dimexpr-0.5\baselineskip-\lineskip-0.5pt\relax%
+        \vskip \dimexpr-0.5\baselineskip-0.5\lineskip-0.5pt\relax%
         \unvbox\csuse{#1footins}%
       }%
 %    \end{macrocode}
@@ -3854,6 +3857,7 @@
        (test {\ifcsstring{onlysideX@#1}{R}} and test{\ifnumodd{\c@page}}))%
        }%
       {%
+         \correct@footinsX@box{#1}%
          \csuse{footstart#1}{#1}%
          \csuse{footgroup#1}{#1}%
          \global\count\csuse{footins#1}=0%
@@ -3879,7 +3883,7 @@
       \splittopskip=0pt%
       \global\setbox\csuse{footins#1}=\vbox{%
         \vsplit\csuse{footins#1} to \dimexpr\ht\csuse{footins#1}-1pt\relax%
-        \vskip \dimexpr-0.5\baselineskip-\lineskip-0.5pt\relax%
+        \vskip \dimexpr-0.5\baselineskip-0.5\lineskip-0.5pt\relax%
         \unvbox\csuse{footins#1}%
       }%
   }{}%
@@ -4979,6 +4983,7 @@
 % \changes{v1.10.0}{2015/01/12}{Debug wrong pages splitting when no optional argument is used in last \cs{pend} (bug was added in v.1.8.3).}
 % \changes{v1.10.0}{2015/01/12}{Debug wrong parallel pages synchronization when an \cs{edtext} falls accross two pages.}
 % \changes{v1.13.0}{2015/03/06}{When using shiftedpstarts option, a \cs{l@dleftbox} with a null height will advance the \cs{pagetotal} in any case.}
+% \changes{v1.13.1}{2015/03/12}{Prevent false empty page after \cs{Pages} (bug added in 1.13.0)}
 % The \cs{Pages} command results in the previous Left and
 % Right texts being typeset on matching facing pages. There should
 % be equal numbers of chunks in the left and right texts.
@@ -5245,12 +5250,31 @@
     \global\instanzaLfalse
     \global\instanzaRfalse
  \l@dprintingpagesfalse%
- \newpage\null%Needed to prevent final notes overlap line number
+ \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\finish@Pages@notes}
+% This macro ensures that all long notes are printed at the end of \cs{Pages} typessetting, and that there is no more long notes for the next pages.
+%    \begin{macrocode}
+\newcommand{\finish@Pages@notes}{%
+  \def\do##1{%
+    \ifvoid\csuse{##1footins}%
+      \ifvoid\csuse{footins##1}\else%
+        \newpage\null%
+        \listbreak%
+      \fi%
+    \else%
+      \newpage\null%
+      \listbreak%
+    \fi%
+  }%
+  \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ledstrutL}
 % \begin{macro}{\ledstrutR}
 % Struts inserted into leftand right text lines.

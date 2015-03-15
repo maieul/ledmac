@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10683}
+% \CheckSum{10675}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -218,6 +218,8 @@
 % \changes{v1.18.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
 % \changes{v1.19.0}{2015/03/06}{\cs{maxhXnotes} and \cs{maxhnotesX} work now for both  two-columns and three-columns setting.}
 % \changes{v1.19.0}{2015/03/06}{Compatibility with \Lpack{eledpar} v.1.13.0.}
+% \changes{v1.19.1}{2015/03/12}{Call \cs{correct@footinsX@box} and \cs{correct@Xfootins@box} directly in \cs{print@notesX@forpages} and \cs{print@Xnotes@forpages}, that is in \Lpack{eledpar}.}
+% \changes{v1.20.0}{2015/03/19}{Correct \cs{inplaceofnumber} hook}
 % \changes{v1.20.0}{2015/03/19}{Add \cs{footlongparagraph} and \cs{footlongparagraphX}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -1202,23 +1204,23 @@
 %
 % \subsection{Disambiguation of identical words in the apparatus}
 % \changes{v1.15.0}{2015/01/12}{New tools to prevent ambiguous references in lemma}
-% Sometimes, the same word occurss twice (or more time) in the same line.
-% \Lpack{eledmac} provides  tools to disambuigate references in  the critical notes.
+% Sometimes, the same word occurs twice (or more) in the same line.
+% \Lpack{eledmac} provides  tools to disambiguate references in the critical notes.
 % The lemma will be followed by a reference number if a given word occurs more that once in the same line.
 %
 % \DescribeMacro{\sameword} To use this tool, you have to mark every occurrence of the potentially ambiguous term with the \cs{sameword} command:
 %   \begin{verbatim}
-%   lupus \sameword{aut} canis \edtext{\sameword{aut}}{\Afootnote{et}} felix
+%   Lupus \sameword{aut} canis \edtext{\sameword{aut}}{\Afootnote{et}} felix
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
-% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not already found in \cs{lemma}.
-% However, if it is actually found in it, you must use this method:
+% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not also present in \cs{lemma}.
+% However, if it is actually present in \cs{lemma}, you must use this method:
 % \begin{itemize}
 %   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[inlemma]`.
 %   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
 % \end{itemize} 
-% Like this :
+% Like this:
 % \begin{verbatim}
 %   \edtext{\sameword[inlemma]{sw}}{\lemma{\sameword{sw} some lemma}\Afootnote{some note}}
 % \end{verbatim}
@@ -1359,6 +1361,10 @@
 % \DescribeMacro{\boxsymlinenum}
 % \cs{boxsymlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} but for the line number symbol.
 % 
+%
+% \DescribeMacro{\boxXendlinenum}
+% \changes{v1.20.0}{2015/03/19}{Add \cs{boxXendlinenum}}
+% \cs{boxXendlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} but for endnotes.
 %\subsubsection{Separator between the lemma and the note content}
 % \DescribeMacro{\lemmaseparator}
 % By default,  in a footnote, the separator between the  lemma and  thenote is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
@@ -9387,19 +9393,14 @@
 %    \end{macrocode}
 % We print all the series of notes by looping on them. 
 % We check before printing them that there are not voided.
-% We also call \cs{correct@footinsX@box} if \Lpack{eledpar} is loaded. 
-% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
     \unvbox\@outputbox%
     \def\do##1{%
     \ifvoid\csuse{footins##1}\else%
-        \ifdefined\correct@footinsX@box%
-           \correct@footinsX@box{##1}%
-        \fi%
         \print@notesX{##1}%
-     \fi%
+    \fi%
     }%
     \dolistloop{\@series}}%
   }%
@@ -9500,8 +9501,22 @@
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
-      \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{%
+  \csuse{bhookXendnote@#4}%
+  \csuse{Xendnotefontsize@#4}%
+  {%
+    \csuse{Xendnotenumfont@#4}%
+    \ifdimequal{\csuse{boxXendlinenum@#4}}{0pt}%
+      {\printendlines#1|}%
+      {\leavevmode\hbox to \csuse{boxXendlinenum@#4}{\printendlines#1|\hfill}}%
+  }%
+  \enspace{%
+    \nottoggle{Xendlemmadisablefontselection@#4}%
+      {\select@lemmafont#1|#2}%
+      {#2}%
+  }%
+  \enskip#3\par%
+}}%
 
 \let\l@d@section=\@gobble
 
@@ -9686,6 +9701,7 @@
     \csgdef{bhookXnote@#1}{}%
     \csgdef{bhookXendnote@#1}{}%
     \csgdef{boxlinenum@#1}{0pt}%
+    \csgdef{boxXendlinenum@#1}{0pt}%
     \csgdef{boxsymlinenum@#1}{0pt}%
     \newtoggle{numberonlyfirstinline@#1}%
     \newtoggle{numberonlyfirstintwolines@#1}%
@@ -9963,6 +9979,8 @@
 
 \newhookcommand@series{boxlinenum}
 
+\newhookcommand@series{boxXendlinenum}%
+
 \newhookcommand@series{boxsymlinenum} 
 
 \newhookcommand@series{parafootsep}
@@ -10151,7 +10169,7 @@
                     {%Be sure the \prevline exists.
                     \ifcsequal{prevline#2}{lineinfo@}%Try it
                        {%
-                       \ifcsempty{symlinenum@#2}% Try if a symbol is define
+                       \IfStrEq{\csuse{symlinenum@#2}}{}%
                         {%
                             \hspace{\csuse{inplaceofnumber@#2}}%
                         }%
@@ -10479,15 +10497,10 @@
 %    \end{macrocode}
 % We print all series of notes by looping on them. 
 % We check before printing them that they are not voided.
-% We also call \cs{correct@Xfootins@box} if \Lpack{eledpar} is loaded. 
-% Read \Lpack{eledpar} handbook about this macro.
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
   \def\do##1{%
     \ifvoid\csuse{##1footins}\else%
-        \ifdefined\correct@Xfootins@box%
-           \correct@Xfootins@box{##1}%
-        \fi%
         \print@Xnotes{##1}%
      \fi%
     }%
