@@ -8279,7 +8279,7 @@
 %    \begin{macrocode}
   \insert\csname #1longfootins\endcsname%
   \bgroup%
-    \if@RTL\noindent \leavevmode\fi\noindent\csname #1footfmt\endcsname#2[#1]\penalty0%
+    \csname #1footfmt\endcsname#2[#1]\penalty0%
   \egroup%
 }%
 %    \end{macrocode}
@@ -9533,13 +9533,11 @@
 \newcommand*{\longpara@vfootnoteX}[2]{%
   \csuse{bhooknoteX@#1}%
   \csuse{notefontsizeX@#1}%
-  \footsplitskipsX%
-  \setbox0=\vbox{%
-    \hsize=\maxdimen%
-    \noindent\csname footfmt#1\endcsname#2[#1]%
-  }%
+  \footsplitskips%
+  \setbox0=\vbox{\hsize=\maxdimen%
+    \noindent\@nameuse{footfmt#1}{#1}{#2}}%
   \setbox0=\hbox{\unvxh0[#1]}%
-  \dp0=0pt%
+  \dp0=\z@%
   \ht0=\csname footfudgefactor#1\endcsname\wd0%
   \dimen0=\ht0%
   \ifdim\dimen\csname longfootins#1\endcsname>\csuse{longpara#1@total}%
@@ -9559,7 +9557,7 @@
   \fi%
   \insert\csname longfootins#1\endcsname%
   \bgroup%
-    \if@RTL\noindent \leavevmode\fi\noindent\csname footfmt#1\endcsname#2[#1]\penalty0%
+    \@nameuse{footfmt#1}{#1}{#2}\penalty0%
   \egroup%
 }%
 %    \end{macrocode}
@@ -9574,7 +9572,7 @@
   \setbox0=\hbox{{\csuse{notefontsizeX@#1}\csuse{txtbeforenotesX@#1}}\unhbox0 \removehboxes}%
   \csuse{notefontsizeX@#1}%
   \setbox0=\vbox{\noindent\unhbox0}%
-  \footsplitskipsX%
+  \footsplitskips%
   \vbadness=10000%
   \vsplit0 to \ht\csuse{longfootins#1}%
   \ifvoid0\else%
@@ -9583,7 +9581,7 @@
       \vskip-\splittopskip%
       \unvxh@l{0}%
     \else%
-     \global\setbox\csuse{toolong@para#1}=\box0%
+     \global\setbox\csuse{toolong#1@para}=\box0%
     \fi%
   \fi%
   \setbox0=\vbox{\unvbox\csuse{longfootins#1}}%
@@ -9614,15 +9612,15 @@
       }%
       \global\csuse{longpara##1@total}=\dimexpr\ht2+\dp2\relax%
       \insert\csuse{footins##1}{\unvbox2}%
-      \ifvoid\csuse{keept@para##1}%
+      \ifvoid\csuse{keept##1@para}%
       \else%
         \ifdim\dimen\csuse{footins##1}>\csuse{longpara##1@total}%
           \global\csuse{longpara##1@total}=\dimexpr%
             \csuse{longpara##1@total}%
-            +\ht\csuse{keept@para##1}%
-            +\dp\csuse{keept@para##1}%
+            +\ht\csuse{keept##1@para}%
+            +\dp\csuse{keept##1@para}%
           \relax%
-          \insert\csuse{footins##1}{\unvbox\csuse{keept@para##1}}%
+          \insert\csuse{footins##1}{\unvbox\csuse{keept##1@para}}%
         \fi%
       \fi%
     \fi%
