@@ -8210,9 +8210,16 @@
 % \subsubsection{Implementation}
 % \begin{macro}{\footlongparagraph}
 % \cs{footlongparagraph} just calls \cs{footlongparagraph} and then make the specific setting for long paragraphed notes, that is mainly setting the \cs{Xlongfootins} insert.
+% The specific register are created here, in order to preserve memory when not using this feature.
 %    \begin{macrocode}
 \newcommand*{\footlongparagraph}[1]{%
   \footparagraph{#1}%
+  \ifcsundef{#1longfootins}{%
+    \expandafter\newbox\csname #1keept@para\endcsname%
+    \expandafter\newbox\csname #1toolong@para\endcsname%
+    \expandafter\newinsert\csname #1longfootins\endcsname%
+    \expandafter\newdimen\csname #1longpara@total\endcsname%
+  }{}%
   \csgdef{series@display#1}{longparagraph}%
   \count\csname #1footins\endcsname=0%
   \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
@@ -8344,6 +8351,7 @@
 % For each series of notes, we first split the second part of the too long note 
 % in a \cs{vbox} of \cs{hbox}es of one line size. 
 %    \begin{macrocode}
+    \ifcsstring{series@display##1}{longparagraph}{%
     \ifvoid\csuse{##1toolong@para}\else%
       \setbox0=\box\csuse{##1toolong@para}%
       \setbox2=\vbox{}%
@@ -8383,7 +8391,7 @@
 % End of the code for one series, and calling it for every series
 %    \begin{macrocode}
     \fi%
-  }%
+  }{}}%
  \dolistloop{\@series}%
 }%
 %    \end{macrocode}
@@ -9503,6 +9511,12 @@
 %    \begin{macrocode}
 \newcommand*{\footlongparagraphX}[1]{%
   \footparagraphX{#1}%
+  \ifcsundef{longfootins#1}{%
+    \expandafter\newbox\csname keept#1@para\endcsname%
+    \expandafter\newbox\csname toolong#1@para\endcsname%
+    \expandafter\newinsert\csname longfootins#1\endcsname%
+    \expandafter\newdimen\csname longpara#1@total\endcsname%  
+  }{}%
   \csgdef{series@displayX#1}{longparagraph}%
   \count\csname footins#1\endcsname=0%
   \csxdef{default@footins#1}{0}%Use this to confine the  notes to one side only
@@ -9581,6 +9595,7 @@
 %    \begin{macrocode}
 \def\continue@longnoteX{%
   \def\do##1{%
+    \ifcsstring{series@displayX##1}{longparagraph}{%
     \ifvoid\csuse{toolong##1@para}\else%
       \setbox0=\box\csuse{toolong##1@para}%
       \setbox2=\vbox{}%
@@ -9611,7 +9626,7 @@
         \fi%
       \fi%
     \fi%
-  }%
+  }{}}%
  \dolistloop{\@series}%
 }%
 %    \end{macrocode}
@@ -10083,21 +10098,7 @@
     \expandafter\newinsert\csname mpfootins#1\endcsname%
     \expandafter\newinsert\csname mp#1footins\endcsname%
 %    \end{macrocode}
-% \subsection{Special tool for \cs{footlongparagraph} and \cs{footlongparagraphX}
-% About these boxes, insert and dimen, see \ref{footlongparagraph:overview} p.~\pageref{footlongparagraph:overview}.
-%    \begin{macrocode}
 
-    \expandafter\newbox\csname #1keept@para\endcsname%
-    \expandafter\newbox\csname keept#1@para\endcsname%
-    \expandafter\newbox\csname #1toolong@para\endcsname%
-    \expandafter\newbox\csname toolong#1@para\endcsname%
-
-    \expandafter\newinsert\csname #1longfootins\endcsname%
-    \expandafter\newinsert\csname longfootins#1\endcsname%
-
-    \expandafter\newdimen\csname #1longpara@total\endcsname%
-    \expandafter\newdimen\csname longpara#1@total\endcsname%
-%    \end{macrocode}
 
 % \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
