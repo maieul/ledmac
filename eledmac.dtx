@@ -8207,7 +8207,24 @@
 % When we do this resinsertion, the last part of the first note will be inserted after the second note!
 % To prevent this problem, we don't insert note in \cs{Afootins} if the space used by the previous inserted notes of the current page, kept in the \cs{Alongpara@total} dimen, is greater than the maximum space allowed for \cs{Afootins}.
 % Such not inserted notes are kept in the \cs{Akeept@para} box, which is inserted before the following page, after \cs{A@toolongpara} box.
-
+% \subsubsection{Implementation}
+% \begin{macro}{\footlongparagraph}
+% \cs{footlongparagraph} just calls \cs{footlongparagraph} and then make the specific setting for long paragraphed notes, that is mainly setting the \cs{Xlongfootins} insert.
+%    \begin{macrocode}
+\newcommand*{\footlongparagraph}[1]{%
+  \footparagraph{#1}%
+  \csgdef{series@display#1}{longparagraph}%
+  \count\csname #1footins\endcsname=0%
+  \skip\csname #1footins\endcsname=0pt%
+  \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
+  \count\csname #1longfootins\endcsname=1000%
+  \dimen\csname #1longfootins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1longfootins\endcsname=\csuse{beforeXnotes@#1}%
+  \expandafter\let\csname v#1footnote\endcsname=\longpara@vfootnote%
+  \expandafter\let\csname #1footgroup\endcsname=\longpara@footgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -9317,6 +9334,24 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Long paragraphed footnotes}
+% About \cs{longparagraphX} operation, read the overview on \cs{longparagraph} \ref{footlongparagraph:overview} p.~\pageref{footlongparagraph:overview} and just put the series letter and the end.
+% \begin{macro}{\footlongparagraphX}
+%    \begin{macrocode}
+\newcommand*{\footlongparagraphX}[1]{%
+  \footparagraphX{#1}%
+  \csgdef{series@displayX#1}{longparagraph}%
+  \count\csname footins#1\endcsname=0%
+  \skip\csname footins#1\endcsname=0pt%
+  \csxdef{default@footins#1}{0}%Use this to confine the  notes to one side only
+  \count\csname longfootins#1\endcsname=1000%
+  \dimen\csname longfootins#1\endcsname=\csuse{maxhnotesX@#1}%
+  \skip\csname longfootins#1\endcsname=\csuse{beforenotesX@#1}%
+  \expandafter\let\csname vfootnote#1\endcsname=\longpara@vfootnoteX%
+  \expandafter\let\csname footgroup#1\endcsname=\longpara@footgroupX%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Footnotes' width for two columns}
 % We define here some commands which make sense only with \Lpack{eledpar}, but must be called when defining notes paramaters.
 % These commands change the width of block notes to allow them to have the same size than two parallel columns.
