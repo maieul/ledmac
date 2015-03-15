@@ -8224,6 +8224,59 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\longpara@vfootnote}
+% \cs{longpara@vfootnote} insert the long paragraphed note, in the two insert classes.
+%    \begin{macrocode}
+\newcommand*{\longpara@vfootnote}[2]{%
+%    \end{macrocode}
+% First, the code is similar to \cs{para@vfootnote}.
+%    \begin{macrocode}
+  \csuse{bhookXnote@#1}%
+  \csuse{Xnotefontsize@#1}%
+  \footsplitskips%
+  \setbox0=\vbox{%
+    \hsize=\maxdimen%
+    \noindent\csname #1footfmt\endcsname#2[#1]%
+  }%
+  \setbox0=\hbox{\unvxh0[#1]}%
+  \dp0=0pt%
+  \ht0=\csname #1footfudgefactor\endcsname\wd0%
+%    \end{macrocode}
+% Now start the  specific code.
+% First, we keep the height of the box. 
+%    \begin{macrocode}
+  \dimen0=\ht0%
+%    \end{macrocode}
+% Then, if the total height of the notes already inserted is lower than the max height allowed, we insert them.
+%    \begin{macrocode}
+  \ifdim\dimen\csname #1longfootins\endcsname>\csuse{#1longpara@total}%
+    \insert\csname #1footins\endcsname%
+    \bgroup%
+      \if@RTL\noindent \leavevmode\fi\box0\penalty0%
+    \egroup%
+    \global\advance\csuse{#1longpara@total} by \dimen0%
+%    \end{macrocode}
+% Otherwise, the total height of the notes already inserted is greater than the maximum height allowed, so we keep the present notes in the box \cs{Xkeept@para}.
+%    \begin{macrocode}
+  \else%
+    \global\setbox\csuse{#1keept@para}=\vbox{%
+      \csuse{Xnotefontsize@#1}%
+      \ifvoid\csuse{#1keept@para}\else%
+        \csuse{#1keept@para}%
+      \fi%
+      \box0\penalty0%
+    }%
+  \fi%
+%    \end{macrocode}
+% In any case, we insert them in the false insert class.
+%    \begin{macrocode}
+  \insert\csname #1longfootins\endcsname%
+  \bgroup%
+    \if@RTL\noindent \leavevmode\fi\noindent\csname #1footfmt\endcsname#2[#1]\penalty0%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -9347,6 +9400,42 @@
 \skip\csname longfootins#1\endcsname=0pt%
   \expandafter\let\csname vfootnote#1\endcsname=\longpara@vfootnoteX%
   \expandafter\let\csname footgroup#1\endcsname=\longpara@footgroupX%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@vfootnoteX}
+%    \begin{macrocode}
+\newcommand*{\longpara@vfootnoteX}[2]{%
+  \csuse{bhooknoteX@#1}%
+  \csuse{notefontsizeX@#1}%
+  \footsplitskipsX%
+  \setbox0=\vbox{%
+    \hsize=\maxdimen%
+    \noindent\csname footfmt#1\endcsname#2[#1]%
+  }%
+  \setbox0=\hbox{\unvxh0[#1]}%
+  \dp0=0pt%
+  \ht0=\csname footfudgefactor#1\endcsname\wd0%
+  \dimen0=\ht0%
+  \ifdim\dimen\csname longfootins#1\endcsname>\csuse{longpara#1@total}%
+    \insert\csname footins#1\endcsname%
+    \bgroup%
+      \if@RTL\noindent \leavevmode\fi\box0\penalty0%
+    \egroup%
+    \global\advance\csuse{longpara#1@total} by \dimen0%
+  \else%
+    \global\setbox\csuse{keept#1@para}=\vbox{%
+      \csuse{notefontsizeX@#1}%
+      \ifvoid\csuse{keept#1@para}\else%
+        \csuse{keept#1@para}%
+      \fi%
+      \box0\penalty0%
+    }%
+  \fi%
+  \insert\csname longfootins#1\endcsname%
+  \bgroup%
+    \if@RTL\noindent \leavevmode\fi\noindent\csname footfmt#1\endcsname#2[#1]\penalty0%
+  \egroup%
 }%
 %    \end{macrocode}
 % \end{macro}
