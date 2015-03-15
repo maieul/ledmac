@@ -8155,6 +8155,51 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Long paragraphed footnotes}
+% As paragraphed footnotes are wrapped in hboxes, 
+% they can't be broken across pages.
+% However, break are available between notes.
+% In many case, it is enough, as paragraphed notes should be short.
+% However, some people want to have long paragraphed notes.
+% That is why Maïeul Rouquette has provided \cs{footlongparagraph}.
+% This system to allow page break is quite complex and require many \TeX\ tricks and resource.
+% People should avoid to use it.
+% In any case, the length of of a long footnotes should not be longer than \cs{maxdimen}, that is \the\maxdimen.
+% \subsubsection{Overview}
+% In the following explanation, we will take the case of working with the \verb+A+ series.
+% The same will be available for other series.
+% The general idea is to use two class of  \TeX insertion:
+% \begin{itemize}
+% \item The standard \cs{Afootins}, which keeps paragraphed notes, as with \cs{footparagraph}.
+% However, the associated counter will be set at 0, and so the notes won't be decreased from the \cs{pagegoal}.
+% \item \cs{Alongfootins}, which keeps notes, but without \cs{hbox} wrapping.
+% \end{itemize}
+% \TeX will be able to cut the \cs{Alongfootins} notes, and we will use its cut to choose, in the output routines, where the paragraphed notes will be cut.
+%
+% In the output routine, we will do two things:
+% \begin{enumerate}
+%  \item For \cs{Afootins}, do the same thing as for paragraphed notes, but, before outing the final notes block, adding it in a \cs{vbox}.
+% We split this \cs{vbox} to the height of \cs{Alongfootins}.
+% So the long note will be split as if there was no \cs{hbox}.
+% The first part is immediately printed, and the last part is kept for later, in the \cs{A@toolongpara} box.
+% \item After that, void \cs{Alongfootins}.
+% \end{enumerate}
+%
+% At the very end of the ouput, when all inserts has been processed, 
+% we insert the content of \cs{A@toolongpara} in \cs{Afootins}.
+% And so, the last part of the notes will be printed in the following page.
+% However, we can not insert directly the \cs{A@toolongpara}, which is an \cs{vbox}, because the output routine needs \cs{hbox}es.
+% So we split \cs{A@toolongpara} in short \cs{hbox}es, one by line.
+% For all line but the last, we use \cs{unvxh@l} which is similar to \cs{unvxh} but does not add the spaces after notes.
+% For the last line, we use \cs{unvxh}.
+%
+% There still remains a problem.
+% Suppose in a page, we call two long paragraphed notes.
+% The first one is split between pages.
+% When we do this resinsertion, the last part of the first note will be inserted after the second note!
+% To prevent this problem, we don't insert note in \cs{Afootins} if the space used by the previous inserted notes of the current page, kept in the \cs{Alongpara@total} dimen, is greater than the maximum space allowed for \cs{Afootins}.
+% Such not inserted notes are kept in the \cs{Akeept@para} box, which is inserted before the following page, after \cs{A@toolongpara} box.
+
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
