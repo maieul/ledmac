@@ -222,6 +222,7 @@
 % \changes{v1.20.0}{2015/03/19}{Correct \cs{inplaceofnumber} hook.}
 % \changes{v1.20.0}{2015/03/19}{Add series option.}
 % \changes{v1.20.0}{2015/03/19}{Fix issues with RTL text in notes when using \LuaTeX.}
+% \changes{v1.20.0}{2015/03/19}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3241,6 +3242,13 @@
 %    \begin{macrocode}
 \newcommand{\led@err@EdtextWithoutFootnote}{%
   \eledmac@error{edtext without Xfootnote. Check syntaxis.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@err@FootnoteWithoutEdtext}
+%    \begin{macrocode}
+\newcommand{\led@err@FootnoteWithoutEdtext}{%
+  \eledmac@error{Xfootnote without edtext. Check syntaxis.}{\@ehd}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -9757,41 +9765,45 @@
 %    \begin{macrocode}
 
     \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-        \begingroup%
-        \newcommand{\content}{##2}%
-        \ifnumberedpar@
-            \ifledRcol%
-               \ifluatex%
-                   \footnotelang@lua[R]%  
-               \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly[R]}%          
-                \footnoteoptions@[R]{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
-                \footnoteoptions@[R]{##1}{false}%
-                \global\advance\insert@countR \@ne%
-            \else%
+        \if@edtext@%
+          \begingroup%
+          \newcommand{\content}{##2}%
+          \ifnumberedpar@%
+              \ifledRcol%
                  \ifluatex%
-                   \footnotelang@lua%
+                     \footnotelang@lua[R]%  
                  \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly}%
-                \footnoteoptions@{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
-                \global\advance\insert@count \@ne%
-                \footnoteoptions@{##1}{false}%
-            \fi
-        \else
-            \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly[R]}%          
+                  \footnoteoptions@[R]{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                  \footnoteoptions@[R]{##1}{false}%
+                  \global\advance\insert@countR \@ne%
+              \else%
+                   \ifluatex%
+                     \footnotelang@lua%
+                   \fi%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly}%
+                  \footnoteoptions@{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                  \global\advance\insert@count \@ne%
+                  \footnoteoptions@{##1}{false}%
+              \fi
+          \else
+              \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+          \fi%
+          \ignorespaces%
+          \endgroup%
+        \else%
+          \led@err@FootnoteWithoutEdtext%
         \fi%
-        \ignorespaces%
-        \endgroup
         }
 %    \end{macrocode}
 %Set standard display and remember the display.
