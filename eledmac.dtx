@@ -8277,6 +8277,48 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\longpara@footgroup}
+% \cs{longpara@footgroup} prints the group the long paragraphed notes.
+%    \begin{macrocode}
+\newcommand*{\longpara@footgroup}[1]{%
+%    \end{macrocode}
+% The beginning is like \cs{para@footgroup}.
+%    \begin{macrocode}
+  \unvbox\csname #1footins\endcsname%
+  \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
+  \makehboxofhboxes%
+  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
+  \csuse{Xnotefontsize@#1}%
+%    \end{macrocode}
+% But we don't print directly the re-formated notes. 
+% We start by adding them in a \cs{vbox}, that we split to the maximum height allowed.
+%    \begin{macrocode}
+  \setbox0=\vbox{\noindent\unhbox0}%
+  \footsplitskips%
+  \vbadness=10000%
+  \vsplit0 to \ht\csuse{#1longfootins}%
+%    \end{macrocode}
+% If the remaining is a not full line, we print it.
+% If it more than one line, we just keep it for the following page.
+%    \begin{macrocode}
+  \ifvoid0\else%
+    \ifdim\ht0<\baselineskip%
+      \vskip-\splitmaxdepth%
+      \vskip-\splittopskip%
+      \unvxh@l{0}%
+    \else%
+     \global\setbox\csuse{#1toolong@para}=\box0%
+    \fi%
+  \fi%
+%    \end{macrocode}
+% Ans now, we void the special insert \cs{Xlongfootins}.
+%    \begin{macrocode}
+  \setbox0=\vbox{\unvbox\csuse{#1longfootins}}%
+  \global\hsize=\old@hsize%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -9436,6 +9478,33 @@
   \bgroup%
     \if@RTL\noindent \leavevmode\fi\noindent\csname footfmt#1\endcsname#2[#1]\penalty0%
   \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@footgroupX}
+%    \begin{macrocode}
+\newcommand*{\longpara@footgroupX}[1]{%
+  \unvbox\csname footins#1\endcsname%
+  \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
+  \makehboxofhboxes%
+  \setbox0=\hbox{{\csuse{notefontsizeX@#1}\csuse{txtbeforenotesX@#1}}\unhbox0 \removehboxes}%
+  \csuse{notefontsizeX@#1}%
+  \setbox0=\vbox{\noindent\unhbox0}%
+  \footsplitskipsX%
+  \vbadness=10000%
+  \vsplit0 to \ht\csuse{longfootins#1}%
+  \ifvoid0\else%
+    \ifdim\ht0<\baselineskip%
+      \vskip-\splitmaxdepth%
+      \vskip-\splittopskip%
+      \unvxh@l{0}%
+    \else%
+     \global\setbox\csuse{toolong@para#1}=\box0%
+    \fi%
+  \fi%
+  \setbox0=\vbox{\unvbox\csuse{longfootins#1}}%
+  \global\hsize=\old@hsize%
 }%
 %    \end{macrocode}
 % \end{macro}
