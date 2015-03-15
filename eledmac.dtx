@@ -8334,6 +8334,60 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\continue@Xlongnote}
+% \cs{continue@Xlongnote} is make at the very end of the page ouput, when all inserted has been displayed.
+% It reinserts too long  paragraphed notes if the following page. 
+%    \begin{macrocode}
+\def\continue@Xlongnote{%
+  \def\do##1{%
+%    \end{macrocode}
+% For each series of notes, we first split the second part of the too long note 
+% in a \cs{vbox} of \cs{hbox}es of one line size. 
+%    \begin{macrocode}
+    \ifvoid\csuse{##1toolong@para}\else%
+      \setbox0=\box\csuse{##1toolong@para}%
+      \setbox2=\vbox{}%
+      \vbadness=10000%
+      \splittopskip=0pt%
+      \csuse{Xnotefontsize@##1}%
+      \@whiledim\ht0>0pt\do{%
+        \vsplit0 to \baselineskip%
+        \setbox1=\lastbox%
+        \ifdim\ht0>0pt%
+          \setbox1=\hbox{\unvxh@l{1}}%
+        \else%
+          \setbox1=\hbox{\unvxh1[##1]}%
+        \fi%
+        \setbox2=\vbox{\unvbox2\box1}%
+      }%
+%    \end{macrocode}
+% Then, we insert it, and so advance the \cs{Xfootins} dimen.
+%    \begin{macrocode}
+      \global\csuse{##1longpara@total}=\dimexpr\ht2+\dp2\relax%
+      \insert\csuse{##1footins}{\unvbox2}%
+%    \end{macrocode}
+%    And now, if in the current page there are somes notes which has not been inserted, we insert them.
+%    \begin{macrocode}
+      \ifvoid\csuse{##1keept@para}%
+      \else%
+        \ifdim\dimen\csuse{##1footins}>\csuse{##1longpara@total}%
+          \global\csuse{##1longpara@total}=\dimexpr%
+            \csuse{##1longpara@total}%
+            +\ht\csuse{##1keept@para}%
+            +\dp\csuse{##1keept@para}%
+          \relax%
+          \insert\csuse{##1footins}{\unvbox\csuse{##1keept@para}}%
+        \fi%
+      \fi%
+%    \end{macrocode}
+% End of the code for one series, and calling it for every series
+%    \begin{macrocode}
+    \fi%
+  }%
+ \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -9520,6 +9574,45 @@
   \fi%
   \setbox0=\vbox{\unvbox\csuse{longfootins#1}}%
   \global\hsize=\old@hsize%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\continue@longnoteX}
+%    \begin{macrocode}
+\def\continue@longnoteX{%
+  \def\do##1{%
+    \ifvoid\csuse{toolong##1@para}\else%
+      \setbox0=\box\csuse{toolong##1@para}%
+      \setbox2=\vbox{}%
+      \vbadness=10000%
+      \splittopskip=0pt%
+      \csuse{notefontsizeX@##1}%
+      \@whiledim\ht0>0pt\do{%
+        \vsplit0 to \baselineskip%
+        \setbox1=\lastbox%
+        \ifdim\ht0>0pt%
+          \setbox1=\hbox{\unvxh@l{1}}%
+        \else%
+          \setbox1=\hbox{\unvxh1[##1]}%
+        \fi%
+        \setbox2=\vbox{\unvbox2\box1}%
+      }%
+      \global\csuse{longpara##1@total}=\dimexpr\ht2+\dp2\relax%
+      \insert\csuse{footins##1}{\unvbox2}%
+      \ifvoid\csuse{keept@para##1}%
+      \else%
+        \ifdim\dimen\csuse{footins##1}>\csuse{longpara##1@total}%
+          \global\csuse{longpara##1@total}=\dimexpr%
+            \csuse{longpara##1@total}%
+            +\ht\csuse{keept@para##1}%
+            +\dp\csuse{keept@para##1}%
+          \relax%
+          \insert\csuse{footins##1}{\unvbox\csuse{keept@para##1}}%
+        \fi%
+      \fi%
+    \fi%
+  }%
+ \dolistloop{\@series}%
 }%
 %    \end{macrocode}
 % \end{macro}
