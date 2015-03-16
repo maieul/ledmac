@@ -219,9 +219,12 @@
 % \changes{v1.19.0}{2015/03/06}{\cs{maxhXnotes} and \cs{maxhnotesX} work now for both  two-columns and three-columns setting.}
 % \changes{v1.19.0}{2015/03/06}{Compatibility with \Lpack{eledpar} v.1.13.0.}
 % \changes{v1.19.1}{2015/03/12}{Call \cs{correct@footinsX@box} and \cs{correct@Xfootins@box} directly in \cs{print@notesX@forpages} and \cs{print@Xnotes@forpages}, that is in \Lpack{eledpar}.}
-% \changes{v1.20.0}{2015/03/19}{Correct \cs{inplaceofnumber} hook}
+% \changes{v1.20.0}{2015/03/19}{Correct \cs{inplaceofnumber} hook.}
+% \changes{v1.20.0}{2015/03/19}{Add series option.}
+% \changes{v1.20.0}{2015/03/19}{Fix issues with RTL text in notes when using \LuaTeX.}
 % \changes{v1.20.0}{2015/03/19}{Add \cs{footlongparagraph} and \cs{footlongparagraphX}.}
 % \changes{v1.20.0}{2015/03/19}{The \cs{newif} are not followed by setting boolean to false, because it is the \TeX\ default setting.}
+% \changes{v1.20.0}{2015/03/19}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -614,6 +617,21 @@
 % edited text.
 %
 %
+% \section{Options}
+% The package has multiple loading options. They are listed here. 
+% Maybe you should read the other parts of the handbook before this section
+% \begin{description}
+% \item[draft], if called, underline the lemma in the main text.
+% \item[ledsecnolinenumber] is deprecated.
+% \item[nopbinverse] prevent page break inside verse.
+% \item[noquotation] the quotation environment is redefined inside numbered text. You can disable this redefinition with (see \ref{noquotation} p.~\pageref{noquotation}).
+% \item[parapparatus] by default, the appparatus cannot have paragraphs inside it, but this option enables paragraphing within the apparatus.
+% \item[series] \Lpack{eledmac} defines six levels of notes: A, B, C, D, E, Z.
+% Using all these notes will consume memory and processing speed.
+% That is why, if your notes don't require the full A-E, Z series, you can customize.
+% \ For example, if you only need an A and B series, call the package with verb+series={A,B}+ option.
+% \item[widthliketwocolumns] set the text width on one column to be the same as the width of two parallel columns with \Lpack{eledpar}. It is useful when alternating between normal and parallel typesetting.
+% \end{description}
 % \section{Text lines and paragraphs numbering}
 % \subsection{Text lines numbering}
 % \DescribeMacro{\beginnumbering}
@@ -2549,7 +2567,7 @@
 % A quotation environment MUST not be opened immediately after a \cs{pstart} 
 % and MUST not be closed immediately before a \cs{pend}.
 %
-% In some case, you don't want these environments be redefined in numbered section.
+% \label{noquotation} In some case, you don't want these environments be redefined in numbered section.
 % You can load the package with the option \verb+noquotation+ to prevent this redefinition.
 % \section{Page breaks}
 % \changes{v1.7.0}{2013/11/08}{New features for managing page breaks.}
@@ -2860,14 +2878,17 @@
 \newif\ifwidthliketwocolumns%
 \newif\ifledsecnolinenumber
 \parapparatus@false
-\DeclareOption{noquotation}{\noquotation@true}
-\DeclareOption{final}{\ledfinaltrue}
-\DeclareOption{draft}{\ledfinalfalse}
-\DeclareOption{parapparatus}{\parapparatus@true}
-\DeclareOption{nopbinverse}{\lednopbinversetrue}
-\DeclareOption{ledsecnolinenumber}{\ledsecnolinenumbertrue}
-\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
-\ExecuteOptions{final}
+\RequirePackage{xkeyval}
+\DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{noquotation}{\noquotation@true}
+\DeclareOptionX{final}{\ledfinaltrue}
+\DeclareOptionX{draft}{\ledfinalfalse}
+\DeclareOptionX{parapparatus}{\parapparatus@true}
+\DeclareOptionX{nopbinverse}{\lednopbinversetrue}
+\DeclareOptionX{ledsecnolinenumber}{\ledsecnolinenumbertrue}
+\DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
+\ExecuteOptionsX{series}%
+\ExecuteOptionsX{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
 % the order listed in the source file: class options, then listed package
@@ -2875,7 +2896,7 @@
 % This was suggested by Dan Luecking\index{Luecking, Dan} in the \texttt{ctt}
 % thread \textit{Class/package option processing}, on 27 February 2004.
 %    \begin{macrocode}
-\ProcessOptions*\relax
+\ProcessOptionsX*\relax
 
 %    \end{macrocode}
 % \end{macro}
@@ -3247,6 +3268,13 @@
 %    \begin{macrocode}
 \newcommand{\led@err@EdtextWithoutFootnote}{%
   \eledmac@error{edtext without Xfootnote. Check syntaxis.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@err@FootnoteWithoutEdtext}
+%    \begin{macrocode}
+\newcommand{\led@err@FootnoteWithoutEdtext}{%
+  \eledmac@error{Xfootnote without edtext. Check syntaxis.}{\@ehd}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -8950,6 +8978,11 @@
 % prepended by the marker.
 %    \begin{macrocode}
 \newcommand*{\normalfootfmtX}[2]{%
+ \ifluatex%
+    \luatextextdir\footnote@luatextextdir%
+    \luatexpardir\footnote@luatexpardir%
+    \par%
+ \fi%
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
@@ -9747,7 +9780,7 @@
 }%
 %    \end{macrocode}
 % We print all the series of notes by looping on them. 
-% We check before printing them that there are not voided.
+% We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
@@ -10104,41 +10137,45 @@
 %    \begin{macrocode}
 
     \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-        \begingroup%
-        \newcommand{\content}{##2}%
-        \ifnumberedpar@
-            \ifledRcol%
-               \ifluatex%
-                   \footnotelang@lua[R]%  
-               \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly[R]}%          
-                \footnoteoptions@[R]{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
-                \footnoteoptions@[R]{##1}{false}%
-                \global\advance\insert@countR \@ne%
-            \else%
+        \if@edtext@%
+          \begingroup%
+          \newcommand{\content}{##2}%
+          \ifnumberedpar@%
+              \ifledRcol%
                  \ifluatex%
-                   \footnotelang@lua%
+                     \footnotelang@lua[R]%  
                  \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly}%
-                \footnoteoptions@{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
-                \global\advance\insert@count \@ne%
-                \footnoteoptions@{##1}{false}%
-            \fi
-        \else
-            \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly[R]}%          
+                  \footnoteoptions@[R]{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                  \footnoteoptions@[R]{##1}{false}%
+                  \global\advance\insert@countR \@ne%
+              \else%
+                   \ifluatex%
+                     \footnotelang@lua%
+                   \fi%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly}%
+                  \footnoteoptions@{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                  \global\advance\insert@count \@ne%
+                  \footnoteoptions@{##1}{false}%
+              \fi
+          \else
+              \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+          \fi%
+          \ignorespaces%
+          \endgroup%
+        \else%
+          \led@err@FootnoteWithoutEdtext%
         \fi%
-        \ignorespaces%
-        \endgroup
         }
 %    \end{macrocode}
 %Set standard display and remember the display.
@@ -10155,9 +10192,13 @@
             \newcommand{\content}{##1}%
             \stepcounter{footnote#1}%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-             \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
+            \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
                {\csuse{@footnotemark#1}}%
                {}%
+            \ifluatex%
+              \xdef\footnote@luatextextdir{\the\luatextextdir}%
+              \xdef\footnote@luatexpardir{\the\luatexpardir}%
+            \fi%
             \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
         \endgroup%
     }
@@ -10214,7 +10255,7 @@
 % \end{macro}
 % \subsection{Init standards series (A,B,C,D,E,Z)}
 %    \begin{macrocode}
-\newseries{A,B,C,D,E,Z}
+\expandafter\newseries\expandafter{\default@series}
 %    \end{macrocode}
 % \section{Display}
 % \subsection{Change series order}
