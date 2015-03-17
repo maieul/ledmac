@@ -11069,6 +11069,7 @@
 %
 % \begin{macro}{\xxref}
 % \changes{v1.19.0}{2015/03/06}{\cs{xxref} works also with right side numbers, when \cs{Rlineflag} is not empty.}
+% \changes{v1.20.0}{2015/03/19}{Debug \cs{xxref} when not loading eledpar (fix bug added in 1.19.0).}
 % The \cs{xxref} command takes two arguments, both of which are
 % labels, e.g., \verb"\xxref{mouse}{elephant}".  It first does some
 % checking to make sure that the labels do exist (if one doesn't,
@@ -11094,8 +11095,13 @@
    \else%
       \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
    \fi%
+   \ifdefined\Rlineflag%
    \StrDel{\csuse{the@@label#1}}{\Rlineflag}[\@tempa]%
-   \StrDel{\csuse{the@@label#2}}{\Rlineflag}[\@tempb]%
+     \StrDel{\csuse{the@@label#2}}{\Rlineflag}[\@tempb]%
+  \else%
+   \letcs{\@tempa}{the@@label#1}%
+   \letcs{\@tempb}{the@@label#2}%
+ \fi%
    \linenum{\@tempa|%
     \@tempb}}}%
 
