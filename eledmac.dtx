@@ -1110,10 +1110,12 @@
 % the most demanding editions.  But it is not hard to add further
 % layers of notes should they be required.
 %
-%\changes{v1.0}{2012/09/15}{Options nonum and nosep in \cs{Xfootnote}.}\label{Xfootnoteopt}
+%\changes{v1.0}{2012/09/15}{Options nonum and nosep in \cs{Xfootnote}.}
+%\changes{v1.20.0}{2015/03/19}{Options fulllines nosep in \cs{Xfootnote}.}\label{Xfootnoteopt}
 %An optional argument can be added before the text of the footnote. Its value is a comma separated list of options. 
-% The available options are:
+% \label{fulllines}The available options are:
 % \begin{itemize}
+% \item \verb|fulllines| to disable \cs{twolines} and \cs{morethantwolines} feature for this note (cf. \ref{twolines} p.~\pageref{twolines}).
 % \item \verb|nonum| to disable line numbering for this note.
 % \item \verb|nosep| to disable the lemma separator for this note. 
 % \end{itemize}
@@ -1307,6 +1309,24 @@
 % But if  you use both \cs{numberonlyfirstinline}\oarg{s} and \cs{numberonlyfirstintwolines}\oarg{s}, the distinction is made.
 % Use \cs{numberonlyfirstintwolines}\oarg{s}\verb+[false]+ to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
+% \changes{v1.20.0}{2015/03/19}{Add \cs{twolines} and \cs{morethantwolines} hooks}
+% \label{twolines}
+% \DescribeMacro{\twolines}\DescribeMacro{\morethantwolines}
+% If a lemma is printed on two lines, \Eledmac\ will print the first and the last line. 
+% However, it is possible to ask to print an abreviation to indicate only ``first line and following''.
+%
+% To do it, use \cs{twolines}\oarg{s}\marg{text} and \cs{morethantwolines}\oarg{s}\marg{text}. 
+% The \verb|<text>| argument of \cs{twolines} will be printed if the lemma is on two line, and the \verb|<text>| argument of \cs{morethantwolines} will be printed if the lemma is on three or more lines. 
+% For example:
+% \begin{verbatim}
+% \twolines{sq.}
+% \morethantwolines{sqq.}
+% \end{verbatim}
+% Will print ``1sq.'' for a lemma on lines 1-2 and ``1sqq.'' for a lemma on lines 1-4.
+%
+% If you use \cs{twolines} and not \cs{morethantwolines}, the \verb|<text>| argument of \cs{twolines} will be used for lemma on three and more lines.
+%
+% You can disable this option for a specific note using `[fulllines]` argument in the notes macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
 %
@@ -7407,18 +7427,26 @@
 % minimise the number of new ones they create. In line with this
 % Peter Wilson has reverted to traditional booleans.
 %
+% Maïeul Rouquette has added \cs{ifl@d@twolines} and \cs{ifl@d@morethantwolines}
+% to print a symbol meaning ``and following`` when there is two, three or more lines.
 % \begin{macro}{\ifl@d@pnum}
 % \begin{macro}{\ifl@d@ssub}
 % \begin{macro}{\ifl@d@elin}
 % \begin{macro}{\ifl@d@esl}
 % \begin{macro}{\ifl@d@dash}
+% \begin{macro}{\ifl@d@twolines}
+% \begin{macro}{\ifl@d@morethantwolines}
 %    \begin{macrocode}
 \newif\ifl@d@pnum 
 \newif\ifl@d@ssub 
 \newif\ifl@d@elin
 \newif\ifl@d@esl
 \newif\ifl@d@dash
+\newif\ifl@d@twolines%
+\newif\ifl@d@morethantwolines%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7522,7 +7550,34 @@
          \l@d@esltrue
          \l@d@dashtrue
       \fi
-  \fi}
+  \fi%
+%    \end{macrocode}
+% However, if the \cs{twolines} is set for the current series, we don't print the end line number.
+%    \begin{macrocode}
+  \ifl@d@dash%
+    \iftoggle{fulllines@}%
+      {}%
+      {%
+        \ifcsempty{twolines@\@currentseries}%
+          {}%
+          {%
+          \l@d@dashfalse%
+          \l@d@twolinestrue%
+          \l@d@elinfalse%
+          \l@d@eslfalse%
+          \ifcsempty{morethantwolines@\@currentseries}%
+            {}%
+            {\ifnum\numexpr #5-#2>1\relax%
+              \l@d@morethantwolinestrue%
+             \fi%
+            }%
+          }%
+      }%
+  \fi%
+%    \end{macrocode}
+% End of \cs{setprintlines}.
+%    \begin{macrocode}
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -7544,12 +7599,20 @@
 %    \end{macrocode}
 % \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
 %        to \cs{printlines}}
+% \changes{v1.20.0}{2015/03/19}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \endashchar\fi
+  \ifl@d@dash \ifl@d@twolines\else\endashchar\fi\fi
   \ifl@d@pnum #4\fullstop\fi
   \ifl@d@elin \linenumrep{#5}\fi
   \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
+  \ifl@d@twolines%
+    \ifl@d@morethantwolines%
+      \csuse{morethantwolines@\@currentseries}%
+    \else%
+      \csuse{twolines@\@currentseries}%
+    \fi%
+  \fi%
 \endgroup}
 %    \end{macrocode}
 % \end{macro}
@@ -9723,6 +9786,8 @@
     \csgdef{boxsymlinenum@#1}{0pt}%
     \newtoggle{numberonlyfirstinline@#1}%
     \newtoggle{numberonlyfirstintwolines@#1}%
+    \csgdef{twolines@#1}{}%
+    \csgdef{morethantwolines@#1}{}%
     \newtoggle{onlypstartinfootnote@#1}%
     \newtoggle{pstartinfootnoteeverytime@#1}%
     \newtoggle{pstartinfootnote@#1}%
@@ -9969,6 +10034,11 @@
     \setcommand@series{##1}{#1}{##2}%
   }%
 }
+
+\newhookcommand@series{twolines}
+
+\newhookcommand@series{morethantwolines}
+
 \newhookcommand@series{Xhangindent}
 
 \newhookcommand@series{hangindentX}
@@ -10116,6 +10186,12 @@
 % \end{macro}
 % \end{macro}
 % \subsection{Hooks for a particular footnote}
+% \begin{macro}{\fulllines@}
+%\cs{fulllines@} toggle is used to print the full lines references,  and not the abreviated form define by \cs{twolines} and \cs{morethantwolines}.
+%    \begin{macrocode}
+\newtoggle{fulllines@}%
+%    \end{macrocode}
+% \end{macro}
 %  \begin{macro}{\nonum@}
 %\cs{nonum@} toggle is used to disable line number printing in a particular footnote.
 %    \begin{macrocode}
@@ -10261,6 +10337,7 @@
 % The previous \cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
+  \xdef\@currentseries{#2}%
   \ifboolexpr{%
    (togl{pstartinfootnote@#2} and bool{numberpstart})%
    or togl{pstartinfootnoteeverytime@#2}}%
