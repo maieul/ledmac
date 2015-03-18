@@ -36,11 +36,11 @@ dist: $(PACKAGE) examples
 	mkdir eledmac/examples
 	$(MAKE) -C examples clean
 	$(MAKE) -C examples all
-	cp examples/*pdf eledmac/examples
-	cp examples/*tex eledmac/examples
-	cp examples/makefile eledmac/examples
+	ln examples/*pdf eledmac/examples
+	ln examples/*tex eledmac/examples
+	ln examples/makefile eledmac/examples
 
-	cp $(PACKAGE) eledmac
+	ln $(PACKAGE) eledmac
 	@$(RM) ../eledmac.zip
 	zip -r ../eledmac.zip eledmac
 	
