@@ -224,6 +224,7 @@
 % \changes{v1.20.0}{2015/03/19}{Fix issues with RTL text in notes when using \LuaTeX.}
 % \changes{v1.20.0}{2015/03/19}{The \cs{newif} are not followed by setting boolean to false, because it is the \TeX\ default setting.}
 % \changes{v1.20.0}{2015/03/19}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
+% \changes{v1.20.0}{2015/03/19}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar command for RTL texts with \LuaLaTeX.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3952,12 +3953,19 @@
   \setlength{\linenumsep}{1pc}
 \newcommand*{\numlabfont}{\normalfont\scriptsize}
 \newcommand*{\ledlinenum}{%
+  \bgroup%
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
   \numlabfont\linenumrep{\line@num}%
   \ifsublines@
     \ifnum\subline@num>0\relax
       \unskip\fullstop\sublinenumrep{\subline@num}%
     \fi
-  \fi}
+  \fi%
+  \egroup%
+}%
+
 \newcommand*{\leftlinenum}{%
   \ledlinenum
   \kern\linenumsep}
@@ -7590,6 +7598,9 @@
 % \changes{v0.15}{2012/06/11}{Line numbering can be reset at each pstart.}
 %    \begin{macrocode}
 \def\printlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
   \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
 % One subtlety left here is when to print a period between
