@@ -8325,6 +8325,7 @@
     \expandafter\newbox\csname #1toolong@para\endcsname%
     \expandafter\newinsert\csname #1longfootins\endcsname%
     \expandafter\newdimen\csname #1longpara@total\endcsname%
+    \expandafter\newdimen\csname #1shift\endcsname%
   }{}%
   \csgdef{series@display#1}{longparagraph}%
   \count\csname #1footins\endcsname=0%
@@ -8356,9 +8357,11 @@
   \ht0=\csname #1footfudgefactor\endcsname\wd0%
 %    \end{macrocode}
 % Now start the  specific code.
-% First, we keep the height of the box. 
+% First, we keep the height of the box and initalize pagegoal adjusting
 %    \begin{macrocode}
   \dimen0=\ht0%
+  \newdimen\old@pagegoal%
+  \old@pagegoal=\pagegoal%
 %    \end{macrocode}
 % Then, if the total height of the notes already inserted is lower than the max height allowed, we insert them.
 %    \begin{macrocode}
@@ -8381,11 +8384,16 @@
     }%
   \fi%
 %    \end{macrocode}
-% In any case, we insert them in the false insert class.
+% In any case, we insert them in the false insert class. 
+% We adjust the pagegoal because we don't want the blank space ad the end of this insert be substracted of the pagegoal by the insertion.
 %    \begin{macrocode}
+  \setbox0=\vbox{\csuse{Xnotefontsize@#1}\noindent\csname #1footfmt\endcsname#2[#1]}%
+  \advance\old@pagegoal by \dimexpr \ht0+\dp0-\dimen0\relax%
+  \global\advance\csname #1shift\endcsname by \dimexpr \ht0+\dp0-\dimen0\relax%
+  \pagegoal=\old@pagegoal%
   \insert\csname #1longfootins\endcsname%
   \bgroup%
-    \csname #1footfmt\endcsname#2[#1]\penalty0%
+    \noindent\unvbox0\penalty0%
   \egroup%
 }%
 %    \end{macrocode}
@@ -8410,15 +8418,22 @@
   \setbox0=\vbox{\noindent\unhbox0}%
   \footsplitskips%
   \vbadness=10000%
-  \vsplit0 to \ht\csuse{#1longfootins}%
+  \ifdim\ht0<\dimexpr\ht\csuse{#1longfootins}-\csname#1shift\endcsname+\baselineskip\relax%
+    \ifdim\ht0<\baselineskip%
+      \unvxh@l{0}%
+     \else%
+        \unvbox0%
+     \fi%
+   \else%
+    \setbox1=\vsplit0 to \dimexpr\ht\csuse{#1longfootins}%
+    \unvbox1%
+  \fi%
 %    \end{macrocode}
 % If the remaining is a not full line, we print it.
 % If it more than one line, we just keep it for the following page.
 %    \begin{macrocode}
   \ifvoid0\else%
     \ifdim\ht0<\baselineskip%
-      \vskip-\splitmaxdepth%
-      \vskip-\splittopskip%
       \unvxh@l{0}%
     \else%
      \global\setbox\csuse{#1toolong@para}=\box0%
@@ -8426,9 +8441,11 @@
   \fi%
 %    \end{macrocode}
 % Ans now, we void the special insert \cs{Xlongfootins}.
+% We also reset some dimensions.
 %    \begin{macrocode}
   \setbox0=\vbox{\unvbox\csuse{#1longfootins}}%
   \global\hsize=\old@hsize%
+  \global\csname #1shift\endcsname=0pt%
 }%
 %    \end{macrocode}
 % \end{macro}
