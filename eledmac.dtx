@@ -8245,15 +8245,11 @@
   \ifcsundef{#1longfootins}{%
     \expandafter\newbox\csname #1keept@para\endcsname%
     \expandafter\newbox\csname #1toolong@para\endcsname%
-    \expandafter\newinsert\csname #1longfootins\endcsname%
     \expandafter\newdimen\csname #1longpara@total\endcsname%
   }{}%
   \csgdef{series@display#1}{longparagraph}%
   \count\csname #1footins\endcsname=0%
   \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
-  \count\csname #1longfootins\endcsname=1000%
-  \dimen\csname #1longfootins\endcsname=\csuse{maxhXnotes@#1}%
-\skip\csname #1longfootins\endcsname=0pt%
   \expandafter\let\csname v#1footnote\endcsname=\longpara@vfootnote%
   \expandafter\let\csname #1footgroup\endcsname=\longpara@footgroup%
 }%
@@ -8284,14 +8280,27 @@
 %    \end{macrocode}
 % Then, if the total height of the notes already inserted is lower than the max height allowed, we insert them.
 %    \begin{macrocode}
-  \ifdim\dimen\csname #1longfootins\endcsname>\csuse{#1longpara@total}%
+  \ifdim\dimen\csname #1footins\endcsname>\csuse{#1longpara@total}%
     \insert\csname #1footins\endcsname%
     \bgroup%
       \if@RTL\noindent \leavevmode\fi\box0\penalty0%
     \egroup%
-    \global\advance\csuse{#1longpara@total} by \dimen0%
 %    \end{macrocode}
-% Otherwise, the total height of the notes already inserted is greater than the maximum height allowed, so we keep the present notes in the box \cs{Xkeept@para}.
+% We also change the totalheight of the paragraphed notes, and use them to change the \cs{pagegoal}, with a imitation of the standard \cs{insert} system.
+%    \begin{macrocode}
+    \global\advance\csuse{#1longpara@total} by \dimen0%
+    \dimen1=\pagegoal%
+    \ifdim\dimen\csname #1footins\endcsname<\csuse{#1longpara@total}%
+      \advance\dimen1 by -\dimexpr%
+        \dimen\csname #1footins\endcsname\relax%
+      \global\csuse{#1longpara@total}=\dimen\csname #1footins\endcsname%
+      \eledmac@warning{\the\csuse{#1longpara@total}}%
+    \else%
+      \advance\dimen1 by -\dimen0%
+    \fi%
+    \global\pagegoal=\dimen1%
+%    \end{macrocode}
+% If the total height of the notes already inserted is greater than the maximum height allowed, so we keep the present notes in the box \cs{Xkeept@para}.
 %    \begin{macrocode}
   \else%
     \global\setbox\csuse{#1keept@para}=\vbox{%
@@ -8303,12 +8312,8 @@
     }%
   \fi%
 %    \end{macrocode}
-% In any case, we insert them in the false insert class.
+% End of \cs{longparagraph@vfootnote}
 %    \begin{macrocode}
-  \insert\csname #1longfootins\endcsname%
-  \bgroup%
-    \csname #1footfmt\endcsname#2[#1]\penalty0%
-  \egroup%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -8332,7 +8337,7 @@
   \setbox0=\vbox{\noindent\unhbox0}%
   \footsplitskips%
   \vbadness=10000%
-  \vsplit0 to \ht\csuse{#1longfootins}%
+  \vsplit0 to \csuse{#1longpara@total}%
 %    \end{macrocode}
 % If the remaining is a not full line, we print it.
 % If it more than one line, we just keep it for the following page.
@@ -8347,9 +8352,8 @@
     \fi%
   \fi%
 %    \end{macrocode}
-% Ans now, we void the special insert \cs{Xlongfootins}.
+% Ans now, we restaure the old \cs{hsize} (when using notesastwocolumns).
 %    \begin{macrocode}
-  \setbox0=\vbox{\unvbox\csuse{#1longfootins}}%
   \global\hsize=\old@hsize%
 }%
 %    \end{macrocode}
