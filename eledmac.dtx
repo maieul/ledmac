@@ -222,6 +222,7 @@
 % \changes{v1.20.0}{2015/03/19}{Correct \cs{inplaceofnumber} hook.}
 % \changes{v1.20.0}{2015/03/19}{Add series option.}
 % \changes{v1.20.0}{2015/03/19}{Fix issues with RTL text in notes when using \LuaTeX.}
+% \changes{v1.20.0}{2015/03/19}{Add \cs{footlongparagraph} and \cs{footlongparagraphX}.}
 % \changes{v1.20.0}{2015/03/19}{The \cs{newif} are not followed by setting boolean to false, because it is the \TeX\ default setting.}
 % \changes{v1.20.0}{2015/03/19}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
 % \changes{v1.20.0}{2015/03/19}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar command for RTL texts with \LuaLaTeX.}
@@ -1272,16 +1273,27 @@
 % \DescribeMacro{\footparagraph}
 % \DescribeMacro{\foottwocol}
 % \DescribeMacro{\footthreecol}
+% \DescribeMacro{\footlongparagraph}
 % By default, all footnotes are formatted as a series of separate
-% paragraphs in one column. Three other formats are also
+% paragraphs in one column. Four other formats are also
 % available for notes, and using these macros you can select a
-% different format for a series of notes. 
+% different format for a series of notes.
+% \label{longparagraph} 
 % \begin{itemize}
 % \item \cs{footparagraph} formats
-% all the footnotes of a series as a single paragraph;
+% all the footnotes of a series as a single paragraph. 
+% One single note can not be split between two pages, 
+% and the page break will occur between note;
 % \item \cs{foottwocol} formats them as separate paragraphs,
 % but in two columns;
 % \item \cs{footthreecol}, in three columns. 
+% \item \cs{footlongparagraph} formats
+% all the footnotes of a series as a single paragraph.
+% One note can be split between two pages. 
+% However, we think long paragraphed notes are not useful, and people should prefer 
+% or normal footnotes, or paragraphed short footnotes (for example for little textual variant). 
+% Indeed \cs{footlongparagraph} feature requires many \TeX\ tricks and resources. 
+% A notes should not be longer than \cs{maxdimen}, that is \the\maxdimen.;
 % \end{itemize}
 % Each of these macros
 % takes one argument: a letter (between \verb"A" and \verb"E") for
@@ -2164,11 +2176,14 @@
 % \DescribeMacro{\footparagraphX}
 % \DescribeMacro{\foottwocolX}
 % \DescribeMacro{\footthreecolX}
+% \DescribeMacro{\footlongparagraphX}
 %  Each of the \verb?\foot...X? macros takes one argument which is the 
 % series letter (e.g., \texttt{B}). \cs{footnormalX} is the typical
 % footnote format. With \cs{footparagraphX} the series is typeset a one
 % paragraph, with \cs{foottwocolX} the notes are in two columns, and are in
 % three columns with \cs{foothreecolX}.
+% \cs{footlongparagraphX} allows to use long notes typeset a one paragraph, 
+% with page breaking. The same restriction as \cs{longparagraph} exists (see \ref{longparagraph} p.~\pageref{longparagraph}).
 %
 % \DescribeMacro{\thefootnoteA}
 % \DescribeMacro{\bodyfootmarkA}
@@ -8254,6 +8269,239 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Long paragraphed footnotes}
+% As paragraphed footnotes are wrapped in hboxes, 
+% they can't be broken across pages.
+% However, break are available between notes.
+% In many case, it is enough, as paragraphed notes should be short.
+% However, some people want to have long paragraphed notes.
+% That is why Maïeul Rouquette has provided \cs{footlongparagraph}.
+% This system to allow page break is quite complex and require many \TeX\ tricks and resource.
+% People should avoid to use it.
+% In any case, the length of of a long footnotes should not be longer than \cs{maxdimen}, that is \the\maxdimen.
+% \subsubsection{Overview}\label{footlongparagraph:overview}
+% In the following explanation, we will take the case of working with the \verb+A+ series.
+% The same will be available for other series.
+% The general idea is to use two class of  \TeX insertion:
+% \begin{itemize}
+% \item The standard \cs{Afootins}, which keeps paragraphed notes, as with \cs{footparagraph}.
+% However, the associated counter will be set at 0, and so the notes won't be decreased from the \cs{pagegoal}.
+% \item \cs{Alongfootins}, which keeps notes, but without \cs{hbox} wrapping.
+% \end{itemize}
+% \TeX will be able to cut the \cs{Alongfootins} notes, and we will use its cut to choose, in the output routines, where the paragraphed notes will be cut.
+%
+% In the output routine, we will do two things:
+% \begin{enumerate}
+%  \item For \cs{Afootins}, do the same thing as for paragraphed notes, but, before outing the final notes block, adding it in a \cs{vbox}.
+% We split this \cs{vbox} to the height of \cs{Alongfootins}.
+% So the long note will be split as if there was no \cs{hbox}.
+% The first part is immediately printed, and the last part is kept for later, in the \cs{A@toolongpara} box.
+% \item After that, void \cs{Alongfootins}.
+% \end{enumerate}
+%
+% At the very end of the ouput, when all inserts has been processed, 
+% we insert the content of \cs{A@toolongpara} in \cs{Afootins}.
+% And so, the last part of the notes will be printed in the following page.
+% However, we can not insert directly the \cs{A@toolongpara}, which is an \cs{vbox}, because the output routine needs \cs{hbox}es.
+% So we split \cs{A@toolongpara} in short \cs{hbox}es, one by line.
+% For all line but the last, we use \cs{unvxh@l} which is similar to \cs{unvxh} but does not add the spaces after notes.
+% For the last line, we use \cs{unvxh}.
+%
+% There still remains a problem.
+% Suppose in a page, we call two long paragraphed notes.
+% The first one is split between pages.
+% When we do this resinsertion, the last part of the first note will be inserted after the second note!
+% To prevent this problem, we don't insert note in \cs{Afootins} if the space used by the previous inserted notes of the current page, kept in the \cs{Alongpara@total} dimen, is greater than the maximum space allowed for \cs{Afootins}.
+% Such not inserted notes are kept in the \cs{Akeept@para} box, which is inserted before the following page, after \cs{A@toolongpara} box.
+% \subsubsection{Implementation}
+% \begin{macro}{\footlongparagraph}
+% \cs{footlongparagraph} just calls \cs{footlongparagraph} and then make the specific setting for long paragraphed notes, that is mainly setting the \cs{Xlongfootins} insert.
+% The specific register are created here, in order to preserve memory when not using this feature.
+%    \begin{macrocode}
+\newcommand*{\footlongparagraph}[1]{%
+  \footparagraph{#1}%
+  \ifcsundef{#1longfootins}{%
+    \expandafter\newbox\csname #1keept@para\endcsname%
+    \expandafter\newbox\csname #1toolong@para\endcsname%
+    \expandafter\newinsert\csname #1longfootins\endcsname%
+    \expandafter\newdimen\csname #1longpara@total\endcsname%
+  }{}%
+  \csgdef{series@display#1}{longparagraph}%
+  \count\csname #1footins\endcsname=0%
+  \csxdef{default@#1footins}{0}%Use this to confine the  notes to one side only
+  \count\csname #1longfootins\endcsname=1000%
+  \dimen\csname #1longfootins\endcsname=\csuse{maxhXnotes@#1}%
+\skip\csname #1longfootins\endcsname=0pt%
+  \expandafter\let\csname v#1footnote\endcsname=\longpara@vfootnote%
+  \expandafter\let\csname #1footgroup\endcsname=\longpara@footgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@vfootnote}
+% \cs{longpara@vfootnote} insert the long paragraphed note, in the two insert classes.
+%    \begin{macrocode}
+\newcommand*{\longpara@vfootnote}[2]{%
+%    \end{macrocode}
+% First, the code is similar to \cs{para@vfootnote}.
+%    \begin{macrocode}
+  \csuse{bhookXnote@#1}%
+  \csuse{Xnotefontsize@#1}%
+  \footsplitskips%
+  \setbox0=\vbox{%
+    \hsize=\maxdimen%
+    \noindent\csname #1footfmt\endcsname#2[#1]%
+  }%
+  \setbox0=\hbox{\unvxh0[#1]}%
+  \dp0=0pt%
+  \ht0=\csname #1footfudgefactor\endcsname\wd0%
+%    \end{macrocode}
+% Now start the  specific code.
+% First, we keep the height of the box. 
+%    \begin{macrocode}
+  \dimen0=\ht0%
+%    \end{macrocode}
+% Then, if the total height of the notes already inserted is lower than the max height allowed, we insert them.
+%    \begin{macrocode}
+  \ifdim\dimen\csname #1longfootins\endcsname>\csuse{#1longpara@total}%
+    \insert\csname #1footins\endcsname%
+    \bgroup%
+      \if@RTL\noindent \leavevmode\fi\box0\penalty0%
+    \egroup%
+    \global\advance\csuse{#1longpara@total} by \dimen0%
+%    \end{macrocode}
+% Otherwise, the total height of the notes already inserted is greater than the maximum height allowed, so we keep the present notes in the box \cs{Xkeept@para}.
+%    \begin{macrocode}
+  \else%
+    \global\setbox\csuse{#1keept@para}=\vbox{%
+      \csuse{Xnotefontsize@#1}%
+      \ifvoid\csuse{#1keept@para}\else%
+        \csuse{#1keept@para}%
+      \fi%
+      \box0\penalty0%
+    }%
+  \fi%
+%    \end{macrocode}
+% In any case, we insert them in the false insert class.
+%    \begin{macrocode}
+  \insert\csname #1longfootins\endcsname%
+  \bgroup%
+    \csname #1footfmt\endcsname#2[#1]\penalty0%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@footgroup}
+% \cs{longpara@footgroup} prints the group the long paragraphed notes.
+%    \begin{macrocode}
+\newcommand*{\longpara@footgroup}[1]{%
+%    \end{macrocode}
+% The beginning is like \cs{para@footgroup}.
+%    \begin{macrocode}
+  \unvbox\csname #1footins\endcsname%
+  \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
+  \makehboxofhboxes%
+  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}\unhbox0 \removehboxes}%
+  \csuse{Xnotefontsize@#1}%
+%    \end{macrocode}
+% But we don't print directly the re-formated notes. 
+% We start by adding them in a \cs{vbox}, that we split to the maximum height allowed.
+%    \begin{macrocode}
+  \setbox0=\vbox{\noindent\unhbox0}%
+  \footsplitskips%
+  \vbadness=10000%
+  \vsplit0 to \ht\csuse{#1longfootins}%
+%    \end{macrocode}
+% If the remaining is a not full line, we print it.
+% If it more than one line, we just keep it for the following page.
+%    \begin{macrocode}
+  \ifvoid0\else%
+    \ifdim\ht0<\baselineskip%
+      \vskip-\splitmaxdepth%
+      \vskip-\splittopskip%
+      \unvxh@l{0}%
+    \else%
+     \global\setbox\csuse{#1toolong@para}=\box0%
+    \fi%
+  \fi%
+%    \end{macrocode}
+% Ans now, we void the special insert \cs{Xlongfootins}.
+%    \begin{macrocode}
+  \setbox0=\vbox{\unvbox\csuse{#1longfootins}}%
+  \global\hsize=\old@hsize%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\unvxh@l}
+% \cs{unvxh@l} is used when long paragraphed notes are reinserted.
+% It is like \cs{unvxh}, but don't insert final space.
+% Consequently, it requires only one mandatory argument, which is box number.
+%    \begin{macrocode}
+\newcommand{\unvxh@l}[1]{%
+  \vbadness=10000\setbox0=\vbox{\unvbox#1%
+    \global\setbox1=\lastbox}%
+  \unhbox1%
+  \unskip% remove \rightskip,
+  \unskip%remove \parfillskip,
+  \unpenalty%remove \penalty of 10000,
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\continue@Xlongnote}
+% \cs{continue@Xlongnote} is make at the very end of the page ouput, when all inserted has been displayed.
+% It reinserts too long  paragraphed notes if the following page. 
+%    \begin{macrocode}
+\def\continue@Xlongnote{%
+  \def\do##1{%
+%    \end{macrocode}
+% For each series of notes, we first split the second part of the too long note 
+% in a \cs{vbox} of \cs{hbox}es of one line size. 
+%    \begin{macrocode}
+    \ifcsstring{series@display##1}{longparagraph}{%
+    \ifvoid\csuse{##1toolong@para}\else%
+      \setbox0=\box\csuse{##1toolong@para}%
+      \setbox2=\vbox{}%
+      \vbadness=10000%
+      \splittopskip=0pt%
+      \csuse{Xnotefontsize@##1}%
+      \@whiledim\ht0>0pt\do{%
+        \vsplit0 to \baselineskip%
+        \setbox1=\lastbox%
+        \ifdim\ht0>0pt%
+          \setbox1=\hbox{\unvxh@l{1}}%
+        \else%
+          \setbox1=\hbox{\unvxh1[##1]}%
+        \fi%
+        \setbox2=\vbox{\unvbox2\box1}%
+      }%
+%    \end{macrocode}
+% Then, we insert it, and so advance the \cs{Xfootins} dimen.
+%    \begin{macrocode}
+      \global\csuse{##1longpara@total}=\dimexpr\ht2+\dp2\relax%
+      \insert\csuse{##1footins}{\unvbox2}%
+%    \end{macrocode}
+%    And now, if in the current page there are somes notes which has not been inserted, we insert them.
+%    \begin{macrocode}
+      \ifvoid\csuse{##1keept@para}%
+      \else%
+        \ifdim\dimen\csuse{##1footins}>\csuse{##1longpara@total}%
+          \global\csuse{##1longpara@total}=\dimexpr%
+            \csuse{##1longpara@total}%
+            +\ht\csuse{##1keept@para}%
+            +\dp\csuse{##1keept@para}%
+          \relax%
+          \insert\csuse{##1footins}{\unvbox\csuse{##1keept@para}}%
+        \fi%
+      \fi%
+%    \end{macrocode}
+% End of the code for one series, and calling it for every series
+%    \begin{macrocode}
+    \fi%
+  }{}}%
+ \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Columnar footnotes}
 %
 % \begin{macro}{\rigidbalance}
@@ -9045,7 +9293,6 @@
   \hangindent=\csuse{hangindentX@#1}%
   \hsize \csuse{hsizetwocolX@#1}
   \parindent=\z@ 
-%%%  \parfillskip=0pt \@plus 1fil
   \tolerance=5000\relax
   \raggedright
   \leavevmode
@@ -9154,7 +9401,6 @@
   \normal@pars
   \hsize \csuse{hsizethreecolX@#1}
   \parindent=\z@ 
-%%%  \parfillskip=0pt \@plus 1fil
   \tolerance=5000\relax
   \raggedright
   \leavevmode
@@ -9370,6 +9616,130 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Long paragraphed footnotes}
+% About \cs{footlongparagraphX} operation, read the overview on \cs{footlongparagraph} \ref{footlongparagraph:overview} p.~\pageref{footlongparagraph:overview} and just put the series letter and the end.
+% \begin{macro}{\footlongparagraphX}
+%    \begin{macrocode}
+\newcommand*{\footlongparagraphX}[1]{%
+  \footparagraphX{#1}%
+  \ifcsundef{longfootins#1}{%
+    \expandafter\newbox\csname keept#1@para\endcsname%
+    \expandafter\newbox\csname toolong#1@para\endcsname%
+    \expandafter\newinsert\csname longfootins#1\endcsname%
+    \expandafter\newdimen\csname longpara#1@total\endcsname%  
+  }{}%
+  \csgdef{series@displayX#1}{longparagraph}%
+  \count\csname footins#1\endcsname=0%
+  \csxdef{default@footins#1}{0}%Use this to confine the  notes to one side only
+  \count\csname longfootins#1\endcsname=1000%
+  \dimen\csname longfootins#1\endcsname=\csuse{maxhnotesX@#1}%
+\skip\csname longfootins#1\endcsname=0pt%
+  \expandafter\let\csname regvfootnote#1\endcsname=\longpara@vfootnoteX%
+  \expandafter\let\csname footgroup#1\endcsname=\longpara@footgroupX%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@vfootnoteX}
+%    \begin{macrocode}
+\newcommand*{\longpara@vfootnoteX}[2]{%
+  \csuse{bhooknoteX@#1}%
+  \csuse{notefontsizeX@#1}%
+  \footsplitskips%
+  \setbox0=\vbox{\hsize=\maxdimen%
+    \noindent\@nameuse{footfmt#1}{#1}{#2}}%
+  \setbox0=\hbox{\unvxh0[#1]}%
+  \dp0=\z@%
+  \ht0=\csname footfudgefactor#1\endcsname\wd0%
+  \dimen0=\ht0%
+  \ifdim\dimen\csname longfootins#1\endcsname>\csuse{longpara#1@total}%
+    \insert\csname footins#1\endcsname%
+    \bgroup%
+      \if@RTL\noindent \leavevmode\fi\box0\penalty0%
+    \egroup%
+    \global\advance\csuse{longpara#1@total} by \dimen0%
+  \else%
+    \global\setbox\csuse{keept#1@para}=\vbox{%
+      \csuse{notefontsizeX@#1}%
+      \ifvoid\csuse{keept#1@para}\else%
+        \csuse{keept#1@para}%
+      \fi%
+      \box0\penalty0%
+    }%
+  \fi%
+  \insert\csname longfootins#1\endcsname%
+  \bgroup%
+    \@nameuse{footfmt#1}{#1}{#2}\penalty0%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\longpara@footgroupX}
+%    \begin{macrocode}
+\newcommand*{\longpara@footgroupX}[1]{%
+  \unvbox\csname footins#1\endcsname%
+  \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
+  \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
+  \makehboxofhboxes%
+  \setbox0=\hbox{{\csuse{notefontsizeX@#1}\csuse{txtbeforenotesX@#1}}\unhbox0 \removehboxes}%
+  \csuse{notefontsizeX@#1}%
+  \setbox0=\vbox{\noindent\unhbox0}%
+  \footsplitskips%
+  \vbadness=10000%
+  \vsplit0 to \ht\csuse{longfootins#1}%
+  \ifvoid0\else%
+    \ifdim\ht0<\baselineskip%
+      \vskip-\splitmaxdepth%
+      \vskip-\splittopskip%
+      \unvxh@l{0}%
+    \else%
+     \global\setbox\csuse{toolong#1@para}=\box0%
+    \fi%
+  \fi%
+  \setbox0=\vbox{\unvbox\csuse{longfootins#1}}%
+  \global\hsize=\old@hsize%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\continue@longnoteX}
+%    \begin{macrocode}
+\def\continue@longnoteX{%
+  \def\do##1{%
+    \ifcsstring{series@displayX##1}{longparagraph}{%
+    \ifvoid\csuse{toolong##1@para}\else%
+      \setbox0=\box\csuse{toolong##1@para}%
+      \setbox2=\vbox{}%
+      \vbadness=10000%
+      \splittopskip=0pt%
+      \csuse{notefontsizeX@##1}%
+      \@whiledim\ht0>0pt\do{%
+        \vsplit0 to \baselineskip%
+        \setbox1=\lastbox%
+        \ifdim\ht0>0pt%
+          \setbox1=\hbox{\unvxh@l{1}}%
+        \else%
+          \setbox1=\hbox{\unvxh1[##1]}%
+        \fi%
+        \setbox2=\vbox{\unvbox2\box1}%
+      }%
+      \global\csuse{longpara##1@total}=\dimexpr\ht2+\dp2\relax%
+      \insert\csuse{footins##1}{\unvbox2}%
+      \ifvoid\csuse{keept##1@para}%
+      \else%
+        \ifdim\dimen\csuse{footins##1}>\csuse{longpara##1@total}%
+          \global\csuse{longpara##1@total}=\dimexpr%
+            \csuse{longpara##1@total}%
+            +\ht\csuse{keept##1@para}%
+            +\dp\csuse{keept##1@para}%
+          \relax%
+          \insert\csuse{footins##1}{\unvbox\csuse{keept##1@para}}%
+        \fi%
+      \fi%
+    \fi%
+  }{}}%
+ \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Footnotes' width for two columns}
 % We define here some commands which make sense only with \Lpack{eledpar}, but must be called when defining notes paramaters.
 % These commands change the width of block notes to allow them to have the same size than two parallel columns.
@@ -9839,6 +10209,8 @@
     \expandafter\newinsert\csname mpfootins#1\endcsname%
     \expandafter\newinsert\csname mp#1footins\endcsname%
 %    \end{macrocode}
+
+
 % \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
@@ -10522,7 +10894,8 @@
   \l@ddofootinsert
   \m@m@makecolfloats
   \m@m@makecoltext
-  \global \maxdepth \@maxdepth}
+  \global \maxdepth \@maxdepth%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10540,7 +10913,6 @@
 % \changes{v0.7}{2005/02/25}{Deleted \cs{page@start} from \cs{l@ddofootinsert}}
 %    \begin{macrocode}
 \newcommand*{\l@ddofootinsert}{%
-%%%   \page@start
    \ifvoid\footins
      \setbox\@outputbox \box\@cclv
    \else
@@ -10583,7 +10955,9 @@
         {\doxtrafeetii\doxtrafeeti}%
         {\doxtrafeeti\doxtrafeetii}%
     }%
-  }%
+  \continue@Xlongnote%
+  \continue@longnoteX%
+}%
 
 %    \end{macrocode}
 % \end{macro}
