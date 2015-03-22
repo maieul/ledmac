@@ -30,7 +30,7 @@ README: README.md
 	@pdflatex $*.dtx
 
 
-dist: $(PACKAGE) examples
+dist: $(PACKAGE) examples clean
 	rm -rf eledmac
 	mkdir eledmac
 	mkdir eledmac/examples
