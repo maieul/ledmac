@@ -11252,9 +11252,13 @@
 %
 % \begin{macro}{\appref}
 % \begin{macro}{\apprefwithpage}
+% \begin{macro}{\apprefprefixsingle}
+% \begin{macro}{\apprefprefixmore}
 % \cs{appref} prints a crossref to some lines of the apparatus defined with \cs{applabel}.
-% It print the line as they should be printed in the apparatus.
-%
+% It prints the line as they should be printed in the apparatus.
+% 
+% If \cs{apprefprefixsingle} is not empty, it print it before the line number.
+% If \cs{apprefprefixsingles} is not empty, it print it before the line numbers when the first line is not the same as the last line.
 % \cs{apprefwithpage} print a crossref to some lines of the apparatus defined with \cs{applabel}.
 % It always prints the page number, as it should be printed in the end notess.
 % The \cs{twolinesappref} and \cs{morethantwolinesappref} are similar to the footnote
@@ -11263,8 +11267,21 @@
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 
+\newcommand\apprefprefixsingle{}%
+\newcommand\apprefprefixmore{}%
+
 \newcommand{\appref}[1]{%
  \xdef\@currentseries{appref}%
+ \ifdefempty{\apprefprefixsingle}{}%
+ {%
+   \ifdefempty{\apprefprefixmore}%
+     {\apprefprefixsingle}%
+     {%
+       \IfEq{\xlineref{#1:start}}{\xlineref{#1:end}}%
+         {\apprefprefixsingle}%
+         {\apprefprefixmore}%
+     }%
+ }%
  \printlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
 }%
 
@@ -11272,6 +11289,8 @@
   \printendlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\edmakelabel}
