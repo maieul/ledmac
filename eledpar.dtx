@@ -3179,37 +3179,43 @@
   \global\advance\absline@numR \@ne
   \do@actionsR
   \do@ballastR
-\ifledgroupnotesR@\else\ifnumberline
-  \ifsublines@
-    \ifnum\sub@lockR<\tw@
-      \global\advance\subline@numR \@ne
-    \fi
-  \else
-    \ifnum\@lockR<\tw@
-      \global\advance\line@numR \@ne
-      \global\subline@numR \z@
+  \ifledgroupnotesR@\else
+    \ifl@dskipversenumber\else
+        \ifnumberline
+          \ifsublines@
+            \ifnum\sub@lockR<\tw@
+              \global\advance\subline@numR \@ne
+           \fi
+          \else
+            \ifnum\@lockR<\tw@
+              \global\advance\line@numR \@ne
+              \global\subline@numR \z@
+            \fi
+          \fi
+        \fi
     \fi
   \fi
-\fi
-\fi
 }
 \newcommand*{\getline@numL}{%
-    \global\advance\absline@num \@ne
+  \global\advance\absline@num \@ne
   \do@actions
   \do@ballast
-\ifledgroupnotesL@\else\ifnumberline
-  \ifsublines@
-     \ifnum\sub@lock<\tw@
-       \global\advance\subline@num \@ne
-     \fi
-  \else
-     \ifnum\@lock<\tw@
-       \global\advance\line@num \@ne
-       \global\subline@num \z@
-     \fi
+  \ifl@dskipversenumber\else
+      \ifledgroupnotesL@\else
+        \ifnumberline
+           \ifsublines@
+             \ifnum\sub@lock<\tw@
+               \global\advance\subline@num \@ne
+             \fi
+           \else
+             \ifnum\@lock<\tw@
+                \global\advance\line@num \@ne
+                \global\subline@num \z@
+             \fi
+           \fi
+        \fi
+      \fi
   \fi
-\fi
-\fi
 }
 
 
@@ -3246,6 +3252,7 @@
 % It may call itself recursively and we use tail recursion, via
 % \cs{do@actions@nextR} for this.
 % \changes{v0.3}{2005/02/24}{Used \cs{do@actions@fixedcode} in \cs{do@actionsR}}
+%\changes{v1.15.0}{2015/03/29}{Add action 1008}
 %    \begin{macrocode}
 \newcommand*{\do@actions@fixedcodeR}{%
   \ifcase\@l@dtempcnta% 
@@ -3256,6 +3263,7 @@
   \or%                     % 1003
     \global\@lockR=\@ne
   \or%                     % 1004
+    \global\l@dskipversenumberfalse%
     \ifnum\@lockR=\tw@
       \global\@lockR=\thr@@
     \else
@@ -3271,9 +3279,12 @@
     \fi
   \or%                     % 1007
     \l@dskipnumbertrue
-  \else
+ \or%                      % 1008
+    \l@dskipversenumbertrue%
+ \else%
     \led@warn@BadAction
-  \fi}
+ \fi%
+}
 
 
 \newcommand*{\do@actionsR}{%
@@ -3412,21 +3423,23 @@
      \ch@ck@l@ckR
   \fi
   \ifnum\@l@dtempcnta=\@l@dtempcntb
-    \if@twocolumn
-      \if@firstcolumn
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+    \ifl@dskipversenumber\else
+      \if@twocolumn
+        \if@firstcolumn
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \else
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \fi
       \else
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \fi
-    \else
-      \@l@dtempcntb=\line@marginR
-      \ifnum\@l@dtempcntb>\@ne
-        \advance\@l@dtempcntb by\page@numR
-      \fi
-      \ifodd\@l@dtempcntb
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \else
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \@l@dtempcntb=\line@marginR
+        \ifnum\@l@dtempcntb>\@ne
+          \advance\@l@dtempcntb by\page@numR
+        \fi
+        \ifodd\@l@dtempcntb
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \else
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \fi
       \fi
     \fi
   \fi
