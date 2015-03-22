@@ -3159,14 +3159,18 @@
 % \end{macro}
 %
 % \begin{macro}{\led@warn@DuplicateLabel}
+% \begin{macro}{\led@warn@AppLabelOutEdtext}
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
   \eledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
+\newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
+  \eledmac@warning{\string\applabel\ outside of \string\edtext\ `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \eledmac@warning{Reference `#1' on page \the\pageno\space undefined.
                   Using `000'.}}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -10998,6 +11002,48 @@
   {\linenumrep{\line@num}|%
      \ifsublines@ \sublinenumrep{\subline@num}\else 0\fi}\to\labelref@list}
 
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\applabel}
+% \cs{applabel}, if called in \cs{edtext} will insert automatically a start and a end label for the current edtext lines.
+%    \begin{macrocode}
+\newcommand*{\applabel}[1]{%
+  \if@edtext@%  
+%    \end{macrocode}
+% Label should not be already defined.
+%    \begin{macrocode}
+      \ifcsundef{the@label#1}{%
+        \csdef{the@label#1}{applabel}%
+       }%
+       {%
+         \led@warn@DuplicateLabel{#1 (applabel)}%
+       }%
+%    \end{macrocode}% Parse the edtext line numbers.
+%    \begin{macrocode}      \expandafter\l@dp@rsefootspec\l@d@nums|%
+%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \begin{macrocode}      \@bsphack%
+%    \end{macrocode}% And now, write the data in the auxiliary file.
+%    \begin{macrocode}      \ifledRcol%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1:start}}%
+        \ifdef{\hypertarget}{\hypertarget{#1:start}{}}{}%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+      \else%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1:start}}%
+        \ifdef{\hypertarget}{\hypertarget{#1:start}{}}{}%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
+      \fi%
+%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \begin{macrocode}      \@esphack%
+%    \end{macrocode}% Warning if \cs{edlabel} is called outside of edtext.
+%    \begin{macrocode}  \else%
+    \led@warn@AppLabelOutEdtext{#1}%
+  \fi%
+%    \end{macrocode}% End of \cs{applabel}
+%    \begin{macrocode}}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\wrap@edcrossref}
