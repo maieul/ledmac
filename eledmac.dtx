@@ -4843,8 +4843,8 @@
 %
 % \begin{macro}{\n@num}
 % \begin{macro}{\n@num@reg}
-% This macro implements the \cs{skipnumbering} command. It uses
-% a new action code, namely 1007.
+% These macros implement the \cs{skipnumbering} command. 
+% They use a new action code, namely 1007.
 % \changes{v0.7}{2005/02/22}{Added \cs{n@num}}
 %    \begin{macrocode}
 \newcommand*{\n@num}{\n@num@reg}
@@ -4855,7 +4855,14 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\n@num}
+% These macros implement the \cs{skipnumbering} for stanza command. 
+% It uses a new action code, namely 1008.
+\newcommand*{\n@num@stanza}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list%
+  \xright@appenditem{-1008}\to\actions@list
+}
+% \end{macro}
 % \begin{macro}{\@ref}
 % \begin{macro}{\insert@count}
 % \cs{@ref}
@@ -5213,6 +5220,7 @@
 % \end{macro}
 %
 % \begin{macro}{\ifl@dskipnumber}
+% \begin{macro}{\ifl@dskipversenumber}
 % \begin{macro}{\l@dskipnumbertrue}
 % \begin{macro}{\l@dskipnumberfalse}
 % \begin{macro}{\skipnumbering}
@@ -5220,14 +5228,22 @@
 % In numbered text \cs{skipnumbering} will suspend the numbering
 % for that particular line.
 % \changes{v0.7}{2005/02/22}{Added \cs{skipnumbering} and supports}
+% \changes{v1.21.0}{2015/03/29}{Correct \cs{skipnumbering} for stanza}
 %    \begin{macrocode}
 \newif\ifl@dskipnumber
+\newif\ifl@dskipversenumber%
 \newcommand*{\skipnumbering}{\skipnumbering@reg}
 \newcommand*{\skipnumbering@reg}{%
-  \write\linenum@out{\string\n@num}%
-  \advanceline{-1}}
+  \ifinstanza%
+     \write\linenum@out{\string\n@num@stanza}%
+  \else%
+    \write\linenum@out{\string\n@num}%
+    \advanceline{-1}%
+  \fi%
+}%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6433,16 +6449,17 @@
   \do@actions
   \do@ballast
   \ifnumberline
-    \ifsublines@
-       \ifnum\sub@lock<\tw@
-         \global\advance\subline@num \@ne
+    \ifl@dskipversenumber\else%
+      \ifsublines@
+         \ifnum\sub@lock<\tw@
+           \global\advance\subline@num \@ne
+      \fi
+    \else
+      \ifnum\@lock<\tw@
+         \global\advance\line@num \@ne
+         \global\subline@num \z@
+      \fi
     \fi
-   \else
-     \ifnum\@lock<\tw@
-       \global\advance\line@num \@ne
-       \global\subline@num \z@
-     \fi
-   \fi
   \fi
 }
 %    \end{macrocode}
@@ -6593,6 +6610,7 @@
       \global\@lock=\thr@@
     \else
       \global\@lock=\z@
+      \global\l@dskipversenumberfalse%
     \fi
   \or%                   % 1005
      \global\sub@lock=\@ne
@@ -6604,6 +6622,8 @@
     \fi
   \or%                   % 1007
     \l@dskipnumbertrue
+  \or%                   % 1008
+    \l@dskipversenumbertrue%
   \else
     \led@warn@BadAction
   \fi}
@@ -6720,9 +6740,10 @@
   \fi
 %    \end{macrocode}
 %
-% The following test is true if we need to print a line number.
+% The following tests are true if we need to print a line number.
 %    \begin{macrocode}
   \ifnum\@l@dtempcnta=\@l@dtempcntb
+  \ifl@dskipversenumber\else
 %    \end{macrocode}
 %
 % If we got here,
@@ -6769,6 +6790,7 @@
       \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
     \fi
  \fi
+\fi
 \fi
 %    \end{macrocode}
 % \end{macro}
