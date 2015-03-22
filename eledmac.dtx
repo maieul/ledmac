@@ -9644,6 +9644,7 @@
     \expandafter\newbox\csname toolong#1@para\endcsname%
     \expandafter\newinsert\csname longfootins#1\endcsname%
     \expandafter\newdimen\csname longpara#1@total\endcsname%  
+    \expandafter\newdimen\csname shift#1\endcsname%
   }{}%
   \csgdef{series@displayX#1}{longparagraph}%
   \count\csname footins#1\endcsname=0%
@@ -9667,6 +9668,8 @@
   \setbox0=\hbox{\unvxh0[#1]}%
   \dp0=\z@%
   \ht0=\csname footfudgefactor#1\endcsname\wd0%
+  \newdimen\old@pagegoal%
+  \old@pagegoal=\pagegoal%
   \dimen0=\ht0%
   \ifdim\dimen\csname longfootins#1\endcsname>\csuse{longpara#1@total}%
     \insert\csname footins#1\endcsname%
@@ -9683,9 +9686,13 @@
       \box0\penalty0%
     }%
   \fi%
+  \setbox0=\vbox{\csuse{notefontsizeX@#1}\noindent\@nameuse{footfmt#1}{#1}{#2}}%
+  \advance\old@pagegoal by \dimexpr \ht0+\dp0-\dimen0\relax%
+  \global\advance\csname shift#1\endcsname by \dimexpr \ht0+\dp0-\dimen0\relax%
+  \pagegoal=\old@pagegoal%
   \insert\csname longfootins#1\endcsname%
   \bgroup%
-    \@nameuse{footfmt#1}{#1}{#2}\penalty0%
+    \unvbox0\penalty0%
   \egroup%
 }%
 %    \end{macrocode}
@@ -9702,11 +9709,18 @@
   \setbox0=\vbox{\noindent\unhbox0}%
   \footsplitskips%
   \vbadness=10000%
-  \vsplit0 to \ht\csuse{longfootins#1}%
+  \ifdim\ht0<\dimexpr\ht\csuse{longfootins#1}-\csname shift#1\endcsname+\baselineskip\relax%
+    \ifdim\ht0<\baselineskip%
+        \unvxh@l{0}%
+     \else%
+        \unvbox0%
+     \fi%
+   \else%
+    \setbox1=\vsplit0 to \dimexpr\ht\csuse{longfootins#1}%
+    \unvbox1%
+  \fi%
   \ifvoid0\else%
     \ifdim\ht0<\baselineskip%
-      \vskip-\splitmaxdepth%
-      \vskip-\splittopskip%
       \unvxh@l{0}%
     \else%
      \global\setbox\csuse{toolong#1@para}=\box0%
@@ -9714,6 +9728,7 @@
   \fi%
   \setbox0=\vbox{\unvbox\csuse{longfootins#1}}%
   \global\hsize=\old@hsize%
+  \global\csname shift#1\endcsname=0pt%
 }%
 %    \end{macrocode}
 % \end{macro}
