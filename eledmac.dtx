@@ -10059,11 +10059,21 @@
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for hooks, like \cs{hsizetwocol}.
 % The first argument is the hooks name, the second a comma separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \cs{twolines}.
+% The second argument is also used to create commands named \cs{<hookname><pseudoseries>}, 
+% like \cs{twolinesappref}.
 % \changes{v1.21.0}{2015/03/29}{\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
 \newcommandx{\newhookcommand@series}[2][2,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
     \setcommand@series{##1}{#1}{##2}[][#2]%
+  }%
+  \ifstrempty{#2}{}{%
+    \def\do##1{%
+      \global\expandafter\newcommand\expandafter*\csname #1##1\endcsname[1]{%
+        \csuse{#1}[##1]{####1}%
+      }%
+    }%
+    \docsvlist{#2}%
   }%
 }
 
@@ -11241,8 +11251,7 @@
 % \end{macro}
 %
 % \begin{macro}{\appref}
-% \begin{macro}{\appreftwolines}
-% \begin{macro}{\apprefmorethantwolines}
+% \begin{macro}{\apprefwithpage}
 % \cs{appref} prints a crossref to some lines of the apparatus defined with \cs{applabel}.
 % It print the line as they should be printed in the apparatus.
 %
@@ -11254,9 +11263,6 @@
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 
-\newcommand{\twolinesappref}[1]{\twolines[appref]{#1}}%
-\newcommand{\morethantwolinesappref}[1]{\morethantwolinesappref[appref]{#1}}%
-
 \newcommand{\appref}[1]{%
  \xdef\@currentseries{appref}%
  \printlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
@@ -11266,8 +11272,6 @@
   \printendlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
 }%
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\edmakelabel}
