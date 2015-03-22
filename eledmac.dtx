@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10675}
+% \CheckSum{10716}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -219,6 +219,12 @@
 % \changes{v1.19.0}{2015/03/06}{\cs{maxhXnotes} and \cs{maxhnotesX} work now for both  two-columns and three-columns setting.}
 % \changes{v1.19.0}{2015/03/06}{Compatibility with \Lpack{eledpar} v.1.13.0.}
 % \changes{v1.19.1}{2015/03/12}{Call \cs{correct@footinsX@box} and \cs{correct@Xfootins@box} directly in \cs{print@notesX@forpages} and \cs{print@Xnotes@forpages}, that is in \Lpack{eledpar}.}
+% \changes{v1.20.0}{2015/03/22}{Correct \cs{inplaceofnumber} hook.}
+% \changes{v1.20.0}{2015/03/22}{Add series option.}
+% \changes{v1.20.0}{2015/03/22}{Fix issues with RTL text in notes when using \LuaLaTeX.}
+% \changes{v1.20.0}{2015/03/22}{The \cs{newif}s are not followed by boolean values set to false, because it is the \TeX\ default setting.}
+% \changes{v1.20.0}{2015/03/22}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
+% \changes{v1.20.0}{2015/03/22}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar commands for RTL texts with \LuaLaTeX.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -316,7 +322,7 @@
 % \Lpack{eledmac} provides many tools and options. Normally, they are all documented in this file.
 % Also provided is a help folder, ``\href{examples/.}{examples}''. The folder contains additional examples (although not for all cases)
 % 
-% To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can report bugs in English or in French (better).
+% To report bugs or request a new feature, please go to ledmac GitHub page and click on ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must create an account on github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can post messages in English or in French (preferred).
 %
 % You can subscribe to the eledmac mail list in:\\ \url{http://geekographie.maieul.net/146}
 % \end{abstract}
@@ -611,6 +617,21 @@
 % edited text.
 %
 %
+% \section{Options}
+% The package can be loaded with a number of global options which are listed here. 
+% It is advised to read the relevant parts of the handbook before reading this section.
+% \begin{description}
+% \item[draft], if called, underline lemmas in the main text.
+% \item[ledsecnolinenumber] is deprecated.
+% \item[nopbinverse] prevent page break inside verses.
+% \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \ref{noquotation} p.~\pageref{noquotation}).
+% \item[parapparatus] by default, the appparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
+% \item[series] \Lpack{eledmac} defines six levels of notes: A, B, C, D, E, Z.
+% Using all these levels consumes memory space and processing speed.
+% This is why, if your work does not require all of the A-E, Z series, you can narrow down the available number of series.
+% For example, if you only need A and B series, call the package with verb+series={A,B}+ option.
+% \item[widthliketwocolumns] set the width of the text disposed on one column to be the same as the width of the text disposed on two parallel columns with \Lpack{eledpar}. This is useful when alternating between normal and parallel typesetting.
+% \end{description}
 % \section{Text lines and paragraphs numbering}
 % \subsection{Text lines numbering}
 % \DescribeMacro{\beginnumbering}
@@ -707,7 +728,13 @@
 % Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
 % If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
 %
-% This feature is not needed for normal use of \Lpack{eledmac}, but it is needed when using verse (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
+% For example, \Lpack{eledmac} does not insert \cs{parskip} between paragraphs. This feature allows you to insert it:
+% \begin{verbatim}
+% \parskip=2\baselineskip% Set the skip between paragraphs
+% \AtEveryPend{\vskip\parskip}% Apply after every \Pend
+% \end{verbatim}
+
+%. This feature is also useful when typesetting verses (see~\ref{verse} p.~\pageref{verse}) or \Lpack{eledpar} (see~\ref{eledpar} p.~\pageref{eledpar}).
 %
 % A \cs{noindent} is automatically added before this argument.
 % \subsubsection{Content before every \cs{pstart} and after every \cs{pend}}
@@ -1090,10 +1117,12 @@
 % the most demanding editions.  But it is not hard to add further
 % layers of notes should they be required.
 %
-%\changes{v1.0}{2012/09/15}{Options nonum and nosep in \cs{Xfootnote}.}\label{Xfootnoteopt}
+%\changes{v1.0}{2012/09/15}{Options nonum and nosep in \cs{Xfootnote}.}
+%\changes{v1.20.0}{2015/03/22}{Options fulllines in \cs{Xfootnote}.}\label{Xfootnoteopt}
 %An optional argument can be added before the text of the footnote. Its value is a comma separated list of options. 
-% The available options are:
+% \label{fulllines}The available options are:
 % \begin{itemize}
+% \item \verb|fulllines| to disable \cs{twolines} and \cs{morethantwolines} features for this note (cf. \ref{twolines} p.~\pageref{twolines}).
 % \item \verb|nonum| to disable line numbering for this note.
 % \item \verb|nosep| to disable the lemma separator for this note. 
 % \end{itemize}
@@ -1212,7 +1241,7 @@
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
-% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not also present in \cs{lemma}.
+% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not already present in \cs{lemma}.
 % However, if it is actually present in \cs{lemma}, you must use this method:
 % \begin{itemize}
 %   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[inlemma]`.
@@ -1287,6 +1316,24 @@
 % But if  you use both \cs{numberonlyfirstinline}\oarg{s} and \cs{numberonlyfirstintwolines}\oarg{s}, the distinction is made.
 % Use \cs{numberonlyfirstintwolines}\oarg{s}\verb+[false]+ to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
+% \changes{v1.20.0}{2015/03/22}{Add \cs{twolines} and \cs{morethantwolines} hooks}
+% \label{twolines}
+% \DescribeMacro{\twolines}\DescribeMacro{\morethantwolines}
+% If a lemma is printed on two subsequent lines, \Eledmac\ will print the first and the last line numbers. 
+% Instead of this, it is also possible to print an abbreviation which stands for ``line 1 and subsequent line(s)''.
+%
+% To achieve this, use \cs{twolines}\oarg{s}\marg{text} and \cs{morethantwolines}\oarg{s}\marg{text}. 
+% The \verb|<text>| argument of \cs{twolines} will be printed if the lemma is on two lines, and the \verb|<text>| argument of \cs{morethantwolines} will be printed if the lemma is on three or more lines. 
+% For example:
+% \begin{verbatim}
+% \twolines{sq.}
+% \morethantwolines{sqq.}
+% \end{verbatim}
+% Will print ``1sq.'' for a lemma which falls on lines 1-2 and ``1sqq.'' for a lemma which falls on lines 1-4.
+%
+% If you use \cs{twolines} without setting \cs{morethantwolines}, the \verb|<text>| argument of \cs{twolines} will be used for lemmas which fall on three and more lines.
+%
+% You can disable this option for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
 %
@@ -1348,6 +1395,10 @@
 % \DescribeMacro{\boxsymlinenum}
 % \cs{boxsymlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} but for the line number symbol.
 % 
+%
+% \DescribeMacro{\boxXendlinenum}
+% \changes{v1.20.0}{2015/03/22}{Add \cs{boxXendlinenum}}
+% \cs{boxXendlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} except in endnotes.
 %\subsubsection{Separator between the lemma and the note content}
 % \DescribeMacro{\lemmaseparator}
 % By default,  in a footnote, the separator between the  lemma and  thenote is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
@@ -1660,8 +1711,6 @@
 % is ended by an ampersand (\&), and the stanza itself is ended
 % by putting \verb?\&? at the end of the last line.
 %
-% \textbf{Be careful: you must have NO space between the end of your verse and} \verb+&+ \textbf{or} \verb+\&+. 
-% In most cases, you will see no difference, but if your verse is exactly the same length as a line, then you will have an empty hanging verse.
 % 
 % \DescribeMacro{\stanzaindentbase}
 % Lines within a stanza may be indented. The indents are integer multiples
@@ -2465,9 +2514,9 @@
 % \section{Sectioning commands}
 % \changes{v1.1.0}{2012/09/25}{Sectioning commands.}
 % \changes{v1.12.0}{2014/08/05}{New sectioning commands.}\label{eledsection}
-% \subsection{Sectioning command without line number or critical notes}
-% The standard sectioning commands (\cs{chapter}, \cs{section} etc.) can be used inside a numbered text.
-% In this case, you must call them as optional argument of \cs{pstart} (\ref{pstart:optionalarg} p.~\pageref{start:optionalarg}:
+% \subsection{Sectioning commands without line numbers or critical notes}
+% The standard sectioning commands (\cs{chapter}, \cs{section} etc.) can be used inside numbered text.
+% In this case, you must call them as optional argument of \cs{pstart} (\ref{pstart:optionalarg} p.~\pageref{pstart:optionalarg}:
 % \begin{verbatim}
 % \pstart[\section{section}]
 % Pstart content.
@@ -2528,7 +2577,7 @@
 % A quotation environment MUST not be opened immediately after a \cs{pstart} 
 % and MUST not be closed immediately before a \cs{pend}.
 %
-% In some case, you don't want these environments be redefined in numbered section.
+% \label{noquotation} In some cases, you don't want these environments to be redefined in numbered sections.
 % You can load the package with the option \verb+noquotation+ to prevent this redefinition.
 % \section{Page breaks}
 % \changes{v1.7.0}{2013/11/08}{New features for managing page breaks.}
@@ -2801,7 +2850,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/03/12 v1.19.1 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/03/22 v1.20.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -2839,14 +2888,17 @@
 \newif\ifwidthliketwocolumns%
 \newif\ifledsecnolinenumber
 \parapparatus@false
-\DeclareOption{noquotation}{\noquotation@true}
-\DeclareOption{final}{\ledfinaltrue}
-\DeclareOption{draft}{\ledfinalfalse}
-\DeclareOption{parapparatus}{\parapparatus@true}
-\DeclareOption{nopbinverse}{\lednopbinversetrue}
-\DeclareOption{ledsecnolinenumber}{\ledsecnolinenumbertrue}
-\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
-\ExecuteOptions{final}
+\RequirePackage{xkeyval}
+\DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{noquotation}{\noquotation@true}
+\DeclareOptionX{final}{\ledfinaltrue}
+\DeclareOptionX{draft}{\ledfinalfalse}
+\DeclareOptionX{parapparatus}{\parapparatus@true}
+\DeclareOptionX{nopbinverse}{\lednopbinversetrue}
+\DeclareOptionX{ledsecnolinenumber}{\ledsecnolinenumbertrue}
+\DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
+\ExecuteOptionsX{series}%
+\ExecuteOptionsX{final}
 %    \end{macrocode}
 % Use the starred form of \verb?\ProcessOptions? which executes options in
 % the order listed in the source file: class options, then listed package
@@ -2854,7 +2906,7 @@
 % This was suggested by Dan Luecking\index{Luecking, Dan} in the \texttt{ctt}
 % thread \textit{Class/package option processing}, on 27 February 2004.
 %    \begin{macrocode}
-\ProcessOptions*\relax
+\ProcessOptionsX*\relax
 
 %    \end{macrocode}
 % \end{macro}
@@ -3229,6 +3281,13 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@err@FootnoteWithoutEdtext}
+%    \begin{macrocode}
+\newcommand{\led@err@FootnoteWithoutEdtext}{%
+  \eledmac@error{Xfootnote without edtext. Check syntax.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@error@ImakeidxAfterEledmac}
 %    \begin{macrocode}
 \newcommand{\led@error@ImakeidxAfterEledmac}{%
@@ -3367,15 +3426,10 @@
 % \changes{v1.18.0}{2015/02/23}{Add \cs{ifl@dprintingpages} and \cs{@dprintingcolumns} for \Lpack{eledpar}}
 %    \begin{macrocode}
 \newif\ifl@dpairing
-  \l@dpairingfalse
 \newif\ifl@dpaging%
-  \l@dpagingfalse%
 \newif\ifl@dprintingpages%
-  \l@dprintingpagesfalse%
 \newif\ifl@dprintingcolumns%
-  \l@dprintingcolumnsfalse%
 \newif\ifpst@rtedL
-  \pst@rtedLfalse
 \newcount\l@dnumpstartsL
 %    \end{macrocode}
 % \cs{ifledRcol} is set to true in the \verb+Rightside+ environnement. It must be distingued from \cs{ifledRcol@} which is set to true when a right line is processed, in \cs{Pages} or \cs{Columns}. 
@@ -3899,12 +3953,19 @@
   \setlength{\linenumsep}{1pc}
 \newcommand*{\numlabfont}{\normalfont\scriptsize}
 \newcommand*{\ledlinenum}{%
+  \bgroup%
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
   \numlabfont\linenumrep{\line@num}%
   \ifsublines@
     \ifnum\subline@num>0\relax
       \unskip\fullstop\sublinenumrep{\subline@num}%
     \fi
-  \fi}
+  \fi%
+  \egroup%
+}%
+
 \newcommand*{\leftlinenum}{%
   \ledlinenum
   \kern\linenumsep}
@@ -5161,7 +5222,6 @@
 % \changes{v0.7}{2005/02/22}{Added \cs{skipnumbering} and supports}
 %    \begin{macrocode}
 \newif\ifl@dskipnumber
-  \l@dskipnumberfalse
 \newcommand*{\skipnumbering}{\skipnumbering@reg}
 \newcommand*{\skipnumbering@reg}{%
   \write\linenum@out{\string\n@num}%
@@ -5416,9 +5476,9 @@
 %
 % \begin{macro}{\@tag}
 % Now, we define an empty \cs{@tag} command. It will be redefine by \cs{edtext}: its value is the first args. It will be used by the \cs{Xfootnote} commands.
-%  \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\@tag}{}
-%  \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\if@edtext@}
 % \changes{v1.15.0}{2015/01/12}{New boolean \cs{if@edtext@}.}
@@ -5751,9 +5811,9 @@
       \fi%
       \global\let\@tempb=\undefined%
     \fi%
-% \end{macrocode}
+%    \end{macrocode}
 % Do the same thing if we are in the right columns.
-% \begin{macrocode}
+%    \begin{macrocode}
   \else%
     \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
     \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
@@ -5769,9 +5829,9 @@
       \global\let\@tempb=\undefined%
     \fi%
   \fi%
-% \end{macrocode}
+%    \end{macrocode}
 % In any case, print the word.
-% \begin{macrocode}
+%    \begin{macrocode}
   #2%
 }%
 %    \end{macrocode}
@@ -6551,7 +6611,7 @@
 
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Line number printing}
+% \section{Line number printing}
 %
 % \begin{macro}{\affixline@num}
 % \cs{affixline@num} originally took a single argument, a series of
@@ -7379,23 +7439,26 @@
 % minimise the number of new ones they create. In line with this
 % Peter Wilson has reverted to traditional booleans.
 %
+% Maïeul Rouquette has added \cs{ifl@d@twolines} and \cs{ifl@d@morethantwolines}
+% to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
 % \begin{macro}{\ifl@d@pnum}
 % \begin{macro}{\ifl@d@ssub}
 % \begin{macro}{\ifl@d@elin}
 % \begin{macro}{\ifl@d@esl}
 % \begin{macro}{\ifl@d@dash}
+% \begin{macro}{\ifl@d@twolines}
+% \begin{macro}{\ifl@d@morethantwolines}
 %    \begin{macrocode}
 \newif\ifl@d@pnum 
-  \l@d@pnumfalse
 \newif\ifl@d@ssub 
-  \l@d@ssubfalse
 \newif\ifl@d@elin
-  \l@d@elinfalse
 \newif\ifl@d@esl
-  \l@d@eslfalse  
 \newif\ifl@d@dash
-  \l@d@dashfalse
+\newif\ifl@d@twolines%
+\newif\ifl@d@morethantwolines%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7499,7 +7562,34 @@
          \l@d@esltrue
          \l@d@dashtrue
       \fi
-  \fi}
+  \fi%
+%    \end{macrocode}
+% However, if the \cs{twolines} is set for the current series, we don't print the last line number.
+%    \begin{macrocode}
+  \ifl@d@dash%
+    \iftoggle{fulllines@}%
+      {}%
+      {%
+        \ifcsempty{twolines@\@currentseries}%
+          {}%
+          {%
+          \l@d@dashfalse%
+          \l@d@twolinestrue%
+          \l@d@elinfalse%
+          \l@d@eslfalse%
+          \ifcsempty{morethantwolines@\@currentseries}%
+            {}%
+            {\ifnum\numexpr #5-#2>1\relax%
+              \l@d@morethantwolinestrue%
+             \fi%
+            }%
+          }%
+      }%
+  \fi%
+%    \end{macrocode}
+% End of \cs{setprintlines}.
+%    \begin{macrocode}
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -7508,6 +7598,9 @@
 % \changes{v0.15}{2012/06/11}{Line numbering can be reset at each pstart.}
 %    \begin{macrocode}
 \def\printlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
   \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
 % One subtlety left here is when to print a period between
@@ -7521,12 +7614,20 @@
 %    \end{macrocode}
 % \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
 %        to \cs{printlines}}
+% \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \endashchar\fi
+  \ifl@d@dash \ifl@d@twolines\else\endashchar\fi\fi
   \ifl@d@pnum #4\fullstop\fi
   \ifl@d@elin \linenumrep{#5}\fi
   \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
+  \ifl@d@twolines%
+    \ifl@d@morethantwolines%
+      \csuse{morethantwolines@\@currentseries}%
+    \else%
+      \csuse{twolines@\@currentseries}%
+    \fi%
+  \fi%
 \endgroup}
 %    \end{macrocode}
 % \end{macro}
@@ -8132,7 +8233,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Insertion of the footnotes separator}
+% \subsubsection{Insertion of the footnotes separator}
 %The command \cs{insertparafootsep}\marg{series} must be called at the beginning of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
 % \changes{v1.8.0}{2013/12/13}{Correct \cs{parafootsep} when using with ledgroup.}
@@ -8193,7 +8294,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \paragraph{Three columns}
+% \subsubsection{Three columns}
 %
 % \begin{macro}{\footthreecol}
 % You say \verb"\footthreecol{A}" to have the \texttt{A} series of the footnotes
@@ -8368,7 +8469,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \paragraph{Two columns}
+% \subsubsection{Two columns}
 %
 % \begin{macro}{\foottwocol}
 % You say \verb"\foottwocol{A}" to have the \texttt{A} series of the footnotes
@@ -8707,6 +8808,11 @@
 % prepended by the marker.
 %    \begin{macrocode}
 \newcommand*{\normalfootfmtX}[2]{%
+ \ifluatex%
+    \luatextextdir\footnote@luatextextdir%
+    \luatexpardir\footnote@luatexpardir%
+    \par%
+ \fi%
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
@@ -9382,7 +9488,7 @@
 }%
 %    \end{macrocode}
 % We print all the series of notes by looping on them. 
-% We check before printing them that there are not voided.
+% We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \setbox\@outputbox \vbox{%
@@ -9491,8 +9597,22 @@
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{\csuse{bhookXendnote@#4}\csuse{Xendnotefontsize@#4}{\csuse{Xendnotenumfont@#4}\printendlines#1|}%
-      \enspace{\nottoggle{Xendlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}\enskip#3\par}}
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{%
+  \csuse{bhookXendnote@#4}%
+  \csuse{Xendnotefontsize@#4}%
+  {%
+    \csuse{Xendnotenumfont@#4}%
+    \ifdimequal{\csuse{boxXendlinenum@#4}}{0pt}%
+      {\printendlines#1|}%
+      {\leavevmode\hbox to \csuse{boxXendlinenum@#4}{\printendlines#1|\hfill}}%
+  }%
+  \enspace{%
+    \nottoggle{Xendlemmadisablefontselection@#4}%
+      {\select@lemmafont#1|#2}%
+      {#2}%
+  }%
+  \enskip#3\par%
+}}%
 
 \let\l@d@section=\@gobble
 
@@ -9677,9 +9797,12 @@
     \csgdef{bhookXnote@#1}{}%
     \csgdef{bhookXendnote@#1}{}%
     \csgdef{boxlinenum@#1}{0pt}%
+    \csgdef{boxXendlinenum@#1}{0pt}%
     \csgdef{boxsymlinenum@#1}{0pt}%
     \newtoggle{numberonlyfirstinline@#1}%
     \newtoggle{numberonlyfirstintwolines@#1}%
+    \csgdef{twolines@#1}{}%
+    \csgdef{morethantwolines@#1}{}%
     \newtoggle{onlypstartinfootnote@#1}%
     \newtoggle{pstartinfootnoteeverytime@#1}%
     \newtoggle{pstartinfootnote@#1}%
@@ -9722,41 +9845,45 @@
 %    \begin{macrocode}
 
     \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-        \begingroup%
-        \newcommand{\content}{##2}%
-        \ifnumberedpar@
-            \ifledRcol%
-               \ifluatex%
-                   \footnotelang@lua[R]%  
-               \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly[R]}%          
-                \footnoteoptions@[R]{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
-                \footnoteoptions@[R]{##1}{false}%
-                \global\advance\insert@countR \@ne%
-            \else%
+        \if@edtext@%
+          \begingroup%
+          \newcommand{\content}{##2}%
+          \ifnumberedpar@%
+              \ifledRcol%
                  \ifluatex%
-                   \footnotelang@lua%
+                     \footnotelang@lua[R]%  
                  \fi%
-               \@ifundefined{xpg@main@language}%if polyglossia
-                     {}%
-                     {\footnotelang@poly}%
-                \footnoteoptions@{##1}{true}%
-                \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-\noexpand\csuse{v#1footnote}{#1}%
-                {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
-                \global\advance\insert@count \@ne%
-                \footnoteoptions@{##1}{false}%
-            \fi
-        \else
-            \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly[R]}%          
+                  \footnoteoptions@[R]{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                  \footnoteoptions@[R]{##1}{false}%
+                  \global\advance\insert@countR \@ne%
+              \else%
+                   \ifluatex%
+                     \footnotelang@lua%
+                   \fi%
+                 \@ifundefined{xpg@main@language}%if polyglossia
+                       {}%
+                       {\footnotelang@poly}%
+                  \footnoteoptions@{##1}{true}%
+                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+  \noexpand\csuse{v#1footnote}{#1}%
+                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                  \global\advance\insert@count \@ne%
+                  \footnoteoptions@{##1}{false}%
+              \fi
+          \else
+              \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+          \fi%
+          \ignorespaces%
+          \endgroup%
+        \else%
+          \led@err@FootnoteWithoutEdtext%
         \fi%
-        \ignorespaces%
-        \endgroup
         }
 %    \end{macrocode}
 %Set standard display and remember the display.
@@ -9773,18 +9900,22 @@
             \newcommand{\content}{##1}%
             \stepcounter{footnote#1}%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-             \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
+            \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
                {\csuse{@footnotemark#1}}%
                {}%
+            \ifluatex%
+              \xdef\footnote@luatextextdir{\the\luatextextdir}%
+              \xdef\footnote@luatexpardir{\the\luatexpardir}%
+            \fi%
             \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
         \endgroup%
     }
 %    \end{macrocode}
 % The counters.
-%  \begin{macrocode}
+%    \begin{macrocode}
     \newcounter{footnote#1}
       \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
-%  \end{macrocode}
+%    \end{macrocode}
 % Don't forget to initialize series
 %    \begin{macrocode}
     \csgdef{series@displayX#1}{}
@@ -9818,11 +9949,11 @@
 %    \begin{macrocode}
 
     \global\cslet{#1end}{\@gobblefour}
-%\end{macrocode}
+%    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
 
     \global\csletcs{#1@@footnote}{#1footnote}
-% \cs{Stock series in \cs{@series}
+% \cs{Stock series in \cs{@series}}
 %    \begin{macrocode}
 
     \listxadd{\@series}{#1}
@@ -9832,9 +9963,10 @@
 % \end{macro}
 % \subsection{Init standards series (A,B,C,D,E,Z)}
 %    \begin{macrocode}
-\newseries{A,B,C,D,E,Z}
+\expandafter\newseries\expandafter{\default@series}
 %    \end{macrocode}
-% \subsection{Some tools}
+% \section{Display}
+% \subsection{Change series order}
 % \changes{v1.1}{2012/09/25}{New tools to change order of series}
 % \begin{macro}{\firstseries}
 % \cs{seriesatbegin}\marg{s} changes the order of series, to put the series \meta{s} at the beginning of the list.
@@ -9852,7 +9984,7 @@
 % \end{macro}
 % \begin{macro}{\seriesatend}
 %  And \cs{seriesatend} moves the series to the end of the list.
-% \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\seriesatend}[1]{
      \edef\series{#1}
      \def\new{}
@@ -9861,11 +9993,10 @@
     \listeadd{\new}{\series}
     \xdef\@series{\new}
 }
-% \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
-% \subsection{Display}
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
-% \subsubsection{Options}
+% \subsection{Options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
 % \changes{v1.13.0}{2014/09/16}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
@@ -9918,6 +10049,11 @@
     \setcommand@series{##1}{#1}{##2}%
   }%
 }
+
+\newhookcommand@series{twolines}
+
+\newhookcommand@series{morethantwolines}
+
 \newhookcommand@series{Xhangindent}
 
 \newhookcommand@series{hangindentX}
@@ -9953,6 +10089,8 @@
 \newhookcommand@series{Xendnotefontsize}
 
 \newhookcommand@series{boxlinenum}
+
+\newhookcommand@series{boxXendlinenum}%
 
 \newhookcommand@series{boxsymlinenum} 
 
@@ -9995,7 +10133,7 @@
 % \changes{v1.12.0}{2014/08/05}{Debug \cs{beforeXnotes} and  \cs{maxhXnotes} which didn't work when called after \cs{footparagraph}.}
 % \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
 % but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
-% \begin{macrocode}
+%    \begin{macrocode}
 \newcommand{\newhookcommand@series@reload}[1]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
     \setcommand@series{##1}{#1}{##2}[reload]%
@@ -10008,7 +10146,7 @@
 \newhookcommand@series@reload{maxhnotesX}
 
 \newhookcommand@series@reload{maxhXnotes}
-% \end{macrocode}
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
 %\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
@@ -10063,6 +10201,12 @@
 % \end{macro}
 % \end{macro}
 % \subsection{Hooks for a particular footnote}
+% \begin{macro}{\fulllines@}
+%\cs{fulllines@} toggle is used to print the fulllines references, and not the abbreviated form defined by \cs{twolines} and \cs{morethantwolines}.
+%    \begin{macrocode}
+\newtoggle{fulllines@}%
+%    \end{macrocode}
+% \end{macro}
 %  \begin{macro}{\nonum@}
 %\cs{nonum@} toggle is used to disable line number printing in a particular footnote.
 %    \begin{macrocode}
@@ -10107,7 +10251,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Line number printing}
+% \section{Line number printing}
 % \begin{macro}{\printlinefootnote}
 % The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the previous options. Its first argument is the information about lines ; its second is the series of the footnote.
@@ -10142,7 +10286,7 @@
                     {%Be sure the \prevline exists.
                     \ifcsequal{prevline#2}{lineinfo@}%Try it
                        {%
-                       \ifcsempty{symlinenum@#2}% Try if a symbol is define
+                       \IfStrEq{\csuse{symlinenum@#2}}{}%
                         {%
                             \hspace{\csuse{inplaceofnumber@#2}}%
                         }%
@@ -10208,6 +10352,7 @@
 % The previous \cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
+  \xdef\@currentseries{#2}%
   \ifboolexpr{%
    (togl{pstartinfootnote@#2} and bool{numberpstart})%
    or togl{pstartinfootnoteeverytime@#2}}%
@@ -10989,6 +11134,7 @@
 %
 % \begin{macro}{\xxref}
 % \changes{v1.19.0}{2015/03/06}{\cs{xxref} works also with right side numbers, when \cs{Rlineflag} is not empty.}
+% \changes{v1.20.0}{2015/03/22}{Debug \cs{xxref} when not loading eledpar (fix bug added in 1.19.0).}
 % The \cs{xxref} command takes two arguments, both of which are
 % labels, e.g., \verb"\xxref{mouse}{elephant}".  It first does some
 % checking to make sure that the labels do exist (if one doesn't,
@@ -11014,8 +11160,13 @@
    \else%
       \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
    \fi%
+   \ifdefined\Rlineflag%
    \StrDel{\csuse{the@@label#1}}{\Rlineflag}[\@tempa]%
-   \StrDel{\csuse{the@@label#2}}{\Rlineflag}[\@tempb]%
+     \StrDel{\csuse{the@@label#2}}{\Rlineflag}[\@tempb]%
+  \else%
+   \letcs{\@tempa}{the@@label#1}%
+   \letcs{\@tempb}{the@@label#2}%
+ \fi%
    \linenum{\@tempa|%
     \@tempb}}}%
 
@@ -12249,7 +12400,6 @@
 %    \begin{macrocode}
 \newcommand*{\hangingsymbol}{}
 \newif\ifinstanza
-\instanzafalse
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -12425,6 +12575,7 @@
 % \changes{v1.12.0}{2014/08/05}{Add \cs{newverse} macro, \cs{falseverse} deprecated.}
 % \changes{v1.12.0}{2014/08/05}{\cs{Stanza} can have an optional argument: content to be printed before.}
 % \changes{v1.12.0}{2014/08/05}{\ampersand can have an optional argument: content to be printed after.}
+% \changes{v1.20.0}{2015/03/22}{\ampersand\ and \textbackslash\ampersand\ can be preceded by spaces.}
 % \begin{macro}{\@stopstanza}
 % \begin{macro}{\newverse}
 % \begin{macro}{\falseverse}
