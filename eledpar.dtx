@@ -3012,14 +3012,14 @@
     \l@dld@ta %space kept for backward compatibility
     \add@inserts\affixside@note%
     \l@dlsn@te %space kept for backward compatibility
-    {\ledllfill\hb@xt@ \wd\one@line{%
+    {\ledllfill\hb@xt@ \Lcolwidth{%
             \do@insidelineLhook%
             \ifluatex%
               \luatextextdir\l@luatextextdir@L%
             \fi%
             \new@lineL%
             \inserthangingsymbolL%
-            \l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+            \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
      \l@drsn@te}}
 
 %    \end{macrocode}
@@ -3149,7 +3149,7 @@
     \l@dld@ta  %space kept for backward compatibility
     \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
-    \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{%
+    \ledllfill\hb@xt@ \Rcolwidth{%
        \do@insidelineRhook%
        \new@lineR%
        \inserthangingsymbolR%
@@ -4106,14 +4106,19 @@
 %\changes{v0.11}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
 %\changes{v0.12}{2012/08/03}{New new management of hangingsymbol insertion, preventing undesirable insertions.}
 % Like in eledmac, the insertion of hangingsymbol is base on \cs{ifinserthangingsymbol}, and, for the right side, on \cs{ifinserthangingsymbolR}.
+% The two commands also include the hanging space, to be sure the \cs{one@line} of hanging lines has the same width that the cs{one@line} of normal lines and prevent shift of the column separator.
 % \begin{macro}{\inserthangingsymbolL}
 % \begin{macro}{\inserthangingsymbolR}
+% \changes{v0.11}{2012/06/11}{Prevent shift of column separator when a verse is hanged}
 % \changes{v1.4.3}{2013/10/27}{Hang verse is now not automatically flush right.}
+% \changes{v1.21.1}{2015/03/29}{Better prevention of  shift of column separator when a verse is hanged}
 %    \begin{macrocode}
 \newif\ifinserthangingsymbolR
 \newcommand{\inserthangingsymbolL}{%
   \ifinserthangingsymbol%
     \ifinstanzaL%
+        \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+          \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
         \hangingsymbol%
     \fi%
   \fi%
@@ -4121,6 +4126,8 @@
 \newcommand{\inserthangingsymbolR}{%
   \ifinserthangingsymbolR%
     \ifinstanzaR%
+        \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+           \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
         \hangingsymbol%
     \fi%
   \fi%
@@ -4128,33 +4135,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%\changes{v0.11}{2012/06/11}{Prevent shift of column separator when a verse is hanged}
-% When a verse is hanged, the column separator is shifted. To prevent it, the \cs{do@lineL} and \cs{do@lineR} commands call \cs{correcthangingL} and \cs{correcthangingR} commands. These commands insert horizontal skip which length is equal to the hang indent.
-% \begin{macro}{\correcthangingL}
-% \begin{macro}{\correcthangingR}
-%    \begin{macrocode}
-\newcommand{\correcthangingL}{%
-\ifl@dprintingpages\else%
-    \ifinstanzaL%
-        \ifinserthangingsymbol%
-            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
-                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-        \fi%
-    \fi%
-\fi}
 
-\newcommand{\correcthangingR}{%
-\ifl@dprintingpages\else%
-    \ifinstanzaR%
-        \ifinserthangingsymbolR%
-            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
-                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-        \fi%
-    \fi%
-\fi}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % Before we can define the main stanza macros we need to be able to save 
 % and reset
 % the category code for \&. To save the current value we use
