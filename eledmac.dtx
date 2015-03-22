@@ -10027,9 +10027,17 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setcommand@series} 
-% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to change commands for some series.
+% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to change hooks in form of commands for some series. 
+% The arguments are:
+% \begin{itemize}
+%   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
+%   \item \verb+#2+ (mandatory): the name of the hook.
+%   \item \verb+#3+ (mandatory): the new value of the hook/command.
+%   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \cs{footnormal or \cs{footparagraph} or … depending of the footnote display).
+%   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\setcommand@series}[4][4]{%
+\newcommandx{\setcommand@series}[5][4,5,usedefault]{%
     \def\do##1{
         \csgdef{#2@##1}{#3}
     \ifstrequal{#4}{reload}{
@@ -10038,6 +10046,9 @@
     }{}}
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
+              \ifstrempty{#5}{}{%
+                 \docsvlist{#5}
+               }
     }%
     {%
               \docsvlist{#1}%
@@ -10047,16 +10058,19 @@
 % \end{macro}
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for hooks, like \cs{hsizetwocol}.
+% The first argument is the hooks name, the second a comma separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \cs{twolines}.
+% \changes{v1.21.0}{2015/03/29}{\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommand{\newhookcommand@series}[1]{%
+\newcommandx{\newhookcommand@series}[2][2,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}%
+    \setcommand@series{##1}{#1}{##2}[][#2]%
   }%
 }
 
-\newhookcommand@series{twolines}
+\newhookcommand@series{twolines}[appref]
 
-\newhookcommand@series{morethantwolines}
+\newhookcommand@series{morethantwolines}[appref]
+
 
 \newhookcommand@series{Xhangindent}
 
@@ -11240,8 +11254,8 @@
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 
-\newcommand{\twolinesappref}[1]{\xdef\twolines@appref{#1}}%
-\newcommand{\morethantwolinesappref}[1]{\xdef\morethantwolines@appref{#1}}%
+\newcommand{\twolinesappref}[1]{\twolines[appref]{#1}}%
+\newcommand{\morethantwolinesappref}[1]{\morethantwolinesappref[appref]{#1}}%
 
 \newcommand{\appref}[1]{%
  \xdef\@currentseries{appref}%
