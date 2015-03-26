@@ -741,7 +741,7 @@
 % A \cs{noindent} is automatically added before this argument.
 % \subsubsection{Content before every \cs{pstart} and after every \cs{pend}}
 % \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}
-% \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
+% \label{AtEveryPstart} \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
 % You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
 % Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
 % \subsubsection{Producting automatically \cs{pstart}…\cs{pend}}
@@ -1109,10 +1109,11 @@
 % \DescribeMacro{\Cfootnote}
 % \DescribeMacro{\Dfootnote}
 % \DescribeMacro{\Efootnote}
-% Five separate series of the footnotes are maintained; each macro
+% \DescribeMacro{\Zfootnote}
+% Six separate series of the footnotes are maintained; each macro
 % taking one argument like \cs{Afootnote}\marg{text}. When all five
 % are used, the \texttt{A} notes appear in a layer just below the main
-% text, followed by the rest in turn, down to the \texttt{E} notes at
+% text, followed by the rest in turn, down to the \texttt{Z} notes at
 % the bottom.  These are the main macros that you will use to construct
 % the critical apparatus of your text. The package provides five
 % layers of notes in the belief that this will be adequate for
@@ -1686,12 +1687,26 @@
 % formatted in the same way.
 %
 %
+% \subsection{Changing series}
+% \subsubsection{Create a new series}\label{newseries}
 %
-% \subsection{Create a new series}\label{newseries}
-%
-%    If you need more than 5 series of critical footnotes you can
+%    If you need more than six series of critical footnotes you can
 % create extra series, using \cs{newseries} command. For example to create G and H series \cs{newseries}\verb+G,H+.
+% 
+% \subsubsection{Delete series}
+% More series are defined, more \Eledmac{} is slow.
+% If you do not need all the six standard series (A, B, C, D, E, Z),
+% you can load the package with the \verb+series+ option. 
+% For example if you need only series~A and~B, use:
+% \begin{verbatim}
+% \usepackage[series={A,B}]{eledmac}
+% \end{verbatim}
+% \subsubsection{Series order}
+% The default series order is the one called with the \verb+series+ option of the package, or, if this option is not used, A, B, C, D, E, Z. 
+% Series order determines footnotes order.
 %
+% \DescribeMacro{seriesatbegin}\DescribeMacro{seriesatend} However in some specific case, you need to change the series order inside the document.
+% You can use \cs{seriesatbegin}\marg{<s>} to push the series \verb+<s>+ at the begin, and \cs{seriesatend}\marg{<s>}  to push the series \verb+<s>+ at the end.
 % \section{Verse}\label{verse}
 %
 %
@@ -2202,10 +2217,11 @@
 % \DescribeMacro{\footnoteC}
 % \DescribeMacro{\footnoteD}
 % \DescribeMacro{\footnoteE}
+% \DescribeMacro{\footnoteZ}
 %    As well as the standard \LaTeX\ footnotes generated via \cs{footnote},
 % the package also provides
-% five series of additional footnotes called \cs{footnoteA} through
-% \cs{footnoteE}. These have the familiar marker in the text, and 
+% six series of additional footnotes called \cs{footnoteA} through
+% \cs{footnoteZ}. These have the familiar marker in the text, and 
 % the marked text at the foot of the page can be formated using
 % any of the styles described for the critical footnotes. Note that
 % the `regular' footnotes have the series letter at the end of the macro
@@ -7795,7 +7811,7 @@
 % \subsection{Standard footnote definitions}
 %
 % \begin{macro}{\footnormal}
-% We can now define all the parameters for the five series of
+% We can now define all the parameters for the six series of
 % footnotes; initially they use the `normal' footnote formatting,
 % which is set up by calling \cs{footnormal}.
 % You can switch to another type of formatting by using
@@ -8647,7 +8663,7 @@
 % \subsection{Generality}
 %    The original \edmac{} provided users with five series of critical footnotes (\cs{Afootnote} \cs{Bfootnote}  \cs{Cfootnote} \cs{Dfootnote} \cs{Efootnote}),
 % and \LaTeX\ provides a single numbered footnote. The \Eledmac{} package
-% uses the \edmac{} mechanism to provide five series of numbered footnotes.
+% uses the \edmac{} mechanism to provide six series of numbered footnotes.
 % 
 %    First, though, the \Lpack{footmisc} package has an option whereby
 % two or more consecutive \cs{footnote}s have their marks separated
@@ -10022,17 +10038,17 @@
 % \section{Display}
 % \subsection{Change series order}
 % \changes{v1.1}{2012/09/25}{New tools to change order of series}
-% \begin{macro}{\firstseries}
+% \changes{v1.21.0}{2015/03/29}{\cs{seriesatbegin} and \cs{seriesatbegin} more efficient}
+% \begin{macro}{\seriesatbegin}
 % \cs{seriesatbegin}\marg{s} changes the order of series, to put the series \meta{s} at the beginning of the list.
 % The series can be the result of a command.
 %    \begin{macrocode}
-\newcommand{\seriesatbegin}[1]{
-     \edef\series{#1}
-     \def\new{}
-     \listeadd{\new}{\series}
-    \def\do##1{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
-    \dolistloop{\@series}
-    \xdef\@series{\new}
+\newcommand{\seriesatbegin}[1]{%
+   \StrDel{\@series}{#1}[\@series]%
+   \edef\@new{}%
+   \listeadd{\@new}{#1}%
+   \listeadd{\@new}{\@series}%
+   \xdef\@series{\@new}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10040,12 +10056,11 @@
 %  And \cs{seriesatend} moves the series to the end of the list.
 %    \begin{macrocode}
 \newcommand{\seriesatend}[1]{
-     \edef\series{#1}
-     \def\new{}
-    \def\do##1{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
-    \dolistloop{\@series}
-    \listeadd{\new}{\series}
-    \xdef\@series{\new}
+   \StrDel{\@series}{#1}[\@series]%
+   \edef\@new{}%
+   \listeadd{\@new}{\@series}%
+   \listeadd{\@new}{#1}%
+   \xdef\@series{\@new}%
 }
 %    \end{macrocode}
 % \end{macro}
