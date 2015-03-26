@@ -10038,17 +10038,17 @@
 % \section{Display}
 % \subsection{Change series order}
 % \changes{v1.1}{2012/09/25}{New tools to change order of series}
-% \begin{macro}{\firstseries}
+% \changes{v1.21.0}{2015/03/29}{\cs{seriesatbegin} and \cs{seriesatbegin} more efficient}
+% \begin{macro}{\seriesatbegin}
 % \cs{seriesatbegin}\marg{s} changes the order of series, to put the series \meta{s} at the beginning of the list.
 % The series can be the result of a command.
 %    \begin{macrocode}
-\newcommand{\seriesatbegin}[1]{
-     \edef\series{#1}
-     \def\new{}
-     \listeadd{\new}{\series}
-    \def\do##1{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
-    \dolistloop{\@series}
-    \xdef\@series{\new}
+\newcommand{\seriesatbegin}[1]{%
+   \StrDel{\@series}{#1}[\@series]%
+   \edef\@new{}%
+   \listeadd{\@new}{#1}%
+   \listeadd{\@new}{\@series}%
+   \xdef\@series{\@new}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10056,12 +10056,11 @@
 %  And \cs{seriesatend} moves the series to the end of the list.
 %    \begin{macrocode}
 \newcommand{\seriesatend}[1]{
-     \edef\series{#1}
-     \def\new{}
-    \def\do##1{\ifcsstring{series}{##1}{}{\listadd{\new}{##1}}}
-    \dolistloop{\@series}
-    \listeadd{\new}{\series}
-    \xdef\@series{\new}
+   \StrDel{\@series}{#1}[\@series]%
+   \edef\@new{}%
+   \listeadd{\@new}{\@series}%
+   \listeadd{\@new}{#1}%
+   \xdef\@series{\@new}%
 }
 %    \end{macrocode}
 % \end{macro}
