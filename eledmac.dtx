@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10716}
+% \CheckSum{10845}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1958,8 +1958,8 @@
 % line number references to those places elsewhere 
 % using those labels.
 %
-%
-%
+% \subsection{Basic use}
+% 
 % \DescribeMacro{\edlabel}
 % First you place a label in the text using the command
 % \cs{edlabel}\marg{lab}. \meta{lab} can be almost anything you like, including
@@ -2005,6 +2005,14 @@
 %    unafraid}{\Afootnote{Of the mouse, that is.}}
 % \end{verbatim}
 %
+% If you add the \cs{edlabel} inside a \cs{Xfootnote} command, 
+% that will refer to the note, and the suffix \emph{n} will be added.
+% You can redefine this suffix by redefine the command \cs{ledinnotemark}. 
+% Actually, it is defined as 
+% \begin{verbatim}
+% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
+% \end{verbatim}
+% Where \verb+#1+ means for the reference.
 % \DescribeMacro{\xpageref}
 % \DescribeMacro{\xlineref}
 % \DescribeMacro{\xsublineref}
@@ -2059,15 +2067,54 @@
 % number here is zero.  It is usually best to collect your
 % \cs{edmakelabel} statements near the top of your document, so that
 % you can see them at a glance.
-%
+% \subsection{Normal \LaTeX\ cross-referencing}
 % \DescribeMacro{\label}
 % \DescribeMacro{\ref}
 % \DescribeMacro{\pageref}
 % \changes{v0.2.1}{2003/08/25}{Added text about normal labeling}
 %    The normal \cs{label}, \cs{ref} and \cs{pageref} macros may be used
 % within numbered text, and operate in the familiar fashion. 
+% \subsection{References to lines commented in the apparatus}
+% \changes{v1.21.0}{2015/03/09}{Add \cs{applabel} and related}
+% Many time, you would like to refers to lines which \cs{edtext} refers.
+% In such case, \Eledmac{} provides specific tools.
 %
+% \DescribeMacro{\applabel}
+% If you use \cs{applabel}\marg{label} inside the second argument of a \cs{edtext},
+% \Eledmac\ will add \cs{edlabel} for both the begin and the end of the marked passage.
+% 
+% The start label will have the form of \verb+<label>:start+ and the end label will have the form of \verb+<label>:end+.
 %
+% Notes that if you use \cs{linenum} (\ref{linenum} p.~\pageref{linenum}),
+% \Eledmac\ will use your line setting to mark the passage.
+%
+% \DescribeMacro{\appref}\DescribeMacro{\apprefwithpage}  
+% To referes to these lines, you can use \cs{appref}\marg{label} and \cs{appref}\marg{label}.
+% The first one will print the lines as they are printed in critical footnotes, 
+% while the second one will print the lines as they are printed in endnotes.
+%
+% \DescribeMacro{\apprefprefixsingle}\DescribeMacro{\apprefprefixmore}
+% If you redefine \cs{apprefprefixsingle}, its content will be printed at the begin of \cs{appref} before lines number.
+% If you redefine \cs{apprefprefixmore}, its content will be printed at the begin of \cs{appref} if you refer to more the one line.
+% 
+% For example, you could use:
+% \begin{verbatim}
+% \renewcommand{\apprefprefixsingle}{line~}
+% \renewcommand{\apprefprefixmore}{lines~}
+% \end{verbatim}
+%
+% Note that if \cs{apprefprefixmore} is empty, \cs{apprefprefixsingle} will used in any case.
+% 
+% 
+% \DescribeMacro{\twolinesappref}
+% \DescribeMacro{\morethantwolinesappref}
+% If you use \cs{twolines} and/or \cs{morethantwolines} (\ref{twolines} p.~\pageref{twolines}) \emph{without series optional argument}, the setting will be also available for \cs{appref}.
+%
+% However, you can also set it by calling \cs{twolinesappref}\marg{text} and \cs{morethantwolinesappref}\marg{text}.
+%
+% It is possible to disable this setting for a specific \cs{appref} command 
+% using \cs{appref}\verb+[fulllines]+\marg{label}.
+% 
 % \section{Side notes}
 %
 %   The \cs{marginpar} command does not work in numbered text. Instead 
@@ -3163,14 +3210,18 @@
 % \end{macro}
 %
 % \begin{macro}{\led@warn@DuplicateLabel}
+% \begin{macro}{\led@warn@AppLabelOutEdtext}
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
   \eledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
+\newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
+  \eledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \eledmac@warning{Reference `#1' on page \the\pageno\space undefined.
                   Using `000'.}}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -10025,9 +10076,17 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setcommand@series} 
-% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to change commands for some series.
+% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to change hooks in form of commands for some series. 
+% The arguments are:
+% \begin{itemize}
+%   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
+%   \item \verb+#2+ (mandatory): the name of the hook.
+%   \item \verb+#3+ (mandatory): the new value of the hook/command.
+%   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \cs{footnormal} or \cs{footparagraph} or … depending of the footnote display).
+%   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\setcommand@series}[4][4]{%
+\newcommandx{\setcommand@series}[5][4,5,usedefault]{%
     \def\do##1{
         \csgdef{#2@##1}{#3}
     \ifstrequal{#4}{reload}{
@@ -10036,6 +10095,9 @@
     }{}}
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
+              \ifstrempty{#5}{}{%
+                 \docsvlist{#5}
+               }
     }%
     {%
               \docsvlist{#1}%
@@ -10045,16 +10107,29 @@
 % \end{macro}
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for hooks, like \cs{hsizetwocol}.
+% The first argument is the hooks name, the second a comma separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \cs{twolines}.
+% The second argument is also used to create commands named \cs{<hookname><pseudoseries>}, 
+% like \cs{twolinesappref}.
+% \changes{v1.21.0}{2015/03/29}{\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommand{\newhookcommand@series}[1]{%
+\newcommandx{\newhookcommand@series}[2][2,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}%
+    \setcommand@series{##1}{#1}{##2}[][#2]%
+  }%
+  \ifstrempty{#2}{}{%
+    \def\do##1{%
+      \global\expandafter\newcommand\expandafter*\csname #1##1\endcsname[1]{%
+        \csuse{#1}[##1]{####1}%
+      }%
+    }%
+    \docsvlist{#2}%
   }%
 }
 
-\newhookcommand@series{twolines}
+\newhookcommand@series{twolines}[appref]
 
-\newhookcommand@series{morethantwolines}
+\newhookcommand@series{morethantwolines}[appref]
+
 
 \newhookcommand@series{Xhangindent}
 
@@ -11001,6 +11076,55 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\applabel}
+% \cs{applabel}, if called in \cs{edtext} will insert automatically a start and a end label for the current edtext lines.
+%    \begin{macrocode}
+\newcommand*{\applabel}[1]{%
+  \if@edtext@%  
+%    \end{macrocode}
+% Label should not be already defined.
+%    \begin{macrocode}
+      \ifcsundef{the@label#1}{%
+        \csdef{the@label#1}{applabel}%
+       }%
+       {%
+         \led@warn@DuplicateLabel{#1 (applabel)}%
+       }%
+%    \end{macrocode}
+% Parse the edtext line numbers.
+%    \begin{macrocode}      
+     \expandafter\l@dp@rsefootspec\l@d@nums|%
+%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \begin{macrocode}
+     \@bsphack%
+%    \end{macrocode}% And now, write the data in the auxiliary file.
+%    \begin{macrocode}
+      \ifledRcol%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1:start}}%
+        \ifdef{\hypertarget}{\hypertarget{#1:start}{}}{}%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+      \else%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1:start}}%
+        \ifdef{\hypertarget}{\hypertarget{#1:start}{}}{}%
+        \protected@write\@auxout{}%
+          {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
+      \fi%
+%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \begin{macrocode}
+      \@esphack%
+%    \end{macrocode}% Warning if \cs{edlabel} is called outside of edtext.
+%    \begin{macrocode}  
+  \else%
+    \led@warn@AppLabelOutEdtext{#1}%
+  \fi%
+%    \end{macrocode}% End of \cs{applabel}
+%    \begin{macrocode}
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\wrap@edcrossref}
 % \changes{v1.12.1}{2014/08/06}{Fix spurious spaces.}
 % \changes{v1.12.7}{2014/09/07}{\cs{wrap@edcrossref} is now robust}
@@ -11174,6 +11298,50 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\appref}
+% \begin{macro}{\apprefwithpage}
+% \begin{macro}{\apprefprefixsingle}
+% \begin{macro}{\apprefprefixmore}
+% \cs{appref} prints a crossref to some lines of the apparatus defined with \cs{applabel}.
+% It prints the line as they should be printed in the apparatus.
+% 
+% If \cs{apprefprefixsingle} is not empty, it print it before the line number.
+% If \cs{apprefprefixsingles} is not empty, it print it before the line numbers when the first line is not the same as the last line.
+% \cs{apprefwithpage} print a crossref to some lines of the apparatus defined with \cs{applabel}.
+% It always prints the page number, as it should be printed in the end notess.
+% The \cs{twolinesappref} and \cs{morethantwolinesappref} are similar to the footnote
+% hooks and \cs{twolines} \cs{morethantwolines}.
+%    \begin{macrocode}
+\xdef\twolines@appref{}%
+\xdef\morethantwolines@appref{}%
+
+\newcommand\apprefprefixsingle{}%
+\newcommand\apprefprefixmore{}%
+
+\newcommandx{\appref}[2][1,usedefault]{%
+ \IfStrEq{#1}{fulllines}%
+   {\toggletrue{fulllines@}}%
+   {}%
+ \xdef\@currentseries{appref}%
+ \ifdefempty{\apprefprefixmore}%
+   {\apprefprefixsingle}%
+   {%
+     \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
+       {\apprefprefixsingle}%
+       {\apprefprefixmore}%
+   }%
+ \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
+ \togglefalse{fulllines@}%
+}%
+
+\newcommand{\apprefwithpage}[1]{%
+  \printendlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\edmakelabel}
 % Sometimes the \cs{edlabel} command cannot be used to specify
 % exactly the page and line desired; you can use the \cs{edmakelabel} macro
@@ -11928,11 +12096,15 @@
 % \end{macro}
 % \begin{macro}{\ledinnote}
 % \begin{macro}{\ledinnotehyperpage}
+% \begin{macro}{\ledinnotemark}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{ledinnotemark}.}
 % These macros are used to specifiy that an index reference points to a note.
 %    \begin{macrocode}
-\newcommand{\ledinnote}[2]{\csuse{#1}{#2\emph{n}}}
-\newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\hyperpage{#2}\emph{n}}}
+\newcommand{\ledinnote}[2]{\csuse{#1}{\ledinnotemark{#2}}}%
+\newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\ledinnotemark{\hyperpage{#2}}}}%
+\newcommand{\ledinnotemark}[1]{#1\emph{n}}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %    The \Lpack{memoir} class provides more flexible indexing than the
