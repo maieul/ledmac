@@ -1978,19 +1978,7 @@
 % \end{macro}
 %
 % \begin{macro}{\n@num}
-% This macro implements the \cs{skipnumbering} command. It uses a new
-% action code, namely 1007.
-%    \begin{macrocode}
-\providecommand*{\n@num}{}
-\renewcommand*{\n@num}{%
-  \ifledRcol
-    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-    \xright@appenditem{-1007}\to\actions@listR
-  \else
-    \n@num@reg
-  \fi}
-
-%    \end{macrocode}
+% \changes{1.15.0}{2015/03/29}{\cs{n@num} defined only one time for both \Eledmac{} and \Eledpar{}.}
 % \end{macro}
 %
 % \begin{macro}{\@ref}
@@ -2277,18 +2265,7 @@
 % \end{macro}
 %
 % \begin{macro}{\skipnumbering}
-% In numbered text, \cs{skipnumbering} in a line will suspend the 
-% numbering for that particular line. That is, line numbers are unchanged and
-% no line number will be printed.
-%    \begin{macrocode}
-\renewcommand*{\skipnumbering}{%
-  \ifledRcol \write\linenum@outR{\string\n@num}%
-             \advanceline{-1}%
-  \else      
-    \skipnumbering@reg
-  \fi}
-
-%    \end{macrocode}
+% \changes{1.15.0}{2015/03/29}{\cs{skipnumbering} defined only one time for both \Eledmac{} and \Eledpar{}}
 % \end{macro}
 %
 %
@@ -3226,37 +3203,43 @@
   \global\advance\absline@numR \@ne
   \do@actionsR
   \do@ballastR
-\ifledgroupnotesR@\else\ifnumberline
-  \ifsublines@
-    \ifnum\sub@lockR<\tw@
-      \global\advance\subline@numR \@ne
-    \fi
-  \else
-    \ifnum\@lockR<\tw@
-      \global\advance\line@numR \@ne
-      \global\subline@numR \z@
+  \ifledgroupnotesR@\else
+    \ifl@dskipversenumberR\else
+        \ifnumberline
+          \ifsublines@
+            \ifnum\sub@lockR<\tw@
+              \global\advance\subline@numR \@ne
+           \fi
+          \else
+            \ifnum\@lockR<\tw@
+              \global\advance\line@numR \@ne
+              \global\subline@numR \z@
+            \fi
+          \fi
+        \fi
     \fi
   \fi
-\fi
-\fi
 }
 \newcommand*{\getline@numL}{%
-    \global\advance\absline@num \@ne
+  \global\advance\absline@num \@ne
   \do@actions
   \do@ballast
-\ifledgroupnotesL@\else\ifnumberline
-  \ifsublines@
-     \ifnum\sub@lock<\tw@
-       \global\advance\subline@num \@ne
-     \fi
-  \else
-     \ifnum\@lock<\tw@
-       \global\advance\line@num \@ne
-       \global\subline@num \z@
-     \fi
+  \ifl@dskipversenumber\else
+      \ifledgroupnotesL@\else
+        \ifnumberline
+           \ifsublines@
+             \ifnum\sub@lock<\tw@
+               \global\advance\subline@num \@ne
+             \fi
+           \else
+             \ifnum\@lock<\tw@
+                \global\advance\line@num \@ne
+                \global\subline@num \z@
+             \fi
+           \fi
+        \fi
+      \fi
   \fi
-\fi
-\fi
 }
 
 
@@ -3282,6 +3265,7 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\l@dskipversenumberR}
 % \begin{macro}{\do@actionsR}
 % \begin{macro}{\do@actions@fixedcodeR}
 % \begin{macro}{\do@actions@nextR}
@@ -3293,7 +3277,10 @@
 % It may call itself recursively and we use tail recursion, via
 % \cs{do@actions@nextR} for this.
 % \changes{v0.3}{2005/02/24}{Used \cs{do@actions@fixedcode} in \cs{do@actionsR}}
+%\changes{v1.15.0}{2015/03/29}{Add action 1008}
 %    \begin{macrocode}
+
+\newif\ifl@dskipversenumberR
 \newcommand*{\do@actions@fixedcodeR}{%
   \ifcase\@l@dtempcnta% 
   \or%                     % 1001
@@ -3302,7 +3289,7 @@
     \global\sublines@false
   \or%                     % 1003
     \global\@lockR=\@ne
-  \or%                     % 1004
+  \or%                     % 1004%
     \ifnum\@lockR=\tw@
       \global\@lockR=\thr@@
     \else
@@ -3318,9 +3305,12 @@
     \fi
   \or%                     % 1007
     \l@dskipnumbertrue
-  \else
+ \or%                      % 1008
+    \l@dskipversenumberRtrue%
+ \else%
     \led@warn@BadAction
-  \fi}
+ \fi%
+}
 
 
 \newcommand*{\do@actionsR}{%
@@ -3358,6 +3348,7 @@
   \do@actions@nextR}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3459,21 +3450,23 @@
      \ch@ck@l@ckR
   \fi
   \ifnum\@l@dtempcnta=\@l@dtempcntb
-    \if@twocolumn
-      \if@firstcolumn
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+    \ifl@dskipversenumberR\else
+      \if@twocolumn
+        \if@firstcolumn
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \else
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \fi
       \else
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \fi
-    \else
-      \@l@dtempcntb=\line@marginR
-      \ifnum\@l@dtempcntb>\@ne
-        \advance\@l@dtempcntb by\page@numR
-      \fi
-      \ifodd\@l@dtempcntb
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \else
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \@l@dtempcntb=\line@marginR
+        \ifnum\@l@dtempcntb>\@ne
+          \advance\@l@dtempcntb by\page@numR
+        \fi
+        \ifodd\@l@dtempcntb
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \else
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \fi
       \fi
     \fi
   \fi
@@ -5145,8 +5138,10 @@
 % Check if the page is full.
 % Check if the verse is split in two subsequent pages.
 % Check there is any forced page breaks.
+% Reset the verse skipnumber boolean
 %    \begin{macrocode}        
               \get@nextboxL%
+    \global\l@dskipversenumberfalse%
                   \ifprint@last@after@pendL%
                      \csuse{after@pendL@\the\l@dpscL}%
                      \global\csundef{after@pendL@\the\l@dpscL}%
@@ -5203,6 +5198,7 @@
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi
               \get@nextboxR%
+     \global\l@dskipversenumberRfalse
                   \ifprint@last@after@pendR%
                      \csuse{after@pendR@\the\l@dpscR}%
                      \global\csundef{after@pendR@\the\l@dpscR}%

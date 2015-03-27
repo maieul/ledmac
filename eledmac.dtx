@@ -4914,20 +4914,37 @@
 % \end{macro}
 %
 % \begin{macro}{\n@num}
-% \begin{macro}{\n@num@reg}
-% This macro implements the \cs{skipnumbering} command. It uses
-% a new action code, namely 1007.
+% These macros implement the \cs{skipnumbering} command. 
+% They use a new action code, namely 1007.
 % \changes{v0.7}{2005/02/22}{Added \cs{n@num}}
+% \changes{1.21.0}{2015/03/29}{\cs{n@num} defined only one time for both \Eledmac{} and \Eledpar{}}
+% \changes{1.21.0}{2015/03/29}{\cs{n@num@ref} deleted}
 %    \begin{macrocode}
-\newcommand*{\n@num}{\n@num@reg}
-\newcommand*{\n@num@reg}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \xright@appenditem{-1007}\to\actions@list}
+\newcommand*{\n@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \xright@appenditem{-1007}\to\actions@listR
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%
+    \xright@appenditem{-1007}\to\actions@list%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\n@num@stanza}
+% These macros implement the \cs{skipnumbering} for stanza command. 
+% It uses a new action code, namely 1008.
+\newcommand*{\n@num@stanza}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1008}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1008}\to\actions@list%
+  \fi%
+}
 % \end{macro}
-%
 % \begin{macro}{\@ref}
 % \begin{macro}{\insert@count}
 % \cs{@ref}
@@ -5285,21 +5302,39 @@
 % \end{macro}
 %
 % \begin{macro}{\ifl@dskipnumber}
+% \begin{macro}{\ifl@dskipversenumber}
 % \begin{macro}{\l@dskipnumbertrue}
 % \begin{macro}{\l@dskipnumberfalse}
 % \begin{macro}{\skipnumbering}
-% \begin{macro}{\skipnumbering@reg}
 % In numbered text \cs{skipnumbering} will suspend the numbering
 % for that particular line.
 % \changes{v0.7}{2005/02/22}{Added \cs{skipnumbering} and supports}
+% \changes{1.21.0}{2015/03/29}{\cs{skipnumbering} defined only one time for both \Eledmac{} and \Eledpar{}.}
+% \changes{v1.21.0}{2015/03/29}{Correct \cs{skipnumbering} for stanza.}
+% \changes{v1.21.0}{2015/03/29}{Delete \cs{skipnumbering@reg}.}
 %    \begin{macrocode}
 \newif\ifl@dskipnumber
-\newcommand*{\skipnumbering}{\skipnumbering@reg}
-\newcommand*{\skipnumbering@reg}{%
-  \write\linenum@out{\string\n@num}%
-  \advanceline{-1}}
+\newif\ifl@dskipversenumber%
+\newcommand*{\skipnumbering}{
+  \ifledRcol%
+    \ifinstanza%
+       \write\linenum@outR{\string\n@num@stanza}%
+    \else%
+      \write\linenum@outR{\string\n@num}%
+      \advanceline{-1}%
+    \fi%
+  \else%
+    \ifinstanza%
+       \write\linenum@out{\string\n@num@stanza}%
+    \else%
+      \write\linenum@out{\string\n@num}%
+      \advanceline{-1}%
+    \fi%
+  \fi%
+}%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6142,6 +6177,7 @@
 \newcommandx*{\pend}[1][1]{\ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
+  \global\l@dskipversenumberfalse%
   \ifnumberedpar@ \else%
     \led@err@PendNoPstart%
   \fi%
@@ -6501,22 +6537,24 @@
 % send to the vertical list.
 %    \begin{macrocode}
 \newcommand*{\getline@num}{%
-     \global\advance\absline@num \@ne
+  \global\advance\absline@num \@ne%
   \do@actions
   \do@ballast
   \ifnumberline
-  \ifsublines@
-     \ifnum\sub@lock<\tw@
-       \global\advance\subline@num \@ne
-     \fi
-  \else
-     \ifnum\@lock<\tw@
-       \global\advance\line@num \@ne
-       \global\subline@num \z@
-     \fi
+    \ifl@dskipversenumber\else%
+      \ifsublines@
+         \ifnum\sub@lock<\tw@
+           \global\advance\subline@num \@ne
+         \fi
+      \else
+        \ifnum\@lock<\tw@
+           \global\advance\line@num \@ne
+           \global\subline@num \z@
+        \fi
+      \fi
+    \fi
   \fi
-  \fi
-  }
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6676,6 +6714,8 @@
     \fi
   \or%                   % 1007
     \l@dskipnumbertrue
+  \or%                   % 1008
+    \l@dskipversenumbertrue%
   \else
     \led@warn@BadAction
   \fi}
@@ -6727,21 +6767,22 @@
 % No number is attached if \cs{ifnumberline} is FALSE (the normal value is TRUE).
 % \changes{v0.15}{2012/06/11}{Line numbering can be disabled.}
 %    \begin{macrocode}
-\ifledgroupnotesL@\else\ifnumberline
-\ifl@dskipnumber
-  \global\l@dskipnumberfalse
-\else
-  \ifsublines@
-    \@l@dtempcntb=\subline@num
-    \ifnum\subline@num>\c@firstsublinenum
-      \@l@dtempcnta=\subline@num
-      \advance\@l@dtempcnta by-\c@firstsublinenum
-      \divide\@l@dtempcnta by\c@sublinenumincrement
-      \multiply\@l@dtempcnta by\c@sublinenumincrement
-      \advance\@l@dtempcnta by\c@firstsublinenum
-    \else
-      \@l@dtempcnta=\c@firstsublinenum
-    \fi
+  \ifledgroupnotesL@\else
+    \ifnumberline
+      \ifl@dskipnumber
+        \global\l@dskipnumberfalse
+      \else
+        \ifsublines@
+           \@l@dtempcntb=\subline@num
+           \ifnum\subline@num>\c@firstsublinenum
+               \@l@dtempcnta=\subline@num
+               \advance\@l@dtempcnta by-\c@firstsublinenum
+               \divide\@l@dtempcnta by\c@sublinenumincrement
+               \multiply\@l@dtempcnta by\c@sublinenumincrement
+               \advance\@l@dtempcnta by\c@firstsublinenum
+           \else
+               \@l@dtempcnta=\c@firstsublinenum
+           \fi
 %    \end{macrocode}
 %
 % That takes care of computing the values for comparison, but if line
@@ -6749,52 +6790,55 @@
 % check fails, then we disable the line-number display by setting the
 % counters to arbitrary but unequal values.
 %    \begin{macrocode}
-    \ch@cksub@l@ck 
+           \ch@cksub@l@ck 
 %    \end{macrocode}
 %
 % Now the line number case, which works the same way.
 %    \begin{macrocode}
-  \else
-    \@l@dtempcntb=\line@num
+        \else
+           \@l@dtempcntb=\line@num
 %    \end{macrocode}
 % Check on the \verb?\linenumberlist? If it's \verb?\empty? use the standard
 % algorithm.
 %    \begin{macrocode}
-    \ifx\linenumberlist\empty
-      \ifnum\line@num>\c@firstlinenum
-         \@l@dtempcnta=\line@num
-         \advance\@l@dtempcnta by-\c@firstlinenum
-         \divide\@l@dtempcnta by\c@linenumincrement
-         \multiply\@l@dtempcnta by\c@linenumincrement
-         \advance\@l@dtempcnta by\c@firstlinenum
-      \else
-         \@l@dtempcnta=\c@firstlinenum
-      \fi
-    \else
+           \ifx\linenumberlist\empty
+              \ifnum\line@num>\c@firstlinenum
+                 \@l@dtempcnta=\line@num
+                 \advance\@l@dtempcnta by-\c@firstlinenum
+                 \divide\@l@dtempcnta by\c@linenumincrement
+                 \multiply\@l@dtempcnta by\c@linenumincrement
+                 \advance\@l@dtempcnta by\c@firstlinenum
+              \else
+                 \@l@dtempcnta=\c@firstlinenum
+              \fi
+           \else
 %    \end{macrocode}
 % The \verb?\linenumberlist? wasn't \verb?\empty?, so here's Wayne's
 % numbering mechanism. This takes place in TeX's mouth.
 %    \begin{macrocode}
-      \@l@dtempcnta=\line@num
-      \edef\rem@inder{,\linenumberlist,\number\line@num,}%
-        \edef\sc@n@list{\def\noexpand\sc@n@list
-        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
-        \sc@n@list\expandafter\sc@n@list\rem@inder|%
-          \ifx\rem@inder\empty\advance\@l@dtempcnta\@ne\fi
-    \fi
+              \@l@dtempcnta=\line@num
+              \edef\rem@inder{,\linenumberlist,\number\line@num,}%
+              \edef\sc@n@list{\def\noexpand\sc@n@list
+                ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
+              \sc@n@list\expandafter\sc@n@list\rem@inder|%
+              \ifx\rem@inder\empty%
+                \advance\@l@dtempcnta\@ne
+              \fi
+           \fi
 %    \end{macrocode}
 %
 %
 % A locking check for lines, just like the version for sub-line
 % numbers above.
 %    \begin{macrocode}
-    \ch@ck@l@ck
-  \fi
+           \ch@ck@l@ck
+        \fi
 %    \end{macrocode}
 %
-% The following test is true if we need to print a line number.
+% The following tests are true if we need to print a line number.
 %    \begin{macrocode}
-  \ifnum\@l@dtempcnta=\@l@dtempcntb
+        \ifnum\@l@dtempcnta=\@l@dtempcntb
+           \ifl@dskipversenumber\else
 %    \end{macrocode}
 %
 % If we got here,
@@ -6817,37 +6861,32 @@
 % \cs{l@drd@ta}.
 %
 %    \begin{macrocode}
- \if@twocolumn
-    \if@firstcolumn
-      \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-    \else
-      \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-    \fi
- \else
+             \if@twocolumn
+                \if@firstcolumn
+                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+                \else
+                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+                \fi
+             \else
 %    \end{macrocode}
 % Continuing the original code \ldots
 %    \begin{macrocode}
-    \@l@dtempcntb=\line@margin
-    \ifnum\@l@dtempcntb>\@ne
-      \advance\@l@dtempcntb \page@num
-    \fi
+                \@l@dtempcntb=\line@margin
+                \ifnum\@l@dtempcntb>\@ne
+                   \advance\@l@dtempcntb \page@num
+                \fi
 %    \end{macrocode}
 %
 % Now print the line (\verb"#1") with its page number.
 %    \begin{macrocode}
-    \ifodd\@l@dtempcntb
-      \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-    \else
-      \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-    \fi
- \fi
-  \else
-%    \end{macrocode}
-%
-% As no line number is to be appended, we just print the line as is.
-%    \begin{macrocode}
-%%    #1%
-  \fi
+                \ifodd\@l@dtempcntb
+                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+                 \else
+                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+                \fi
+             \fi
+          \fi
+       \fi
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -6856,10 +6895,10 @@
 % A value of $1$ is advanced to
 % $2$; $3$ advances to $0$; other values are unchanged.
 %    \begin{macrocode}
-  \f@x@l@cks
-\fi
-\fi
-\fi
+       \f@x@l@cks
+      \fi
+    \fi
+  \fi
 }
 
 %    \end{macrocode}
