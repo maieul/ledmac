@@ -9656,20 +9656,30 @@
 % We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
-  \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox%
-    \def\do##1{%
-    \ifvoid\csuse{footins##1}\else%
-        \print@notesX{##1}%
-    \fi%
-    }%
-    \dolistloop{\@series}}%
-  }%
+  \unless\ifnofamiliar@%
+    \setbox\@outputbox \vbox{%
+      \unvbox\@outputbox%
+      \def\do##1{%
+      \ifvoid\csuse{footins##1}\else%
+          \print@notesX{##1}%
+      \fi%
+      }%
+      \dolistloop{\@series}}%
+  \fi%
+}%
 
 \newcommand{\doreinxtrafeeti}{%
-  \def\do##1{\ifvoid\csuse{footins##1}\else\insert\csuse{footins##1}{\unvbox\csuse{footins##1}}\fi}%
-  \dolistloop{\@series}%
-  }
+  \unless\ifnofamiliar@%  
+    \def\do##1{%
+      \ifvoid\csuse{footins##1}\else
+        \insert%
+          \csuse{footins##1}
+          {\unvbox\csuse{footins##1}}%
+       \fi%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10820,12 +10830,14 @@
 % We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
-  \def\do##1{%
-    \ifvoid\csuse{##1footins}\else%
-        \print@Xnotes{##1}%
-     \fi%
-    }%
-  \dolistloop{\@series}%
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \ifvoid\csuse{##1footins}\else%
+          \print@Xnotes{##1}%
+       \fi%
+      }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -10851,11 +10863,13 @@
 % within \cs{@reinserts}. The implementation may well have to change.
 %    \begin{macrocode}
 \newcommand*{\doreinxtrafeetii}{%
-  \def\do##1{%
-    \ifvoid\csuse{##1footins}\else%
-      \insert\csuse{##1footins}{\unvbox\csuse{##1footins}}%
-    \fi}%
-  \dolistloop{\@series}
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \ifvoid\csuse{##1footins}\else%
+        \insert\csuse{##1footins}{\unvbox\csuse{##1footins}}%
+      \fi}%
+    \dolistloop{\@series}
+  \fi%
 }
 
 %    \end{macrocode}
@@ -10941,11 +10955,14 @@
 % \begin{macro}{\@mem@extranofeet}
 %    \begin{macrocode}
 \g@addto@macro{\@mem@extranofeet}{%
-  \def\do#1{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
-  \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
-  }
-  \dolistloop{\@series}%
-  \@led@extranofeet}
+  \unless\ifnocritical@%
+    \def\do#1{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
+    \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
+    }
+    \dolistloop{\@series}%
+    \@led@extranofeet
+  \fi%
+  }%
 }{%
 %    \end{macrocode}
 % \end{macro}
@@ -10954,12 +10971,25 @@
 % \begin{macro}{\@doclearpage}
 %    \begin{macrocode}
 \newcommand*{\@led@testifnofoot}{%
-  \@led@nofoottrue
-  \ifvoid\footins\else\@led@nofootfalse\fi
-  \def\do##1{\ifvoid\csuse{##1footins}\else\@led@nofootfalse\fi%
-  \ifvoid\csuse{footins##1}\else\@led@nofootfalse\fi}%
-  \dolistloop{\@series}
-  \@led@extranofeet}
+  \@led@nofoottrue%
+  \ifvoid\footins\else%
+    \@led@nofootfalse%
+  \fi%
+  \def\do##1{%
+    \unless\ifnocritical@%
+      \ifvoid\csuse{##1footins}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+    \unless\ifnofamiliar@%    
+      \ifvoid\csuse{footins##1}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+  }%
+  \dolistloop{\@series}%
+  \@led@extranofeet%
+}%
 
 \renewcommand{\@doclearpage}{%
   \@led@testifnofoot
@@ -13046,20 +13076,24 @@
 % Macros to disable and restore familiar notes, to prevent them from printing multiple times in edtabularx and edarrayx environments. 
 %    \begin{macrocode}
 \newcommand{\disable@familiarnotes}{%
-  \def\do##1{%
-      \csletcs{footnote@@##1}{footnote##1}%
-      \expandafter\renewcommand \csname footnote##1\endcsname[1]{%
-        \protected@csxdef{@thefnmark##1}{\csuse{thefootnote##1}}%
-        \csuse{@footnotemark##1}%
-      }%
-  }%
-  \dolistloop{\@series}%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{footnote@@##1}{footnote##1}%
+        \expandafter\renewcommand \csname footnote##1\endcsname[1]{%
+          \protected@csxdef{@thefnmark##1}{\csuse{thefootnote##1}}%
+          \csuse{@footnotemark##1}%
+        }%
+    }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 \newcommand{\restore@familiarnotes}{%
-  \def\do##1{%
-      \csletcs{footnote##1}{footnote@@##1}%
-  }%
-  \dolistloop{\@series}%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{footnote##1}{footnote@@##1}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 
 %    \end{macrocode}
