@@ -10201,6 +10201,7 @@
 % \end{macro}
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
 % \subsection{Options}
+% \subsubsection{Tools to set options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
 % \changes{v1.13.0}{2014/09/16}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
@@ -10256,6 +10257,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsubsection{Tools to generate options commands}
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for hooks, like \cs{hsizetwocol}.
 % The first argument is the hooks name, the second a comma separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \cs{twolines}.
@@ -10276,6 +10278,45 @@
     \docsvlist{#2}%
   }%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\newhooktoggle@series}
+%\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
+%    \begin{macrocode}
+\newcommand{\newhooktoggle@series}[1]{%
+  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
+    \settoggle@series{##1}{#1}{##2}%
+    }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\newhooktoggle@series}
+% \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
+% \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
+% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
+%    \begin{macrocode}
+\newcommand{\newhooktoggle@series@reload}[1]{%
+  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
+    \settoggle@series{##1}{#1}{##2}[reload]%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\newhookcommand@series@reload}
+% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work.}
+% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work when called after \cs{footparagraphX}.}
+% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforeXnotes} and  \cs{maxhXnotes} which didn't work when called after \cs{footparagraph}.}
+% \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
+% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
+%    \begin{macrocode}
+\newcommand{\newhookcommand@series@reload}[1]{%
+  \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
+    \setcommand@series{##1}{#1}{##2}[reload]%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
 
 \newhookcommand@series{twolines}[appref]
 
@@ -10354,19 +10395,7 @@
 
 
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\newhookcommand@series@reload}
-% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work.}
-% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work when called after \cs{footparagraphX}.}
-% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforeXnotes} and  \cs{maxhXnotes} which didn't work when called after \cs{footparagraph}.}
-% \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
-% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
-%    \begin{macrocode}
-\newcommand{\newhookcommand@series@reload}[1]{%
-  \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}[reload]%
-  }%
-}
+
 \newhookcommand@series@reload{beforeXnotes}
 
 \newhookcommand@series@reload{beforenotesX}
@@ -10374,16 +10403,8 @@
 \newhookcommand@series@reload{maxhnotesX}
 
 \newhookcommand@series@reload{maxhXnotes}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\newhooktoggle@series}
-%\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
+
 %    \begin{macrocode}
-\newcommand{\newhooktoggle@series}[1]{%
-  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}%
-    }%
-}
 \newhooktoggle@series{numberonlyfirstinline}
 \newhooktoggle@series{numberonlyfirstintwolines}
 \newhooktoggle@series{nonumberinfootnote}
@@ -10394,23 +10415,12 @@
 \newhooktoggle@series{Xlemmadisablefontselection}
 \newhooktoggle@series{Xendlemmadisablefontselection}
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\newhooktoggle@series}
-% \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
-% \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
-% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
-%    \begin{macrocode}
-\newcommand{\newhooktoggle@series@reload}[1]{%
-  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}[reload]%
-    }%
-}%
+
 
 \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
 \newhooktoggle@series@reload{notesXwidthliketwocolumns}%
 
-%    \end{macrocode}
-% \end{macro}
+
 % \subsection{Old commands, kept for backward compatibility}
 % The next commands are kept for ascendant compatibily, but should'nt be used anymore.
 % \begin{macro}{\notenumfont}
