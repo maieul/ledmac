@@ -9941,12 +9941,14 @@
         \newseries@eledpar{#1}%
       \fi%
 %    \end{macrocode}
-% \subsection{Create all commands to memorize display options}
-% The commands are order in three groups: those for critical footnotes (letter at begin), those for familiar footnotes (letter at end), and those for endnotes. 
-% We look at the the \verb+nocritical+ and \verb+ifnofamiliar+ option, in order to not create command if not needed, to prevent to many call to \cs{csname}…\cs{endcsname} structures, which are very slow.
-% \subsubsection{Options for critical footnotes}
+% \subsection{For critical footnotes}
+% Critical footnotes are those with start with letter.
+% We look for the \cs{nocritical} option of \Eledmac{}.
 %    \begin{macrocode}
     \unless\ifnocritical@
+%    \end{macrocode}
+% \subsubsection{Options}
+%    \begin{macrocode}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xhangindent@#1}{0pt}%
       \csgdef{Xragged@#1}{}%
@@ -9984,12 +9986,78 @@
       \csgdef{afterXrule@#1}{0pt}
       \csgdef{txtbeforeXnotes@#1}{}
       \csgdef{maxhXnotes@#1}{\ledfootinsdim}
-    \newtoggle{Xnoteswidthliketwocolumns@#1}%
+      \newtoggle{Xnoteswidthliketwocolumns@#1}%
+%    \end{macrocode}
+% \subsubsection{Create inserts, needed to add notes in foot}
+% As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
+%    \begin{macrocode}
+      \expandafter\newinsert\csname #1footins\endcsname%
+      \unless\ifnoledgroup@%
+        \expandafter\newinsert\csname mp#1footins\endcsname%
+      \fi%
+%    \end{macrocode}
+% \subsubsection{Create commands for critical apparatus, \cs{Afootnote}, \cs{Bfootnote} etc}
+% Note the double \# in command: it's because command is made inside another command.
+% \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
+%    \begin{macrocode}
+      \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
+          \if@edtext@%
+            \begingroup%
+            \newcommand{\content}{##2}%
+            \ifnumberedpar@%
+                \ifledRcol%
+                   \ifluatex%
+                       \footnotelang@lua[R]%  
+                   \fi%
+                   \@ifundefined{xpg@main@language}%if polyglossia
+                         {}%
+                         {\footnotelang@poly[R]}%          
+                    \footnoteoptions@[R]{##1}{true}%
+                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+    \noexpand\csuse{v#1footnote}{#1}%
+                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                    \footnoteoptions@[R]{##1}{false}%
+                    \global\advance\insert@countR \@ne%
+                \else%
+                     \ifluatex%
+                       \footnotelang@lua%
+                     \fi%
+                   \@ifundefined{xpg@main@language}%if polyglossia
+                         {}%
+                         {\footnotelang@poly}%
+                    \footnoteoptions@{##1}{true}%
+                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+    \noexpand\csuse{v#1footnote}{#1}%
+                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                    \global\advance\insert@count \@ne%
+                    \footnoteoptions@{##1}{false}%
+                \fi
+            \else
+                \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+            \fi%
+            \ignorespaces%
+            \endgroup%
+          \else%
+            \led@err@FootnoteWithoutEdtext%
+          \fi%
+          }
+%    \end{macrocode}
+% \subsubsection{Set standard display}
+%    \begin{macrocode}
+      \footnormal{#1}
+%    \end{macrocode}
+% End of for critical footnotes.
+%    \begin{macrocode}
     \fi
 %    \end{macrocode}
-% \subsubsection{Options for familiar footnotes}
+% \subsection{For familiar footnotes}
+% Critical footnotes are those with end with letter.
+% We look for the \cs{nofamiliar} option of \Eledmac{}.
 %    \begin{macrocode}
     \unless\ifnofamiliar@
+%    \end{macrocode}
+% \subsubsection{Options}
+%    \begin{macrocode}
       \csgdef{hangindentX@#1}{0pt}%
       \csgdef{raggedX@#1}{}%
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
@@ -10001,116 +10069,54 @@
       \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
       \csgdef{maxhnotesX@#1}{\ledfootinsdim}%
       \newtoggle{notesXwidthliketwocolumns@#1}%
-    \fi
-%    \end{macrocode}
-% \subsubsection{Options for endnotes}
+% End of for familiar footnotes.
+% \subsubsection{Create inserts, needed to add notes in foot}
+% As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
 %    \begin{macrocode}
-    \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
-    \csgdef{bhookXendnote@#1}{}%
-    \csgdef{boxXendlinenum@#1}{0pt}%
-%    \end{macrocode}
-% \subsection{Create inserts, needed to add notes in foot}
-% As regards inserts, see chapter 15 of the TeXBook by D. Knuth
-%    \begin{macrocode}
-		\unless\ifnocritical@%
-      \expandafter\newinsert\csname #1footins\endcsname%
-    \fi%
-    \unless\ifnofamiliar@%
       \expandafter\newinsert\csname footins#1\endcsname%
-    \fi%
-    
-    \ifnoledgroup@\else%
-      \unless\ifnocritical@%
-        \expandafter\newinsert\csname mp#1footins\endcsname%
-      \fi%
-      \unless\ifnofamiliar@%
+      \unless\ifnoledgroup@%
         \expandafter\newinsert\csname mpfootins#1\endcsname%
       \fi%
-    \fi%
 %    \end{macrocode}
-% \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
-% Note the double \# in command: it's because command is made inside another command.
-% \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
-%    \begin{macrocode}
-
-    \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-        \if@edtext@%
-          \begingroup%
-          \newcommand{\content}{##2}%
-          \ifnumberedpar@%
-              \ifledRcol%
-                 \ifluatex%
-                     \footnotelang@lua[R]%  
-                 \fi%
-                 \@ifundefined{xpg@main@language}%if polyglossia
-                       {}%
-                       {\footnotelang@poly[R]}%          
-                  \footnoteoptions@[R]{##1}{true}%
-                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-  \noexpand\csuse{v#1footnote}{#1}%
-                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
-                  \footnoteoptions@[R]{##1}{false}%
-                  \global\advance\insert@countR \@ne%
-              \else%
-                   \ifluatex%
-                     \footnotelang@lua%
-                   \fi%
-                 \@ifundefined{xpg@main@language}%if polyglossia
-                       {}%
-                       {\footnotelang@poly}%
-                  \footnoteoptions@{##1}{true}%
-                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-  \noexpand\csuse{v#1footnote}{#1}%
-                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
-                  \global\advance\insert@count \@ne%
-                  \footnoteoptions@{##1}{false}%
-              \fi
-          \else
-              \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
-          \fi%
-          \ignorespaces%
-          \endgroup%
-        \else%
-          \led@err@FootnoteWithoutEdtext%
-        \fi%
-        }
-%    \end{macrocode}
-%Set standard display and remember the display.
-%    \begin{macrocode}
-    \csgdef{series@display#1}{}
-    \footnormal{#1}
-%    \end{macrocode}
-%\subsection{Create tools for familiar footnotes (\cs{footnoteX})}
+%\subsubsection{Create tools for familiar footnotes (\cs{footnoteX})}
 % First, create the \cs{footnoteX} command.
+% Note the double \# in command: it's because command is made inside another command.
 %    \begin{macrocode}
 
-    \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
-        \begingroup%
-            \newcommand{\content}{##1}%
-            \stepcounter{footnote#1}%
-            \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-            \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
-               {\csuse{@footnotemark#1}}%
-               {}%
-            \ifluatex%
-              \xdef\footnote@luatextextdir{\the\luatextextdir}%
-              \xdef\footnote@luatexpardir{\the\luatexpardir}%
-            \fi%
-            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
-        \endgroup%
-    }
+      \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+          \begingroup%
+              \newcommand{\content}{##1}%
+              \stepcounter{footnote#1}%
+              \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+              \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
+                 {\csuse{@footnotemark#1}}%
+                 {}%
+              \ifluatex%
+                \xdef\footnote@luatextextdir{\the\luatextextdir}%
+                \xdef\footnote@luatexpardir{\the\luatexpardir}%
+              \fi%
+              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+          \endgroup%
+      }
 %    \end{macrocode}
-% The counters.
+% The define the counters.
 %    \begin{macrocode}
-    \newcounter{footnote#1}
-      \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+      \newcounter{footnote#1}
+        \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
 %    \end{macrocode}
 % Don't forget to initialize series
 %    \begin{macrocode}
-    \csgdef{series@displayX#1}{}
-    \footnormalX{#1}
+      \footnormalX{#1}
+ \fi
 %    \end{macrocode}
+
 % \subsection{The endnotes}
+% Endnotes are command like \cs{Xendnote}, where X is a series' letter.
+% First, we check for the \verb+noend+ options.
+%    \begin{macrocode}
+  \unless\ifnoend@
+%    \end{macrocode}
+% \subsubsection{The main macro}
 % The \cs{Xendnote} macro functions to
 % write one endnote to the \file{.end} file. We change
 % \cs{newlinechar} so that in the file every space becomes the
@@ -10118,13 +10124,13 @@
 % exceed restrictions on the length of lines in files.
 %    \begin{macrocode}
 
-    \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
-        \global\@noneed@Footnotetrue%
-        \newcommand{\content}{##1}%
-           \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-          {\ifnumberedpar@\l@d@nums\fi}%
-           {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
-        }
+      \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
+          \global\@noneed@Footnotetrue%
+          \newcommand{\content}{##1}%
+             \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
+            {\ifnumberedpar@\l@d@nums\fi}%
+             {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
+          }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
 % \verb"footfmt" commands above, and they take the same arguments.
@@ -10137,12 +10143,23 @@
 % defined in the amsfonts package.}
 %    \begin{macrocode}
 
-    \global\cslet{#1end}{\@gobblefour}
+      \global\cslet{#1end}{\@gobblefour}
 %    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
-
-    \global\csletcs{#1@@footnote}{#1footnote}
-% \cs{Stock series in \cs{@series}}
+%    \begin{macrocode}
+      \global\csletcs{#1@@footnote}{#1footnote}
+%    \end{macrocode}
+% \subsubsection{The option's}
+%    \begin{macrocode}
+      \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
+      \csgdef{bhookXendnote@#1}{}%
+      \csgdef{boxXendlinenum@#1}{0pt}%
+%    \end{macrocode}
+% End of endnotes declaration
+%    \begin{macrocode}
+  \fi%
+%    \end{macrocode}
+% Dump series in \cs{@series}
 %    \begin{macrocode}
 
     \listxadd{\@series}{#1}
