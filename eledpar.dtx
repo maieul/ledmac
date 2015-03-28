@@ -2337,74 +2337,83 @@
 %    \begin{macrocode}
 \newcommand{\newseries@eledpar}[1]{%
 %    \end{macrocode}
-% \subsubsection{Create commands to memorize display options}
-%    \begin{macrocode}
-    \csgdef{onlysideX@#1}{}%
-    \csgdef{onlyXside@#1}{}%
-%    \end{macrocode}
-% \subsubsection{Boolean flags for notes to be printed in one side only}
+% \subsubsection{Notes to be printed in one side only}
 % \Lpack{eledpar} allows notes to be printed on one side only.
-% We need boolean flags, and set them to true when a note series is not printed in one side
-% evne though it contains something.
+% We need to declare these option.
+% We also need boolean flags, and set them to true when a note series is not printed in one side.
+% We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
 %    \begin{macrocode}
-    \global\newbool{keepforXside@#1}%
-    \global\newbool{keepforsideX@#1}%
+    \unless\ifnocritical@%
+      \csgdef{onlysideX@#1}{}%
+      \global\newbool{keepforXside@#1}%
+    \fi%
+    \unless\ifnofamiliar%
+      \global\newbool{keepforsideX@#1}%
+      \csgdef{onlyXside@#1}{}%
+    \fi%
 %    \end{macrocode}
 % \subsubsection{Familiar footnotes without marks}
 % The \cs{footnoteXnomk} commands are for notes which are printed  in the left side, while they are called in the right side.
 % Basically, they set first toggle \cs{nomark@} to true, then call the \cs{footnoteX}.
 % and finally add the footnote counter in the footnote counter list.
 %
+% First, check the \verb+nofamiliar+ option of \Eledmac{}
+%    \begin{macrocode}
+  \unless\ifnofamiliar@%
 % So declare the list.
 %    \begin{macrocode}
-    \expandafter\list@create\csname footnote#1@mk\endcsname%
+      \expandafter\list@create\csname footnote#1@mk\endcsname%
 %    \end{macrocode}
 % Then, declare the \cs{footnoteXnomk} command.
 %    \begin{macrocode}
-    \expandafter\newcommand\csname footnote#1nomk\endcsname[1]{%
+      \expandafter\newcommand\csname footnote#1nomk\endcsname[1]{%
 %    \end{macrocode}
 % First step: just call the normal \cs{footnoteX}, saying that we don't want to print the mark.
 %    \begin{macrocode}
-       \toggletrue{nomk@}%
-       \csuse{footnote#1}{##1}%
-       \togglefalse{nomk@}%
+         \toggletrue{nomk@}%
+         \csuse{footnote#1}{##1}%
+         \togglefalse{nomk@}%
 %    \end{macrocode}
 % Second, and last, step: store the footnote counter in the footnote counters list.
 % We use some \cs{let}, because \cs{xright@appenditem} is difficult to use with \cs{expandafter}.
 %    \begin{macrocode}
-       \letcs{\@tmp}{footnote#1@mk}%
-       \numdef\@tmpa{\csuse{c@footnote#1}}%
-       \global\xright@appenditem{\@tmpa}\to\@tmp%
-       \global\cslet{footnote#1@mk}{\@tmp}%
-   }%
+         \letcs{\@tmp}{footnote#1@mk}%
+         \numdef\@tmpa{\csuse{c@footnote#1}}%
+         \global\xright@appenditem{\@tmpa}\to\@tmp%
+         \global\cslet{footnote#1@mk}{\@tmp}%
+     }%
 %    \end{macrocode}
 % Then, declare the command which inserts the footnotemark in the right side.
 %    \begin{macrocode}
-    \expandafter\newcommand\csname footnote#1mk\endcsname{%
+      \expandafter\newcommand\csname footnote#1mk\endcsname{%
 %    \end{macrocode}
 % Get the first element of the footnote mark list.
 % As \cs{gl@p} is difficult to use with dynamic name macro, we use \cs{let} commands.
 %    \begin{macrocode}
-       \letcs{\@tmp}{footnote#1@mk}%
-       \gl@p\@tmp\to\@tmpa%
-       \global\cslet{footnote#1@mk}{\@tmp}%
+         \letcs{\@tmp}{footnote#1@mk}%
+         \gl@p\@tmp\to\@tmpa%
+         \global\cslet{footnote#1@mk}{\@tmp}%
 %    \end{macrocode}
 % Set the footnotecounter with it. 
 % For the sake of security, we make a backup of the previous value.
 %    \begin{macrocode}
-       \letcs{\old@footnote}{c@footnote#1}%
-       \setcounter{footnote#1}{\@tmpa}%
+         \letcs{\old@footnote}{c@footnote#1}%
+         \setcounter{footnote#1}{\@tmpa}%
 %    \end{macrocode}
 % Define the footnote mark and print it
 %    \begin{macrocode}
-       \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-       \csuse{@footnotemark#1}%
+         \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+         \csuse{@footnotemark#1}%
 %    \end{macrocode}
 % Restore previous footnote counter and finally add space.
 %    \begin{macrocode}
-       \setcounter{footnote#1}{\old@footnote}%
-       \xspace%
-    }%
+         \setcounter{footnote#1}{\old@footnote}%
+         \xspace%
+      }%
+%    \end{macrocode}
+% End of tools for familiar notes without marks
+%    \begin{macrocode}
+  \fi
 %    \end{macrocode}
 % End of \cs{newseries@eledpar}.
 %    \begin{macrocode}
@@ -2415,9 +2424,13 @@
 % Read the eledmac code handbook about \cs{newhookcommand@series}.
 % Here, we create hooks which are specific to \Lpack{eledpar}.
 %    \begin{macrocode}
-\newhookcommand@series{onlysideX}%
+\unless\ifnocritical@%
+  \newhookcommand@series{onlyXside}%
+\fi%
+\unless\ifnofamiliar@%
+  \newhookcommand@series{onlysideX}%
+\fi
 
-\newhookcommand@series{onlyXside}%
 
 %    \end{macrocode}
 % \subsubsection{Init standards series (A,B,C,D,E,Z)}
