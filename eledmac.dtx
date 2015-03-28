@@ -227,6 +227,7 @@
 % \changes{v1.20.0}{2015/03/22}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar commands for RTL texts with \LuaLaTeX.}
 % \changes{v1.21.0}{2015/03/29}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which print nothing}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with space between columns with notes in two columns (bug added by v1.13.0).}
+% \changes{v1.21.0}{2015/03/09}{Add noledgroup option.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -625,6 +626,7 @@
 % \begin{description}
 % \item[draft] underline lemmas in the main text.
 % \item[ledsecnolinenumber] is deprecated.
+% \item[noledgroup] \eledmac{} allows to use critical series of notes and new series of normal notes inside minipage and ledgroup environments (see~\ref{ledgroup} p.~\pageref{ledgroup}). However, such feature requires many memories, which are lost for other needs. So if you do not need this feature, use \verb+noledgroup+ option. This should make \eledmac{} faster.
 % \item[nopbinverse] prevent page break inside verses.
 % \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \ref{noquotation} p.~\pageref{noquotation}).
 % \item[parapparatus] by default, the appparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
@@ -1904,7 +1906,7 @@
 % in a minipage but unlike with \verb?\footnote? the numbering scheme is
 % unaltered.
 %
-% \DescribeEnv{ledgroup}
+% \DescribeEnv{ledgroup}\label{ledgroup}
 % Minipages, of course, aren't broken across pages. Footnotes in a \verb?ledgroup?
 % environment are typeset at the end of the environment, as with minipages,
 % but the environment includes normal page breaks. The environment makes no
@@ -2943,6 +2945,7 @@
 %
 % \subsection{Package options}
 % \begin{macro}{\ifledfinal}
+% \begin{macro}{\ifnoledgroup@}
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
 % \begin{macro}{\iflednopbinverse}
@@ -2955,6 +2958,7 @@
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
 %    \begin{macrocode}
 \newif\ifledfinal
+\newif\ifnoledgroup@%
 \newif\ifparapparatus@
 \newif\ifnoquotation@
 \newif\iflednopbinverse
@@ -2964,6 +2968,7 @@
 \parapparatus@false
 \RequirePackage{xkeyval}
 \DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{noledgroup}{\noledgroup@true}%
 \DeclareOptionX{noquotation}{\noquotation@true}
 \DeclareOptionX{final}{\ledfinaltrue}
 \DeclareOptionX{draft}{\ledfinalfalse}
@@ -2983,6 +2988,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7944,11 +7950,13 @@
 % normal setup as we can (so the notes will have a similar layout).
 % \changes{v0.4}{2004/02/29}{Added minpage footnote setup to \cs{footnormal}}
 %    \begin{macrocode}
-  \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
-  \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
-  \count\csname mp#1footins\endcsname=1000
-  \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+  \ifnoledgroup@\else%
+    \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
+    \count\csname mp#1footins\endcsname=1000
+    \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+  \fi
 }
 
 %    \end{macrocode}
@@ -8005,11 +8013,13 @@
 %    \end{macrocode}
 % And the extra setup for minipages.
 %    \begin{macrocode}
-  \expandafter\let\csname mpv#1footnote\endcsname=\mppara@vfootnote
-  \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
-  \count\csname mp#1footins\endcsname=1000
-  \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+  \ifnoledgroup@\else
+    \expandafter\let\csname mpv#1footnote\endcsname=\mppara@vfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
+    \count\csname mp#1footins\endcsname=1000
+    \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+  \fi
 }
 %    \end{macrocode}
 % \end{macro}
@@ -8428,9 +8438,11 @@
 %    \end{macrocode}
 % The additional setup for minipages.
 %    \begin{macrocode}
-  \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
-  \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
-  \mpthreecolfootsetup{#1}
+  \ifnoledgroup@\else
+    \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
+    \mpthreecolfootsetup{#1}
+  \fi
 }
 
 %    \end{macrocode}
@@ -8603,9 +8615,11 @@
 %    \end{macrocode}
 % The additional setup for minipages.
 %    \begin{macrocode}
-  \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
-  \expandafter\let\csname mp#1footgroup\endcsname=\mptwocolfootgroup
-  \mptwocolfootsetup{#1}
+  \ifnoledgroup@\else
+    \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mptwocolfootgroup
+    \mptwocolfootsetup{#1}
+  \fi
 }
 
 %    \end{macrocode}
@@ -9088,13 +9102,15 @@
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
 %    \end{macrocode}
-% Aditions for minipages.
+% Additions for minipages.
 %    \begin{macrocode}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
-  \count\csname mpfootins#1\endcsname=1000
-  \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+  \ifnoledgroup@\else%
+    \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+    \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
+    \count\csname mpfootins#1\endcsname=1000
+    \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+  \fi
 }
 
 %    \end{macrocode}
@@ -9115,9 +9131,12 @@
   \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
   \dimen\csname #1footins\endcsname=\csuse{maxhnotesX@#1}%
   \twocolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
-  \mptwocolfootsetupX{#1}}
+  \ifnoledgroup@\else%
+    \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+    \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
+    \mptwocolfootsetupX{#1}
+  \fi%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9224,9 +9243,12 @@
   \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
   \dimen\csname #1footins\endcsname=\csuse{maxhnotesX@#1}%
   \threecolfootsetupX{#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
-  \mpthreecolfootsetupX{#1}}
+  \ifnoledgroup@\else%
+    \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
+    \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
+    \mpthreecolfootsetupX{#1}
+  \fi%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9336,12 +9358,15 @@
   \csxdef{default@footins#1}{1000}%Use this to confine the  notes to one side only
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
   \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
-  \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
-  \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
-  \count\csname mpfootins#1\endcsname=1000
-  \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
-  \para@footsetupX{#1}}
+  \para@footsetupX{#1}
+  \ifnoledgroup@\else
+    \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
+    \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
+    \count\csname mpfootins#1\endcsname=1000
+    \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+  \fi
+  }
 
 %    \end{macrocode}
 % \end{macro}
@@ -9951,8 +9976,11 @@
 
     \expandafter\newinsert\csname footins#1\endcsname%
     \expandafter\newinsert\csname #1footins\endcsname%
-    \expandafter\newinsert\csname mpfootins#1\endcsname%
-    \expandafter\newinsert\csname mp#1footins\endcsname%
+    
+    \ifnoledgroup@\else%
+      \expandafter\newinsert\csname mpfootins#1\endcsname%
+      \expandafter\newinsert\csname mp#1footins\endcsname%
+    \fi%
 %    \end{macrocode}
 % \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
 % Note the double \# in command: it's because command is made inside another command.
@@ -10685,7 +10713,7 @@
        \boxmaxdepth \@maxdepth
        \@tempdima\dp\@cclv
        \unvbox \@cclv
-       \ifFN@bottom\vfill\fi\vskip \skip\footins%%% If the option bottom of loadmisc package is loaded
+       \ifFN@bottom\vfill\fi\vskip \skip\footins% If the option bottom of loadmisc package is loaded
        \color@begingroup
          \normalcolor
          \footnoterule
@@ -11829,6 +11857,7 @@
 % \changes{v0.4}{2004/02/29}{Added \cs{l@dfeetbeginmini}, \cs{l@dfeetendmini}
 %                           and all their supporting code}
 %    \begin{macrocode}
+\ifnoledgroup@\else%
 \newcommand*{\l@dfeetbeginmini}{\l@dedbeginmini\l@dfambeginmini}
 \newcommand*{\l@dfeetendmini}{%
     \IfStrEq{critical-familiar}{\@mpfnpos}%
@@ -12045,6 +12074,10 @@
 %    \end{macrocode}
 % \end{environment}
 %
+% Close the \cs{ifnoledgroup@}\cs{else}.
+%    \begin{macrocode}
+\fi%
+%    \end{macrocode}
 % \begin{macro}{\ifledgroupnotesL@}
 % \begin{macro}{\ifledgroupnotesR@}
 % These boolean tests check if we are in the notes of a ledgroup.  If we are, we don't number the lines.
