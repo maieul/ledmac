@@ -4051,11 +4051,21 @@
 }%
 
 \newcommand*{\leftlinenum}{%
-  \ledlinenum
-  \kern\linenumsep}
+  \ifl@dhidenumber%
+    \global\l@dhidenumberfalse%
+  \else%
+    \ledlinenum
+    \kern\linenumsep%
+  \fi%
+}
 \newcommand*{\rightlinenum}{%
-  \kern\linenumsep
-  \ledlinenum}
+  \ifl@dhidenumber%
+    \global\l@dhidenumberfalse%
+  \else%
+    \kern\linenumsep
+    \ledlinenum%
+  \fi%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -4956,6 +4966,33 @@
     \xright@appenditem{-1008}\to\actions@list%
   \fi%
 }
+% \end{macro}
+% \begin{macro}{\ifl@dhidenumber}
+% \begin{macro}{\hidenumbering}
+% \cs{hidenumbering} hides number in margin. 
+% It uses action code 1009.
+% \begin{macro}{\h@num}
+%    \begin{macrocode}
+\newif\ifl@dhidenumber
+\newcommand*{\hidenumbering}{
+  \ifledRcol%
+    \write\linenum@outR{\string\hide@num}%
+  \else%
+    \write\linenum@out{\string\hide@num}%
+  \fi%
+}%
+\newcommand*{\hide@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1009}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1009}\to\actions@list%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\@ref}
 % \begin{macro}{\insert@count}
@@ -6728,6 +6765,8 @@
     \l@dskipnumbertrue
   \or%                   % 1008
     \l@dskipversenumbertrue%
+ \or%    % 1009
+    \l@dhidenumbertrue
   \else
     \led@warn@BadAction
   \fi}
