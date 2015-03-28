@@ -228,7 +228,8 @@
 % \changes{v1.20.0}{2015/03/22}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar commands for RTL texts with \LuaLaTeX.}
 % \changes{v1.21.0}{2015/03/29}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which print nothing}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with space between columns with notes in two columns (bug added by v1.13.0).}
-% \changes{v1.21.0}{2015/03/09}{Add noledgroup option.}
+% \changes{v1.21.0}{2015/03/29}{Add nocritical, noend, nofamiliar and noledgroup options.}
+% \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -626,6 +627,12 @@
 % \begin{description}
 % \item[draft] underline lemmas in the main text.
 % \item[ledsecnolinenumber] is deprecated.
+% \item[nocritical] disable tools for critical footnotes (\cs{Afootnote}, \cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ faster. 
+% It will also preserve rooms for other package.
+% \item[noend] disable tools for end footnotes (\cs{Aendnote}, \cs{Bendnote} etc.). If you do not need endnotes, this option lets \eledmac\ faster. 
+% It will also preserve rooms for other package.
+% \item[nofamiliar] disable tools for familiar footnotes (\cs{footnoteA}, \cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ faster.
+% It will also preserve rooms for other package.
 % \item[noledgroup] \eledmac{} allows to use critical series of notes and new series of normal notes inside minipage and ledgroup environments (see~\ref{ledgroup} p.~\pageref{ledgroup}). However, such feature requires many memories, which are lost for other needs. So if you do not need this feature, use \verb+noledgroup+ option. This should make \eledmac{} faster.
 % \item[nopbinverse] prevent page break inside verses.
 % \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \ref{noquotation} p.~\pageref{noquotation}).
@@ -1139,7 +1146,8 @@
 % \DescribeMacro{\Cendnote}
 % \DescribeMacro{\Dendnote}
 % \DescribeMacro{\Eendnote}
-% The package also maintains five separate series of endnotes.
+% \DescribeMacro{\Zendnote}
+% The package also maintains six separate series of endnotes.
 % Like footnotes each macro takes a single argument like 
 % \cs{Aendnote}\marg{text}.
 % Normally, none of them are printed: you must use the
@@ -1963,10 +1971,7 @@
 % Its default definition is: \\
 % \verb?\newcommand*{\printnpnum}[1]{p.#1) }?
 %
-% \DescribeMacro{\noendnotes}
-% If you aren't going to have any endnotes, you can say \cs{noendnotes}
-% in your file, before the first \cs{beginnumbering}, to suppress the
-% generation of an unneeded \file{.end} file.
+% If you don't use endnotes, you could use \verb+noend+ option when loading \Lpack{eledpar}.
 %
 % \section{Cross referencing}
 % \changes{v1.12.0}{2014/08/05}{Add hyperlink to crossref (needs \Lpack{hyperref} package).}
@@ -2945,6 +2950,9 @@
 %
 % \subsection{Package options}
 % \begin{macro}{\ifledfinal}
+% \begin{macro}{\ifnocritical@}
+% \begin{macro}{\ifnoend@}
+% \begin{macro}{\ifnofamiliar@}
 % \begin{macro}{\ifnoledgroup@}
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
@@ -2958,6 +2966,9 @@
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
 %    \begin{macrocode}
 \newif\ifledfinal
+\newif\ifnocritical@%
+\newif\ifnoend@%
+\newif\ifnofamiliar@%
 \newif\ifnoledgroup@%
 \newif\ifparapparatus@
 \newif\ifnoquotation@
@@ -2968,7 +2979,17 @@
 \parapparatus@false
 \RequirePackage{xkeyval}
 \DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{nocritical}{\nocritical@true}%
+\DeclareOptionX{nofamiliar}{\nofamiliar@true}%
 \DeclareOptionX{noledgroup}{\noledgroup@true}%
+\DeclareOptionX{noend}{%
+ \let\l@dend@open\@gobble%
+ \let\l@d@end\relax
+ \let\l@dend@close\relax%
+  \global\let\l@dend@stuff=\relax%
+  \global\chardef\l@d@end=16%
+  \noend@true%
+}%
 \DeclareOptionX{noquotation}{\noquotation@true}
 \DeclareOptionX{final}{\ledfinaltrue}
 \DeclareOptionX{draft}{\ledfinalfalse}
@@ -2988,6 +3009,9 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3324,6 +3348,7 @@
 % \end{macro}
 % \begin{macro}{\led@war@FalseverseDeprecated}
 % \begin{macro}{\led@war@ledxxxDeprecated}
+% \begin{macro}{\led@war@noendnotesDeprecated}
 %    \begin{macrocode}
 \newcommand{\led@war@FalseverseDeprecated}{%
   \eledmac@warning{\string\falseverse\space deprecated. Look at \string\newverse\space instead.}%
@@ -3331,7 +3356,11 @@
 \newcommand{\led@war@ledxxxDeprecated}[1]{%
   \eledmac@warning{\string\led#1\space deprecated. Look at \string\e#1 instead.}%
 }%
+\newcommand{\led@war@noendnotesDeprecated}[0]{%
+  \eledmac@warning{\string\noendnotes\space deprecated. Use `noend` option instead.}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\led@err@TooManyColumns}
@@ -9130,7 +9159,7 @@
   \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
-  \dimen\csname #1footins\endcsname=\csuse{maxhnotesX@#1}%
+  \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
   \twocolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
@@ -9242,7 +9271,7 @@
   \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
-  \dimen\csname #1footins\endcsname=\csuse{maxhnotesX@#1}%
+  \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
   \threecolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
@@ -9632,20 +9661,30 @@
 % We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
-  \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox%
-    \def\do##1{%
-    \ifvoid\csuse{footins##1}\else%
-        \print@notesX{##1}%
-    \fi%
-    }%
-    \dolistloop{\@series}}%
-  }%
+  \unless\ifnofamiliar@%
+    \setbox\@outputbox \vbox{%
+      \unvbox\@outputbox%
+      \def\do##1{%
+      \ifvoid\csuse{footins##1}\else%
+          \print@notesX{##1}%
+      \fi%
+      }%
+      \dolistloop{\@series}}%
+  \fi%
+}%
 
 \newcommand{\doreinxtrafeeti}{%
-  \def\do##1{\ifvoid\csuse{footins##1}\else\insert\csuse{footins##1}{\unvbox\csuse{footins##1}}\fi}%
-  \dolistloop{\@series}%
-  }
+  \unless\ifnofamiliar@%  
+    \def\do##1{%
+      \ifvoid\csuse{footins##1}\else
+        \insert%
+          \csuse{footins##1}
+          {\unvbox\csuse{footins##1}}%
+       \fi%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -9679,6 +9718,10 @@
 % \changes{v1.14.0}{2014/10/20}{Debug spurious characters before endnotes.}
 % \label{endnotes}\relax
 %
+% First, check the noend option.
+%    \begin{macrocode}
+\ifbool{noend@}{}{%Used instead of \ifnoend@ to prevent expansion problem
+%    \end{macrocode}
 % \begin{macro}{\l@d@end}
 % \begin{macro}{\ifl@dend@}
 % \begin{macro}{\l@dend@true}
@@ -9871,17 +9914,22 @@
 % \end{macro}
 %
 % \begin{macro}{\noendnotes}
-% You can say \cs{noendnotes} before the first
-% \cs{beginnumbering} in your file if if you will not use
-% any of the endnote commands: this will suppress the creation of
-% an \file{.end} file. If you do have some lingering endnote
-% commands in your file,
-% the notes will be written to your terminal and to the log file.
+% \changes{v1.21.0}{2015/03/29}{\cs{noendnotes} deprecated, prefer noend option.}
+% The \cs{noendnotes} command is deprecated. 
+% You should prefer \verb+noend+ options.
+% Ho
 %    \begin{macrocode}
-\newcommand*{\noendnotes}{\global\let\l@dend@stuff=\relax
-                \global\chardef\l@d@end=16 }
+\newcommand*{\noendnotes}{%
+  \led@war@noendnotesDeprecated%
+  \global\let\l@dend@stuff=\relax%
+  \global\chardef\l@d@end=16%
+}%
 %    \end{macrocode}
 % \end{macro}
+% End of section for end notes
+%    \begin{macrocode}
+}%
+%    \end{macrocode}
 % \section{Generate series}%
 % In this section, X means the name of the series (A, B etc.)
 % \begin{macro}{\series}
@@ -9916,156 +9964,185 @@
         \newseries@eledpar{#1}%
       \fi%
 %    \end{macrocode}
-% \subsection{Create all commands to memorize display options}
+% \subsection{For critical footnotes}
+% Critical footnotes are those with start with letter.
+% We look for the \cs{nocritical} option of \Eledmac{}.
 %    \begin{macrocode}
-    \newtoggle{Xlemmadisablefontselection@#1}
-    \newtoggle{Xendlemmadisablefontselection@#1}
-    \csgdef{Xhangindent@#1}{0pt}%
-    \csgdef{hangindentX@#1}{0pt}%
-    \csgdef{Xragged@#1}{}%
-    \csgdef{raggedX@#1}{}%
-    \csgdef{hsizetwocol@#1}{0.45 \hsize}%
-    \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
-    \csgdef{hsizethreecol@#1}{.3 \hsize}%
-    \csgdef{hsizethreecolX@#1}{.3 \hsize}%
-    \csgdef{Xnotenumfont@#1}{\notenumfont}%
-    \csgdef{Xendnotenumfont@#1}{\notenumfont}%
-    \csgdef{notenumfontX@#1}{\notenumfont}%
-    \csgdef{Xnotefontsize@#1}{\notefontsetup}%
-    \csgdef{notefontsizeX@#1}{\notefontsetup}%
-    \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
-    \csgdef{bhooknoteX@#1}{}%
-    \csgdef{bhookXnote@#1}{}%
-    \csgdef{bhookXendnote@#1}{}%
-    \csgdef{boxlinenum@#1}{0pt}%
-    \csgdef{boxXendlinenum@#1}{0pt}%
-    \csgdef{boxsymlinenum@#1}{0pt}%
-    \newtoggle{numberonlyfirstinline@#1}%
-    \newtoggle{numberonlyfirstintwolines@#1}%
-    \csgdef{twolines@#1}{}%
-    \csgdef{morethantwolines@#1}{}%
-    \newtoggle{onlypstartinfootnote@#1}%
-    \newtoggle{pstartinfootnoteeverytime@#1}%
-    \newtoggle{pstartinfootnote@#1}%
-    \csgdef{symlinenum@#1}{\symplinenum}%
-    \newtoggle{nonumberinfootnote@#1}%
-    \csgdef{beforenumberinfootnote@#1}{0pt}%
-    \csgdef{afternumberinfootnote@#1}{0.5em}%
-    \newtoggle{nonbreakableafternumber@#1}%
-    \csgdef{beforesymlinenum@#1}{\csuse{beforenumberinfootnote@#1}}%
-    \csgdef{aftersymlinenum@#1}{\csuse{afternumberinfootnote@#1}}%
-    \csgdef{inplaceofnumber@#1}{1em}%
-    \global\cslet{lemmaseparator@#1}{\rbracket}%
-    \csgdef{beforelemmaseparator@#1}{0em}%
-    \csgdef{afterlemmaseparator@#1}{0.5em}%
-    \csgdef{inplaceoflemmaseparator@#1}{1em}%
-    \csgdef{afternote@#1}{1em plus.4em minus.4em}%
-    \csgdef{parafootsep@#1}{\parafootftmsep}%
-    \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}
-    \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
-    \csgdef{afterXrule@#1}{0pt}
-    \csgdef{afterruleX@#1}{0pt}
-    \csgdef{txtbeforeXnotes@#1}{}
-    \csgdef{maxhnotesX@#1}{\ledfootinsdim}%
-    \csgdef{maxhXnotes@#1}{\ledfootinsdim}
-    \newtoggle{Xnoteswidthliketwocolumns@#1}%
-    \newtoggle{notesXwidthliketwocolumns@#1}%
+    \unless\ifnocritical@
 %    \end{macrocode}
-% \subsection{Create inserts, needed to add notes in foot}
-% As regards inserts, see chapter 15 of the TeXBook by D. Knuth
+% \subsubsection{Options}
 %    \begin{macrocode}
-
-    \expandafter\newinsert\csname footins#1\endcsname%
-    \expandafter\newinsert\csname #1footins\endcsname%
-    
-    \ifnoledgroup@\else%
-      \expandafter\newinsert\csname mpfootins#1\endcsname%
-      \expandafter\newinsert\csname mp#1footins\endcsname%
-    \fi%
+      \newtoggle{Xlemmadisablefontselection@#1}
+      \csgdef{Xhangindent@#1}{0pt}%
+      \csgdef{Xragged@#1}{}%
+      \csgdef{hsizetwocol@#1}{0.45 \hsize}%
+      \csgdef{hsizethreecol@#1}{.3 \hsize}%
+      \newtoggle{Xendlemmadisablefontselection@#1}
+      \csgdef{Xnotenumfont@#1}{\notenumfont}%
+      \csgdef{Xendnotenumfont@#1}{\notenumfont}%
+      \csgdef{Xnotefontsize@#1}{\notefontsetup}%
+      \csgdef{bhookXnote@#1}{}%
+      \csgdef{boxlinenum@#1}{0pt}%
+      \csgdef{boxsymlinenum@#1}{0pt}%
+      \newtoggle{numberonlyfirstinline@#1}%
+      \newtoggle{numberonlyfirstintwolines@#1}%
+      \csgdef{twolines@#1}{}%
+      \csgdef{morethantwolines@#1}{}%
+      \newtoggle{onlypstartinfootnote@#1}%
+      \newtoggle{pstartinfootnoteeverytime@#1}%
+      \newtoggle{pstartinfootnote@#1}%
+      \csgdef{symlinenum@#1}{\symplinenum}%
+      \newtoggle{nonumberinfootnote@#1}%
+      \csgdef{beforenumberinfootnote@#1}{0pt}%
+      \csgdef{afternumberinfootnote@#1}{0.5em}%
+      \newtoggle{nonbreakableafternumber@#1}%
+      \csgdef{beforesymlinenum@#1}{\csuse{beforenumberinfootnote@#1}}%
+      \csgdef{aftersymlinenum@#1}{\csuse{afternumberinfootnote@#1}}%
+      \csgdef{inplaceofnumber@#1}{1em}%
+      \global\cslet{lemmaseparator@#1}{\rbracket}%
+      \csgdef{beforelemmaseparator@#1}{0em}%
+      \csgdef{afterlemmaseparator@#1}{0.5em}%
+      \csgdef{inplaceoflemmaseparator@#1}{1em}%
+      \csgdef{beforeXnotes@#1}{1.2em \@plus .6em \@minus .6em}
+      \csgdef{afterXrule@#1}{0pt}
+      \csgdef{txtbeforeXnotes@#1}{}
+      \csgdef{maxhXnotes@#1}{\ledfootinsdim}
+      \newtoggle{Xnoteswidthliketwocolumns@#1}%
 %    \end{macrocode}
-% \subsection{Create commands for critical apparatus, \cs{Xfootnote}}
+% \subsubsection{Create inserts, needed to add notes in foot}
+% As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
+%    \begin{macrocode}
+      \expandafter\newinsert\csname #1footins\endcsname%
+      \unless\ifnoledgroup@%
+        \expandafter\newinsert\csname mp#1footins\endcsname%
+      \fi%
+%    \end{macrocode}
+% \subsubsection{Create commands for critical apparatus, \cs{Afootnote}, \cs{Bfootnote} etc}
 % Note the double \# in command: it's because command is made inside another command.
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
 %    \begin{macrocode}
-
-    \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-        \if@edtext@%
-          \begingroup%
-          \newcommand{\content}{##2}%
-          \ifnumberedpar@%
-              \ifledRcol%
-                 \ifluatex%
-                     \footnotelang@lua[R]%  
-                 \fi%
-                 \@ifundefined{xpg@main@language}%if polyglossia
-                       {}%
-                       {\footnotelang@poly[R]}%          
-                  \footnoteoptions@[R]{##1}{true}%
-                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-  \noexpand\csuse{v#1footnote}{#1}%
-                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
-                  \footnoteoptions@[R]{##1}{false}%
-                  \global\advance\insert@countR \@ne%
-              \else%
+      \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
+          \if@edtext@%
+            \begingroup%
+            \newcommand{\content}{##2}%
+            \ifnumberedpar@%
+                \ifledRcol%
                    \ifluatex%
-                     \footnotelang@lua%
+                       \footnotelang@lua[R]%  
                    \fi%
-                 \@ifundefined{xpg@main@language}%if polyglossia
-                       {}%
-                       {\footnotelang@poly}%
-                  \footnoteoptions@{##1}{true}%
-                  \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-  \noexpand\csuse{v#1footnote}{#1}%
-                  {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
-                  \global\advance\insert@count \@ne%
-                  \footnoteoptions@{##1}{false}%
-              \fi
-          \else
-              \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                   \@ifundefined{xpg@main@language}%if polyglossia
+                         {}%
+                         {\footnotelang@poly[R]}%          
+                    \footnoteoptions@[R]{##1}{true}%
+                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+    \noexpand\csuse{v#1footnote}{#1}%
+                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                    \footnoteoptions@[R]{##1}{false}%
+                    \global\advance\insert@countR \@ne%
+                \else%
+                     \ifluatex%
+                       \footnotelang@lua%
+                     \fi%
+                   \@ifundefined{xpg@main@language}%if polyglossia
+                         {}%
+                         {\footnotelang@poly}%
+                    \footnoteoptions@{##1}{true}%
+                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
+    \noexpand\csuse{v#1footnote}{#1}%
+                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                    \global\advance\insert@count \@ne%
+                    \footnoteoptions@{##1}{false}%
+                \fi
+            \else
+                \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+            \fi%
+            \ignorespaces%
+            \endgroup%
+          \else%
+            \led@err@FootnoteWithoutEdtext%
           \fi%
-          \ignorespaces%
-          \endgroup%
-        \else%
-          \led@err@FootnoteWithoutEdtext%
-        \fi%
-        }
+          }
 %    \end{macrocode}
-%Set standard display and remember the display.
+% \subsubsection{Set standard display}
 %    \begin{macrocode}
-    \csgdef{series@display#1}{}
-    \footnormal{#1}
+      \footnormal{#1}
 %    \end{macrocode}
-%\subsection{Create tools for familiar footnotes (\cs{footnoteX})}
+% End of for critical footnotes.
+%    \begin{macrocode}
+    \fi
+%    \end{macrocode}
+% \subsection{For familiar footnotes}
+% Critical footnotes are those with end with letter.
+% We look for the \cs{nofamiliar} option of \Eledmac{}.
+%    \begin{macrocode}
+    \unless\ifnofamiliar@
+%    \end{macrocode}
+% \subsubsection{Options}
+%    \begin{macrocode}
+      \csgdef{hangindentX@#1}{0pt}%
+      \csgdef{raggedX@#1}{}%
+      \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
+      \csgdef{hsizethreecolX@#1}{.3 \hsize}%
+      \csgdef{notenumfontX@#1}{\notenumfont}%
+      \csgdef{notefontsizeX@#1}{\notefontsetup}%
+      \csgdef{bhooknoteX@#1}{}%
+      \csgdef{afterruleX@#1}{0pt}
+      \csgdef{beforenotesX@#1}{1.2em \@plus .6em \@minus .6em}
+      \csgdef{maxhnotesX@#1}{\ledfootinsdim}%
+      \newtoggle{notesXwidthliketwocolumns@#1}%
+% End of for familiar footnotes.
+% \subsubsection{Create inserts, needed to add notes in foot}
+% As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
+%    \begin{macrocode}
+      \expandafter\newinsert\csname footins#1\endcsname%
+      \unless\ifnoledgroup@%
+        \expandafter\newinsert\csname mpfootins#1\endcsname%
+      \fi%
+%    \end{macrocode}
+%\subsubsection{Create tools for familiar footnotes (\cs{footnoteX})}
 % First, create the \cs{footnoteX} command.
+% Note the double \# in command: it's because command is made inside another command.
 %    \begin{macrocode}
 
-    \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
-        \begingroup%
-            \newcommand{\content}{##1}%
-            \stepcounter{footnote#1}%
-            \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-            \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
-               {\csuse{@footnotemark#1}}%
-               {}%
-            \ifluatex%
-              \xdef\footnote@luatextextdir{\the\luatextextdir}%
-              \xdef\footnote@luatexpardir{\the\luatexpardir}%
-            \fi%
-            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
-        \endgroup%
-    }
+      \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+          \begingroup%
+              \newcommand{\content}{##1}%
+              \stepcounter{footnote#1}%
+              \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+              \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with eledpar
+                 {\csuse{@footnotemark#1}}%
+                 {}%
+              \ifluatex%
+                \xdef\footnote@luatextextdir{\the\luatextextdir}%
+                \xdef\footnote@luatexpardir{\the\luatexpardir}%
+              \fi%
+              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+          \endgroup%
+      }
 %    \end{macrocode}
-% The counters.
+% The define the counters.
 %    \begin{macrocode}
-    \newcounter{footnote#1}
-      \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+      \newcounter{footnote#1}
+        \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
 %    \end{macrocode}
 % Don't forget to initialize series
 %    \begin{macrocode}
-    \csgdef{series@displayX#1}{}
-    \footnormalX{#1}
+      \footnormalX{#1}
+ \fi
+%    \end{macrocode}
+% \subsection{Common options to critical and familiar footnotes}
+% For historical reason, \verb+parafootsep+ and \verb+afternote+ hooks are common to critical and familiar footnotes.
+%    \begin{macrocode}
+  \csgdef{parafootsep@#1}{\parafootftmsep}%
+  \csgdef{afternote@#1}{1em plus.4em minus.4em}%
 %    \end{macrocode}
 % \subsection{The endnotes}
+% Endnotes are command like \cs{Xendnote}, where X is a series' letter.
+% First, we check for the \verb+noend+ options.
+%    \begin{macrocode}
+  \unless\ifnoend@
+%    \end{macrocode}
+% \subsubsection{The main macro}
 % The \cs{Xendnote} macro functions to
 % write one endnote to the \file{.end} file. We change
 % \cs{newlinechar} so that in the file every space becomes the
@@ -10073,13 +10150,13 @@
 % exceed restrictions on the length of lines in files.
 %    \begin{macrocode}
 
-    \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
-        \global\@noneed@Footnotetrue%
-        \newcommand{\content}{##1}%
-           \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-          {\ifnumberedpar@\l@d@nums\fi}%
-           {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
-        }
+      \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
+          \global\@noneed@Footnotetrue%
+          \newcommand{\content}{##1}%
+             \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
+            {\ifnumberedpar@\l@d@nums\fi}%
+             {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
+          }
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
 % \verb"footfmt" commands above, and they take the same arguments.
@@ -10092,16 +10169,26 @@
 % defined in the amsfonts package.}
 %    \begin{macrocode}
 
-    \global\cslet{#1end}{\@gobblefour}
+      \global\cslet{#1end}{\@gobblefour}
 %    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
-
-    \global\csletcs{#1@@footnote}{#1footnote}
-% \cs{Stock series in \cs{@series}}
 %    \begin{macrocode}
-
+      \global\csletcs{#1@@footnote}{#1footnote}
+%    \end{macrocode}
+% \subsubsection{The option's}
+%    \begin{macrocode}
+      \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
+      \csgdef{bhookXendnote@#1}{}%
+      \csgdef{boxXendlinenum@#1}{0pt}%
+%    \end{macrocode}
+% End of endnotes declaration
+%    \begin{macrocode}
+  \fi%
+%    \end{macrocode}
+% Dump series in \cs{@series}
+%    \begin{macrocode}
     \listxadd{\@series}{#1}
-}
+  }
 }% End of \newseries
 %    \end{macrocode}
 % \end{macro}
@@ -10140,6 +10227,7 @@
 % \end{macro}
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
 % \subsection{Options}
+% \subsubsection{Tools to set options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
 % \changes{v1.13.0}{2014/09/16}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
@@ -10195,6 +10283,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsubsection{Tools to generate options commands}
 % \begin{macro}{\newhookcommand@series}
 % \cs{newhookcommand@series}\cs{command names} is a generic command to add new commands for hooks, like \cs{hsizetwocol}.
 % The first argument is the hooks name, the second a comma separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \cs{twolines}.
@@ -10215,83 +10304,28 @@
     \docsvlist{#2}%
   }%
 }
-
-\newhookcommand@series{twolines}[appref]
-
-\newhookcommand@series{morethantwolines}[appref]
-
-
-\newhookcommand@series{Xhangindent}
-
-\newhookcommand@series{hangindentX}
-
-\newhookcommand@series{Xragged}
-
-\newhookcommand@series{raggedX}
-
-\newhookcommand@series{hsizetwocol}
-
-\newhookcommand@series{hsizethreecol}
-
-\newhookcommand@series{hsizetwocolX}
-
-\newhookcommand@series{hsizethreecolX}
-
-\newhookcommand@series{Xnotenumfont}
-
-\newhookcommand@series{notenumfontX}
-
-\newhookcommand@series{Xendnotenumfont}
-
-\newhookcommand@series{bhooknoteX}
-
-\newhookcommand@series{bhookXnote}
-
-\newhookcommand@series{bhookXendnote}
-
-\newhookcommand@series{Xnotefontsize}
-
-\newhookcommand@series{notefontsizeX}
-
-\newhookcommand@series{Xendnotefontsize}
-
-\newhookcommand@series{boxlinenum}
-
-\newhookcommand@series{boxXendlinenum}%
-
-\newhookcommand@series{boxsymlinenum} 
-
-\newhookcommand@series{parafootsep}
-
-\newhookcommand@series{symlinenum}
-
-\newhookcommand@series{beforenumberinfootnote}
-
-\newhookcommand@series{afternumberinfootnote}
-
-\newhookcommand@series{beforesymlinenum}
-
-\newhookcommand@series{aftersymlinenum}
-
-\newhookcommand@series{inplaceofnumber}
-
-\newhookcommand@series{lemmaseparator}
-
-\newhookcommand@series{beforelemmaseparator}
-
-\newhookcommand@series{afterlemmaseparator}
-
-\newhookcommand@series{inplaceoflemmaseparator}
-
-\newhookcommand@series{afternote}
-
-\newhookcommand@series{txtbeforeXnotes}
-
-\newhookcommand@series{afterruleX}
-
-\newhookcommand@series{afterXrule}
-
-
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\newhooktoggle@series}
+%\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
+%    \begin{macrocode}
+\newcommand{\newhooktoggle@series}[1]{%
+  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
+    \settoggle@series{##1}{#1}{##2}%
+    }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\newhooktoggle@series}
+% \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
+% \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
+% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
+%    \begin{macrocode}
+\newcommand{\newhooktoggle@series@reload}[1]{%
+  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
+    \settoggle@series{##1}{#1}{##2}[reload]%
+    }%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhookcommand@series@reload}
@@ -10306,50 +10340,82 @@
     \setcommand@series{##1}{#1}{##2}[reload]%
   }%
 }
-\newhookcommand@series@reload{beforeXnotes}
-
-\newhookcommand@series@reload{beforenotesX}
-
-\newhookcommand@series@reload{maxhnotesX}
-
-\newhookcommand@series@reload{maxhXnotes}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\newhooktoggle@series}
-%\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
+% \subsubsection{Options for critical notes}
+% Before generate options' command for critical notes, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
-\newcommand{\newhooktoggle@series}[1]{%
-  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}%
-    }%
-}
-\newhooktoggle@series{numberonlyfirstinline}
-\newhooktoggle@series{numberonlyfirstintwolines}
-\newhooktoggle@series{nonumberinfootnote}
-\newhooktoggle@series{pstartinfootnote}
-\newhooktoggle@series{pstartinfootnoteeverytime}%
-\newhooktoggle@series{onlypstartinfootnote}
-\newhooktoggle@series{nonbreakableafternumber}
-\newhooktoggle@series{Xlemmadisablefontselection}
-\newhooktoggle@series{Xendlemmadisablefontselection}
+\unless\ifnocritical@
+  \newhookcommand@series{twolines}[appref]
+  \newhookcommand@series{morethantwolines}[appref]
+  \newhookcommand@series{Xhangindent}
+  \newhookcommand@series{Xragged}
+  \newhookcommand@series{hsizetwocol}
+  \newhookcommand@series{hsizethreecol}
+  \newhookcommand@series{Xnotenumfont}
+  \newhookcommand@series{bhookXnote}
+  \newhookcommand@series{boxsymlinenum} 
+  \newhookcommand@series{symlinenum}
+  \newhookcommand@series{beforenumberinfootnote}
+  \newhookcommand@series{afternumberinfootnote}
+  \newhookcommand@series{beforesymlinenum}
+  \newhookcommand@series{aftersymlinenum}
+  \newhookcommand@series{inplaceofnumber}
+  \newhookcommand@series{lemmaseparator}
+  \newhookcommand@series{beforelemmaseparator}
+  \newhookcommand@series{afterlemmaseparator}
+  \newhookcommand@series{inplaceoflemmaseparator}
+  \newhookcommand@series{txtbeforeXnotes}
+  \newhookcommand@series{afterXrule}
+  \newhooktoggle@series{numberonlyfirstinline}
+  \newhooktoggle@series{numberonlyfirstintwolines}
+  \newhooktoggle@series{nonumberinfootnote}
+  \newhooktoggle@series{pstartinfootnote}
+  \newhooktoggle@series{pstartinfootnoteeverytime}%
+  \newhooktoggle@series{onlypstartinfootnote}
+  \newhooktoggle@series{nonbreakableafternumber}
+  \newhooktoggle@series{Xlemmadisablefontselection}
+  \newhookcommand@series@reload{maxhXnotes}
+  \newhookcommand@series@reload{beforeXnotes}
+  \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
+  \newhookcommand@series{Xnotefontsize}
+  \newhookcommand@series{boxlinenum}
+\fi
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\newhooktoggle@series}
-% \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
-% \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
-% but the commands created by this macro also reload the series displaying (normal, paragraph, twocol, threecol).
+% \subsubsection{Options for familiar notes}
+% Before generate options' command for familiar notes, we check the \verb+nofamiliar+ option.
 %    \begin{macrocode}
-\newcommand{\newhooktoggle@series@reload}[1]{%
-  \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}[reload]%
-    }%
-}%
-
-\newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
-\newhooktoggle@series@reload{notesXwidthliketwocolumns}%
-
+\unless\ifnofamiliar@
+  \newhookcommand@series{hangindentX}
+  \newhookcommand@series{raggedX}
+  \newhookcommand@series{hsizetwocolX}
+  \newhookcommand@series{hsizethreecolX}
+  \newhookcommand@series{notenumfontX}
+  \newhookcommand@series{bhooknoteX}
+  \newhookcommand@series@reload{beforenotesX}
+  \newhookcommand@series@reload{maxhnotesX}
+  \newhooktoggle@series@reload{notesXwidthliketwocolumns}%
+  \newhookcommand@series{afterruleX}
+  \newhookcommand@series{notefontsizeX}
+\fi
 %    \end{macrocode}
-% \end{macro}
+% \subsubsection{Common options to critical and familiar footnotes}
+% For historical reason, \verb+parafootsep+ and \verb+afternote+ hooks are common to critical and familiar footnotes.
+%    \begin{macrocode}
+\newhookcommand@series{parafootsep}
+\newhookcommand@series{afternote}
+%    \end{macrocode}
+% \subsubsection{Options for endnotes}
+% Before generate options' command for endnotes, we check the \verb+noend+ option.
+%    \begin{macrocode}
+\unless\ifnoend@
+  \newhookcommand@series{Xendnotenumfont}
+  \newhookcommand@series{bhookXendnote}
+  \newhookcommand@series{boxXendlinenum}%
+  \newhookcommand@series{Xendnotefontsize}
+  \newhooktoggle@series{Xendlemmadisablefontselection}
+\fi
+%    \end{macrocode}
 % \subsection{Old commands, kept for backward compatibility}
 % The next commands are kept for ascendant compatibily, but should'nt be used anymore.
 % \begin{macro}{\notenumfont}
@@ -10784,12 +10850,14 @@
 % We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
-  \def\do##1{%
-    \ifvoid\csuse{##1footins}\else%
-        \print@Xnotes{##1}%
-     \fi%
-    }%
-  \dolistloop{\@series}%
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \ifvoid\csuse{##1footins}\else%
+          \print@Xnotes{##1}%
+       \fi%
+      }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -10815,11 +10883,13 @@
 % within \cs{@reinserts}. The implementation may well have to change.
 %    \begin{macrocode}
 \newcommand*{\doreinxtrafeetii}{%
-  \def\do##1{%
-    \ifvoid\csuse{##1footins}\else%
-      \insert\csuse{##1footins}{\unvbox\csuse{##1footins}}%
-    \fi}%
-  \dolistloop{\@series}
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \ifvoid\csuse{##1footins}\else%
+        \insert\csuse{##1footins}{\unvbox\csuse{##1footins}}%
+      \fi}%
+    \dolistloop{\@series}
+  \fi%
 }
 
 %    \end{macrocode}
@@ -10905,11 +10975,14 @@
 % \begin{macro}{\@mem@extranofeet}
 %    \begin{macrocode}
 \g@addto@macro{\@mem@extranofeet}{%
-  \def\do#1{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
-  \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
-  }
-  \dolistloop{\@series}%
-  \@led@extranofeet}
+  \unless\ifnocritical@%
+    \def\do#1{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
+    \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
+    }
+    \dolistloop{\@series}%
+    \@led@extranofeet
+  \fi%
+  }%
 }{%
 %    \end{macrocode}
 % \end{macro}
@@ -10918,12 +10991,25 @@
 % \begin{macro}{\@doclearpage}
 %    \begin{macrocode}
 \newcommand*{\@led@testifnofoot}{%
-  \@led@nofoottrue
-  \ifvoid\footins\else\@led@nofootfalse\fi
-  \def\do##1{\ifvoid\csuse{##1footins}\else\@led@nofootfalse\fi%
-  \ifvoid\csuse{footins##1}\else\@led@nofootfalse\fi}%
-  \dolistloop{\@series}
-  \@led@extranofeet}
+  \@led@nofoottrue%
+  \ifvoid\footins\else%
+    \@led@nofootfalse%
+  \fi%
+  \def\do##1{%
+    \unless\ifnocritical@%
+      \ifvoid\csuse{##1footins}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+    \unless\ifnofamiliar@%    
+      \ifvoid\csuse{footins##1}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+  }%
+  \dolistloop{\@series}%
+  \@led@extranofeet%
+}%
 
 \renewcommand{\@doclearpage}{%
   \@led@testifnofoot
@@ -13010,20 +13096,24 @@
 % Macros to disable and restore familiar notes, to prevent them from printing multiple times in edtabularx and edarrayx environments. 
 %    \begin{macrocode}
 \newcommand{\disable@familiarnotes}{%
-  \def\do##1{%
-      \csletcs{footnote@@##1}{footnote##1}%
-      \expandafter\renewcommand \csname footnote##1\endcsname[1]{%
-        \protected@csxdef{@thefnmark##1}{\csuse{thefootnote##1}}%
-        \csuse{@footnotemark##1}%
-      }%
-  }%
-  \dolistloop{\@series}%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{footnote@@##1}{footnote##1}%
+        \expandafter\renewcommand \csname footnote##1\endcsname[1]{%
+          \protected@csxdef{@thefnmark##1}{\csuse{thefootnote##1}}%
+          \csuse{@footnotemark##1}%
+        }%
+    }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 \newcommand{\restore@familiarnotes}{%
-  \def\do##1{%
-      \csletcs{footnote##1}{footnote@@##1}%
-  }%
-  \dolistloop{\@series}%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{footnote##1}{footnote@@##1}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
 }%
 
 %    \end{macrocode}
