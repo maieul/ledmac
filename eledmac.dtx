@@ -3443,6 +3443,7 @@
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Moves gobbling command}
+% \changes{v1.21.0}{2015/03/29}{Provide \cs{@gobblefive}}
 % \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
 %  to avoid clash with the amsfonts package}
 % \begin{macro}{\@gobblethree}
@@ -3450,6 +3451,7 @@
 %    \begin{macrocode}
 \providecommand*{\@gobblethree}[3]{}
 \providecommand*{\@gobblefour}[4]{}
+\providecommand*{\@gobblefive}[5]{}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -9816,8 +9818,12 @@
 % nothing with this information, but it's there if you want to write
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
+% \changes{v1.21.0}{2015/03/29}{\cs{endnotes} take five arguments.}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+  \IfStrEq{#5}{fulllines}%
+   {\toggletrue{fulllines@}}%
+   {}%
   \csuse{bhookXendnote@#4}%
   \csuse{Xendnotefontsize@#4}%
   {%
@@ -9832,6 +9838,7 @@
       {#2}%
   }%
   \enskip#3\par%
+  \togglefalse{fulllines@}%
 }}%
 
 \let\l@d@section=\@gobble
@@ -10185,26 +10192,33 @@
 % exceed restrictions on the length of lines in files.
 %    \begin{macrocode}
 
-      \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
-          \global\@noneed@Footnotetrue%
-          \newcommand{\content}{##1}%
-             \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-            {\ifnumberedpar@\l@d@nums\fi}%
-             {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
-          }
+      \global\expandafter\newcommandx\csname #1endnote\endcsname[2][1,usedefault]{%
+         \bgroup%
+         \newlinechar='40%
+         \global\@noneed@Footnotetrue%
+         \newcommand{\content}{##2}%
+         \immediate\write\l@d@end{%
+           \expandafter\string\csname #1end\endcsname%
+           {\ifnumberedpar@\l@d@nums\fi}%
+           {\ifnumberedpar@\expandonce\@tag\fi}%
+           {\expandonce\content}%
+           {#1}%
+           {##1}%
+         }%
+         \egroup%
+         \ignorespaces%
+     }%
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
 % \verb"footfmt" commands above, and they take the same arguments.
 % When we process this file, we'll want to pick out the notes of one
 % series and ignore all the rest. To do that, we equate the \verb"end"
 % command for the series we want to \cs{endprint}, and leave the
-% rest equated to \cs{@gobblethree}, which just skips over its three
-% arguments.\footnote{Christophe Hebeisen (\texttt{christophe.hebeisen@a3.epfl.ch})
-% emailed on 2003/11/05 to say he had found that \cs{@gobblethree} was also
-% defined in the amsfonts package.}
+% rest equated to \cs{@gobblefive}, which just skips over its fiver
+% arguments.
 %    \begin{macrocode}
 
-      \global\cslet{#1end}{\@gobblefour}
+      \global\cslet{#1end}{\@gobblefive}
 %    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
 %    \begin{macrocode}
