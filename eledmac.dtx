@@ -231,6 +231,7 @@
 % \changes{v1.21.0}{2015/03/29}{Add nocritical, noend, nofamiliar and noledgroup options.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
 % \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore}.}
+% \changes{v1.21.0}{2015/03/29}{Fix bug when a \cs{Xfootnote} follows a \cs{Xendnote} in the second argument of \cs{edtext} (bug added in eledmac 1.0.0 !).}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1347,13 +1348,17 @@
 % \end{verbatim}
 % Will print ``1sq.'' for a lemma which falls on lines 1-2 and ``1sqq.'' for a lemma which falls on lines 1-4.
 %
-% If you use \cs{twolines} without setting \cs{morethantwolines}, the \verb|<text>| argument of \cs{twolines} will be used for lemmas which fall on three and more lines.
+% \DescribeMacro{\morethantwolines} If you use \cs{twolines} without setting \cs{morethantwolines}, the \verb|<text>| argument of \cs{twolines} will be used for lemmas which fall on three and more lines.
 %
 % However, if you want to use short form when the lemma overlaps two lines but not when it overlaps more, use \cs{twolinesbutnotmore}\oarg{series}.
 %
 % It is possible to disable \cs{twolinesbutnotmore}\oarg{series} with \cs{twolinesbutnotmore}\oarg{series}\verb+[false]+.
 %
 % You can disable \cs{twolines} and related for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
+%
+% \changes{v1.21.0}{2015/03/29}{Add \cs{Xendtwolines} and \cs{Xendmorethantwolines} and Xendtwolinesbutnotmore}
+% \DescribeMacro{\Xendtwolines}\DescribeMacro{\Xendmorethantwolines}\DescribeMacro{\Xendtwolinesbutnotmore}
+% For endnotes, use  \cs{Xendtwolines}; \cs{Xendmorethantwolines}; \cs{Xendtwolinesbutnotmore} instead of \cs{twolines}; \cs{morethantwolines}; \cs{twolinesbutnotmore}.
 %
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
@@ -2137,6 +2142,20 @@
 % Note that if \cs{apprefprefixmore} is empty, \cs{apprefprefixsingle} will used in any case.
 % 
 % 
+% \DescribeMacro{\Xendtwolinesapprefwithpage}
+% \DescribeMacro{\Xendmorethantwolinesapprefwithpage}
+% \DescribeMacro{\Xendtwolinesbutnotmoreapprefwithpage}
+% If you use \cs{twolines}, \cs{morethantwolines} and/or \cs{twolinesbutnotmore}
+% (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
+% series argument}, the setting will also be available for \cs{apprefwithpage}.
+%
+% The commands \cs{twolinesapprefwithpage}\marg{text},
+% \cs{morethantwolinesapprefwithpage}\marg{text} and \cs{twolinesbutnotmoreapprefwithpage} can also be used, if you
+% only want to change the reference style of \cs{appref}.
+%
+% It is possible to disable this setting for a specific \cs{apprefwithpage} command by
+% using \cs{appref}\verb+[fulllines]+\marg{label}.
+% 
 % \DescribeMacro{\twolinesappref}
 % \DescribeMacro{\morethantwolinesappref}
 % \DescribeMacro{\twolinesbutnotmoreappref}
@@ -2144,13 +2163,12 @@
 % (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
 % series argument}, the setting will also be available for \cs{appref}.
 %
-% The commands \cs{twolinesappref}\marg{text},
-% \cs{morethantwolinesappref}\marg{text} and \cs{twolinesbutnotmoreappref} can also be used, if you
+% The commands \cs{Xendtwolinesappref}\marg{text},
+% \cs{Xendmorethantwolinesappref}\marg{text} and \cs{Xendtwolinesbutnotmoreappref} can also be used, if you
 % only want to change the reference style of \cs{appref}.
 %
 % It is possible to disable this setting for a specific \cs{appref} command by
 % using \cs{appref}\verb+[fulllines]+\marg{label}.
-% 
 % \section{Side notes}
 %
 %   The \cs{marginpar} command does not work in numbered text. Instead 
@@ -3426,6 +3444,7 @@
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Moves gobbling command}
+% \changes{v1.21.0}{2015/03/29}{Provide \cs{@gobblefive}}
 % \changes{v0.2.2}{2003/11/05}{Used \cs{providecommand} for \cs{@gobblethree}
 %  to avoid clash with the amsfonts package}
 % \begin{macro}{\@gobblethree}
@@ -3433,6 +3452,7 @@
 %    \begin{macrocode}
 \providecommand*{\@gobblethree}[3]{}
 \providecommand*{\@gobblefour}[4]{}
+\providecommand*{\@gobblefive}[5]{}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -9793,8 +9813,21 @@
 % nothing with this information, but it's there if you want to write
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
+% \changes{v1.21.0}{2015/03/29}{\cs{endnotes} take five arguments.}
+% Arguments are:
+% \begin{itemize}
+%   \item \verb+#1+ Line numbers and font selection.
+%   \item \verb+#2+ Lemma.
+%   \item \verb+#3+ Note content.
+%   \item \verb+#4+ Series.
+%   \item \verb+#5+ Optional argument of \cs{Xendnote}.
+% \end{itemize}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+  \xdef\@currentseries{#4}%
+  \IfStrEq{#5}{fulllines}%
+   {\toggletrue{fulllines@}}%
+   {}%
   \csuse{bhookXendnote@#4}%
   \csuse{Xendnotefontsize@#4}%
   {%
@@ -9809,6 +9842,7 @@
       {#2}%
   }%
   \enskip#3\par%
+  \togglefalse{fulllines@}%
 }}%
 
 \let\l@d@section=\@gobble
@@ -9873,7 +9907,39 @@
          \l@d@esltrue
          \l@d@dashtrue
       \fi
-  \fi}
+  \fi%
+%    \end{macrocode}
+%    \begin{macrocode}
+  \ifl@d@dash%
+    \iftoggle{fulllines@}%
+      {}%
+      {%
+        \ifboolexpr{%
+          test{\ifcsempty{Xendtwolines@\@currentseries}}%
+          or (%
+           togl {Xendtwolinesbutnotmore@\@currentseries}%
+           and test {\ifnumgreater{#5-#2}{1}}%
+           )%
+          }%
+          {}%
+          {%
+          \l@d@dashfalse%
+          \l@d@twolinestrue%
+          \l@d@elinfalse%
+          \l@d@eslfalse%
+          \ifcsempty{Xendmorethantwolines@\@currentseries}%
+            {}%
+            {\ifnum\numexpr #5-#2>1\relax%
+              \l@d@morethantwolinestrue%
+             \fi%
+            }%
+          }%
+      }%
+  \fi%
+%    \end{macrocode}
+% End of \cs{setprintendlines}.
+%    \begin{macrocode}
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9893,10 +9959,17 @@
 %    \begin{macrocode}
   \printnpnum{#1} \linenumrep{#2}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \endashchar\fi
+  \ifl@d@dash \ifl@d@twolines\else\endashchar\fi\fi
   \ifl@d@pnum \printnpnum{#4}\fi
   \ifl@d@elin \linenumrep{#5}\fi
   \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
+  \ifl@d@twolines%
+    \ifl@d@morethantwolines%
+      \csuse{Xendmorethantwolines@\@currentseries}%
+    \else%
+      \csuse{Xendtwolines@\@currentseries}%
+    \fi%
+  \fi%
 \endgroup}
 
 %    \end{macrocode}
@@ -9990,9 +10063,7 @@
       \csgdef{Xragged@#1}{}%
       \csgdef{hsizetwocol@#1}{0.45 \hsize}%
       \csgdef{hsizethreecol@#1}{.3 \hsize}%
-      \newtoggle{Xendlemmadisablefontselection@#1}
       \csgdef{Xnotenumfont@#1}{\notenumfont}%
-      \csgdef{Xendnotenumfont@#1}{\notenumfont}%
       \csgdef{Xnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXnote@#1}{}%
       \csgdef{boxlinenum@#1}{0pt}%
@@ -10164,33 +10235,45 @@
 % exceed restrictions on the length of lines in files.
 %    \begin{macrocode}
 
-      \global\expandafter\newcommand\csname #1endnote\endcsname[2]{{\newlinechar='40
-          \global\@noneed@Footnotetrue%
-          \newcommand{\content}{##1}%
-             \immediate\write\l@d@end{\expandafter\string\csname #1end\endcsname%
-            {\ifnumberedpar@\l@d@nums\fi}%
-             {\ifnumberedpar@\expandonce\@tag\fi}{\expandonce\content}{#1}}}\ignorespaces%
-          }
+      \global\expandafter\newcommandx\csname #1endnote\endcsname[2][1,usedefault]{%
+         \bgroup%
+         \newlinechar='40%
+         \global\@noneed@Footnotetrue%
+         \newcommand{\content}{##2}%
+         \immediate\write\l@d@end{%
+           \expandafter\string\csname #1end\endcsname%
+           {\ifnumberedpar@\l@d@nums\fi}%
+           {\ifnumberedpar@\expandonce\@tag\fi}%
+           {\expandonce\content}%
+           {#1}%
+           {##1}%
+         }%
+         \egroup%
+         \ignorespaces%
+     }%
 %    \end{macrocode}
 % \cs{Xendnote}  commands called \cs{Xend} commands on to the endnote file; these are analogous to the various
 % \verb"footfmt" commands above, and they take the same arguments.
 % When we process this file, we'll want to pick out the notes of one
 % series and ignore all the rest. To do that, we equate the \verb"end"
 % command for the series we want to \cs{endprint}, and leave the
-% rest equated to \cs{@gobblethree}, which just skips over its three
-% arguments.\footnote{Christophe Hebeisen (\texttt{christophe.hebeisen@a3.epfl.ch})
-% emailed on 2003/11/05 to say he had found that \cs{@gobblethree} was also
-% defined in the amsfonts package.}
+% rest equated to \cs{@gobblefive}, which just skips over its fiver
+% arguments.
 %    \begin{macrocode}
 
-      \global\cslet{#1end}{\@gobblefour}
+      \global\cslet{#1end}{\@gobblefive}
 %    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
 %    \begin{macrocode}
       \global\csletcs{#1@@footnote}{#1footnote}
 %    \end{macrocode}
-% \subsubsection{The option's}
+% \subsubsection{The options}
 %    \begin{macrocode}
+      \csgdef{Xendtwolines@#1}{}%
+      \csgdef{Xendmorethantwolines@#1}{}%
+      \newtoggle{Xendtwolinesbutnotmore@#1}{}%
+      \newtoggle{Xendlemmadisablefontselection@#1}%
+      \csgdef{Xendnotenumfont@#1}{\notenumfont}%
       \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXendnote@#1}{}%
       \csgdef{boxXendlinenum@#1}{0pt}%
@@ -10445,6 +10528,9 @@
 % Before generate options' command for endnotes, we check the \verb+noend+ option.
 %    \begin{macrocode}
 \unless\ifnoend@
+  \newhookcommand@series{Xendtwolines}[apprefwithpage]
+  \newhookcommand@series{Xendmorethantwolines}[apprefwithpage]   
+  \newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{bhookXendnote}
   \newhookcommand@series{boxXendlinenum}%
@@ -11547,8 +11633,16 @@
  \togglefalse{fulllines@}%
 }%
 
-\newcommand{\apprefwithpage}[1]{%
-  \printendlines\xpageref{#1:start}|\xlineref{#1:start}|\xsublineref{#1:start}|\xpageref{#1:end}|\xlineref{#1:end}|\xsublineref{#1:end}||%
+\xdef\Xendtwolines@apprefwithpage{}%
+\xdef\Xendmorethantwolines@apprefwithpage{}%
+\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+
+\newcommandx{\apprefwithpage}[2][1,usedefault]{%
+ \IfStrEq{#1}{fulllines}%
+   {\toggletrue{fulllines@}}%
+   {}%
+  \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
+ \togglefalse{fulllines@}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -15494,6 +15588,14 @@
 
 % We don't see any reason to print it in other section. However, if you want to print the pstart number in all footnote, with or without \cs{numberpstarttrue}, you can use 
 % \cs{pstartinfootnoteeverytime}.
+% \subsection{Migration to eledmac 1.21.0}
+% Clean the \verb+.end+ file before the next run.
+% If you have redefined \cs{endprint}, you must :
+% \begin{itemize}
+%  \item Contact us to ask feature that required your hack, in order to prevent such hack in future.
+%  \item Use the new fifth argument.
+%  \item Add \verb+\xdef\@currentseries{#4}+ at the begin of your own command.
+% \end{itemize}
 % \clearpage
 % \bibliographystyle{alpha}
 % \phantomsection
