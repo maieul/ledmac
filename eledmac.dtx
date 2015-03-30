@@ -230,6 +230,7 @@
 % \changes{v1.21.0}{2015/03/29}{Fix bug with space between columns with notes in two columns (bug added by v1.13.0).}
 % \changes{v1.21.0}{2015/03/29}{Add nocritical, noend, nofamiliar and noledgroup options.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1348,7 +1349,11 @@
 %
 % If you use \cs{twolines} without setting \cs{morethantwolines}, the \verb|<text>| argument of \cs{twolines} will be used for lemmas which fall on three and more lines.
 %
-% You can disable this option for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
+% However, if you want to use short form when the lemma overlaps two lines but not when it overlaps more, use \cs{twolinesbutnotmore}\oarg{series}.
+%
+% It is possible to disable \cs{twolinesbutnotmore}\oarg{series} with \cs{twolinesbutnotmore}\oarg{series}\verb+[false]+.
+%
+% You can disable \cs{twolines} and related for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
 %
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
@@ -2134,11 +2139,13 @@
 % 
 % \DescribeMacro{\twolinesappref}
 % \DescribeMacro{\morethantwolinesappref}
-% If you use \cs{twolines} and/or \cs{morethantwolines}
+% \DescribeMacro{\twolinesbutnotmoreappref}
+% If you use \cs{twolines}, \cs{morethantwolines} and/or \cs{twolinesbutnotmore}
 % (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
 % series argument}, the setting will also be available for \cs{appref}.
-% The commands \cs{twolinesappref}\marg{text} and
-% \cs{morethantwolinesappref}\marg{text} can also be defined, if you
+%
+% The commands \cs{twolinesappref}\marg{text},
+% \cs{morethantwolinesappref}\marg{text} and \cs{twolinesbutnotmoreappref} can also be used, if you
 % only want to change the reference style of \cs{appref}.
 %
 % It is possible to disable this setting for a specific \cs{appref} command by
@@ -7723,7 +7730,13 @@
     \iftoggle{fulllines@}%
       {}%
       {%
-        \ifcsempty{twolines@\@currentseries}%
+        \ifboolexpr{%
+          test{\ifcsempty{twolines@\@currentseries}}%
+          or (%
+           togl {twolinesbutnotmore@\@currentseries}%
+           and test {\ifnumgreater{#5-#2}{1}}%
+           )%
+          }%
           {}%
           {%
           \l@d@dashfalse%
@@ -9988,6 +10001,7 @@
       \newtoggle{numberonlyfirstintwolines@#1}%
       \csgdef{twolines@#1}{}%
       \csgdef{morethantwolines@#1}{}%
+      \newtoggle{twolinesbutnotmore@#1}{}%
       \newtoggle{onlypstartinfootnote@#1}%
       \newtoggle{pstartinfootnoteeverytime@#1}%
       \newtoggle{pstartinfootnote@#1}%
@@ -10232,9 +10246,16 @@
 % \changes{v1.1}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
 % \changes{v1.13.0}{2014/09/16}{\cs{settoggle@series} can take an optional arguments to reload series setup.}
 % \cs{settoggle@series}\marg{series}\marg{toggle}\marg{value} is a generic command to switch toggles for some series.
-
+% The arguments are:
+% \begin{itemize}
+%   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
+%   \item \verb+#2+ (mandatory): the name of the hook.
+%   \item \verb+#3+ (mandatory): the new value of toggle (true or false).
+%   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \cs{footnormal} or \cs{footparagraph} or … depending of the footnote display).
+%   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\settoggle@series}[4][4]{%
+\newcommandx{\settoggle@series}[5][4,5,usedefault]{%
     \def\do##1{%
       \global\settoggle{#2@##1}{#3}%
       \ifstrequal{#4}{reload}%
@@ -10246,8 +10267,11 @@
       }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
+              \ifstrempty{#5}{}{%
+                 \docsvlist{#5}%
+               }
            }%
-        {%
+           {%
               \docsvlist{#1}%
            }%
 }
@@ -10308,11 +10332,22 @@
 % \end{macro}
 % \begin{macro}{\newhooktoggle@series}
 %\cs{newhooktoggle@series}\cs{command names} is a generic command to add new commands for new toggle hook, like \cs{numberonlyfirstinline}.
+% The second argument is also used to create commands named \cs{<hookname><pseudoseries>}, 
+% like \cs{twolinesbutnotmoreappref}.
+% \changes{v1.21.0}{2015/03/29}{\cs{newhooktoggle@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommand{\newhooktoggle@series}[1]{%
+\newcommandx{\newhooktoggle@series}[2][2,usedefault]{%
   \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}%
+    \settoggle@series{##1}{#1}{##2}[][#2]%
     }%
+  \ifstrempty{#2}{}{%
+    \def\do##1{%
+      \global\expandafter\newcommand\expandafter*\csname #1##1\endcsname{%
+        \csuse{#1}[##1]%
+      }%
+    }%
+    \docsvlist{#2}%
+  }%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10347,7 +10382,8 @@
 %    \begin{macrocode}
 \unless\ifnocritical@
   \newhookcommand@series{twolines}[appref]
-  \newhookcommand@series{morethantwolines}[appref]
+  \newhookcommand@series{morethantwolines}[appref]   
+  \newhooktoggle@series{twolinesbutnotmore}[appref]
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
   \newhookcommand@series{hsizetwocol}
@@ -11490,6 +11526,7 @@
 %    \begin{macrocode}
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
+\newtoggle{twolinesbutnotmore@appref}%
 
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
