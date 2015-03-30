@@ -3387,12 +3387,13 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@war@ledsetnormalparstuffDeprecated}
 % \begin{macro}{\led@war@FalseverseDeprecated}
 % \begin{macro}{\led@war@ledxxxDeprecated}
 % \begin{macro}{\led@war@noendnotesDeprecated}
 %    \begin{macrocode}
-\newcommand{\led@war@FalseverseDeprecated}{%
-  \eledmac@warning{\string\falseverse\space deprecated. Look at \string\newverse\space instead.}%
+\newcommand{\led@war@ledsetnormalparstuffDeprecated}{%
+  \eledmac@warning{\string\ledsetnormalparstuff\space deprecated. Look at \string\Xledsetnormalparstuff\space and \ledsetnormalparstuffX\space instead.}%
 }%
 \newcommand{\led@war@ledxxxDeprecated}[1]{%
   \eledmac@warning{\string\led#1\space deprecated. Look at \string\e#1 instead.}%
@@ -3401,6 +3402,7 @@
   \eledmac@warning{\string\noendnotes\space deprecated. Use `noend` option instead.}%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7503,7 +7505,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\ledsetnormalparstuff@common}
 % \begin{macro}{\ledsetnormalparstuff}
+% \begin{macro}{\Xledsetnormalparstuff}
+% \begin{macro}{\ledsetnormalparstuffX}
 % \begin{macro}{\normalfootfmt}
 % \phantomsection\label{normalfootfmt}\relax
 % \cs{normalfootfmt} is a `normal' macro
@@ -7526,18 +7531,39 @@
 % \cs{autopar}, for example).
 % 
 % \changes{v1.4}{2012/11/16}{Direction of footnotes with polyglossia.}
+% \changes{v1.21.0}{2015/03/29}{\cs{ledsetnormalparstuff} deprecated and becomes \cs{ledsetnormalparstuffX} and \cs{Xledsetnormalparstuff}.}
 %    \begin{macrocode}
 \newcommand*{\ledsetnormalparstuff}{%
+  \led@war@ledsetnormalparstuffDeprecated%
   \ifluatex%
      \luatextextdir\footnote@luatextextdir%
    \luatexpardir\footnote@luatexpardir%
   \fi%
   \csuse{\csuse{footnote@dir}}%
   \normal@pars%
-  \noindent \parfillskip \z@ \@plus 1fil}
+  \noindent \parfillskip \z@ \@plus 1fil}%
+
+\newcommand*{\ledsetnormalparstuff@common}{%
+  \ifluatex%
+     \luatextextdir\footnote@luatextextdir%
+   \luatexpardir\footnote@luatexpardir%
+  \fi%
+  \csuse{\csuse{footnote@dir}}%
+  \normal@pars%
+  \parfillskip \z@ \@plus 1fil}%
+
+\newcommand*{\Xledsetnormalparstuff}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{Xparindent@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when going from ledmac to eledmac 
+}%
+
+\newcommand*{\ledsetnormalparstuffX}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{parindentX@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when going from ledmac to eledmac 
+}%
 
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
-  \ledsetnormalparstuff%
+  \Xledsetnormalparstuff{#4}%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
@@ -7547,6 +7573,9 @@
   }}%
   #3\strut\par}
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -8345,7 +8374,7 @@
 %    \begin{macrocode}
 \newcommandx*{\parafootfmt}[4][4=Z]{%
   \insertparafootsep{#4}%
-  \ledsetnormalparstuff%
+  \Xledsetnormalparstuff{#4}%
   \printlinefootnote{#1}{#4}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -9026,7 +9055,7 @@
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
-  \ledsetnormalparstuff
+  \ledsetnormalparstuffX{#1}%
   \hangindent=\csuse{hangindentX@#1}%
   {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%\enspace
     #2\strut\par}}
@@ -9535,7 +9564,7 @@
        \@nameuse{@thefnmark#1}%
    }%
   \insertparafootsep{#1}%
-  \ledsetnormalparstuff
+  \ledsetnormalparstuffX{#1}%
   {\csuse{notenumfontX@#1}\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
     #2\penalty-10}}
 
@@ -15609,6 +15638,15 @@
 % We don't see any reason to print it in other section. However, if you want to print the pstart number in all footnote, with or without \cs{numberpstarttrue}, you can use 
 % \cs{pstartinfootnoteeverytime}.
 % \subsection{Migration to eledmac 1.21.0}
+% \subsubsection{\cs{Xledsetnormalparstuff} and \cs{ledsetnormalparstuffX}}
+% The \cs{ledsetnormalparstuff} has been split in two different commands:
+% \begin{itemize}
+%  \item \cs{Xledsetnormalparstuff} for critical notes;
+%  \item \cs{ledsetnormalparstuffX} for familiar notes.
+% \end{itemize}
+% The new commands take an optional argument which is the series letter.
+% If you have redefined \cs{ledsetnormalparstuff} or commands which call them, you must make the appropriate change
+% \subsubsection{Endnotes}
 % Clean the \verb+.end+ file before the next run.
 % If you have redefined \cs{endprint}, you must :
 % \begin{itemize}
