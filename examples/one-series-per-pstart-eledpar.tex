@@ -1,0 +1,245 @@
+\documentclass{article} 
+\usepackage{lipsum}
+\usepackage[series={A,B,C,D,E,F,G,H,I,J}]{eledmac}%Declare series to use
+\usepackage{eledpar}
+\usepackage{polyglossia}
+\setmainlanguage{english}
+\usepackage{libertine}
+
+
+% Here, the loop system
+\makeatletter% We need to use command with @
+  % Two counters: one for left and one for right
+  \newcounter{mynotelevel}%
+    \renewcommand{\themynotelevel}{\Alph{mynotelevel}}% Print the counter as a letter
+  \newcounter{mynotelevelR}%
+    \renewcommand{\themynotelevelR}{\Alph{mynotelevelR}}% Print the counter as a letter
+  \setcounter{mynotelevelR}{5}
+
+  % Following lines are called at each \pstart
+  \AtEveryPstartCall{%
+        \ifledRcol%If it's a right pstart
+          \addtocounter{mynotelevelR}{1}%Step counter
+          \ifnumequal{\arabic{mynotelevelR}}{11}{%Not more than J series (10)
+            \setcounter{mynotelevelR}{6}% If more than J => restart to F (6)
+          }{}%
+            \global\letcs{\mynote}{\themynotelevelR footnote}%  And let mynote equal to <X>footnote, where <X> is the current level \letcs is defined by etoolbox, called by eledmac        
+        \else% If it's a left page
+          \addtocounter{mynotelevel}{1}%Step counter
+          \ifnumequal{\arabic{mynotelevel}}{6}{%Not more than E series (5)
+            \setcounter{mynotelevel}{1}%If more than J => restart to A (1)
+          }{}%
+            \global\letcs{\mynote}{\themynotelevel footnote}%And let mynote equal to <X>footnote, where <X> is the current level \letcs is defined by etoolbox, called by eledmac        
+
+                \fi%
+  }
+  % This code is called when begins of  pstart are printed
+  \AtEveryPstart{%
+    \ifodd\c@page%If we are on a left page
+        \addtocounter{mynotelevelR}{1}%Step counter
+        \ifnumequal{\arabic{mynotelevelR}}{11}{%Not more than J series (10)
+          \setcounter{mynotelevelR}{6}}{}% If more than J => restart to F (6)
+                    \seriesatend{\themynotelevelR}% The series should be at the end
+            \else
+        \addtocounter{mynotelevel}{1}%Step counter
+        \ifnumequal{\arabic{mynotelevel}}{6}{%Not more than E series (5)
+          \setcounter{mynotelevel}{1}}{}%% If more than E => restart to A (1)
+          \seriesatend{\themynotelevel}% The series should be at the end
+    \fi
+   }
+
+\makeatother
+\begin{document}
+
+\title{One series per \textbackslash pstart with eledmac}
+\author{}
+\maketitle
+\begin{abstract}
+This file provides example of implementing feature to have one series of notes by \verb+\pstart+…\verb+pend+, when typesetting parallel page.
+
+We suppose there is not more than five \verb+\pstart+…\verb+pend+ by page. The series A, B, C, D and E are for left pages, while the series F, G, H, I, J are for right notes.
+
+\subsection*{In the left page}
+Instead of using \verb+\Afootnote+, \verb+\Bfootnote+ etc., we use \verb+\mynote+, which we let equal to \verb+\Afootnote+ at the first \verb+pstart+, \verb+\Bfootnote+ at the second \verb+\pstart+, \verb+\Cfootnote+ at the third, \verb+\Dfootnote+ at the fourth, \verb+\Efootnote+ at the fifth, and we restarts at \verb+\Afootnote+ at the sixth \verb+\pstart+.
+
+To do that, we increment the counter \verb+mynotelevel+ at every \verb+pstart+ and reset it to~1 when it becomes equal to~6.
+
+
+
+\subsection*{In the right page}
+
+We do the same thing, but use the \verb+mynotelevelR+ counter, rotating its values between 6 and 10, and, consequently, rotating between F, G, H, I, J series.
+
+\subsection*{Series position}
+To ensure that the series of a \verb+pstart+ which is between two page will be printed at the end of the series in the first page but a the begin in the second page, we use \verb+\seriesatend+. However, we need to do it when the \verb+pstart+s are printed, and not when they are called. So we use:
+\begin{description}
+  \item[\textbackslash AtEveryPstartCall] to set the footnote series.
+  \item[\textbackslash AtEveryPstart] to set the footnote position.
+\end{description}
+\end{abstract}
+
+
+
+\begin{pages}
+\begin{Leftside}
+    \beginnumbering
+
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel first}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[1]
+    \pend
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2]\edtext{on therpage}{\mynote{on otherpage}} 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel first}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[1]
+    \pend
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2]\edtext{on therpage}{\mynote{on otherpage}} 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevel Here}{\mynote{First footnote in \themynotelevel}} is the 
+    \edtext{\themynotelevel second}{\mynote{Second footnote in \themynotelevel.}} paragraph: 
+    \lipsum[2] 
+    \pend
+    % Many more \pstart ... \pend to follow. 
+
+    \endnumbering
+\end{Leftside}
+
+\begin{Rightside}
+    \beginnumbering
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR first}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[1]
+    \pend
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+        \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2]\edtext{on therpage}{\mynote{on otherpage}} 
+    \pend
+
+        \pstart sss\themynotelevelR
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR first}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[1]
+    \pend
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+        \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+        \pstart
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2]\edtext{on therpage}{\mynote{on otherpage}} 
+    \pend
+
+        \pstart sss\themynotelevelR
+    \edtext{\themynotelevelR Here}{\mynote{First footnote in \themynotelevelR}} is the 
+    \edtext{\themynotelevelR second}{\mynote{Second footnote in \themynotelevelR.}} paragraph: 
+    \lipsum[2] 
+    \pend
+
+    % Many more \pstart ... \pend to follow. 
+
+    \endnumbering
+\end{Rightside}
+\setcounter{mynotelevel}{0}%Restart the left counter
+\setcounter{mynotelevelR}{5}% And restart the right counter
+\Pages
+\end{pages}
+
+\end{document}
