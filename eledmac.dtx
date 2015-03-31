@@ -1475,12 +1475,20 @@
 %
 %
 % \subsubsection{Styles of notes content}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{Xparindent} and \cs{hangindentX}}
+% \DescribeMacro{\Xparindent}
+% By default, \Eledmac{} does not insert indent before paragraph in critical footnotes. 
+% Use \cs{Xparindent}\oarg{series} to enable them.
+%
+% \DescribeMacro{\parindentX}
+% By default, \Eledmac{} does not insert indent before paragraph in familiar footnotes. 
+% Use \cs{parindentX}\oarg{series} to enable them. 
 %
 % \DescribeMacro{\Xhangindent}
 % For critical notes NOT paragraphed you can define an indent with \cs{Xhangindent}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make distinction between a new note and a break in a note. The default value is 0~pt.
 %
 % \DescribeMacro{\hangindentX}
-% For  familiar notes NOT paragraphed you can define an indent with \cs{Xhangindent}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make a distinction between a new note and a break in anote.
+% For  familiar notes NOT paragraphed you can define an indent with \cs{Xhangindent}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make a distinction between a new note and a break in a note.
 %
 % \subsubsection{Arbitrary code at the beginninging of notes}
 % \changes{v1.1}{2012/09/25}{New hook to add arbitrary code at the beginning of the notes}
@@ -3379,12 +3387,13 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@war@ledsetnormalparstuffDeprecated}
 % \begin{macro}{\led@war@FalseverseDeprecated}
 % \begin{macro}{\led@war@ledxxxDeprecated}
 % \begin{macro}{\led@war@noendnotesDeprecated}
 %    \begin{macrocode}
-\newcommand{\led@war@FalseverseDeprecated}{%
-  \eledmac@warning{\string\falseverse\space deprecated. Look at \string\newverse\space instead.}%
+\newcommand{\led@war@ledsetnormalparstuffDeprecated}{%
+  \eledmac@warning{\string\ledsetnormalparstuff\space deprecated. Look at \string\Xledsetnormalparstuff\space and \ledsetnormalparstuffX\space instead.}%
 }%
 \newcommand{\led@war@ledxxxDeprecated}[1]{%
   \eledmac@warning{\string\led#1\space deprecated. Look at \string\e#1 instead.}%
@@ -3393,6 +3402,7 @@
   \eledmac@warning{\string\noendnotes\space deprecated. Use `noend` option instead.}%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7495,7 +7505,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\ledsetnormalparstuff@common}
 % \begin{macro}{\ledsetnormalparstuff}
+% \begin{macro}{\Xledsetnormalparstuff}
+% \begin{macro}{\ledsetnormalparstuffX}
 % \begin{macro}{\normalfootfmt}
 % \phantomsection\label{normalfootfmt}\relax
 % \cs{normalfootfmt} is a `normal' macro
@@ -7518,18 +7531,39 @@
 % \cs{autopar}, for example).
 % 
 % \changes{v1.4}{2012/11/16}{Direction of footnotes with polyglossia.}
+% \changes{v1.21.0}{2015/03/29}{\cs{ledsetnormalparstuff} deprecated and becomes \cs{ledsetnormalparstuffX} and \cs{Xledsetnormalparstuff}.}
 %    \begin{macrocode}
 \newcommand*{\ledsetnormalparstuff}{%
+  \led@war@ledsetnormalparstuffDeprecated%
   \ifluatex%
      \luatextextdir\footnote@luatextextdir%
    \luatexpardir\footnote@luatexpardir%
   \fi%
   \csuse{\csuse{footnote@dir}}%
   \normal@pars%
-  \noindent \parfillskip \z@ \@plus 1fil}
+  \noindent \parfillskip \z@ \@plus 1fil}%
+
+\newcommand*{\ledsetnormalparstuff@common}{%
+  \ifluatex%
+     \luatextextdir\footnote@luatextextdir%
+   \luatexpardir\footnote@luatexpardir%
+  \fi%
+  \csuse{\csuse{footnote@dir}}%
+  \normal@pars%
+  \parfillskip \z@ \@plus 1fil}%
+
+\newcommand*{\Xledsetnormalparstuff}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{Xparindent@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when going from ledmac to eledmac 
+}%
+
+\newcommand*{\ledsetnormalparstuffX}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{parindentX@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when going from ledmac to eledmac 
+}%
 
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
-  \ledsetnormalparstuff%
+  \Xledsetnormalparstuff{#4}%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
@@ -7539,6 +7573,9 @@
   }}%
   #3\strut\par}
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -8337,7 +8374,7 @@
 %    \begin{macrocode}
 \newcommandx*{\parafootfmt}[4][4=Z]{%
   \insertparafootsep{#4}%
-  \ledsetnormalparstuff%
+  \Xledsetnormalparstuff{#4}%
   \printlinefootnote{#1}{#4}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -8599,11 +8636,11 @@
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\threecolfootfmt}[4][4=Z]{% 
   \normal@pars
   \hsize \csuse{hsizethreecol@#4}
-  \parindent=0pt
+  \nottoggle{Xparindent@#4}{\parindent=\z@}{}
   \tolerance=5000
-  \raggedright
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
+  \raggedright
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -8722,11 +8759,11 @@
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\twocolfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
   \normal@pars
   \hsize \csuse{hsizetwocol@#4}
-  \parindent=0pt
+  \nottoggle{Xparindent@#4}{\parindent=\z@}{}
   \tolerance=5000
-  \raggedright
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
+  \raggedright
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -8984,7 +9021,7 @@
     \fi\fi%
     \setnotesXpositionliketwocolumns@{#1}%
     \spaceskip=\z@skip \xspaceskip=\z@skip
-    \csuse{\csuse{footnote@dir}}\if@RTL\else\noindent\leavevmode\fi\@nameuse{footfmt#1}{#1}{#2}\egroup}
+    \csuse{\csuse{footnote@dir}}\@nameuse{footfmt#1}{#1}{#2}\egroup}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9018,9 +9055,9 @@
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
-  \ledsetnormalparstuff
+  \ledsetnormalparstuffX{#1}%
   \hangindent=\csuse{hangindentX@#1}%
-  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%\enspace
+  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%
     #2\strut\par}}
 
 %    \end{macrocode}
@@ -9251,11 +9288,11 @@
   \normal@pars
   \hangindent=\csuse{hangindentX@#1}%
   \hsize \csuse{hsizetwocolX@#1}
-  \parindent=\z@ 
+ \nottoggle{parindentX@#1}{\parindent=\z@}{}
   \tolerance=5000\relax
-  \raggedright
   \leavevmode
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
+ \raggedright
+  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -9362,11 +9399,11 @@
   \hangindent=\csuse{hangindentX@#1}%
   \normal@pars
   \hsize \csuse{hsizethreecolX@#1}
-  \parindent=\z@ 
+  \nottoggle{parindentX@#1}{\parindent=\z@}{} %
   \tolerance=5000\relax
-  \raggedright
   \leavevmode
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
+  \raggedright
+  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -9527,8 +9564,8 @@
        \@nameuse{@thefnmark#1}%
    }%
   \insertparafootsep{#1}%
-  \ledsetnormalparstuff
-  {\csuse{notenumfontX@#1}\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%\enspace
+  \ledsetnormalparstuffX{#1}%
+  {\csuse{notenumfontX@#1}\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
     #2\penalty-10}}
 
 %    \end{macrocode}
@@ -10066,6 +10103,7 @@
 %    \end{macrocode}
 % \subsubsection{Options}
 %    \begin{macrocode}
+      \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xhangindent@#1}{0pt}%
       \csgdef{Xragged@#1}{}%
@@ -10172,6 +10210,7 @@
 %    \end{macrocode}
 % \subsubsection{Options}
 %    \begin{macrocode}
+      \newtoggle{parindentX@#1}
       \csgdef{hangindentX@#1}{0pt}%
       \csgdef{raggedX@#1}{}%
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
@@ -10472,6 +10511,7 @@
 % Before generate options' command for critical notes, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
+  \newhooktoggle@series{Xparindent}
   \newhookcommand@series{twolines}[appref]
   \newhookcommand@series{morethantwolines}[appref]   
   \newhooktoggle@series{twolinesbutnotmore}[appref]
@@ -10513,6 +10553,7 @@
 % Before generate options' command for familiar notes, we check the \verb+nofamiliar+ option.
 %    \begin{macrocode}
 \unless\ifnofamiliar@
+  \newhooktoggle@series{parindentX}
   \newhookcommand@series{hangindentX}
   \newhookcommand@series{raggedX}
   \newhookcommand@series{hsizetwocolX}
@@ -15597,6 +15638,15 @@
 % We don't see any reason to print it in other section. However, if you want to print the pstart number in all footnote, with or without \cs{numberpstarttrue}, you can use 
 % \cs{pstartinfootnoteeverytime}.
 % \subsection{Migration to eledmac 1.21.0}
+% \subsubsection{\cs{Xledsetnormalparstuff} and \cs{ledsetnormalparstuffX}}
+% The \cs{ledsetnormalparstuff} has been split in two different commands:
+% \begin{itemize}
+%  \item \cs{Xledsetnormalparstuff} for critical notes;
+%  \item \cs{ledsetnormalparstuffX} for familiar notes.
+% \end{itemize}
+% The new commands take an optional argument which is the series letter.
+% If you have redefined \cs{ledsetnormalparstuff} or commands which call them, you must make the appropriate change
+% \subsubsection{Endnotes}
 % Clean the \verb+.end+ file before the next run.
 % If you have redefined \cs{endprint}, you must :
 % \begin{itemize}
