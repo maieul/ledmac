@@ -234,6 +234,9 @@
 % \changes{v1.21.0}{2015/03/29}{Fix bug when a \cs{Xfootnote} follows a \cs{Xendnote} in the second argument of \cs{edtext} (bug added in eledmac 1.0.0 !).}
 % \changes{v1.21.0}{2015/03/29}{Add noeledsec package option}
 % \changes{v1.21.0}{2015/03/29}{parapparatus option works now for familiar footnotes.}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{beforenotesX} and \cs{beforeXnotes} features for notes in two and three columns.}
+% \changes{v1.21.0}{2015/03/29}{Debug \cs{beforenotesX} \cs{maxhnotesX} \cs{notesXwidthliketwocolumns} and \cs{afterruleX} with two and three columns footnotes}
+% \changes{v1.21.0}{2015/03/29}{\cs{afterXrule} and \cs{afterruleX} features cause not anymore problems of overflowing at the bottom of the page.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1320,7 +1323,7 @@
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
 % Since version 1.0, some commands can be used to change the display of the footnotes. All can have an optional argument \oarg{s}, which is the letter of the series --- or a list of letters separated by comma --- depending on which option is applied.
 %
-% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote. 
+% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote, except for commands concerning the place keept by the notes --- including blank space. 
 %
 % \subsubsection{Control line number printing}
 % \DescribeMacro{\numberonlyfirstinline}
@@ -1583,7 +1586,6 @@
 %
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \Lpack{eledmac}, adds 2.6pt. These 2.6pt are not changed by this command.}
 %
-% Be careful with this setting: it can place notes by the page number, at the bottom of the page.
 %
 % \DescribeMacro{\afterruleX}
 % You can change the vertical space printed after the rule of the familiar notes with \cs{beforenotesX}\oarg{s}\marg{l}.
@@ -1591,7 +1593,6 @@
 %
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \Lpack{eledmac}, adds 2.6pt. These 2.6pt are not changed by this command.}
 %
-% Be careful with this setting: it can place notes by the page number, at the bottom of the page.
 %
 % \DescribeMacro{\preXnotes}
 % You can set the space before the first series of critical notes printed on each page
@@ -2302,7 +2303,7 @@
 % series letter (e.g., \texttt{B}). \cs{footnormalX} is the typical
 % footnote format. With \cs{footparagraphX} the series is typeset a one
 % paragraph, with \cs{foottwocolX} the notes are in two columns, and are in
-% three columns with \cs{foothreecolX}.
+% three columns with \cs{footthreecolX}.
 %
 % \DescribeMacro{\thefootnoteA}
 % \DescribeMacro{\bodyfootmarkA}
@@ -7923,7 +7924,10 @@
     \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-            \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+            \togglefalse{preXnotes@}%
+            \skip\csname #1footins\endcsname=%
+              \dimexpr\csuse{preXnotes@}+\csuse{afterXrule@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname #1footins\endcsname%
@@ -7933,8 +7937,7 @@
   \fi%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
-  \print@Xfootnoterule{#1}%%
-  \vskip\csuse{afterXrule@#1}%
+  \print@Xfootnoterule{#1}%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
@@ -7980,13 +7983,11 @@
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
       \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
     \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
   \fi%
   \setlength{\parindent}{0pt}
  {\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}
@@ -8080,7 +8081,8 @@
   \count\csname #1footins\endcsname=1000
   \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
 % normal setup as we can (so the notes will have a similar layout).
@@ -8091,7 +8093,8 @@
     \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
     \count\csname mp#1footins\endcsname=1000
     \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
   \fi
 }
 
@@ -8144,7 +8147,8 @@
   \count\csname #1footins\endcsname=1000
   \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \para@footsetup{#1}
 %    \end{macrocode}
 % And the extra setup for minipages.
@@ -8154,7 +8158,8 @@
     \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
     \count\csname mp#1footins\endcsname=1000
     \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
   \fi
 }
 %    \end{macrocode}
@@ -8214,14 +8219,16 @@
     \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-           \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+            \togglefalse{preXnotes@}%
+            \skip\csname #1footins\endcsname=%
+              \dimexpr\csuse{preXnotes@}+\csuse{afterXrule@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname #1footins\endcsname%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
   \print@Xfootnoterule{#1}%%
-  \vskip\csuse{afterXrule@#1}%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
@@ -8459,13 +8466,11 @@
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
       \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
     \fi%
   \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
   \fi%
   \unvbox\csname mp#1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
@@ -8570,6 +8575,8 @@
   \expandafter\let\csname #1footfmt\endcsname=\threecolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\threecolfootgroup
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \threecolfootsetup{#1}
 %    \end{macrocode}
 % The additional setup for minipages.
@@ -8577,6 +8584,8 @@
   \ifnoledgroup@\else
     \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
     \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
     \mpthreecolfootsetup{#1}
   \fi
 }
@@ -8717,14 +8726,12 @@
     \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
-    \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
+    \print@Xfootnoterule{#1}%
   \fi%
   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
@@ -8747,6 +8754,8 @@
   \expandafter\let\csname #1footfmt\endcsname=\twocolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\twocolfootgroup
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \twocolfootsetup{#1}
 %    \end{macrocode}
 % The additional setup for minipages.
@@ -8754,6 +8763,8 @@
   \ifnoledgroup@\else
     \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
     \expandafter\let\csname mp#1footgroup\endcsname=\mptwocolfootgroup
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
     \mptwocolfootsetup{#1}
   \fi
 }
@@ -8834,14 +8845,12 @@
     \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
-    \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
+    \print@Xfootnoterule{#1}%
   \fi%
    {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
@@ -9109,7 +9118,10 @@
     \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-           \togglefalse{prenotesX@} \skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+           \togglefalse{prenotesX@}% 
+           \skip\csname footins#1\endcsname=%
+             \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+           }%
           {}%
       }%
   \vskip\skip\csname footins#1\endcsname%
@@ -9121,7 +9133,7 @@
   \setnotesXwidthliketwocolumns@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
   \print@footnoteXrule{#1}%
-  \vskip\csuse{afterruleX@#1}}
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -9162,13 +9174,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \unvbox\@nameuse{mpfootins#1}}
 
@@ -9236,7 +9246,8 @@
   \count\csname footins#1\endcsname=1000
   \csxdef{default@footins#1}{1000}%Use to have note only for one side
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
 %    \end{macrocode}
 % Additions for minipages.
 %    \begin{macrocode}
@@ -9245,7 +9256,8 @@
     \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
     \count\csname mpfootins#1\endcsname=1000
     \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}%
   \fi
 }
 
@@ -9261,15 +9273,19 @@
 % \cs{foottwocolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\foottwocolX}[1]{%
-  \csgdef{series@displayX#1}{twocol}
+  \csgdef{series@displayX#1}{twocolX}
   \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by \csuse{afterruleX@#1}\relax%
   \twocolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}
     \mptwocolfootsetupX{#1}
   \fi%
 }
@@ -9347,13 +9363,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9373,15 +9387,19 @@
 % \cs{footthreecolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footthreecolX}[1]{%
-  \csgdef{series@displayX#1}{threecol}
+  \csgdef{series@displayX#1}{threecolX}
   \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by \csuse{afterruleX@#1}\relax%
   \threecolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}
     \mpthreecolfootsetupX{#1}
   \fi%
 }
@@ -9458,13 +9476,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9493,14 +9509,16 @@
   \count\csname footins#1\endcsname=1000
   \csxdef{default@footins#1}{1000}%Use this to confine the  notes to one side only
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
   \para@footsetupX{#1}
   \ifnoledgroup@\else
     \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
     \count\csname mpfootins#1\endcsname=1000
     \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}%
   \fi
   }
 
@@ -9531,7 +9549,10 @@
     \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-            \togglefalse{prenotesX@}\skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+            \togglefalse{prenotesX@}%
+            \skip\csname footins#1\endcsname=%
+              \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname footins#1\endcsname%
@@ -9542,7 +9563,6 @@
   \setnotesXwidthliketwocolumns@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
   \print@footnoteXrule{#1}%
-  \vskip\csuse{afterruleX@#1}%
   }
 
 %    \end{macrocode}
@@ -9626,13 +9646,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
   \fi%
   \unvbox\csname mpfootins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
@@ -9732,17 +9750,22 @@
 %
 % \begin{macro}{\print@Xfootnoterule}
 % \begin{macro}{\print@footnoteXrule}
+% \changes{v1.21.0}{2015/03/29}{Code refactoring: the spaces after the footnote rules are directly managed in \cs{print@Xfootnoterule} and \cs{print@footnoteXrule}}
 %    \begin{macrocode}
 \newcommand{\print@Xfootnoterule}[1]{%
+  \vskip-\csuse{afterXrule@#1}%Because count in \dimen\csuse{#1footins}
   \nointerlineskip%
   \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
   \nointerlineskip%
+  \vskip\csuse{afterXrule@#1}%
 }%
 
 \newcommand{\print@footnoteXrule}[1]{%
+  \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}
   \nointerlineskip%
   \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
   \nointerlineskip%
+  \vskip\csuse{afterruleX@#1}%
 }%
 
 %    \end{macrocode}
@@ -10564,7 +10587,7 @@
   \newhookcommand@series{afterlemmaseparator}
   \newhookcommand@series{inplaceoflemmaseparator}
   \newhookcommand@series{txtbeforeXnotes}
-  \newhookcommand@series{afterXrule}
+  \newhookcommand@series@reload{afterXrule}
   \newhooktoggle@series{numberonlyfirstinline}
   \newhooktoggle@series{numberonlyfirstintwolines}
   \newhooktoggle@series{nonumberinfootnote}
@@ -10595,7 +10618,7 @@
   \newhookcommand@series@reload{beforenotesX}
   \newhookcommand@series@reload{maxhnotesX}
   \newhooktoggle@series@reload{notesXwidthliketwocolumns}%
-  \newhookcommand@series{afterruleX}
+  \newhookcommand@series@reload{afterruleX}
   \newhookcommand@series{notefontsizeX}
 \fi
 %    \end{macrocode}
