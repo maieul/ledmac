@@ -232,6 +232,7 @@
 % \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
 % \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore}.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug when a \cs{Xfootnote} follows a \cs{Xendnote} in the second argument of \cs{edtext} (bug added in eledmac 1.0.0 !).}
+% \changes{v1.21.0}{2015/03/29}{Add noeledsec package option}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -631,6 +632,7 @@
 % \item[ledsecnolinenumber] is deprecated.
 % \item[nocritical] disable tools for critical footnotes (\cs{Afootnote}, \cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ faster. 
 % It will also preserve rooms for other package.
+% \item[noeledsec] disable tools for \cs{eledsection} and related commands (\ref{eledsection} p.~\pageref{eledsection}).
 % \item[noend] disable tools for end footnotes (\cs{Aendnote}, \cs{Bendnote} etc.). If you do not need endnotes, this option lets \eledmac\ faster. 
 % It will also preserve rooms for other package.
 % \item[nofamiliar] disable tools for familiar footnotes (\cs{footnoteA}, \cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ faster.
@@ -2658,7 +2660,7 @@
 % \item \cs{ledsubsubsection}\oarg{text}\marg{critical text}
 % \item \cs{ledsubsubsection*}
 % \end{itemize}
-% These commands are deprecated, and won't be maintened anymore, because of a bad conception.
+% \label{eledsection} These commands are deprecated, and won't be maintened anymore, because of a bad conception.
 % Since version 1.12.0, you have to use the following commands:
 % \begin{itemize}
 % \item \cs{eledchapter}\oarg{text}\marg{critical text}
@@ -2688,9 +2690,8 @@
 %
 % For technical reasons, the page break before \cs{elechapter} can't be added automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
 % \DescribeMacro{\noeledsec}
-% If you aren't going to have any \cs{eledxxx} commands, you can say \cs{noeledsec}
-% in your file, before the first \cs{beginnumbering}, to suppress the
-% generation of unneeded \file{.eledsec} file.
+% If you aren't going to have any \cs{eledxxx} commands, you load \Eledmac{ with \cs{noeledsec} option. 
+% That will suppress the generation of unneeded \file{.eledsec} file, keep memory and make \Lpack{eledmac} faster.
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
@@ -2992,6 +2993,7 @@
 % \subsection{Package options}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifnocritical@}
+% \begin{macro}{\if@noeled@sec}
 % \begin{macro}{\ifnoend@}
 % \begin{macro}{\ifnofamiliar@}
 % \begin{macro}{\ifnoledgroup@}
@@ -3008,6 +3010,7 @@
 %    \begin{macrocode}
 \newif\ifledfinal
 \newif\ifnocritical@%
+\newif\if@noeled@sec%
 \newif\ifnoend@%
 \newif\ifnofamiliar@%
 \newif\ifnoledgroup@%
@@ -3020,6 +3023,7 @@
 \parapparatus@false
 \RequirePackage{xkeyval}
 \DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{noeledsec}{\@noeled@sectrue}
 \DeclareOptionX{nocritical}{\nocritical@true}%
 \DeclareOptionX{nofamiliar}{\nofamiliar@true}%
 \DeclareOptionX{noledgroup}{\noledgroup@true}%
@@ -3050,6 +3054,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3388,10 +3393,14 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\led@war@ledsetnormalparstuffDeprecated}
+% \begin{macro}{\led@war@noeledsecDeprecated}
 % \begin{macro}{\led@war@FalseverseDeprecated}
 % \begin{macro}{\led@war@ledxxxDeprecated}
 % \begin{macro}{\led@war@noendnotesDeprecated}
 %    \begin{macrocode}
+\newcommand{\led@war@noeledsecDeprecated}[0]{%
+  \eledmac@warning{\string\noeledsec\space deprecated. Use `noeledsec` option instead.}%
+}%
 \newcommand{\led@war@ledsetnormalparstuffDeprecated}{%
   \eledmac@warning{\string\ledsetnormalparstuff\space deprecated. Look at \string\Xledsetnormalparstuff\space and \ledsetnormalparstuffX\space instead.}%
 }%
@@ -3402,6 +3411,7 @@
   \eledmac@warning{\string\noendnotes\space deprecated. Use `noend` option instead.}%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -14822,6 +14832,11 @@
 %   \item This last command is called when the pstart is effectively printed.
 % \end{enumerate}
 %
+% We do not defined commands for \cs{eledsection} and related if the \verb+noeledsec+ option is loaded.
+% We use etoolbox tests and not the \verb+\ifxxx…\else…\fi+ structure to prevent problem of expansions with command after the \verb+\ifxxx+ which contains \verb+fi+.
+%    \begin{macrocode}
+\notbool{@noeled@sec}{%
+%    \end{macrocode}
 % \begin{macro}{\beforeeledchapter}
 % For technical reasons, not yet solved, page-breaking before chapters can't be made automatically by eledmac. Users have to us \cs{beforeeledchapter}.
 %    \begin{macrocode}
@@ -15102,14 +15117,12 @@
 % \end{macro}
 % \begin{macro}{\noeledsec}
 % \changes{v1.12.6}{2014/08/31}{Add \cs{noeledsec} macro.}
-% \begin{macro}{\if@noeled@sec}
-% The boolean \cs{if@noeled@sec} is set to true when \cs{noeledsec} is called.
-% It is used to disable external file creation.
+% The \cs{noeledsec} commands is deprecated, people should prefer the \verb+noeledsec+ package option.
 %    \begin{macrocode}
-\newif\if@noeled@sec%
-\newcommand{\noeledsec}{\global\@noeled@sectrue}%
-%    \end{macrocode}
-% \end{macro}
+\newcommand{\noeledsec}{%
+  \led@war@noeledsecDeprecated%
+  \global\@noeled@sectrue%
+}%
 % \end{macro}
 % \begin{macro}{\eledchapter}
 % \begin{macro}{\eledsection}
@@ -15320,6 +15333,10 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% End of the conditional test about \verb+noeledsec+ option.
+%    \begin{macrocode}
+}{}
+%    \end{macrocode}
 % \section{Page breaking or no page breaking depending of specific lines}
 % By default, page breaks are automatic.  However, the user can define lines which will force page breaks, or prevent page breaks around one specific line.
 % On the first run, the line-list file records the line number of where the page break is being changed (either forced, or prevented).
