@@ -1047,8 +1047,13 @@
 % When inserted into a numbered line the macro \cs{skipnumbering} causes
 % the numbering of that particular line to be skipped; that is, the line 
 % number is unchanged and no line number will be printed.
+% Note that if you use it in \cs{stanza}, you must call it at the begin of the verse.
 %
-%
+% \DescribeMacro{\hidenumbering}
+% \changes{v1.21.1}{2015/03/29}{Add \cs{hidenumbering}}
+% When inserted into a numbered line the macro \cs{hidenumbering} causes
+% the numbering of that particular line to be hidden; that is no line number will be printed.
+% Note that if you use it in \cs{stanza}, you must call it at the begin of the verse.
 % \section{The apparatus}
 % \subsection{Commands}
 % \DescribeMacro{\edtext}
@@ -5062,6 +5067,33 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifl@dhidenumber}
+% \begin{macro}{\hidenumbering}
+% \cs{hidenumbering} hides number in margin. 
+% It uses action code 1009.
+% \begin{macro}{\h@num}
+%    \begin{macrocode}
+\newif\ifl@dhidenumber
+\newcommand*{\hidenumbering}{
+  \ifledRcol%
+    \write\linenum@outR{\string\hide@num}%
+  \else%
+    \write\linenum@out{\string\hide@num}%
+  \fi%
+}%
+\newcommand*{\hide@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1009}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1009}\to\actions@list%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\@ref}
 % \begin{macro}{\insert@count}
 % \cs{@ref}
@@ -5438,15 +5470,15 @@
        \write\linenum@outR{\string\n@num@stanza}%
     \else%
       \write\linenum@outR{\string\n@num}%
-      \advanceline{-1}%
     \fi%
+    \advanceline{-1}%
   \else%
     \ifinstanza%
        \write\linenum@out{\string\n@num@stanza}%
     \else%
       \write\linenum@out{\string\n@num}%
-      \advanceline{-1}%
     \fi%
+    \advanceline{-1}%
   \fi%
 }%
 
@@ -6463,7 +6495,12 @@
     \inserthangingsymbolfalse
   \fi
   \check@pb@in@verse
-  \affixline@num
+  \ifl@dhidenumber%
+    \global\l@dhidenumberfalse%
+    \f@x@l@cks%
+  \else%
+    \affixline@num%
+  \fi%
 %    \end{macrocode}
 % \changes{v1.12.0}{2014/08/05}{\cs{do@line} is split in more little commands.}
 % Depending wether a sectioning command is called at this pstart or not 
@@ -6657,7 +6694,6 @@
   \do@actions
   \do@ballast
   \ifnumberline
-    \ifl@dskipversenumber\else%
       \ifsublines@
          \ifnum\sub@lock<\tw@
            \global\advance\subline@num \@ne
@@ -6668,7 +6704,6 @@
            \global\subline@num \z@
         \fi
       \fi
-    \fi
   \fi
 }
 %    \end{macrocode}
@@ -6832,6 +6867,8 @@
     \l@dskipnumbertrue
   \or%                   % 1008
     \l@dskipversenumbertrue%
+ \or%    % 1009
+    \l@dhidenumbertrue
   \else
     \led@warn@BadAction
   \fi}
