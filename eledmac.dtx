@@ -9935,6 +9935,35 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+%
+% The same thing is required for familiar notes and \cs{prenotesX}.
+% \begin{macro}{firstseriesX@}
+% \begin{macro}{prepare@prenotesX}
+%    \begin{macrocode}
+\gdef\firstseriesX@{}
+\newcommand{\prepare@prenotesX}[1]{%
+  \ifdimequal{0pt}{\prenotesX@}%
+  {}%
+  {%
+    \IfStrEq{\firstseriesX@}{}{%
+      \global\skip\csuse{footins#1}=\prenotesX@%
+      \global\advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
+      \gdef\firstseriesX@{#1}%
+    }%
+    {%
+     \ifseriesbefore{#1}{\firstseriesX@}%
+       {%
+       \global\skip\csuse{footins#1}=\csuse{beforenotesX@\firstseriesX@}%
+       \global\advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
+       \gdef\firstXseries@{#1}%
+       }%
+       {}%
+    }%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Footnotes' output}
 % \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
@@ -9954,10 +9983,13 @@
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \unless\ifnofamiliar@%
+    \gdef\firstseriesX@{}%
     \setbox\@outputbox \vbox{%
       \unvbox\@outputbox%
       \def\do##1{%
       \ifvoid\csuse{footins##1}\else%
+          \global\skip\csuse{footins##1}=\csuse{beforenotesX@##1}%
+          \global\advance\skip\csuse{footins##1} by\csuse{afterruleX@##1}%          
           \print@notesX{##1}%
       \fi%
       }%
@@ -10470,6 +10502,7 @@
 
       \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
           \begingroup%
+              \prepare@prenotesX{#1}%
               \newcommand{\content}{##1}%
               \stepcounter{footnote#1}%
               \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
