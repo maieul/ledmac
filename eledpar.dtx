@@ -1269,6 +1269,7 @@
 % \cs{lineationR}\marg{word} is the macro used to select the 
 % lineation system for right texts.
 % Its argument is a string: either \texttt{page}, \texttt{pstart} or \texttt{section}.
+% \changes{v1.15.0}{2015/03/29}{As \cs{lineation}, \cs{lineationR} automatically set the \cs{pstartinfootnote}.}
 %    \begin{macrocode}
 \newcommand*{\lineationR}[1]{{%
   \ifnumbering
@@ -1278,19 +1279,28 @@
     \ifx\@tempa\@tempb
         \global\bypage@Rtrue
         \global\bypstart@Rfalse
+         \unless\ifnocritical@%
+           \pstartinfootnote[][false]%
+         \fi%
     \else
        \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
            \global\bypage@Rfalse
            \global\bypstart@Rtrue
+           \unless\ifnocritical@%
+             \pstartinfootnote%
+           \fi%
        \else
            \def@tempb{section}
            \ifx\@tempa\@tempb
-           \global\bypage@Rfalse
-           \global\bypstart@Rfalse
+             \global\bypage@Rfalse%
+             \global\bypstart@Rfalse%
+             \unless\ifnocritical@%
+               \pstartinfootnote[][false]%
+             \fi%
            \else
              \led@warn@BadLineation
-        \fi
+           \fi%
        \fi
     \fi
   \fi}}
