@@ -51,7 +51,7 @@
 %
 % \fi
 %
-% \CheckSum{10845}
+% \CheckSum{11125}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -227,11 +227,17 @@
 % \changes{v1.20.0}{2015/03/22}{Explicit error message when calling \cs{Xfootnote} outside of \cs{edtext}.}
 % \changes{v1.20.0}{2015/03/22}{Fix bug with line number typesetting direction when using \cs{eledsection} and similar commands for RTL texts with \LuaLaTeX.}
 % \changes{v1.21.0}{2015/03/29}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which print nothing}
+% \changes{v1.21.0}{2015/03/29}{\cs{AtEveryPstart} and \cs{AtEveryPend} are now compatible with \cs{autopar}}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with space between columns with notes in two columns (bug added by v1.13.0).}
 % \changes{v1.21.0}{2015/03/29}{Add nocritical, noend, nofamiliar and noledgroup options.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
-% \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore}.}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore} and \cs{twolinesonlyinsamepage}.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug when a \cs{Xfootnote} follows a \cs{Xendnote} in the second argument of \cs{edtext} (bug added in eledmac 1.0.0 !).}
+% \changes{v1.21.0}{2015/03/29}{Add noeledsec package option}
+% \changes{v1.21.0}{2015/03/29}{parapparatus option works now for familiar footnotes.}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{beforenotesX} and \cs{beforeXnotes} features for notes in two and three columns.}
+% \changes{v1.21.0}{2015/03/29}{Debug \cs{beforenotesX} \cs{maxhnotesX} \cs{notesXwidthliketwocolumns} and \cs{afterruleX} with two and three columns footnotes}
+% \changes{v1.21.0}{2015/03/29}{\cs{afterXrule} and \cs{afterruleX} features cause not anymore problems of overflowing at the bottom of the page.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -631,6 +637,7 @@
 % \item[ledsecnolinenumber] is deprecated.
 % \item[nocritical] disable tools for critical footnotes (\cs{Afootnote}, \cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ faster. 
 % It will also preserve rooms for other package.
+% \item[noeledsec] disable tools for \cs{eledsection} and related commands (\ref{eledsection} p.~\pageref{eledsection}).
 % \item[noend] disable tools for end footnotes (\cs{Aendnote}, \cs{Bendnote} etc.). If you do not need endnotes, this option lets \eledmac\ faster. 
 % It will also preserve rooms for other package.
 % \item[nofamiliar] disable tools for familiar footnotes (\cs{footnoteA}, \cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ faster.
@@ -1041,8 +1048,13 @@
 % When inserted into a numbered line the macro \cs{skipnumbering} causes
 % the numbering of that particular line to be skipped; that is, the line 
 % number is unchanged and no line number will be printed.
+% Note that if you use it in \cs{stanza}, you must call it at the begin of the verse.
 %
-%
+% \DescribeMacro{\hidenumbering}
+% \changes{v1.21.1}{2015/03/29}{Add \cs{hidenumbering}}
+% When inserted into a numbered line the macro \cs{hidenumbering} causes
+% the numbering of that particular line to be hidden; that is no line number will be printed.
+% Note that if you use it in \cs{stanza}, you must call it at the begin of the verse.
 % \section{The apparatus}
 % \subsection{Commands}
 % \DescribeMacro{\edtext}
@@ -1317,13 +1329,13 @@
 % \changes{v1.0}{2012/09/15}{New generic commands to customize footnote display.}
 % Since version 1.0, some commands can be used to change the display of the footnotes. All can have an optional argument \oarg{s}, which is the letter of the series --- or a list of letters separated by comma --- depending on which option is applied.
 %
-% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote. 
+% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote, except for commands concerning the place keept by the notes --- including blank space. 
 %
 % \subsubsection{Control line number printing}
 % \DescribeMacro{\numberonlyfirstinline}
 % \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
 % By default, the line number is printed in every note. If you want to print it only the first time for a value (i.e one time for line 1, one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{s}. 
-
+%
 % Use \cs{numberonlyfirstinline}\oarg{s}\verb+[false]+ to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
 % \DescribeMacro{\numberonlyfirstintwolines}
@@ -1354,11 +1366,21 @@
 %
 % It is possible to disable \cs{twolinesbutnotmore}\oarg{series} with \cs{twolinesbutnotmore}\oarg{series}\verb+[false]+.
 %
+% When you use lineation by page, the final page number, if different from the initial page number,  
+% won't be printed, because considered as included in the \cs{Xendtwolines} symbol.
+% 
+% \DescribeMacro{twolinesonlyinsamepage}
+% However, you can force to print the final page  number with\\ 
+% \cs{twolinesonlyinsamepage}\oarg{series}.
+% 
+% Use \cs{twolinesonlyinsamepage}\oarg{series}\verb+[false]+ to disable it.
+%
 % You can disable \cs{twolines} and related for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
 %
-% \changes{v1.21.0}{2015/03/29}{Add \cs{Xendtwolines} and \cs{Xendmorethantwolines} and Xendtwolinesbutnotmore}
+% \label{Xendtwolines}\changes{v1.21.0}{2015/03/29}{Add \cs{Xendtwolines}, \cs{Xendmorethantwolines}, \cs{Xendtwolinesbutnotmore} and \cs{Xendtwolinesonlyinsamepage}.}
 % \DescribeMacro{\Xendtwolines}\DescribeMacro{\Xendmorethantwolines}\DescribeMacro{\Xendtwolinesbutnotmore}
-% For endnotes, use  \cs{Xendtwolines}; \cs{Xendmorethantwolines}; \cs{Xendtwolinesbutnotmore} instead of \cs{twolines}; \cs{morethantwolines}; \cs{twolinesbutnotmore}.
+% For endnotes, use  \cs{Xendtwolines}; \cs{Xendmorethantwolines}; \cs{Xendtwolinesbutnotmore}; \cs{Xendtwolinesonlyinsamepage}  instead of \cs{twolines}; \cs{morethantwolines}; \cs{twolinesbutnotmore}; \cs{twolinesonlyinsamepage}.
+% 
 %
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
@@ -1510,7 +1532,24 @@
 % \DescribeMacro{\bhookXendnote}
 % \cs{bhookXendnote}\oarg{series}\marg{code} is to be used at the beginning of the endnotes.
 %
-% \subsubsection{Options for notes in columns}
+% \subsubsection{Options for footnotes in columns}
+% \paragraph{Alignement}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{Xcolalign} and \cs{colalignX} hooks}
+% By default, texts in footnotes in two or three columns are flushed left without hyphenation.
+% However, you can change it with \cs{Xcolalign}\oarg{s}\marg{code}, for critical footnotes, and \cs{colalignX}\oarg{s}\marg{code}, for familiar footnote.
+%
+% \verb+<code>+ must be one of the following command:
+% \begin{description}
+%  \item[\cs{justifying}] to have justified text, as with normal \LaTeX behavior. You can also let \verb+<code>+ empty.
+%  \item[\cs{raggedright}] to have left aligned text, but \emph{without hyphens}. That is the default \Lpack{eledmac} setting. 
+%  \item[\cs{RaggedRight}] to have left aligned text  \emph{with hyphens}.
+%  \item[\cs{raggedleft}] to have right aligned text, but \emph{without hyphens}.
+%  \item[\cs{RaggedLeft}] to have right aligned text  \emph{with hyphens}.
+%  \item[\cs{centering}] to have centered text, but \emph{without hyphens}.
+%  \item[\cs{Centering}] to have centered text  \emph{with hyphens}.
+% \end{description}
+%
+% \paragraph{Size of the columns}
 % For the following four macros, be careful that the columns are made from right to left.
 %
 % \DescribeMacro{\hsizetwocol}
@@ -1563,7 +1602,6 @@
 %
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \Lpack{eledmac}, adds 2.6pt. These 2.6pt are not changed by this command.}
 %
-% Be careful with this setting: it can place notes by the page number, at the bottom of the page.
 %
 % \DescribeMacro{\afterruleX}
 % You can change the vertical space printed after the rule of the familiar notes with \cs{beforenotesX}\oarg{s}\marg{l}.
@@ -1571,7 +1609,6 @@
 %
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \Lpack{eledmac}, adds 2.6pt. These 2.6pt are not changed by this command.}
 %
-% Be careful with this setting: it can place notes by the page number, at the bottom of the page.
 %
 % \DescribeMacro{\preXnotes}
 % You can set the space before the first series of critical notes printed on each page
@@ -2077,7 +2114,7 @@
 % do the necessary processing of the \file{.aux} file, and the \cs{x...}
 % ones cannot.
 %  \item When \Lpack{hyperref} is loaded, the hyperref link won't be added. (Indeed,
-%  it's not a limitation, but a feature.
+%  it's not a limitation, but a feature.)
 % \end{itemize}
 %
 % \DescribeMacro{\xxref}
@@ -2149,35 +2186,40 @@
 %
 % Note that if \cs{apprefprefixmore} is empty, \cs{apprefprefixsingle} will used in any case.
 % 
-% 
-% \DescribeMacro{\Xendtwolinesapprefwithpage}
-% \DescribeMacro{\Xendmorethantwolinesapprefwithpage}
-% \DescribeMacro{\Xendtwolinesbutnotmoreapprefwithpage}
-% If you use \cs{twolines}, \cs{morethantwolines} and/or \cs{twolinesbutnotmore}
-% (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
-% series argument}, the setting will also be available for \cs{apprefwithpage}.
-%
-% The commands \cs{twolinesapprefwithpage}\marg{text},
-% \cs{morethantwolinesapprefwithpage}\marg{text} and \cs{twolinesbutnotmoreapprefwithpage} can also be used, if you
-% only want to change the reference style of \cs{appref}.
-%
-% It is possible to disable this setting for a specific \cs{apprefwithpage} command by
-% using \cs{appref}\verb+[fulllines]+\marg{label}.
-% 
 % \DescribeMacro{\twolinesappref}
 % \DescribeMacro{\morethantwolinesappref}
 % \DescribeMacro{\twolinesbutnotmoreappref}
-% If you use \cs{twolines}, \cs{morethantwolines} and/or \cs{twolinesbutnotmore}
+% \DescribeMacro{\twolinesonlyinsamepage}
+% If you use \cs{twolines}, \cs{morethantwolines},  \cs{twolinesbutnotmore} and/or \cs{twolinesonlyinsamepage}
 % (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
 % series argument}, the setting will also be available for \cs{appref}.
-%
-% The commands \cs{Xendtwolinesappref}\marg{text},
-% \cs{Xendmorethantwolinesappref}\marg{text} and \cs{Xendtwolinesbutnotmoreappref} can also be used, if you
+% 
+% The commands \cs{twolinesappref}\marg{text},
+% \cs{morethantwolinesappref}\marg{text}, \cs{twolinesbutnotmoreappref} \cs{twolinesonlyinsamepageappref} can also be used, if you
 % only want to change the reference style of \cs{appref}.
 %
 % It is possible to disable this setting for a specific \cs{appref} command by
 % using \cs{appref}\verb+[fulllines]+\marg{label}.
+%
+%
+% \DescribeMacro{\Xendtwolinesapprefwithpage}
+% \DescribeMacro{\Xendmorethantwolinesapprefwithpage}
+% \DescribeMacro{\Xendtwolinesbutnotmoreapprefwithpage}
+% \DescribeMacro{\Xendtwolinesonlyinsamepageapprefwithpage}
+% If you use one of  \cs{Xendtwolines}, \cs{Xendmorethantwolines},  \cs{Xendtwolinesbutnotmore},
+% \cs{Xendtwolinesonlyinsamepage})
+% (\ref{Xendtwolines} p.~\pageref{Xendtwolines}) \emph{without the optional
+% series argument}, the setting will also be available for \cs{apprefwithpage}.
+%
+% The commands \cs{Xendtwolinesappref}\marg{text},
+% \cs{Xendmorethantwolinesappref}\marg{text}, \cs{Xendtwolinesbutnotmoreappref}, \cs{Xendtwolinesonlyinsamepageappref} can also be used, if you
+% only want to change the reference style of \cs{apprefwithpage}.
+%
+% It is possible to disable this setting for a specific \cs{apprefwithpage} command by
+% using \cs{apprefwithpage}\verb+[fulllines]+\marg{label}.
+% 
 % \section{Side notes}
+%
 %
 %   The \cs{marginpar} command does not work in numbered text. Instead 
 % the package provides for non-floating sidenotes in either margin.
@@ -2282,7 +2324,7 @@
 % series letter (e.g., \texttt{B}). \cs{footnormalX} is the typical
 % footnote format. With \cs{footparagraphX} the series is typeset a one
 % paragraph, with \cs{foottwocolX} the notes are in two columns, and are in
-% three columns with \cs{foothreecolX}.
+% three columns with \cs{footthreecolX}.
 %
 % \DescribeMacro{\thefootnoteA}
 % \DescribeMacro{\bodyfootmarkA}
@@ -2658,7 +2700,7 @@
 % \item \cs{ledsubsubsection}\oarg{text}\marg{critical text}
 % \item \cs{ledsubsubsection*}
 % \end{itemize}
-% These commands are deprecated, and won't be maintened anymore, because of a bad conception.
+% \label{eledsection} These commands are deprecated, and won't be maintened anymore, because of a bad conception.
 % Since version 1.12.0, you have to use the following commands:
 % \begin{itemize}
 % \item \cs{eledchapter}\oarg{text}\marg{critical text}
@@ -2688,9 +2730,8 @@
 %
 % For technical reasons, the page break before \cs{elechapter} can't be added automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
 % \DescribeMacro{\noeledsec}
-% If you aren't going to have any \cs{eledxxx} commands, you can say \cs{noeledsec}
-% in your file, before the first \cs{beginnumbering}, to suppress the
-% generation of unneeded \file{.eledsec} file.
+% If you aren't going to have any \cs{eledxxx} commands, you load \Eledmac{ with \cs{noeledsec} option. 
+% That will suppress the generation of unneeded \file{.eledsec} file, keep memory and make \Lpack{eledmac} faster.
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
@@ -2992,6 +3033,7 @@
 % \subsection{Package options}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifnocritical@}
+% \begin{macro}{\if@noeled@sec}
 % \begin{macro}{\ifnoend@}
 % \begin{macro}{\ifnofamiliar@}
 % \begin{macro}{\ifnoledgroup@}
@@ -3008,6 +3050,7 @@
 %    \begin{macrocode}
 \newif\ifledfinal
 \newif\ifnocritical@%
+\newif\if@noeled@sec%
 \newif\ifnoend@%
 \newif\ifnofamiliar@%
 \newif\ifnoledgroup@%
@@ -3020,6 +3063,7 @@
 \parapparatus@false
 \RequirePackage{xkeyval}
 \DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{noeledsec}{\@noeled@sectrue}
 \DeclareOptionX{nocritical}{\nocritical@true}%
 \DeclareOptionX{nofamiliar}{\nofamiliar@true}%
 \DeclareOptionX{noledgroup}{\noledgroup@true}%
@@ -3050,6 +3094,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3388,10 +3433,14 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\led@war@ledsetnormalparstuffDeprecated}
+% \begin{macro}{\led@war@noeledsecDeprecated}
 % \begin{macro}{\led@war@FalseverseDeprecated}
 % \begin{macro}{\led@war@ledxxxDeprecated}
 % \begin{macro}{\led@war@noendnotesDeprecated}
 %    \begin{macrocode}
+\newcommand{\led@war@noeledsecDeprecated}[0]{%
+  \eledmac@warning{\string\noeledsec\space deprecated. Use `noeledsec` option instead.}%
+}%
 \newcommand{\led@war@ledsetnormalparstuffDeprecated}{%
   \eledmac@warning{\string\ledsetnormalparstuff\space deprecated. Look at \string\Xledsetnormalparstuff\space and \ledsetnormalparstuffX\space instead.}%
 }%
@@ -3402,6 +3451,7 @@
   \eledmac@warning{\string\noendnotes\space deprecated. Use `noend` option instead.}%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3843,19 +3893,25 @@
     \ifx\@tempa\@tempb
         \global\bypage@true
         \global\bypstart@false
-        \pstartinfootnote[][false]
+        \unless\ifnocritical@%
+          \pstartinfootnote[][false]%
+        \fi%
     \else
        \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
            \global\bypage@false
            \global\bypstart@true
-           \pstartinfootnote
+           \unless\ifnocritical@%
+             \pstartinfootnote%
+           \fi%
        \else
           \def\@tempb{section}
           \ifx\@tempa\@tempb
            \global\bypage@false
            \global\bypstart@false
-           \pstartinfootnote[][false]
+           \unless\ifnocritical@%
+             \pstartinfootnote[][false]%
+           \fi%
           \else
             \led@warn@BadLineation
         \fi
@@ -4762,6 +4818,7 @@
   \ifnum #1=\last@page@num
   \else
     \ifbypage@
+      \csxdef{lastlinenumberon@\the\last@page@num}{\the\line@num}%
       \line@num=\z@ \subline@num=\z@
     \fi
     \page@num=#1\relax
@@ -5032,6 +5089,33 @@
   \fi%
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifl@dhidenumber}
+% \begin{macro}{\hidenumbering}
+% \cs{hidenumbering} hides number in margin. 
+% It uses action code 1009.
+% \begin{macro}{\h@num}
+%    \begin{macrocode}
+\newif\ifl@dhidenumber
+\newcommand*{\hidenumbering}{
+  \ifledRcol%
+    \write\linenum@outR{\string\hide@num}%
+  \else%
+    \write\linenum@out{\string\hide@num}%
+  \fi%
+}%
+\newcommand*{\hide@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1009}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1009}\to\actions@list%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\@ref}
 % \begin{macro}{\insert@count}
@@ -5409,15 +5493,15 @@
        \write\linenum@outR{\string\n@num@stanza}%
     \else%
       \write\linenum@outR{\string\n@num}%
-      \advanceline{-1}%
     \fi%
+    \advanceline{-1}%
   \else%
     \ifinstanza%
        \write\linenum@out{\string\n@num@stanza}%
     \else%
       \write\linenum@out{\string\n@num}%
-      \advanceline{-1}%
     \fi%
+    \advanceline{-1}%
   \fi%
 }%
 
@@ -6209,7 +6293,11 @@
 \newif\iflabelpstart
 \labelpstartfalse
 \newcommandx*{\pstart}[1][1]{%
-  \ifstrempty{#1}{\at@every@pstart}{\parindent=0pt#1}%
+  \bgroup%
+    \ifstrempty{#1}%
+    {\at@every@pstart}%
+    {\parindent=0pt#1}%
+  \egroup%
   \ifluatex%
     \edef\l@luatextextdir@L{\the\luatextextdir}%
   \fi%
@@ -6304,7 +6392,11 @@
    \fi%
   \@oldnobreak%
   \addtocounter{pstart}{1}%
-  \ifstrempty{#1}{\at@every@pend}{\parindent=0pt#1}%
+  \bgroup%
+  \ifstrempty{#1}%
+   {\at@every@pend}%
+   {\parindent=0pt#1}%
+  \egroup%
 }
 
 %    \end{macrocode}
@@ -6434,7 +6526,12 @@
     \inserthangingsymbolfalse
   \fi
   \check@pb@in@verse
-  \affixline@num
+  \ifl@dhidenumber%
+    \global\l@dhidenumberfalse%
+    \f@x@l@cks%
+  \else%
+    \affixline@num%
+  \fi%
 %    \end{macrocode}
 % \changes{v1.12.0}{2014/08/05}{\cs{do@line} is split in more little commands.}
 % Depending wether a sectioning command is called at this pstart or not 
@@ -6628,7 +6725,6 @@
   \do@actions
   \do@ballast
   \ifnumberline
-    \ifl@dskipversenumber\else%
       \ifsublines@
          \ifnum\sub@lock<\tw@
            \global\advance\subline@num \@ne
@@ -6639,7 +6735,6 @@
            \global\subline@num \z@
         \fi
       \fi
-    \fi
   \fi
 }
 %    \end{macrocode}
@@ -6803,6 +6898,8 @@
     \l@dskipnumbertrue
   \or%                   % 1008
     \l@dskipversenumbertrue%
+ \or%    % 1009
+    \l@dhidenumbertrue
   \else
     \led@warn@BadAction
   \fi}
@@ -7734,8 +7831,47 @@
 % \end{macro}
 % \end{macro}
 %
+%
+% \begin{macro}{\setistwofollowinglines}
+% The \cs{ifistwofollowinglines} boolean, used by the \cs{twolines} and related tools, is set to true by \cs{setistwofollowinglines}.
+% This command takes the following arguments:
+% \begin{itemize}
+%  \item \verb+#1+ First page number.
+%  \item \verb+#2+ First line number.
+%  \item \verb+#3+ Last page number.
+%  \item \verb+#4+ Last line number.
+% \end{itemize}
+% If \verb+#3+-\verb+#2+ = 1, then that means the two lines are following, and consequently \cs{ifistwofollowinglines} is set to true.
+% However, if we use lineation by page, two lines can be following if:
+% \begin{itemize}
+%   \item First line number is equal to the last line number of the first page.
+%   \item Last line number is equal to 1.
+%   \item \verb+#3+-\verb+#1+ is equal to 1.
+% \end{itemize}
+%    \begin{macrocode}
+\newif\ifistwofollowinglines@%
+\newcommand{\setistwofollowinglines}[4]{%
+    \ifcsdef{lastlinenumberon@#1}%
+      {\numdef{\tmp}{\csuse{lastlinenumberon@#1}}}%
+      {\numdef{\tmp}{0}}%
+    \istwofollowinglines@false%
+    \ifnumequal{#4-#2}{1}%
+    {\istwofollowinglines@true}%
+    {\ifbypage@%
+      \ifnumequal{#3-#1}{1}%
+      {%
+      \ifnumequal{#2}{\tmp}%
+        {\ifnumequal{#4}{1}{\istwofollowinglines@true}{}}%
+        {}%
+      }%
+      {}%
+    }%
+}%
+% \end{macro}
+%    \end{macrocode}
+%
 % \begin{macro}{\setprintlines}
-% First of all, we print the page numbers only if\/: 1)~we're doing
+% We print the page numbers only if\/: 1)~we're doing
 % the lineation by page, and 2)~the ending page number is different
 % from the starting page number.\phantomsection\label{printlines}
 % 
@@ -7792,15 +7928,23 @@
 % However, if the \cs{twolines} is set for the current series, we don't print the last line number.
 %    \begin{macrocode}
   \ifl@d@dash%
-    \iftoggle{fulllines@}%
+    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{twolines@\@currentseries}}}%
       {}%
       {%
+      \setistwofollowinglines{#1}{#2}{#4}{#5}%
         \ifboolexpr{%
-          test{\ifcsempty{twolines@\@currentseries}}%
-          or (%
-           togl {twolinesbutnotmore@\@currentseries}%
-           and test {\ifnumgreater{#5-#2}{1}}%
-           )%
+          (%
+               togl {twolinesbutnotmore@\@currentseries}%
+               and not% 
+                 (%
+                  bool {istwofollowinglines@}%              
+                 )%
+          )%
+          or% 
+          (%
+             (not test{\ifnumequal{#1}{#4}})%
+               and togl{twolinesonlyinsamepage@\@currentseries}%
+             )%
           }%
           {}%
           {%
@@ -7810,7 +7954,7 @@
           \l@d@eslfalse%
           \ifcsempty{morethantwolines@\@currentseries}%
             {}%
-            {\ifnum\numexpr #5-#2>1\relax%
+            {\ifistwofollowinglines@\else%
               \l@d@morethantwolinestrue%
              \fi%
             }%
@@ -7848,16 +7992,17 @@
 % \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \ifl@d@twolines\else\endashchar\fi\fi
-  \ifl@d@pnum #4\fullstop\fi
-  \ifl@d@elin \linenumrep{#5}\fi
-  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{morethantwolines@\@currentseries}%
     \else%
       \csuse{twolines@\@currentseries}%
     \fi%
+  \else%
+    \ifl@d@dash \endashchar\fi%
+    \ifl@d@pnum #4\fullstop\fi%
+    \ifl@d@elin \linenumrep{#5}\fi%
+    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
 \endgroup}
 %    \end{macrocode}
@@ -7895,7 +8040,10 @@
     \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-            \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+            \togglefalse{preXnotes@}%
+            \skip\csname #1footins\endcsname=%
+              \dimexpr\csuse{preXnotes@}+\csuse{afterXrule@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname #1footins\endcsname%
@@ -7905,8 +8053,7 @@
   \fi%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
-  \print@Xfootnoterule{#1}%%
-  \vskip\csuse{afterXrule@#1}%
+  \print@Xfootnoterule{#1}%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
@@ -7952,13 +8099,11 @@
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
       \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
     \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
   \fi%
   \setlength{\parindent}{0pt}
  {\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}
@@ -8052,7 +8197,8 @@
   \count\csname #1footins\endcsname=1000
   \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
 % normal setup as we can (so the notes will have a similar layout).
@@ -8063,7 +8209,8 @@
     \expandafter\let\csname mp#1footgroup\endcsname=\mpnormalfootgroup
     \count\csname mp#1footins\endcsname=1000
     \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
   \fi
 }
 
@@ -8116,7 +8263,8 @@
   \count\csname #1footins\endcsname=1000
   \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \para@footsetup{#1}
 %    \end{macrocode}
 % And the extra setup for minipages.
@@ -8126,7 +8274,8 @@
     \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
     \count\csname mp#1footins\endcsname=1000
     \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
-    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
   \fi
 }
 %    \end{macrocode}
@@ -8186,14 +8335,16 @@
     \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
-           \togglefalse{preXnotes@}\skip\csname #1footins\endcsname=\csuse{preXnotes@}}%
+            \togglefalse{preXnotes@}%
+            \skip\csname #1footins\endcsname=%
+              \dimexpr\csuse{preXnotes@}+\csuse{afterXrule@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname #1footins\endcsname%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
   \print@Xfootnoterule{#1}%%
-  \vskip\csuse{afterXrule@#1}%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
@@ -8431,13 +8582,11 @@
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
       \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
     \fi%
   \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
   \fi%
   \unvbox\csname mp#1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
@@ -8542,6 +8691,8 @@
   \expandafter\let\csname #1footfmt\endcsname=\threecolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\threecolfootgroup
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \threecolfootsetup{#1}
 %    \end{macrocode}
 % The additional setup for minipages.
@@ -8549,6 +8700,8 @@
   \ifnoledgroup@\else
     \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
     \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
     \mpthreecolfootsetup{#1}
   \fi
 }
@@ -8640,7 +8793,7 @@
   \tolerance=5000
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
-  \raggedright
+  \csuse{Xcolalign@#4}%
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -8689,14 +8842,12 @@
     \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
-    \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
+    \print@Xfootnoterule{#1}%
   \fi%
   {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
@@ -8719,6 +8870,8 @@
   \expandafter\let\csname #1footfmt\endcsname=\twocolfootfmt
   \expandafter\let\csname #1footgroup\endcsname=\twocolfootgroup
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
   \twocolfootsetup{#1}
 %    \end{macrocode}
 % The additional setup for minipages.
@@ -8726,6 +8879,8 @@
   \ifnoledgroup@\else
     \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
     \expandafter\let\csname mp#1footgroup\endcsname=\mptwocolfootgroup
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
     \mptwocolfootsetup{#1}
   \fi
 }
@@ -8763,7 +8918,7 @@
   \tolerance=5000
   \hangindent=\csuse{Xhangindent@#4}
   \leavevmode
-  \raggedright
+  \csuse{Xcolalign@#4}%
   \strut{\printlinefootnote{#1}{#4}}%
   {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
   \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
@@ -8806,14 +8961,12 @@
     \else%
       \setXnoteswidthliketwocolumns@{#1}%
       \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%%
-      \vskip\csuse{afterXrule@#1}%
+      \print@Xfootnoterule{#1}%
     \fi%
   \else%
     \setXnoteswidthliketwocolumns@{#1}%
     \setXnotespositionliketwocolumns@{#1}%
-    \print@Xfootnoterule{#1}%%
-    \vskip\csuse{afterXrule@#1}%
+    \print@Xfootnoterule{#1}%
   \fi%
    {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
   \splittopskip=\ht\strutbox
@@ -9011,7 +9164,7 @@
 % the \meta{series} and calls the series' \cs{footfmt...} to format the
 % \meta{text}.
 %    \begin{macrocode}
-\newcommand*{\normalvfootnoteX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
     \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
@@ -9046,7 +9199,7 @@
 % \cs{normalfootfmtX}\marg{series}\marg{text} typesets the footnote text,
 % prepended by the marker.
 %    \begin{macrocode}
-\newcommand*{\normalfootfmtX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmtX}[2]{%
  \ifluatex%
     \luatextextdir\footnote@luatextextdir%
     \luatexpardir\footnote@luatexpardir%
@@ -9081,7 +9234,10 @@
     \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-           \togglefalse{prenotesX@} \skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+           \togglefalse{prenotesX@}% 
+           \skip\csname footins#1\endcsname=%
+             \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+           }%
           {}%
       }%
   \vskip\skip\csname footins#1\endcsname%
@@ -9093,7 +9249,7 @@
   \setnotesXwidthliketwocolumns@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
   \print@footnoteXrule{#1}%
-  \vskip\csuse{afterruleX@#1}}
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -9134,13 +9290,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \unvbox\@nameuse{mpfootins#1}}
 
@@ -9208,7 +9362,8 @@
   \count\csname footins#1\endcsname=1000
   \csxdef{default@footins#1}{1000}%Use to have note only for one side
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
 %    \end{macrocode}
 % Additions for minipages.
 %    \begin{macrocode}
@@ -9217,7 +9372,8 @@
     \expandafter\let\csname mpfootgroup#1\endcsname=\mpnormalfootgroupX
     \count\csname mpfootins#1\endcsname=1000
     \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}%
   \fi
 }
 
@@ -9233,15 +9389,19 @@
 % \cs{foottwocolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\foottwocolX}[1]{%
-  \csgdef{series@displayX#1}{twocol}
+  \csgdef{series@displayX#1}{twocolX}
   \expandafter\let\csname regvfootnote#1\endcsname=\twocolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\twocolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\twocolfootgroupX
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by \csuse{afterruleX@#1}\relax%
   \twocolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mptwocolfootgroupX
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}
     \mptwocolfootsetupX{#1}
   \fi%
 }
@@ -9268,7 +9428,7 @@
 % \begin{macro}{\twocolvfootnoteX}
 % \cs{twocolvfootnoteX}\marg{series}
 %    \begin{macrocode}
-\newcommand*{\twocolvfootnoteX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
     \csuse{notefontsizeX@#1}
     \footsplitskips
@@ -9281,7 +9441,7 @@
 % \begin{macro}{\twocolfootfmtX}
 %  \cs{twocolfootfmtX}\marg{series}
 %    \begin{macrocode}
-\newcommand*{\twocolfootfmtX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolfootfmtX}[2]{%
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
@@ -9291,7 +9451,7 @@
  \nottoggle{parindentX@#1}{\parindent=\z@}{}
   \tolerance=5000\relax
   \leavevmode
- \raggedright
+ \csuse{colalignX@#1}%
   {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
     #2\strut\par}\allowbreak}
 
@@ -9319,13 +9479,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9345,15 +9503,19 @@
 % \cs{footthreecolX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\footthreecolX}[1]{%
-  \csgdef{series@displayX#1}{threecol}
+  \csgdef{series@displayX#1}{threecolX}
   \expandafter\let\csname regvfootnote#1\endcsname=\threecolvfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\threecolfootfmtX
   \expandafter\let\csname footgroup#1\endcsname=\threecolfootgroupX
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}%
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by \csuse{afterruleX@#1}\relax%
   \threecolfootsetupX{#1}
   \ifnoledgroup@\else%
     \expandafter\let\csname mpvfootnote#1\endcsname=\mpnormalvfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mpthreecolfootgroupX
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}
     \mpthreecolfootsetupX{#1}
   \fi%
 }
@@ -9380,7 +9542,7 @@
 % \begin{macro}{\threecolvfootnoteX}
 % \cs{threecolvfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
-\newcommand*{\threecolvfootnoteX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
     \csuse{notefontsizeX@#1}
     \footsplitskips
@@ -9392,7 +9554,7 @@
 % \begin{macro}{\threecolfootfmtX}
 % \cs{threecolfootfmtX}\marg{series}
 %    \begin{macrocode}
-\newcommand*{\threecolfootfmtX}[2]{%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolfootfmtX}[2]{%
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
@@ -9402,7 +9564,7 @@
   \nottoggle{parindentX@#1}{\parindent=\z@}{} %
   \tolerance=5000\relax
   \leavevmode
-  \raggedright
+  \csuse{colalignX@#1}%
   {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
     #2\strut\par}\allowbreak}
 
@@ -9430,13 +9592,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
     \setnotesXwidthliketwocolumns@{#1}%
     \setnotesXpositionliketwocolumns@{#1}%
     \print@footnoteXrule{#1}%
-    \vskip\csuse{afterruleX@#1}%
   \fi%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9465,14 +9625,16 @@
   \count\csname footins#1\endcsname=1000
   \csxdef{default@footins#1}{1000}%Use this to confine the  notes to one side only
   \dimen\csname footins#1\endcsname=\csuse{maxhnotesX@#1}
-  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}
+  \skip\csname footins#1\endcsname=\csuse{beforenotesX@#1}%
+  \advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
   \para@footsetupX{#1}
   \ifnoledgroup@\else
     \expandafter\let\csname mpvfootnote#1\endcsname=\mppara@vfootnoteX
     \expandafter\let\csname mpfootgroup#1\endcsname=\mppara@footgroupX
     \count\csname mpfootins#1\endcsname=1000
     \dimen\csname mpfootins#1\endcsname=\csuse{maxhnotesX@#1}
-    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}
+    \skip\csname mpfootins#1\endcsname=\csuse{beforenotesX@#1}%
+    \advance\skip\csname mpfootins#1\endcsname by\csuse{afterruleX@#1}%
   \fi
   }
 
@@ -9503,7 +9665,10 @@
     \ifdimequal{0pt}{\prenotesX@}{}%
       {%
       \iftoggle{prenotesX@}{%
-            \togglefalse{prenotesX@}\skip\csname footins#1\endcsname=\csuse{prenotesX@}}%
+            \togglefalse{prenotesX@}%
+            \skip\csname footins#1\endcsname=%
+              \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+            }%
           {}%
       }%
   \vskip\skip\csname footins#1\endcsname%
@@ -9514,7 +9679,6 @@
   \setnotesXwidthliketwocolumns@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
   \print@footnoteXrule{#1}%
-  \vskip\csuse{afterruleX@#1}%
   }
 
 %    \end{macrocode}
@@ -9598,13 +9762,11 @@
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
     \fi%
   \else%
       \setnotesXwidthliketwocolumns@{#1}%
       \setnotesXpositionliketwocolumns@{#1}%
       \print@footnoteXrule{#1}%
-      \vskip\csuse{afterruleX@#1}%
   \fi%
   \unvbox\csname mpfootins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
@@ -9704,17 +9866,22 @@
 %
 % \begin{macro}{\print@Xfootnoterule}
 % \begin{macro}{\print@footnoteXrule}
+% \changes{v1.21.0}{2015/03/29}{Code refactoring: the spaces after the footnote rules are directly managed in \cs{print@Xfootnoterule} and \cs{print@footnoteXrule}}
 %    \begin{macrocode}
 \newcommand{\print@Xfootnoterule}[1]{%
+  \vskip-\csuse{afterXrule@#1}%Because count in \dimen\csuse{#1footins}
   \nointerlineskip%
   \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
   \nointerlineskip%
+  \vskip\csuse{afterXrule@#1}%
 }%
 
 \newcommand{\print@footnoteXrule}[1]{%
+  \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}
   \nointerlineskip%
   \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
   \nointerlineskip%
+  \vskip\csuse{afterruleX@#1}%
 }%
 
 %    \end{macrocode}
@@ -9956,15 +10123,23 @@
 %    \end{macrocode}
 %    \begin{macrocode}
   \ifl@d@dash%
-    \iftoggle{fulllines@}%
+    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{Xendtwolines@\@currentseries}}}%
       {}%
       {%
+      \setistwofollowinglines{#1}{#2}{#4}{#5}%
         \ifboolexpr{%
-          test{\ifcsempty{Xendtwolines@\@currentseries}}%
-          or (%
-           togl {Xendtwolinesbutnotmore@\@currentseries}%
-           and test {\ifnumgreater{#5-#2}{1}}%
-           )%
+          (%
+               togl {Xendtwolinesbutnotmore@\@currentseries}%
+               and not% 
+                 (%
+                  bool {istwofollowinglines@}%              
+                 )%
+          )%
+          or% 
+          (%
+             (not test{\ifnumequal{#1}{#4}})%
+               and togl{Xendtwolinesonlyinsamepage@\@currentseries}%
+             )%
           }%
           {}%
           {%
@@ -9974,7 +10149,7 @@
           \l@d@eslfalse%
           \ifcsempty{Xendmorethantwolines@\@currentseries}%
             {}%
-            {\ifnum\numexpr #5-#2>1\relax%
+            {\ifistwofollowinglines@\else%
               \l@d@morethantwolinestrue%
              \fi%
             }%
@@ -10004,16 +10179,17 @@
 %    \begin{macrocode}
   \printnpnum{#1} \linenumrep{#2}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \ifl@d@dash \ifl@d@twolines\else\endashchar\fi\fi
-  \ifl@d@pnum \printnpnum{#4}\fi
-  \ifl@d@elin \linenumrep{#5}\fi
-  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
     \else%
       \csuse{Xendtwolines@\@currentseries}%
     \fi%
+  \else%
+    \ifl@d@dash \endashchar\fi%
+    \ifl@d@pnum \printnpnum{#4}\fi%
+    \ifl@d@elin \linenumrep{#5}\fi%
+    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
 \endgroup}
 
@@ -10109,6 +10285,7 @@
       \csgdef{Xragged@#1}{}%
       \csgdef{hsizetwocol@#1}{0.45 \hsize}%
       \csgdef{hsizethreecol@#1}{.3 \hsize}%
+      \csgdef{Xcolalign@#1}{\raggedright}%
       \csgdef{Xnotenumfont@#1}{\notenumfont}%
       \csgdef{Xnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXnote@#1}{}%
@@ -10118,7 +10295,8 @@
       \newtoggle{numberonlyfirstintwolines@#1}%
       \csgdef{twolines@#1}{}%
       \csgdef{morethantwolines@#1}{}%
-      \newtoggle{twolinesbutnotmore@#1}{}%
+      \newtoggle{twolinesbutnotmore@#1}%
+      \newtoggle{twolinesonlyinsamepage@#1}%
       \newtoggle{onlypstartinfootnote@#1}%
       \newtoggle{pstartinfootnoteeverytime@#1}%
       \newtoggle{pstartinfootnote@#1}%
@@ -10215,6 +10393,7 @@
       \csgdef{raggedX@#1}{}%
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
       \csgdef{hsizethreecolX@#1}{.3 \hsize}%
+      \csgdef{colalignX@#1}{\raggedright}%
       \csgdef{notenumfontX@#1}{\notenumfont}%
       \csgdef{notefontsizeX@#1}{\notefontsetup}%
       \csgdef{bhooknoteX@#1}{}%
@@ -10319,6 +10498,7 @@
       \csgdef{Xendtwolines@#1}{}%
       \csgdef{Xendmorethantwolines@#1}{}%
       \newtoggle{Xendtwolinesbutnotmore@#1}{}%
+      \newtoggle{Xendtwolinesonlyinsamepage@#1}{}%
       \newtoggle{Xendlemmadisablefontselection@#1}%
       \csgdef{Xendnotenumfont@#1}{\notenumfont}%
       \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
@@ -10515,10 +10695,12 @@
   \newhookcommand@series{twolines}[appref]
   \newhookcommand@series{morethantwolines}[appref]   
   \newhooktoggle@series{twolinesbutnotmore}[appref]
+  \newhooktoggle@series{twolinesonlyinsamepage}[appref]
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
   \newhookcommand@series{hsizetwocol}
   \newhookcommand@series{hsizethreecol}
+  \newhookcommand@series{Xcolalign}%
   \newhookcommand@series{Xnotenumfont}
   \newhookcommand@series{bhookXnote}
   \newhookcommand@series{boxsymlinenum} 
@@ -10533,7 +10715,7 @@
   \newhookcommand@series{afterlemmaseparator}
   \newhookcommand@series{inplaceoflemmaseparator}
   \newhookcommand@series{txtbeforeXnotes}
-  \newhookcommand@series{afterXrule}
+  \newhookcommand@series@reload{afterXrule}
   \newhooktoggle@series{numberonlyfirstinline}
   \newhooktoggle@series{numberonlyfirstintwolines}
   \newhooktoggle@series{nonumberinfootnote}
@@ -10558,12 +10740,13 @@
   \newhookcommand@series{raggedX}
   \newhookcommand@series{hsizetwocolX}
   \newhookcommand@series{hsizethreecolX}
+  \newhookcommand@series{colalignX}%
   \newhookcommand@series{notenumfontX}
   \newhookcommand@series{bhooknoteX}
   \newhookcommand@series@reload{beforenotesX}
   \newhookcommand@series@reload{maxhnotesX}
   \newhooktoggle@series@reload{notesXwidthliketwocolumns}%
-  \newhookcommand@series{afterruleX}
+  \newhookcommand@series@reload{afterruleX}
   \newhookcommand@series{notefontsizeX}
 \fi
 %    \end{macrocode}
@@ -10580,6 +10763,7 @@
   \newhookcommand@series{Xendtwolines}[apprefwithpage]
   \newhookcommand@series{Xendmorethantwolines}[apprefwithpage]   
   \newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
+  \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{bhookXendnote}
   \newhookcommand@series{boxXendlinenum}%
@@ -11662,6 +11846,7 @@
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 \newtoggle{twolinesbutnotmore@appref}%
+\newtoggle{twolinesonlyinsamepage@appref}%
 
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
@@ -11685,6 +11870,7 @@
 \xdef\Xendtwolines@apprefwithpage{}%
 \xdef\Xendmorethantwolines@apprefwithpage{}%
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 
 \newcommandx{\apprefwithpage}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
@@ -14822,6 +15008,11 @@
 %   \item This last command is called when the pstart is effectively printed.
 % \end{enumerate}
 %
+% We do not defined commands for \cs{eledsection} and related if the \verb+noeledsec+ option is loaded.
+% We use etoolbox tests and not the \verb+\ifxxx…\else…\fi+ structure to prevent problem of expansions with command after the \verb+\ifxxx+ which contains \verb+fi+.
+%    \begin{macrocode}
+\notbool{@noeled@sec}{%
+%    \end{macrocode}
 % \begin{macro}{\beforeeledchapter}
 % For technical reasons, not yet solved, page-breaking before chapters can't be made automatically by eledmac. Users have to us \cs{beforeeledchapter}.
 %    \begin{macrocode}
@@ -15102,14 +15293,13 @@
 % \end{macro}
 % \begin{macro}{\noeledsec}
 % \changes{v1.12.6}{2014/08/31}{Add \cs{noeledsec} macro.}
-% \begin{macro}{\if@noeled@sec}
-% The boolean \cs{if@noeled@sec} is set to true when \cs{noeledsec} is called.
-% It is used to disable external file creation.
+% The \cs{noeledsec} commands is deprecated, people should prefer the \verb+noeledsec+ package option.
 %    \begin{macrocode}
-\newif\if@noeled@sec%
-\newcommand{\noeledsec}{\global\@noeled@sectrue}%
+\newcommand{\noeledsec}{%
+  \led@war@noeledsecDeprecated%
+  \global\@noeled@sectrue%
+}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \begin{macro}{\eledchapter}
 % \begin{macro}{\eledsection}
@@ -15320,6 +15510,10 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% End of the conditional test about \verb+noeledsec+ option.
+%    \begin{macrocode}
+}{}
+%    \end{macrocode}
 % \section{Page breaking or no page breaking depending of specific lines}
 % By default, page breaks are automatic.  However, the user can define lines which will force page breaks, or prevent page breaks around one specific line.
 % On the first run, the line-list file records the line number of where the page break is being changed (either forced, or prevented).
