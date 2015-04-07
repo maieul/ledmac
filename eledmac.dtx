@@ -10123,17 +10123,21 @@
 %    \end{macrocode}
 %    \begin{macrocode}
   \ifl@d@dash%
-    \iftoggle{fulllines@}%
+    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{Xendtwolines@\@currentseries}}}%
       {}%
       {%
+      \setistwofollowinglines{#1}{#2}{#4}{#5}%
         \ifboolexpr{%
-          (test{\ifcsempty{Xendtwolines@\@currentseries}}%
-          or (%
-           togl {Xendtwolinesbutnotmore@\@currentseries}%
-           and not test {\ifnumequal{#5-#2}{1}}%
-           ))%
-           or(%
-               (not test{\ifnumequal{#1}{#4}})%
+          (%
+               togl {Xendtwolinesbutnotmore@\@currentseries}%
+               and not% 
+                 (%
+                  bool {istwofollowinglines@}%              
+                 )%
+          )%
+          or% 
+          (%
+             (not test{\ifnumequal{#1}{#4}})%
                and togl{Xendtwolinesonlyinsamepage@\@currentseries}%
              )%
           }%
@@ -10145,7 +10149,7 @@
           \l@d@eslfalse%
           \ifcsempty{Xendmorethantwolines@\@currentseries}%
             {}%
-            {\ifnum\numexpr #5-#2>1\relax%
+            {\ifistwofollowinglines@\else%
               \l@d@morethantwolinestrue%
              \fi%
             }%
