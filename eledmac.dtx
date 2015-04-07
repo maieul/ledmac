@@ -239,6 +239,7 @@
 % \changes{v1.21.0}{2015/03/29}{Add \cs{beforenotesX} and \cs{beforeXnotes} features for notes in two and three columns.}
 % \changes{v1.21.0}{2015/03/29}{Debug \cs{beforenotesX} \cs{maxhnotesX} \cs{notesXwidthliketwocolumns} and \cs{afterruleX} with two and three columns footnotes}
 % \changes{v1.21.0}{2015/03/29}{\cs{afterXrule} and \cs{afterruleX} features cause not anymore problems of overflowing at the bottom of the page.}
+% \changes{v1.21.0}{2015/03/29}{\cs{preXnotes} and \cs{prenotesX} features cause not anymore problems of overflowing at the bottom of the page.}
 % \changes{v1.21.0}{2015/03/29}{Fix spurious space after first page number in \cs{doendnotes}. oldprintnpnumspace option allows to come back to previous setting}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -1620,7 +1621,6 @@
 % You can disable this feature by setting the length to 0pt.
 %
 % 
-% Be careful with this setting: it can place notes by the page number, at the bottom of the page.
 %
 % \DescribeMacro{\prenotesX}
 % You can want the space before the first printed (in a page) series of familiar notes not to be the same as before other series. Default value is \verb+0pt+.
@@ -1628,7 +1628,6 @@
 % You can disable this feature by setting the length to 0~pt.
 %
 % 
-% Be careful with this setting: it could make the notes be written on the bottom pages number.
 % \DescribeMacro{\maxhXnotes}\label{maxhXnotes}
 % By default, one series of critical notes can take 80\% of the page size, before being broken to the next page. 
 % If you want to change the size use \cs{maxhXnotes}\oarg{s}\marg{l}. 
@@ -9894,7 +9893,83 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \section{Specific skip for first series of footnotes}
+% \cs{beforeXnotes} insert a specific skip for the first series of notes in a page.
+% As we can know in advance which series will be the first, we call \cs{prepare@preXnotes} before inserting any critical notes, in order to prevent page number overlapping. 
+% \begin{enumerate}
+%   \item If it is the first note of the current page, it changes the footnote skip for the series to the value specified to \cs{beforeXnotes}. Keeps the series of the note as the first one of the current page.
+%   \item If it is not the first notes of the current page:
+%   \begin{itemize}
+%     \item If the current series is printed after the series keept as the first of the current page, then nothing happens.
+%     \item If the current series is printed before the series keept as the first of the current page, then it changes the footnote the current series to the value normally used the series which was marked as the first of the page. Keeps the current series as the new first one of the current page.
+%   \end{itemize}
+% \end{enumerate}
+% 
 %
+% For example, suppose the series order is A,B. We call first a \cs{Bfootnote} and the a \cs{Afootnote}. The only skips used are, finally, the skip specific to the first series of the page, and the skip for the B series. If we have not called \cs{Afootnote}, the only skip used is the skip specific to the first series of the page.
+% 
+% That is perfect. 
+%
+%
+% The series skip and first series of the current page are reset before the footnotes are printed. Then, the footstart macros manage the problem of the first series of the page.
+%
+% The space after rule, defined by \cs{afterXrule}, is not depending wether the series is the first one of the page. So we use it's normal value for each series.
+% \begin{macro}{firstXseries@}
+% \begin{macro}{prepare@preXnotes}
+%    \begin{macrocode}
+\gdef\firstXseries@{}
+\newcommand{\prepare@preXnotes}[1]{%
+  \ifdimequal{0pt}{\preXnotes@}%
+  {}%
+  {%
+    \IfStrEq{\firstXseries@}{}{%
+      \global\skip\csuse{#1footins}=\preXnotes@%
+      \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+      \gdef\firstXseries@{#1}%
+    }%
+    {%
+     \ifseriesbefore{#1}{\firstXseries@}%
+       {%
+       \global\skip\csuse{#1footins}=\csuse{beforeXnotes@\firstXseries@}%
+       \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+       \gdef\firstXseries@{#1}%
+       }%
+       {}%
+    }%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% The same thing is required for familiar notes and \cs{prenotesX}.
+% \begin{macro}{firstseriesX@}
+% \begin{macro}{prepare@prenotesX}
+%    \begin{macrocode}
+\gdef\firstseriesX@{}
+\newcommand{\prepare@prenotesX}[1]{%
+  \ifdimequal{0pt}{\prenotesX@}%
+  {}%
+  {%
+    \IfStrEq{\firstseriesX@}{}{%
+      \global\skip\csuse{footins#1}=\prenotesX@%
+      \global\advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
+      \gdef\firstseriesX@{#1}%
+    }%
+    {%
+     \ifseriesbefore{#1}{\firstseriesX@}%
+       {%
+       \global\skip\csuse{footins#1}=\csuse{beforenotesX@\firstseriesX@}%
+       \global\advance\skip\csname footins#1\endcsname by\csuse{afterruleX@#1}%
+       \gdef\firstXseries@{#1}%
+       }%
+       {}%
+    }%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Footnotes' output}
 % \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
@@ -9914,10 +9989,13 @@
 %    \begin{macrocode}
 \newcommand*{\doxtrafeeti}{%
   \unless\ifnofamiliar@%
+    \gdef\firstseriesX@{}%
     \setbox\@outputbox \vbox{%
       \unvbox\@outputbox%
       \def\do##1{%
       \ifvoid\csuse{footins##1}\else%
+          \global\skip\csuse{footins##1}=\csuse{beforenotesX@##1}%
+          \global\advance\skip\csuse{footins##1} by\csuse{afterruleX@##1}%          
           \print@notesX{##1}%
       \fi%
       }%
@@ -10352,9 +10430,12 @@
                          {}%
                          {\footnotelang@poly[R]}%          
                     \footnoteoptions@[R]{##1}{true}%
-                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-    \noexpand\csuse{v#1footnote}{#1}%
-                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@listR
+                    \xright@appenditem{%
+                      \noexpand\prepare@preXnotes{#1}%
+                      \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \noexpand\csuse{v#1footnote}{#1}%
+                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                    }\to\inserts@listR
                     \footnoteoptions@[R]{##1}{false}%
                     \global\advance\insert@countR \@ne%
                 \else%
@@ -10365,9 +10446,12 @@
                          {}%
                          {\footnotelang@poly}%
                     \footnoteoptions@{##1}{true}%
-                    \xright@appenditem{\noexpand\prepare@edindex@fornote{\l@d@nums}%
-    \noexpand\csuse{v#1footnote}{#1}%
-                    {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}}\to\inserts@list
+                    \xright@appenditem{%
+                      \noexpand\prepare@preXnotes{#1}%
+                      \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \noexpand\csuse{v#1footnote}{#1}%
+                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                     }\to\inserts@list
                     \global\advance\insert@count \@ne%
                     \footnoteoptions@{##1}{false}%
                 \fi
@@ -10426,6 +10510,7 @@
 
       \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
           \begingroup%
+              \prepare@prenotesX{#1}%
               \newcommand{\content}{##1}%
               \stepcounter{footnote#1}%
               \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
@@ -10555,6 +10640,17 @@
    \listeadd{\@new}{\@series}%
    \listeadd{\@new}{#1}%
    \xdef\@series{\@new}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Test series order}
+% \begin{macro}{\ifseriesbefore}
+% \cs{ifseriesbefore}\marg{seriesA}\marg{seriesB}\marg{true}\marg{false} expands \verb+<true>+ if \verb+<seriesA+> is printed before \verb+<seriesB>+, expands \verb+<false>+ otherwise. 
+%    \begin{macrocode}
+\newcommand{\ifseriesbefore}[4]{%
+ \StrPosition{\@series}{#1}[\@first]%
+ \StrPosition{\@series}{#2}[\@second]%
+ \ifnumgreater{\@second}{\@first}{#3}{#4}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -11215,8 +11311,11 @@
 %    \begin{macrocode}
 \newcommand*{\@opxtrafeetii}{%
   \unless\ifnocritical@%
+    \gdef\firstXseries@{}%
     \def\do##1{%
       \ifvoid\csuse{##1footins}\else%
+          \global\skip\csuse{##1footins}=\csuse{beforeXnotes@##1}%
+          \global\advance\skip\csuse{##1footins} by\csuse{afterXrule@##1}%
           \print@Xnotes{##1}%
        \fi%
       }%
