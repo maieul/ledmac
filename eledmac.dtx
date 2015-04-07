@@ -9887,7 +9887,54 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \section{Specific skip for first series of footnotes}
+% \cs{beforeXnotes} insert a specific skip for the first series of notes in a page.
+% As we can know in advance which series will be the first, we call \cs{prepare@preXnotes} before inserting any critical notes, in order to prevent page number overlapping. 
+% \begin{enumerate}
+%   \item If it is the first note of the current page, it changes the footnote skip for the series to the value specified to \cs{beforeXnotes}. Keeps the series of the note as the first one of the current page.
+%   \item If it is not the first notes of the current page:
+%   \begin{itemize}
+%     \item If the current series is printed after the series keept as the first of the current page, then nothing happens.
+%     \item If the current series is printed before the series keept as the first of the current page, then it changes the footnote the current series to the value normally used the series which was marked as the first of the page. Keeps the current series as the new first one of the current page.
+%   \end{itemize}
+% \end{enumerate}
+% 
 %
+% For example, suppose the series order is A,B. We call first a \cs{Bfootnote} and the a \cs{Afootnote}. The only skips used are, finally, the skip specific to the first series of the page, and the skip for the B series. If we have not called \cs{Afootnote}, the only skip used is the skip specific to the first series of the page.
+% 
+% That is perfect. 
+%
+%
+% The series skip and first series of the current page are reset before the footnotes are printed. Then, the footstart macros manage the problem of the first series of the page.
+%
+% The space after rule, defined by \cs{afterXrule}, is not depending wether the series is the first one of the page. So we use it's normal value for each series.
+% \begin{macro}{firstXseries@}
+% \begin{macro}{prepare@preXnotes}
+%    \begin{macrocode}
+\gdef\firstXseries@{}
+\newcommand{\prepare@preXnotes}[1]{%
+  \ifdimequal{0pt}{\preXnotes@}%
+  {}%
+  {%
+    \IfStrEq{\firstXseries@}{}{%
+      \global\skip\csuse{#1footins}=\preXnotes@%
+      \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+      \gdef\firstXseries@{#1}%
+    }%
+    {%
+     \ifseriesbefore{#1}{\firstXseries@}%
+       {%
+       \global\skip\csuse{#1footins}=\csuse{beforeXnotes@\firstXseries@}%
+       \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+       \gdef\firstXseries@{#1}%
+       }%
+       {}%
+    }%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Footnotes' output}
 % \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
