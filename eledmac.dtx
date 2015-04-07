@@ -241,6 +241,7 @@
 % \changes{v1.21.0}{2015/03/29}{\cs{afterXrule} and \cs{afterruleX} features cause not anymore problems of overflowing at the bottom of the page.}
 % \changes{v1.21.0}{2015/03/29}{\cs{preXnotes} and \cs{prenotesX} features cause not anymore problems of overflowing at the bottom of the page.}
 % \changes{v1.21.0}{2015/03/29}{Fix spurious space after first page number in \cs{doendnotes}. oldprintnpnumspace option allows to come back to previous setting}
+% \changes{v1.21.0}{2015/03/29}{\cs{chapter} inside optional argument of \cs{pstart} works with when typesetting parallel pages}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -15200,7 +15201,9 @@
 \AtBeginDocument{%
 \patchcmd{\chapter}{\clearforchapter}{%
   \if@eled@sectioning\else%
-    \clearforchapter
+    \ifl@dprintingpages\else%
+      \clearforchapter%
+    \fi%
   \fi%
   }
   {}
@@ -15254,7 +15257,9 @@
 
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
   \if@eled@sectioning\else%
-    \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \eledsection : will keep critical notes from printing on the title page.
+    \ifl@dprintingpages\else%
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \eledsection : will keep critical notes from printing on the title page.
+    \fi%
   \fi%
   }%
   {}%
