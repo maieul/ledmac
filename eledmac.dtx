@@ -230,7 +230,7 @@
 % \changes{v1.21.0}{2015/03/29}{Fix bug with space between columns with notes in two columns (bug added by v1.13.0).}
 % \changes{v1.21.0}{2015/03/29}{Add nocritical, noend, nofamiliar and noledgroup options.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug with \cs{maxhnotesX} when using \cs{foottwocolX} or \cs{footthreecolX}.}
-% \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore}.}
+% \changes{v1.21.0}{2015/03/29}{Add \cs{twolinesbutnotmore} and \cs{twolinesonlyinsamepage}.}
 % \changes{v1.21.0}{2015/03/29}{Fix bug when a \cs{Xfootnote} follows a \cs{Xendnote} in the second argument of \cs{edtext} (bug added in eledmac 1.0.0 !).}
 % \changes{v1.21.0}{2015/03/29}{Add noeledsec package option}
 % \changes{v1.21.0}{2015/03/29}{parapparatus option works now for familiar footnotes.}
@@ -1329,7 +1329,7 @@
 % \DescribeMacro{\numberonlyfirstinline}
 % \changes{v1.0.1}{2012/09/16}{Correction on \cs{numberonlyfirstinline} with lineation by pstart or by page.}
 % By default, the line number is printed in every note. If you want to print it only the first time for a value (i.e one time for line 1, one time for line 2 etc.), you can use \cs{numberonlyfirstinline}\oarg{s}. 
-
+%
 % Use \cs{numberonlyfirstinline}\oarg{s}\verb+[false]+ to cancel it (\verb|<s>| can be empty if you want to disable it for every series).
 %
 % \DescribeMacro{\numberonlyfirstintwolines}
@@ -1360,18 +1360,21 @@
 %
 % It is possible to disable \cs{twolinesbutnotmore}\oarg{series} with \cs{twolinesbutnotmore}\oarg{series}\verb+[false]+.
 %
+% When you use lineation by page, the final page number, if different from the initial page number,  
+% won't be printed, because considered as included in the \cs{Xendtwolines} symbol.
+% 
+% \DescribeMacro{twolinesonlyinsamepage}
+% However, you can force to print the final page  number with\\ 
+% \cs{twolinesonlyinsamepage}\oarg{series}.
+% 
+% Use \cs{twolinesonlyinsamepage}\oarg{series}\verb+[false]+ to disable it.
+%
 % You can disable \cs{twolines} and related for a specific note by using the `[fulllines]` argument in the note macro cf.~\ref{fulllines} p.~\pageref{fulllines}. 
 %
 % \label{Xendtwolines}\changes{v1.21.0}{2015/03/29}{Add \cs{Xendtwolines}, \cs{Xendmorethantwolines}, \cs{Xendtwolinesbutnotmore} and \cs{Xendtwolinesonlyinsamepage}.}
 % \DescribeMacro{\Xendtwolines}\DescribeMacro{\Xendmorethantwolines}\DescribeMacro{\Xendtwolinesbutnotmore}
-% For endnotes, use  \cs{Xendtwolines}; \cs{Xendmorethantwolines}; \cs{Xendtwolinesbutnotmore} instead of \cs{twolines}; \cs{morethantwolines}; \cs{twolinesbutnotmore}.
+% For endnotes, use  \cs{Xendtwolines}; \cs{Xendmorethantwolines}; \cs{Xendtwolinesbutnotmore}; \cs{Xendtwolinesonlyinsamepage}  instead of \cs{twolines}; \cs{morethantwolines}; \cs{twolinesbutnotmore}; \cs{twolinesonlyinsamepage}.
 % 
-% In this case, the final page number, if different from the initial page number,  
-% won't be printed, because considered as included in the \cs{Xendtwolines} symbol.
-% 
-% \DescribeMacro{\Xendtwolinesonlyinsamepage}
-% However, you can force to print the final page  number with\\ 
-% \cs{Xendtwolinesonlyinsamepage}\oarg{series}.
 %
 % \DescribeMacro{\symlinenum}
 % For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of line number. 
@@ -2180,12 +2183,13 @@
 % \DescribeMacro{\twolinesappref}
 % \DescribeMacro{\morethantwolinesappref}
 % \DescribeMacro{\twolinesbutnotmoreappref}
-% If you use \cs{twolines}, \cs{morethantwolines} and/or \cs{twolinesbutnotmore}
+% \DescribeMacro{\twolinesonlyinsamepage}
+% If you use \cs{twolines}, \cs{morethantwolines},  \cs{twolinesbutnotmore} and/or \cs{twolinesonlyinsamepage}
 % (\ref{twolines} p.~\pageref{twolines}) \emph{without the optional
 % series argument}, the setting will also be available for \cs{appref}.
 % 
 % The commands \cs{twolinesappref}\marg{text},
-% \cs{morethantwolinesappref}\marg{text} and \cs{twolinesbutnotmoreappref} can also be used, if you
+% \cs{morethantwolinesappref}\marg{text}, \cs{twolinesbutnotmoreappref} \cs{twolinesonlyinsamepageappref} can also be used, if you
 % only want to change the reference style of \cs{appref}.
 %
 % It is possible to disable this setting for a specific \cs{appref} command by
@@ -7836,11 +7840,15 @@
       {}%
       {%
         \ifboolexpr{%
-          test{\ifcsempty{twolines@\@currentseries}}%
+          (test{\ifcsempty{twolines@\@currentseries}}%
           or (%
            togl {twolinesbutnotmore@\@currentseries}%
            and not test {\ifnumequal{#5-#2}{1}}%
-           )%
+           ))%
+           or(%
+               (not test{\ifnumequal{#1}{#4}})%
+               and togl{twolinesonlyinsamepage@\@currentseries}%
+             )%
           }%
           {}%
           {%
@@ -10187,7 +10195,8 @@
       \newtoggle{numberonlyfirstintwolines@#1}%
       \csgdef{twolines@#1}{}%
       \csgdef{morethantwolines@#1}{}%
-      \newtoggle{twolinesbutnotmore@#1}{}%
+      \newtoggle{twolinesbutnotmore@#1}%
+      \newtoggle{twolinesonlyinsamepage@#1}%
       \newtoggle{onlypstartinfootnote@#1}%
       \newtoggle{pstartinfootnoteeverytime@#1}%
       \newtoggle{pstartinfootnote@#1}%
@@ -10586,6 +10595,7 @@
   \newhookcommand@series{twolines}[appref]
   \newhookcommand@series{morethantwolines}[appref]   
   \newhooktoggle@series{twolinesbutnotmore}[appref]
+  \newhooktoggle@series{twolinesonlyinsamepage}[appref]
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
   \newhookcommand@series{hsizetwocol}
@@ -11736,6 +11746,7 @@
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 \newtoggle{twolinesbutnotmore@appref}%
+\newtoggle{twolinesonlyinsamepage@appref}%
 
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
