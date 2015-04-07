@@ -1,11 +1,39 @@
 \documentclass{article}
 \usepackage{eledmac}
+\makeatletter
+\def\firstXseries{}
+\beforeXnotes[C]{2\baselineskip}
+\newcommand{\if@series@before}[4]{%
+ \StrPosition{\@series}{#1}[\@first]%
+ \StrPosition{\@series}{#2}[\@second]%
+ \ifnumgreater{\@second}{\@first}{#3}{#4}%
+}
+\newcommand{\prepare@preXnotes}[1]{%
+  \ifdimequal{0pt}{\preXnotes@}{}%
+  {%
+  \IfStrEq{\firstXseries}{}{%
+    \global\skip\csuse{#1footins}=\preXnotes@%
+    \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+    \gdef\firstXseries{#1}%
+  }%
+  {%
+   \if@series@before{#1}{\firstXseries}%
+     {
+     \global\skip\csuse{#1footins}=\csuse{beforeXnotes@\firstXseries}%
+     \global\advance\skip\csname #1footins\endcsname by\csuse{afterXrule@\firstXseries}%
+     \gdef\firstXseries{#1}%
+     }
+     {}%
+  }%
+  }%
+}
+%\makeatother
 \begin{document}
 \preXnotes{5\baselineskip}
 \beginnumbering
 \autopar
 
-\edtext{Lorem ipsum dolor sit amet}{\Afootnote{XX}\Bfootnote{YYY}}, consectetur adipiscing elit.
+\edtext{Lorem ipsum dolor sit amet}{\Cfootnote{C sncf}\Afootnote{BXX}}, consectetur adipiscing elit.
  Etiam pellentesque ante tortor, ac commodo justo fringilla ornare.
  Phasellus imperdiet commodo semper.
  Mauris pretium luctus ex, in ornare nisl sodales at.
@@ -15,7 +43,7 @@
  In ac mauris a velit pellentesque finibus id eget nulla.
  Vestibulum eget scelerisque elit.
 
- Nam ac lectus sit amet quam commodo pharetra.
+ \edtext{Nam}{\Bfootnote{AYYY}} ac lectus sit amet quam commodo pharetra.
  Proin facilisis ipsum non quam gravida aliquet.
  Nunc vulputate libero a massa sagittis, vitae vestibulum erat aliquet.
  Phasellus ultricies leo ut suscipit convallis.
@@ -80,10 +108,44 @@ Etiam eget dictum lectus.
  Pellentesque iaculis malesuada sem, non vulputate leo maximus vel.
 
  
-
 Pellentesque euismod mi purus, eget iaculis metus interdum nec.
  Fusce rutrum nunc felis, non elementum nisi sagittis vel.
  Morbi orci nisl, elementum gravida tristique eu, lacinia quis odio.
+ Phasellus mattis nunc a nisl tristique interdum.
+ Morbi feugiat, metus eu maximus ultricies, dui ante venenatis nulla, eu laoreet arcu justo non quam.
+ Aliquam eu fringilla nisl, at tempor turpis.
+ Sed porta rutrum neque, non rutrum leo lacinia eget.
+ Curabitur volutpat, lorem quis eleifend gravida, diam velit laoreet ex, vel iaculis sem nisi et leo.
+ Vestibulum scelerisque, nunc vitae aliquam sollicitudin, nulla mauris blandit mauris, et molestie metus felis vel magna.
+ Donec vitae purus et magna blandit egestas.
+ Vivamus vitae volutpat diam, et placerat ante.
+ 
+ Pellentesque euismod mi purus, eget iaculis metus interdum nec.
+ Fusce rutrum nunc felis, non elementum nisi sagittis vel.
+ Morbi orci nisl, elementum gravida tristique eu, lacinia quis odio.
+ Phasellus mattis nunc a nisl tristique interdum.
+ Morbi feugiat, metus eu maximus ultricies, dui ante venenatis nulla, eu laoreet arcu justo non quam.
+ Aliquam eu fringilla nisl, at tempor turpis.
+ Sed porta rutrum neque, non rutrum leo lacinia eget.
+ Curabitur volutpat, lorem quis eleifend gravida, diam velit laoreet ex, vel iaculis sem nisi et leo.
+ Vestibulum scelerisque, nunc vitae aliquam sollicitudin, nulla mauris blandit mauris, et molestie metus felis vel magna.
+ Donec vitae purus et magna blandit egestas.
+ Vivamus vitae volutpat diam, et placerat ante.
+ 
+ \edtext{Morbi}{\Afootnote{s}} Pellentesque euismod mi purus, eget iaculis metus interdum nec.
+ Fusce rutrum nunc felis, non elementum nisi sagittis vel.
+ Morbi orci nisl, elementum gravida tristique eu, lacinia quis odio.
+ Phasellus mattis nunc a nisl tristique interdum.
+ Morbi feugiat, metus eu maximus ultricies, dui ante venenatis nulla, eu laoreet arcu justo non quam.
+ Aliquam eu fringilla nisl, at tempor turpis.
+ Sed porta rutrum neque, non rutrum leo lacinia eget.
+ Curabitur volutpat, lorem quis eleifend gravida, diam velit laoreet ex, vel iaculis sem nisi et leo.
+ Vestibulum scelerisque, nunc vitae aliquam sollicitudin, nulla mauris blandit mauris, et molestie metus felis vel magna.
+ Donec vitae purus et magna blandit egestas.
+ Vivamus vitae volutpat diam, et placerat ante.
+Pellentesque euismod mi purus, eget iaculis metus interdum nec.
+ Fusce rutrum nunc felis, non elementum nisi sagittis vel.
+  orci nisl, elementum gravida tristique eu, lacinia quis odio.
  Phasellus mattis nunc a nisl tristique interdum.
  Morbi feugiat, metus eu maximus ultricies, dui ante venenatis nulla, eu laoreet arcu justo non quam.
  Aliquam eu fringilla nisl, at tempor turpis.
@@ -97,4 +159,11 @@ Pellentesque euismod mi purus, eget iaculis metus interdum nec.
 
 
 \endnumbering
+
+
+\if@series@before{A}{B}{avant}{apres}
+
+\the\skip\Afootins
+
+\the\skip\Bfootins
 \end{document}
