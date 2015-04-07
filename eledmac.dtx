@@ -4806,6 +4806,7 @@
   \ifnum #1=\last@page@num
   \else
     \ifbypage@
+      \csxdef{lastlinenumberon@\the\last@page@num}{\the\line@num}%
       \line@num=\z@ \subline@num=\z@
     \fi
     \page@num=#1\relax
@@ -7778,8 +7779,47 @@
 % \end{macro}
 % \end{macro}
 %
+%
+% \begin{macro}{\setistwofollowinglines}
+% The \cs{ifistwofollowinglines} boolean, used by the \cs{twolines} and related tools, is set to true by \cs{setistwofollowinglines}.
+% This command takes the following arguments:
+% \begin{itemize}
+%  \item \verb+#1+ First page number.
+%  \item \verb+#2+ First line number.
+%  \item \verb+#3+ Last page number.
+%  \item \verb+#4+ Last line number.
+% \end{itemize}
+% If \verb+#3+-\verb+#2+ = 1, then that means the two lines are following, and consequently \cs{ifistwofollowinglines} is set to true.
+% However, if we use lineation by page, two lines can be following if:
+% \begin{itemize}
+%   \item First line number is equal to the last line number of the first page.
+%   \item Last line number is equal to 1.
+%   \item \verb+#3+-\verb+#1+ is equal to 1.
+% \end{itemize}
+%    \begin{macrocode}
+\newif\ifistwofollowinglines@%
+\newcommand{\setistwofollowinglines}[4]{%
+    \ifcsdef{lastlinenumberon@#1}%
+      {\numdef{\tmp}{\csuse{lastlinenumberon@#1}}}%
+      {\numdef{\tmp}{0}}%
+    \istwofollowinglines@false%
+    \ifnumequal{#4-#2}{1}%
+    {\istwofollowinglines@true}%
+    {\ifbypage@%
+      \ifnumequal{#3-#1}{1}%
+      {%
+        \ifnumequal{#2}{\csuse{lastlinenumberon@#1}}%
+        {\ifnumequal{#4}{1}{\istwofollowinglines@true}{}}%
+        {}%
+      }%
+      {}%
+    }%
+}%
+% \end{macro}
+%    \end{macrocode}
+%
 % \begin{macro}{\setprintlines}
-% First of all, we print the page numbers only if\/: 1)~we're doing
+% We print the page numbers only if\/: 1)~we're doing
 % the lineation by page, and 2)~the ending page number is different
 % from the starting page number.\phantomsection\label{printlines}
 % 
@@ -7836,17 +7876,21 @@
 % However, if the \cs{twolines} is set for the current series, we don't print the last line number.
 %    \begin{macrocode}
   \ifl@d@dash%
-    \iftoggle{fulllines@}%
+    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{twolines@\@currentseries}}}%
       {}%
       {%
+      \setistwofollowinglines{#1}{#2}{#4}{#5}%
         \ifboolexpr{%
-          (test{\ifcsempty{twolines@\@currentseries}}%
-          or (%
-           togl {twolinesbutnotmore@\@currentseries}%
-           and not test {\ifnumequal{#5-#2}{1}}%
-           ))%
-           or(%
-               (not test{\ifnumequal{#1}{#4}})%
+          (%
+               togl {twolinesbutnotmore@\@currentseries}%
+               and not% 
+                 (%
+                  bool {istwofollowinglines@}%              
+                 )%
+          )%
+          or% 
+          (%
+             (not test{\ifnumequal{#1}{#4}})%
                and togl{twolinesonlyinsamepage@\@currentseries}%
              )%
           }%
@@ -7858,7 +7902,7 @@
           \l@d@eslfalse%
           \ifcsempty{morethantwolines@\@currentseries}%
             {}%
-            {\ifnum\numexpr #5-#2>1\relax%
+            {\ifistwofollowinglines@\else%
               \l@d@morethantwolinestrue%
              \fi%
             }%
