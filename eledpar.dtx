@@ -65,6 +65,7 @@
 %</driver>
 %
 % \fi
+% \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
 % \CheckSum{4968}
 %
 % \makeatletter
@@ -190,6 +191,9 @@
 % \changes{v1.13.0}{2015/03/06}{Fix bug in shiftedpstarts when size difference between pstarts is very important.}
 % \changes{v1.14.0}{2015/03/22}{The \cs{newif}s are not followed by boolean values set to false, because it is the \TeX\ default setting.}
 % \changes{v1.14.0}{2015/03/22}{Fix bug with line number position when using \cs{eledsection} and similar commands for RTL texts with \LuaLaTeX.}
+% \changes{v1.15.0}{2015/04/13}{Add \cs{AtEveryPstartCall}.}
+% \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \cs{eledchapter} (bug added in v1.13.0).}
+% \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -212,9 +216,11 @@
 %       the \Lpack{\eledpar} package\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 % \author{%
+% Ma\"ieul Rouquette\thanks{\texttt{maieul at maieul dot net}}
+% {\small based on the original \Lpack{ledpar} by}
 % Peter Wilson \\
 % Herries Press\thanks{\texttt{herries dot press at earthlink dot net}}\\
-% Ma\"ieul Rouquette\thanks{\texttt{maieul at maieul dot net}}}
+% }
 %
 % \date{}
 %
@@ -486,8 +492,8 @@
 % \footnote{The same applies to \LaTeX\ normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical informations.}
 % We have not changed this default setting, because we don't want to break compatibility with older version of \Lpack{eledmac}. 
 % So, you MUST change the default setting via \cs{maxhXnotes} (for critical notes)\cs{maxhnotesX} (for familiar notes). 
-% Both commands are explained in \Lpack handbook (\ref{eledmac-maxhXnotes} p.~\pageref{eledmac-maxhXnotes}).
-% As and advisable setting:
+% Both commands are explained in \Lpack handbook (\reff{eledmac-maxhXnotes}).
+% As an advisable setting:
 % \begin{verbatim}
 % \maxhXnotes{0.6\textheight}
 % \maxhnotesX{0.6\textheight}
@@ -525,7 +531,7 @@
 %   \end{Rightside}
 % \end{verbatim}
 % \section{Left and right texts}\label{leftright}
-%
+% \subsection{Environments}
 % Parallel texts are divided into Leftside and Rightside. The form of the
 % contents of these two are independent of whether they will be set 
 % in columns or pages.
@@ -535,7 +541,7 @@
 % The left text is put within the \verb?Leftside? environment and the 
 % right text likewise in the \verb?Rightside? environment. The number of 
 % \verb?Leftside? and \verb?Rightside? environments must be the same.
-%
+% \subsection{Line numbering scheme}
 % Within these environments you can designate the line numbering scheme(s)
 % to be used. 
 % \DescribeMacro{\firstlinenum}
@@ -558,6 +564,15 @@
 % scheme for sublines.
 % The starred versions change both left and right numbering schemes.
 %
+% Generally speaking, controls like \cs{firstlinenum} or \cs{linenummargin}
+% apply to sequential and left texts. 
+% To effect right texts only, they have 
+% to be within a \verb?Rightside? environment. 
+% \DescribeMacro{\lineationR}
+% \cs{lineationR} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for the right side.
+% \DescribeMacro{\lineation*} 
+% \cs{lineation*} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for both sides.
+% \subsection{chunk}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % In a serial (non-parallel) mode, each numbered paragraph, or chunk, 
@@ -588,13 +603,16 @@
 % Remember, though,
 % that the left/right sides are effectively independent of each other.
 %
-% Generally speaking, controls like \cs{firstlinenum} or \cs{linenummargin}
-% apply to sequential and left texts. To effect right texts only they have 
-% to be within a \verb?Rightside? environment. 
-% \DescribeMacro{\lineationR}
-% \cs{lineationR} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for the right side.
-% \DescribeMacro{\lineation*} 
-% \cs{lineation*} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for both sides.
+% \subsection{\cs{AtEveryPstart} and \cs{AtEveryPstartCall}}
+% In general, remember that the moment where a \cs{pstart} is called is different 
+% from the moment when  the \cs{pstart}\ldots\cs{pend} content is printed, which is when \cs{Pages} or \cs{Columns} is processed.
+% 
+% Consequently:
+% \begin{itemize}
+%  \item The argument of \cs{AtEveryPstart} (see \reff{eledmac-AtEveryPstart}) is called before every chunk is printed, except if you used an optional argument for the \cs{pstart}.
+%  \item The argument of \cs{AtEveryPstartCall} is called before every \cs{pstart}.
+% \end{itemize}
+% \subsection{Language setting}
 % If you are using the 
 % \Lpack{babel} package with different languages 
 % (via, say, \cs{selectlanguage}) for the left and right texts it is 
@@ -608,6 +626,7 @@
 % selection for the side. The right side language is also
 % applied to the right side line numbers.
 %
+% \subsection{Shifting}
 % Corresponding left and right sides must have the same number of
 % paragraph chunks --- if there are four on the left there must be four
 % on the right, even if some are empty. The start of each pair of left and
@@ -925,7 +944,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/03/22 v1.14.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/04/13 v1.15.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -1252,6 +1271,7 @@
 % \cs{lineationR}\marg{word} is the macro used to select the 
 % lineation system for right texts.
 % Its argument is a string: either \texttt{page}, \texttt{pstart} or \texttt{section}.
+% \changes{v1.15.0}{2015/04/13}{As \cs{lineation}, \cs{lineationR} automatically set the \cs{pstartinfootnote}.}
 %    \begin{macrocode}
 \newcommand*{\lineationR}[1]{{%
   \ifnumbering
@@ -1261,19 +1281,28 @@
     \ifx\@tempa\@tempb
         \global\bypage@Rtrue
         \global\bypstart@Rfalse
+         \unless\ifnocritical@%
+           \pstartinfootnote[][false]%
+         \fi%
     \else
        \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
            \global\bypage@Rfalse
            \global\bypstart@Rtrue
+           \unless\ifnocritical@%
+             \pstartinfootnote%
+           \fi%
        \else
            \def@tempb{section}
            \ifx\@tempa\@tempb
-           \global\bypage@Rfalse
-           \global\bypstart@Rfalse
+             \global\bypage@Rfalse%
+             \global\bypstart@Rfalse%
+             \unless\ifnocritical@%
+               \pstartinfootnote[][false]%
+             \fi%
            \else
              \led@warn@BadLineation
-        \fi
+           \fi%
        \fi
     \fi
   \fi}}
@@ -1964,19 +1993,7 @@
 % \end{macro}
 %
 % \begin{macro}{\n@num}
-% This macro implements the \cs{skipnumbering} command. It uses a new
-% action code, namely 1007.
-%    \begin{macrocode}
-\providecommand*{\n@num}{}
-\renewcommand*{\n@num}{%
-  \ifledRcol
-    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-    \xright@appenditem{-1007}\to\actions@listR
-  \else
-    \n@num@reg
-  \fi}
-
-%    \end{macrocode}
+% \changes{v1.15.0}{2015/04/13}{\cs{n@num} defined only one time for both \Eledmac{} and \Eledpar{}.}
 % \end{macro}
 %
 % \begin{macro}{\@ref}
@@ -2263,18 +2280,7 @@
 % \end{macro}
 %
 % \begin{macro}{\skipnumbering}
-% In numbered text, \cs{skipnumbering} in a line will suspend the 
-% numbering for that particular line. That is, line numbers are unchanged and
-% no line number will be printed.
-%    \begin{macrocode}
-\renewcommand*{\skipnumbering}{%
-  \ifledRcol \write\linenum@outR{\string\n@num}%
-             \advanceline{-1}%
-  \else      
-    \skipnumbering@reg
-  \fi}
-
-%    \end{macrocode}
+% \changes{v1.15.0}{2015/04/13}{\cs{skipnumbering} defined only one time for both \Eledmac{} and \Eledpar{}}
 % \end{macro}
 %
 %
@@ -2344,74 +2350,83 @@
 %    \begin{macrocode}
 \newcommand{\newseries@eledpar}[1]{%
 %    \end{macrocode}
-% \subsubsection{Create commands to memorize display options}
-%    \begin{macrocode}
-    \csgdef{onlysideX@#1}{}%
-    \csgdef{onlyXside@#1}{}%
-%    \end{macrocode}
-% \subsubsection{Boolean flags for notes to be printed in one side only}
+% \subsubsection{Notes to be printed on one side only}
 % \Lpack{eledpar} allows notes to be printed on one side only.
-% We need boolean flags, and set them to true when a note series is not printed in one side
-% evne though it contains something.
+% We need to declare these options.
+% We also need boolean flags, and to set them to true when a note series is not printed on one side.
+% We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
 %    \begin{macrocode}
-    \global\newbool{keepforXside@#1}%
-    \global\newbool{keepforsideX@#1}%
+    \unless\ifnocritical@%
+      \csgdef{onlysideX@#1}{}%
+      \global\newbool{keepforXside@#1}%
+    \fi%
+    \unless\ifnofamiliar@%
+      \global\newbool{keepforsideX@#1}%
+      \csgdef{onlyXside@#1}{}%
+    \fi%
 %    \end{macrocode}
 % \subsubsection{Familiar footnotes without marks}
-% The \cs{footnoteXnomk} commands are for notes which are printed  in the left side, while they are called in the right side.
+% The \cs{footnoteXnomk} commands are for notes which are printed on the left side, while they are called in the right side.
 % Basically, they set first toggle \cs{nomark@} to true, then call the \cs{footnoteX}.
 % and finally add the footnote counter in the footnote counter list.
 %
+% First, check the \verb+nofamiliar+ option of \Eledmac{}
+%    \begin{macrocode}
+  \unless\ifnofamiliar@%
 % So declare the list.
 %    \begin{macrocode}
-    \expandafter\list@create\csname footnote#1@mk\endcsname%
+      \expandafter\list@create\csname footnote#1@mk\endcsname%
 %    \end{macrocode}
 % Then, declare the \cs{footnoteXnomk} command.
 %    \begin{macrocode}
-    \expandafter\newcommand\csname footnote#1nomk\endcsname[1]{%
+      \expandafter\newcommand\csname footnote#1nomk\endcsname[1]{%
 %    \end{macrocode}
 % First step: just call the normal \cs{footnoteX}, saying that we don't want to print the mark.
 %    \begin{macrocode}
-       \toggletrue{nomk@}%
-       \csuse{footnote#1}{##1}%
-       \togglefalse{nomk@}%
+         \toggletrue{nomk@}%
+         \csuse{footnote#1}{##1}%
+         \togglefalse{nomk@}%
 %    \end{macrocode}
 % Second, and last, step: store the footnote counter in the footnote counters list.
 % We use some \cs{let}, because \cs{xright@appenditem} is difficult to use with \cs{expandafter}.
 %    \begin{macrocode}
-       \letcs{\@tmp}{footnote#1@mk}%
-       \numdef\@tmpa{\csuse{c@footnote#1}}%
-       \global\xright@appenditem{\@tmpa}\to\@tmp%
-       \global\cslet{footnote#1@mk}{\@tmp}%
-   }%
+         \letcs{\@tmp}{footnote#1@mk}%
+         \numdef\@tmpa{\csuse{c@footnote#1}}%
+         \global\xright@appenditem{\@tmpa}\to\@tmp%
+         \global\cslet{footnote#1@mk}{\@tmp}%
+     }%
 %    \end{macrocode}
 % Then, declare the command which inserts the footnotemark in the right side.
 %    \begin{macrocode}
-    \expandafter\newcommand\csname footnote#1mk\endcsname{%
+      \expandafter\newcommand\csname footnote#1mk\endcsname{%
 %    \end{macrocode}
 % Get the first element of the footnote mark list.
 % As \cs{gl@p} is difficult to use with dynamic name macro, we use \cs{let} commands.
 %    \begin{macrocode}
-       \letcs{\@tmp}{footnote#1@mk}%
-       \gl@p\@tmp\to\@tmpa%
-       \global\cslet{footnote#1@mk}{\@tmp}%
+         \letcs{\@tmp}{footnote#1@mk}%
+         \gl@p\@tmp\to\@tmpa%
+         \global\cslet{footnote#1@mk}{\@tmp}%
 %    \end{macrocode}
 % Set the footnotecounter with it. 
 % For the sake of security, we make a backup of the previous value.
 %    \begin{macrocode}
-       \letcs{\old@footnote}{c@footnote#1}%
-       \setcounter{footnote#1}{\@tmpa}%
+         \letcs{\old@footnote}{c@footnote#1}%
+         \setcounter{footnote#1}{\@tmpa}%
 %    \end{macrocode}
 % Define the footnote mark and print it
 %    \begin{macrocode}
-       \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
-       \csuse{@footnotemark#1}%
+         \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+         \csuse{@footnotemark#1}%
 %    \end{macrocode}
 % Restore previous footnote counter and finally add space.
 %    \begin{macrocode}
-       \setcounter{footnote#1}{\old@footnote}%
-       \xspace%
-    }%
+         \setcounter{footnote#1}{\old@footnote}%
+         \xspace%
+      }%
+%    \end{macrocode}
+% End of tools for familiar notes without marks
+%    \begin{macrocode}
+  \fi
 %    \end{macrocode}
 % End of \cs{newseries@eledpar}.
 %    \begin{macrocode}
@@ -2422,9 +2437,13 @@
 % Read the eledmac code handbook about \cs{newhookcommand@series}.
 % Here, we create hooks which are specific to \Lpack{eledpar}.
 %    \begin{macrocode}
-\newhookcommand@series{onlysideX}%
+\unless\ifnocritical@%
+  \newhookcommand@series{onlyXside}%
+\fi%
+\unless\ifnofamiliar@%
+  \newhookcommand@series{onlysideX}%
+\fi
 
-\newhookcommand@series{onlyXside}%
 
 %    \end{macrocode}
 % \subsubsection{Init standards series (A,B,C,D,E,Z)}
@@ -2762,6 +2781,7 @@
   \ifstrempty{#1}%
     {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
     {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
+   \at@every@pstart@call%
   }
 %    \end{macrocode}
 %
@@ -2812,6 +2832,7 @@
    \ifstrempty{#1}%
      {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
      {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
+   \at@every@pstart@call%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2897,6 +2918,14 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\AtEveryPstartCall}
+% The \cs{AtEveryPstartCall} argument is called when the \cs{pstartL} or \cs{pstartR} is called.
+% That is different of \cs{AtEveryPstart} the argument of which is called when the \cs{pstart}s are printed.
+%    \begin{macrocode}
+\newcommand{\AtEveryPstartCall}[1]{\xdef\at@every@pstart@call{\unexpanded{#1}}}%
+\gdef\at@every@pstart@call{}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifprint@last@after@pendL}
 % \begin{macro}{\ifprint@last@after@pendR}
 % Two booleans set to true, when the time is to print the last optional argument of a \cs{pend}.
@@ -2969,34 +2998,39 @@
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
-  \advance\countLline \@ne
+  \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
-  {\vbadness=10000 
-   \splittopskip=\z@
-   \do@lineLhook
-   \l@demptyd@ta
-   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}
+  {\vbadness=10000%
+   \splittopskip=\z@%
+   \do@lineLhook%
+   \l@demptyd@ta%
+   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}%
                            to\baselineskip}% 
-  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}
-  \unvbox\one@line \global\setbox\one@line=\lastbox 
-  \getline@numL
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}%
+  \unvbox\one@line \global\setbox\one@line=\lastbox% 
+  \getline@numL%
   \ifnum\@lock>\@ne%
     \inserthangingsymboltrue%
   \else%
     \inserthangingsymbolfalse%
-  \fi
-  \setbox\l@dleftbox
+  \fi%
+  \setbox\l@dleftbox%
   \hb@xt@ \Lcolwidth{%
-    \affixline@num
+    \ifl@dhidenumber%
+      \global\l@dhidenumberfalse%
+      \f@x@l@cks%
+    \else%
+      \affixline@num%
+    \fi%
     \xifinlist{\the\l@dpscL}{\eled@sections@@}%
       {\add@inserts\affixside@note}%
       {\print@lineL}}%
-  \add@penaltiesL
-  \global\advance\@donereallinesL\@ne
-  \global\advance\@donetotallinesL\@ne
-\else
+  \add@penaltiesL%
+  \global\advance\@donereallinesL\@ne%
+  \global\advance\@donetotallinesL\@ne%
+\else%
   \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
-  \global\advance\@donetotallinesL\@ne
+  \global\advance\@donetotallinesL\@ne%
 \fi}
 
 
@@ -3012,14 +3046,14 @@
     \l@dld@ta %space kept for backward compatibility
     \add@inserts\affixside@note%
     \l@dlsn@te %space kept for backward compatibility
-    {\ledllfill\hb@xt@ \wd\one@line{%
+    {\ledllfill\hb@xt@ \Lcolwidth{%
             \do@insidelineLhook%
             \ifluatex%
               \luatextextdir\l@luatextextdir@L%
             \fi%
             \new@lineL%
             \inserthangingsymbolL%
-            \l@dunhbox@line{\one@line}}\correcthangingL\ledrlfill\l@drd@ta%
+            \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
      \l@drsn@te}}
 
 %    \end{macrocode}
@@ -3104,36 +3138,41 @@
 \newcommand*{\do@lineR}{%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \ledRcol@true%
-  \advance\countRline \@ne
+  \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
-  {\vbadness=10000 
-   \splittopskip=\z@
-   \do@lineRhook
-   \l@demptyd@ta
-   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}
+  {\vbadness=10000%
+   \splittopskip=\z@%
+   \do@lineRhook%
+   \l@demptyd@ta%
+   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}%
                            to\baselineskip}% 
-  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}
-  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox 
-  \getline@numR
+  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}%
+  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox%
+  \getline@numR%
   \ifnum\@lockR>\@ne%
-    \inserthangingsymbolRtrue
+    \inserthangingsymbolRtrue%
   \else%
     \inserthangingsymbolRfalse%
   \fi%
-  \setbox\l@drightbox
+  \setbox\l@drightbox%
   \hb@xt@ \Rcolwidth{%
-    \affixline@numR%
+    \ifl@dhidenumber%
+      \global\l@dhidenumberfalse%
+      \f@x@l@cksR%
+    \else%
+      \affixline@numR%
+    \fi%
     \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
      {\add@insertsR\affixside@noteR}%
      {\print@lineR}%
   }%
-  \add@penaltiesR
-  \global\advance\@donereallinesR\@ne
-  \global\advance\@donetotallinesR\@ne
-\else
-  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}
-  \global\advance\@donetotallinesR\@ne
-\fi
+  \add@penaltiesR%
+  \global\advance\@donereallinesR\@ne%
+  \global\advance\@donetotallinesR\@ne%
+\else%
+  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
+  \global\advance\@donetotallinesR\@ne%
+\fi%
 \ledRcol@false%
 }
 
@@ -3149,7 +3188,7 @@
     \l@dld@ta  %space kept for backward compatibility
     \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
-    \correcthangingR\ledllfill\hb@xt@ \wd\one@lineR{%
+    \ledllfill\hb@xt@ \Rcolwidth{%
        \do@insidelineRhook%
        \new@lineR%
        \inserthangingsymbolR%
@@ -3157,7 +3196,7 @@
               \luatextextdir\l@luatextextdir@R%
        \fi%
        \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
-     \l@drsn@te
+     \l@drsn@te%
   }
 
 \def\print@eledsectionR{%
@@ -3202,37 +3241,39 @@
   \global\advance\absline@numR \@ne
   \do@actionsR
   \do@ballastR
-\ifledgroupnotesR@\else\ifnumberline
-  \ifsublines@
-    \ifnum\sub@lockR<\tw@
-      \global\advance\subline@numR \@ne
-    \fi
-  \else
-    \ifnum\@lockR<\tw@
-      \global\advance\line@numR \@ne
-      \global\subline@numR \z@
-    \fi
+  \ifledgroupnotesR@\else
+        \ifnumberline
+          \ifsublines@
+            \ifnum\sub@lockR<\tw@
+              \global\advance\subline@numR \@ne
+           \fi
+          \else
+            \ifnum\@lockR<\tw@
+              \global\advance\line@numR \@ne
+              \global\subline@numR \z@
+            \fi
+          \fi
+        \fi
   \fi
-\fi
-\fi
 }
 \newcommand*{\getline@numL}{%
-    \global\advance\absline@num \@ne
+  \global\advance\absline@num \@ne
   \do@actions
   \do@ballast
-\ifledgroupnotesL@\else\ifnumberline
-  \ifsublines@
-     \ifnum\sub@lock<\tw@
-       \global\advance\subline@num \@ne
-     \fi
-  \else
-     \ifnum\@lock<\tw@
-       \global\advance\line@num \@ne
-       \global\subline@num \z@
-     \fi
+      \ifledgroupnotesL@\else
+        \ifnumberline
+           \ifsublines@
+             \ifnum\sub@lock<\tw@
+               \global\advance\subline@num \@ne
+             \fi
+           \else
+             \ifnum\@lock<\tw@
+                \global\advance\line@num \@ne
+                \global\subline@num \z@
+             \fi
+           \fi
+      \fi
   \fi
-\fi
-\fi
 }
 
 
@@ -3258,6 +3299,7 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\l@dskipversenumberR}
 % \begin{macro}{\do@actionsR}
 % \begin{macro}{\do@actions@fixedcodeR}
 % \begin{macro}{\do@actions@nextR}
@@ -3269,7 +3311,10 @@
 % It may call itself recursively and we use tail recursion, via
 % \cs{do@actions@nextR} for this.
 % \changes{v0.3}{2005/02/24}{Used \cs{do@actions@fixedcode} in \cs{do@actionsR}}
+% \changes{v1.15.0}{2015/04/13}{Add action 1008 and 1009}
 %    \begin{macrocode}
+
+\newif\ifl@dskipversenumberR
 \newcommand*{\do@actions@fixedcodeR}{%
   \ifcase\@l@dtempcnta% 
   \or%                     % 1001
@@ -3278,7 +3323,7 @@
     \global\sublines@false
   \or%                     % 1003
     \global\@lockR=\@ne
-  \or%                     % 1004
+  \or%                     % 1004%
     \ifnum\@lockR=\tw@
       \global\@lockR=\thr@@
     \else
@@ -3294,9 +3339,14 @@
     \fi
   \or%                     % 1007
     \l@dskipnumbertrue
-  \else
+ \or%                      % 1008
+    \l@dskipversenumberRtrue%
+ \or% 	                   % 1009
+    \l@dhidenumbertrue% 
+ \else%
     \led@warn@BadAction
-  \fi}
+ \fi%
+}
 
 
 \newcommand*{\do@actionsR}{%
@@ -3334,6 +3384,7 @@
   \do@actions@nextR}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3435,21 +3486,23 @@
      \ch@ck@l@ckR
   \fi
   \ifnum\@l@dtempcnta=\@l@dtempcntb
-    \if@twocolumn
-      \if@firstcolumn
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+    \ifl@dskipversenumberR\else
+      \if@twocolumn
+        \if@firstcolumn
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \else
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \fi
       \else
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \fi
-    \else
-      \@l@dtempcntb=\line@marginR
-      \ifnum\@l@dtempcntb>\@ne
-        \advance\@l@dtempcntb by\page@numR
-      \fi
-      \ifodd\@l@dtempcntb
-        \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-      \else
-        \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \@l@dtempcntb=\line@marginR
+        \ifnum\@l@dtempcntb>\@ne
+          \advance\@l@dtempcntb by\page@numR
+        \fi
+        \ifodd\@l@dtempcntb
+          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+        \else
+          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+        \fi
       \fi
     \fi
   \fi
@@ -3682,7 +3735,7 @@
 % general case, is a rather complicated task.
 % The seven parameters of the
 % argument are the line numbers as stored in \cs{l@d@nums}, in the
-% form described on page \pageref{eledmac-linenumbers} of \Eledmac{}' handbook: the starting
+% form described on \reff{eledmac-linenumbers} of \Eledmac{}' handbook: the starting
 % page, line, and sub-line numbers, followed by the ending page,
 % line, and sub-line numbers, and then the font specifier for
 % the lemma.
@@ -4104,55 +4157,38 @@
 
 % \section{Verse}
 %\changes{v0.11}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
-%\changes{v0.12}{2012/08/03}{New new management of hangingsymbol insertion, preventing undesirable insertions.}
+%\changes{v0.12}{2012/08/03}{New management of hangingsymbol insertion, preventing undesirable insertions.}
 % Like in eledmac, the insertion of hangingsymbol is base on \cs{ifinserthangingsymbol}, and, for the right side, on \cs{ifinserthangingsymbolR}.
+% Both commands also include the hanging space, to be sure the \cs{one@line} of hanging lines has the same width that the \cs{one@line} of normal lines and to prevent the column separator from shifting.
 % \begin{macro}{\inserthangingsymbolL}
 % \begin{macro}{\inserthangingsymbolR}
-% \changes{v1.4.3}{2013/10/27}{Hang verse is now not automatically flush right.}
+% \changes{v0.11}{2012/06/11}{Prevent the column separator for hanging verse from shifting}
+% \changes{v1.4.3}{2013/10/27}{Hanging verse is no longer automatically flush right.}
+% \changes{v1.15.0}{2015/04/13}{Prevent more efficiently the column separator from shifting when a verse is hanging}
 %    \begin{macrocode}
 \newif\ifinserthangingsymbolR
 \newcommand{\inserthangingsymbolL}{%
-\ifinserthangingsymbol%
+  \ifinserthangingsymbol%
     \ifinstanzaL%
+        \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+          \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
         \hangingsymbol%
     \fi%
-\fi}
+  \fi%
+}%
 \newcommand{\inserthangingsymbolR}{%
-\ifinserthangingsymbolR%
+  \ifinserthangingsymbolR%
     \ifinstanzaR%
+        \hskip \@ifundefined{sza@0@}{0}{\expandafter%
+           \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
         \hangingsymbol%
     \fi%
-\fi}
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%\changes{v0.11}{2012/06/11}{Prevent shift of column separator when a verse is hanged}
-% When a verse is hanged, the column separator is shifted. To prevent it, the \cs{do@lineL} and \cs{do@lineR} commands call \cs{correcthangingL} and \cs{correcthangingR} commands. These commands insert horizontal skip which length is equal to the hang indent.
-% \begin{macro}{\correcthangingL}
-% \begin{macro}{\correcthangingR}
-%    \begin{macrocode}
-\newcommand{\correcthangingL}{%
-\ifl@dpaging\else%
-    \ifinstanzaL%
-        \ifinserthangingsymbol%
-            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
-                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-        \fi%
-    \fi%
-\fi}
 
-\newcommand{\correcthangingR}{%
-\ifl@dpaging\else%
-    \ifinstanzaR%
-        \ifinserthangingsymbolR%
-            \hskip \@ifundefined{sza@0@}{0}{\expandafter%
-                   \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
-        \fi%
-    \fi%
-\fi}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % Before we can define the main stanza macros we need to be able to save 
 % and reset
 % the category code for \&. To save the current value we use
@@ -4993,12 +5029,12 @@
 \newcommand*{\Pages}{%
  \l@dprintingpagestrue%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
-  \parledgroup@notespacing@set@correction
-  \typeout{}
-  \typeout{*************************** PAGES ***************************}
-  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
+  \parledgroup@notespacing@set@correction%
+  \typeout{}%
+  \typeout{*************************** PAGES ***************************}%
+  \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else%
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
-  \fi
+  \fi%
 %    \end{macrocode}
 % \changes{v1.13.0}{2015/03/06xx}{Prevent false overfull hboxes when using \cs{Pages} outside of pages environment.}
 % As \cs{Pages} must be called outside of the pages environment, we have to redefine the \cs{Lcolwidth} and \cs{Rcolwidth} lengths, to prevent false overfull hboxes.
@@ -5008,93 +5044,93 @@
 %    \end{macrocode}
 % Get onto an empty even (left) page, then initialise counters, etc.
 %    \begin{macrocode}
-  \cleartol@devenpage
-  \begingroup
-    \l@dzeropenalties
-    \endgraf\global\num@lines=\prevgraf
-            \global\num@linesR=\prevgraf
-    \global\par@line=\z@
-    \global\par@lineR=\z@
-    \global\l@dpscL=\z@
-    \global\l@dpscR=\z@
-    \writtenlinesLfalse
-    \writtenlinesRfalse
+  \cleartol@devenpage%
+  \begingroup%
+    \l@dzeropenalties%
+    \endgraf\global\num@lines=\prevgraf%
+            \global\num@linesR=\prevgraf%
+    \global\par@line=\z@%
+    \global\par@lineR=\z@%
+    \global\l@dpscL=\z@%
+    \global\l@dpscR=\z@%
+    \writtenlinesLfalse%
+    \writtenlinesRfalse%
 %    \end{macrocode}
-% The footnotes are printed in way which is different way from the one expected in \Lpack{eledmac}, as we may want to have the notes printed in one side only.
+% The footnotes are printed in a different way from expected in \Lpack{eledmac}, as we may want to print the notes on one side only.
 %    \begin{macrocode}
     \let\print@Xnotes\print@Xnotes@forpages%
     \let\print@notesX\print@notesX@forpages%
 %    \end{macrocode}
 % Check if there are chunks to be processed.
 %    \begin{macrocode}
-    \check@pstarts
-    \loop\if@pstarts
+    \check@pstarts%
+    \loop\if@pstarts%
 %    \end{macrocode}
 % Loop over the number of chunks, incrementing the chunk counts 
 % (\cs{l@dpscL}
 % and \cs{l@dpscR} are chunk (box) counts.)
 %    \begin{macrocode}
-      \global\advance\l@dpscL \@ne
-      \global\advance\l@dpscR \@ne
+      \global\advance\l@dpscL \@ne%
+      \global\advance\l@dpscR \@ne%
 %    \end{macrocode}
 % Calculate the maximum number of real text lines in the chunk pair,
 % storing the result in the relevant \cs{l@dmaxlinesinpar}.
 %    \begin{macrocode}
-      \getlinesfromparlistL
-      \getlinesfromparlistR
+      \getlinesfromparlistL%
+      \getlinesfromparlistR%
       \l@dcalc@maxoftwo{\@cs@linesinparL}{\@cs@linesinparR}%
           {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
-      \check@pstarts
-    \repeat
+      \check@pstarts%
+    \repeat%
 %    \end{macrocode}
 % Zero the counts again, ready for the next bit.
 %    \begin{macrocode}
-    \global\l@dpscL=\z@
-    \global\l@dpscR=\z@
+    \global\l@dpscL=\z@%
+    \global\l@dpscR=\z@%
 %    \end{macrocode}
 % Get the number of lines on the first pair of pages and store
 % the minumum in \cs{l@dminpagelines}.
 %    \begin{macrocode}
-    \getlinesfrompagelistL
-    \getlinesfrompagelistR
+    \getlinesfrompagelistL%
+    \getlinesfrompagelistR%
     \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
         {\l@dminpagelines}%
 %    \end{macrocode}
 % Now we start processing the left and right chunks (\cs{l@dpscL} and
 % \cs{l@dpscR} count the left and right chunks), starting with the first pair.
 %    \begin{macrocode}
-    \check@pstarts
-    \if@pstarts
+    \check@pstarts%
+    \if@pstarts%
 %    \end{macrocode}
 % Increment the chunk counts to get the first pair.
 % Restore also the value of public pstart counters.
 %    \begin{macrocode}
-      \global\advance\l@dpscL \@ne
-      \global\advance\l@dpscR \@ne
+      \global\advance\l@dpscL \@ne%
+      \global\advance\l@dpscR \@ne%
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
 % We haven't processed any lines from these chunks yet, so zero the
 % respective line counts.
 %    \begin{macrocode}
-      \global\@donereallinesL=\z@
-      \global\@donetotallinesL=\z@
-      \global\@donereallinesR=\z@
-      \global\@donetotallinesR=\z@
+      \global\@donereallinesL=\z@%
+      \global\@donetotallinesL=\z@%
+      \global\@donereallinesR=\z@%
+      \global\@donetotallinesR=\z@%
 %    \end{macrocode}
 % Start a loop over the boxes (chunks).
 %    \begin{macrocode}
-      \checkraw@text
+      \checkraw@text%
 %    \end{macrocode}
 %    \begin{macrocode}
 %      \begingroup
-{        \loop\ifaraw@text
+{        \loop\ifaraw@text%
 %    \end{macrocode}
 % See if there is more that can be done for the left page and set up the 
 % left language.
 % \changes{v0.2}{2004/12/20}{Added \cs{l@duselanguage} to \cs{Pages}}
 %    \begin{macrocode}
-          \checkpageL
+          \checkpageL%
           \l@duselanguage{\theledlanguageL}%
 {            \loop\ifl@dsamepage%       
 %    \end{macrocode}
@@ -5102,14 +5138,14 @@
 % Eventually, adds the optional argument of pstart.
 % \changes{v0.3}{2005/02/10}{Added \cs{ledstrutL} to \cs{Pages}}
 %    \begin{macrocode}
-              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
+              \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}%
               \csuse{before@pstartL@\the\l@dpscL}%
-              \global\csundef{before@pstartL@\the\l@dpscL}
-              \do@lineL
+              \global\csundef{before@pstartL@\the\l@dpscL}%
+              \do@lineL%
               \xifinlist{\the\l@dpscL}{\eled@sections@@}
                 {\print@eledsectionL}%
                 {}%
-              \advance\numpagelinesL \@ne
+              \advance\numpagelinesL \@ne%
 %    \end{macrocode}
 % When using shiftedpstarts option, a \cs{l@dleftbox} with a null height is not printed.
 % That means we do not insert blank lines at the end of a left chunk lower than the corresponding right chunk.
@@ -5119,7 +5155,7 @@
 % even if all the lines actually needed for the current page have been printed.
 % \l@dleftbox
 %    \begin{macrocode}
-              \ifshiftedpstarts
+              \ifshiftedpstarts%
                       \ifdim\ht\l@dleftbox>0pt\hb@xt@%
                         \hsize{\ledstrutL\unhbox\l@dleftbox}%
                       \else%
@@ -5130,7 +5166,7 @@
               \else%
                       \parledgroup@correction@notespacing{L}
                       \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
-              \fi
+              \fi%
 %    \end{macrocode}
 % Perhaps we have to move to the next (left) box. Check if we have got all
 % we can onto the page. If not, repeat for the next line. 
@@ -5138,16 +5174,18 @@
 % Check if the page is full.
 % Check if the verse is split in two subsequent pages.
 % Check there is any forced page breaks.
+% Reset the verse skipnumber boolean
 %    \begin{macrocode}        
               \get@nextboxL%
+    \global\l@dskipversenumberfalse%
                   \ifprint@last@after@pendL%
                      \csuse{after@pendL@\the\l@dpscL}%
                      \global\csundef{after@pendL@\the\l@dpscL}%
                    \fi%
               \checkpageL%
-              \checkverseL
-              \checkpbL
-            \repeat
+              \checkverseL%
+              \checkpbL%
+            \repeat%
 %    \end{macrocode}
 % That (left) page has been filled. Output the number of real lines 
 % on the page --- if the page break is because the page has been 
@@ -5155,17 +5193,17 @@
 % ended early in order to synchronise with the facing page so use an
 % impossibly large number.
 %    \begin{macrocode}
-            \ifl@dpagefull
+            \ifl@dpagefull%
               \@writelinesonpageL{\the\numpagelinesL}%
-            \else
+            \else%
               \@writelinesonpageL{1000}%
-            \fi
+            \fi%
 %    \end{macrocode}
 % Reset to zero the left-page line count,  clear the page to get onto the facing
 % (odd, right) page, and reinitialize the accumulated dimension of interline correction for notes in parallel ledgroup.
 %    \begin{macrocode}
-            \numpagelinesL \z@
-            \parledgroup@correction@notespacing@init
+            \numpagelinesL \z@%
+            \parledgroup@correction@notespacing@init%
             \clearl@dleftpage }%
 %    \end{macrocode}
 % Now do the same for the right text.
@@ -5174,16 +5212,16 @@
           \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
-              \initnumbering@sectcountR
-              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}
+              \initnumbering@sectcountR%
+              \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
               \csuse{before@pstartR@\the\l@dpscR}%
-              \global\csundef{before@pstartR@\the\l@dpscR}
-              \do@lineR
-              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
+              \global\csundef{before@pstartR@\the\l@dpscR}%
+              \do@lineR%
+              \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
                 {\print@eledsectionR}%
                 {}%
-              \advance\numpagelinesR \@ne
-              \ifshiftedpstarts
+              \advance\numpagelinesR \@ne%
+              \ifshiftedpstarts%
                       \ifdim\ht\l@drightbox>0pt\hb@xt@%
                         \hsize{\ledstrutR\unhbox\l@drightbox}%
                       \else%
@@ -5192,63 +5230,64 @@
                         \global\pagetotal=\dimen0%
                       \fi%
               \else%
-                      \parledgroup@correction@notespacing{R}
+                      \parledgroup@correction@notespacing{R}%
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
-              \fi
+              \fi%
               \get@nextboxR%
+     \global\l@dskipversenumberRfalse%
                   \ifprint@last@after@pendR%
                      \csuse{after@pendR@\the\l@dpscR}%
                      \global\csundef{after@pendR@\the\l@dpscR}%
                    \fi%
               \checkpageR%
-              \checkverseR
-              \checkpbR
-            \repeat
-            \ifl@dpagefull
+              \checkverseR%
+              \checkpbR%
+            \repeat%
+            \ifl@dpagefull%
               \@writelinesonpageR{\the\numpagelinesR}%
-            \else
+            \else%
               \@writelinesonpageR{1000}%
-            \fi
-            \numpagelinesR=\z@
-            \parledgroup@correction@notespacing@init
+            \fi%
+            \numpagelinesR=\z@%
+            \parledgroup@correction@notespacing@init%
 %    \end{macrocode}
 % The page is full, so move onto the next (left, odd) page and repeat left 
 % text processing.
 %    \begin{macrocode}
-            \clearl@drightpage}
+            \clearl@drightpage}%
 %    \end{macrocode}
 % More to do? If there is we have to get the number of lines for the next
 % pair of pages before starting to output them.
 % \changes{v0.3.b}{2005/04/08}{Added \cs{l@dminpagelines} calculation
 %                             for succeeding page pairs}
 %    \begin{macrocode}
-          \checkraw@text
-          \ifaraw@text
-            \getlinesfrompagelistL
-            \getlinesfrompagelistR
+          \checkraw@text%
+          \ifaraw@text%
+            \getlinesfrompagelistL%
+            \getlinesfrompagelistR%
             \l@dcalc@minoftwo{\@cs@linesonpageL}{\@cs@linesonpageR}%
                              {\l@dminpagelines}%
-          \fi
-        \repeat}
+          \fi%
+        \repeat}%
 %    \end{macrocode}
 % We have now output the text from all the chunks.
 %    \begin{macrocode}
-    \fi
+    \fi%
 %    \end{macrocode}
 % Make sure that there are no inserts hanging around.
 %    \begin{macrocode}
-    \flush@notes
-    \flush@notesR
-  \endgroup
+    \flush@notes%
+    \flush@notesR%
+  \endgroup%
 %    \end{macrocode}
 % Zero counts ready for the next set of left/right text chunks. The boolean tests for stanza are switched to false.
 %    \begin{macrocode}
-  \global\l@dpscL=\z@
-  \global\l@dpscR=\z@
-  \global\l@dnumpstartsL=\z@
-  \global\l@dnumpstartsR=\z@
-    \global\instanzaLfalse
-    \global\instanzaRfalse
+  \global\l@dpscL=\z@%
+  \global\l@dpscR=\z@%
+  \global\l@dnumpstartsL=\z@%
+  \global\l@dnumpstartsR=\z@%
+    \global\instanzaLfalse%
+    \global\instanzaRfalse%
  \l@dprintingpagesfalse%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
@@ -5261,6 +5300,12 @@
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%
+    \ifnocritical@%
+      \newbox\csuse{##1footins}
+    \fi
+    \ifnofamiliar@%
+      \newbox\csuse{footins##1}
+    \fi
     \ifvoid\csuse{##1footins}%
       \ifvoid\csuse{footins##1}\else%
         \newpage\null%
@@ -5731,6 +5776,21 @@
 % \end{macro}
 %
 % \section{Sections' titles' commands}
+% As switching from left to right pages does not clear the page since v1.13.0,
+% but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
+% 
+% So we patch the \cs{chapter} command in order to prevent this problem.
+% \begin{macro}{\chapter}
+%    \begin{macrocode}
+\pretocmd{\chapter}{%
+  \ifl@dprintingpages%
+    \vbox{}%
+  \fi%
+  }%
+  {}%
+  {}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\eledsectnotoc}
 % \cs{eledsectnotoc} just saves its content \cs{@eledsectnotoc}, which will be tested where sectioning commands will be printed.
 %    \begin{macrocode}
