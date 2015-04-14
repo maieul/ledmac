@@ -13024,9 +13024,26 @@
 %    \begin{macrocode}
     {%
     \ifxindyhyperref@%
-       \get@index@command#1|+%
+      \IfSubStr{\temp@}{|}%
+      {%
+       \get@index@command#1+%
        \ifledRcol%
           \immediate\write\eledmac@out{
+            (define-attributes ("eledmacR\thelabidx"))^^J
+            \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{\@backslashchar\@index@command{" :close "}}" :attr "eledmacR\thelabidx")
+            }%
+          \gdef\@edindex@hyperref{|eledmacR\thelabidx}%
+       \else%
+          \immediate\write\eledmac@out{%
+             (define-attributes ("eledmac\thelabidx"))^^J
+             \space\space(markup-locref :open "\string\hyperlink{\edindexlab\thelabidx}{\@backslashchar\@index@command{" :close "}}" :attr "eledmac\thelabidx")
+             }%
+          \gdef\@edindex@hyperref{|eledmac\thelabidx}%
+       \fi%
+      }%
+      {\get@index@command#1|+%
+        \ifledRcol%
+          \immediate\write\eledmac@out{%
             (define-attributes ("eledmacR\thelabidx"))^^J
             \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmacR\thelabidx")
             }%
@@ -13037,7 +13054,8 @@
              \space\space(markup-locref :open "\string\hyperlink{\edindexlab\thelabidx}{" :close "}" :attr "eledmac\thelabidx")
              }%
           \gdef\@edindex@hyperref{|eledmac\thelabidx}%
-       \fi%
+       \fi%     
+      }%
 %    \end{macrocode}
 % And now, in any other case.
 %    \begin{macrocode}
