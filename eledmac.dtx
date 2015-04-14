@@ -3088,7 +3088,12 @@
 \DeclareOptionX{nopbinverse}{\lednopbinversetrue}
 \DeclareOptionX{ledsecnolinenumber}{\ledsecnolinenumbertrue}
 \DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
-\DeclareOptionX{xindy+hyperref}{\xindyhyperref@true}%
+\DeclareOptionX{xindy+hyperref}{%
+  \AtBeginDocument{\immediate\openout\eledmac@out=eledmac.xdy}%
+  \newwrite\eledmac@out%
+  \xindyhyperref@true%
+  \AtEndDocument{\immediate\closeout\eledmac@out=eledmac.xdy}%
+}%
 \ExecuteOptionsX{series}%
 \ExecuteOptionsX{final}
 %    \end{macrocode}
@@ -13013,8 +13018,24 @@
       }%
     }%
     {%
-    \gdef\@index@txt{#1}%
-    \gdef\@edindex@hyperref{}}%
+    \ifxindyhyperref@%
+       \get@index@command#1|+%
+       \ifledRcol%
+          (define-attributes ("eledmacR\thelabidx"))^^J
+          \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmacR\thelabidx")
+        }%
+          \gdef\@edindex@hyperref{|eledmacR\thelabidx}%
+       \else%
+        \immediate\write\eledmac@out{%
+          (define-attributes ("eledmac\thelabidx"))^^J
+          \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmac\thelabidx")
+        }%
+          \gdef\@edindex@hyperref{|eledmac\thelabidx}%
+       \fi%      
+    \else%
+      \gdef\@index@txt{#1}%
+      \gdef\@edindex@hyperref{}}%
+    \fi%
 }
 %    \end{macrocode}
 % \end{macro}
