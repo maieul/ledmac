@@ -12987,16 +12987,18 @@
 % \changes{v1.21.0}{2015/0}{Look at the hyperindex option of hyperref before inserting hyperref}
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
-  \ifdefequal{\iftrue}{\ifHy@hyperindex}%
 %    \end{macrocode}
-% We have to disable spaces to work with a \Lpack{xstring} bug
+% We have to disable temporary spaces to work with a \Lpack{xstring} bug (or feature?)
 %    \begin{macrocode}
-    {%
-    \edef\temp@{%
-    \catcode`\ =9 %space need for catcode
-    #1%
-    \catcode`\ =10 % space need for catcode
-    }%
+  \edef\temp@{%
+  \catcode`\ =9 %space need for catcode
+  #1%
+  \catcode`\ =10 % space need for catcode
+  }%
+%    \end{macrocode}
+% Now, we define \cs{@edindex@hyperref} if the \verb+hyperindex+ of \Lpack{hyperref} is enabled.
+%    \begin{macrocode}
+  \ifdefequal{\iftrue}{\ifHy@hyperindex}{%
     \IfSubStr{\temp@}{|}%
       {\get@index@command#1+%
       \ifledRcol%
@@ -13017,25 +13019,33 @@
        \fi%
       }%
     }%
+%    \end{macrocode}
+% Now, if the \verb|hyperref+xindy| option of \eledmac{} is enabled
+%    \begin{macrocode}
     {%
     \ifxindyhyperref@%
        \get@index@command#1|+%
        \ifledRcol%
-          (define-attributes ("eledmacR\thelabidx"))^^J
-          \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmacR\thelabidx")
-        }%
+          \immediate\write\eledmac@out{
+            (define-attributes ("eledmacR\thelabidx"))^^J
+            \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmacR\thelabidx")
+            }%
           \gdef\@edindex@hyperref{|eledmacR\thelabidx}%
        \else%
-        \immediate\write\eledmac@out{%
-          (define-attributes ("eledmac\thelabidx"))^^J
-          \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmac\thelabidx")
-        }%
+          \immediate\write\eledmac@out{%
+             (define-attributes ("eledmac\thelabidx"))^^J
+             \space\space(markup-locref :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}" :attr "eledmac\thelabidx")
+             }%
           \gdef\@edindex@hyperref{|eledmac\thelabidx}%
-       \fi%      
+       \fi%
+%    \end{macrocode}
+% And now, in any other case.
+%    \begin{macrocode}
     \else%
       \gdef\@index@txt{#1}%
-      \gdef\@edindex@hyperref{}}%
+      \gdef\@edindex@hyperref{}%
     \fi%
+    }%
 }
 %    \end{macrocode}
 % \end{macro}
