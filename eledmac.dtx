@@ -12761,10 +12761,14 @@
 % This macro is called at the beginning of each critical note.
 % It switches some parameters, 
 % to allow indexing in this note, with reference to page and line number.
+% It also defines \cs{@ledinnote@command} which will be printed as encapsulating command after the \verb+|+.
 %    \begin{macrocode}
 \newcommand{\prepare@edindex@fornote}[1]{%
     \l@dp@rsefootspec#1|%
-    \@edindex@fornote@true
+    \@edindex@fornote@true%
+    \gdef\@ledinnote@command{%
+      ledinnote{\@index@command}%
+    }%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -12925,8 +12929,8 @@
     \ifl@imakeidx%
       \if@edindex@fornote@%
         \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
-        \expandafter\imki@wrindexentry{##1}{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}%
-        \expandafter\imki@wrindexentry{##1}{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
+        \expandafter\imki@wrindexentry{##1}{\@index@txt|)\@ledinnote@command}{\theendpageline}%
       \else%
         \get@edindex@hyperref{##2}%
         \imki@wrindexentry{##1}{\@index@txt\@edindex@hyperref}{\thepageline}%
@@ -12935,10 +12939,10 @@
       \if@edindex@fornote@%
         \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
         \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|(ledinnote{\@index@command}}{\thestartpageline}
+          {\string\indexentry{\@index@txt|(\@ledinnote@command}{\thestartpageline}
           }%
         \expandafter\protected@write\@indexfile{}%
-          {\string\indexentry{\@index@txt|)ledinnote{\@index@command}}{\theendpageline}
+          {\string\indexentry{\@index@txt|)\@ledinnote@command}{\theendpageline}
          }%
       \else%
         \protected@write\@indexfile{}%
