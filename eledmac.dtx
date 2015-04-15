@@ -12774,9 +12774,39 @@
 \newcommand{\prepare@edindex@fornote}[1]{%
     \l@dp@rsefootspec#1|%
     \@edindex@fornote@true%
+}
+%    \end{macrocode}
+% \end{macro}
+%    \end{macrocode}
+% \begin{macro}{\get@edindex@ledinnote@command}
+% The \cs{get@edindex@ledinnote@command} macro defines
+% a \cs{@ledinnote@command} command which is added as attribute (text inserted after \verb+|+) of the next index entry.
+%
+% Consequently, we write the definite of location reference attribut in the \verb+.xdy+ file.
+%    \begin{macrocode}
+\newcommand{\get@edindex@ledinnote@command}{%
+  \ifxindy@%
     \gdef\@ledinnote@command{%
-      ledinnote{\@index@command}%
+      ledinnote\thelabidx%
     }%
+    \immediate\write\eledmac@out{%
+      (define-attributes ("ledinnote\thelabidx"))^^J
+      \space\space(markup-locref^^J 
+        \eledmacmarkuplocrefdepth^^J
+        :open "\string\ledinnote{\@index@command}{"^^J
+        :close "}"^^J
+        :attr "ledinnote\thelabidx"^^J
+        )
+      }%
+%    \end{macrocode}
+% If we not use \verb+xindy+ option, \cs{@ledinnote@command} will produce
+% something like \verb+ledinnote{formatingcommand}+.
+%    \begin{macrocode}
+  \else%
+    \gdef\@ledinnote@command{%
+       ledinnote{\@index@command}%
+    }%
+  \fi%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -12937,6 +12967,7 @@
     \ifl@imakeidx%
       \if@edindex@fornote@%
         \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \get@edindex@ledinnote@command%
         \expandafter\imki@wrindexentry{##1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
         \expandafter\imki@wrindexentry{##1}{\@index@txt|)\@ledinnote@command}{\theendpageline}%
       \else%
@@ -12946,6 +12977,7 @@
     \else%
       \if@edindex@fornote@%
         \IfSubStr[1]{##2}{|}{\get@index@command##2+}{\get@index@command##2|+}%
+        \get@edindex@ledinnote@command%
         \expandafter\protected@write\@indexfile{}%
           {\string\indexentry{\@index@txt|(\@ledinnote@command}{\thestartpageline}
           }%
