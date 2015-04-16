@@ -13127,61 +13127,55 @@
       }%
     }%
 %    \end{macrocode}
-% Now, if the \verb|hyperref+xindy| option of \eledmac{} is enabled
 %    \begin{macrocode}
-    {%
-    \ifxindyhyperref@%
+% If we use both xindy and hyperref, first get  the \cs{index@command} command.
+% Then define \cs{@edindex@hyperref} in the form \verb+eledmacXXX+
+%    \begin{macrocode}
+    {\ifxindyhyperref@%     
       \IfSubStr{\temp@}{|}%
-      {%
-       \get@index@command#1+%
-       \ifledRcol%
-          \immediate\write\eledmac@out{
-            (define-attributes ("eledmacR\thelabidx"))^^J
-            \space\space(markup-locref^^J 
-              \eledmacmarkuplocrefdepth^^J
-              :open "\string\hyperlinkR{\edindexlab\thelabidx}{\@backslashchar\@index@command{"^^J
-              :close "}}"^^J
-              :attr "eledmacR\thelabidx"^^J
-              )
-            }%
-          \gdef\@edindex@hyperref{|eledmacR\thelabidx}%
-       \else%
-          \immediate\write\eledmac@out{%
-             (define-attributes ("eledmac\thelabidx"))^^J
-             \space\space(markup-locref^^J 
-               \eledmacmarkuplocrefdepth^^J
-               :open "\string\hyperlink{\edindexlab\thelabidx}{\@backslashchar\@index@command{"^^J
-               :close "}}"^^J
-               :attr "eledmac\thelabidx"^^J
-               )
-             }%
-          \gdef\@edindex@hyperref{|\@index@parenthesis eledmac\thelabidx}%
-       \fi%
-      }%
-      {\get@index@command#1|+%
-        \ifledRcol%
-          \immediate\write\eledmac@out{%
-            (define-attributes ("eledmacR\thelabidx"))^^J
-            \space\space(markup-locref^^J
-              \eledmacmarkuplocrefdepth^^J^^J
-              :open "\string\hyperlinkR{\edindexlab\thelabidx}{" :close "}"^^J
-              :attr "eledmacR\thelabidx"^^J
-              )
-            }%
-          \gdef\@edindex@hyperref{|eledmacR\thelabidx}%
-       \else%
-          \immediate\write\eledmac@out{%
-             (define-attributes ("eledmac\thelabidx"))^^J
-             \space\space(markup-locref^^J 
-               \eledmacmarkuplocrefdepth^^J
-               :open "\string\hyperlink{\edindexlab\thelabidx}{"^^J 
-               :close "}"^^J 
-               :attr "eledmac\thelabidx"^^J
-               )
-             }%
-          \gdef\@edindex@hyperref{|eledmac\thelabidx}%
-       \fi%     
-      }%
+        {\get@index@command#1+}%
+        {\get@index@command#1|+}%
+     \gdef\@edindex@hyperref{|eledmac\thelabidx}%
+%    \end{macrocode}
+% If we start a reference range by a opening parenthesis,
+% store the \cs{thelabidx} for the current \cs{edindex}, and then define \cs{@edindex@hyperref} on the form \verb+|(eledmac\thelabidx+.
+%    \begin{macrocode}
+      \IfStrEq{\@index@parenthesis}{(}%
+        {%
+        \csxdef{xindyparenthesis@\@index@txt}{\thelabidx}%
+        \gdef\@edindex@hyperref{|(eledmac\thelabidx}%
+        }%
+        {}%
+%    \end{macrocode}
+% This \cs{thelabidx} will be called back at the closing parenthesis, to have the same number in  
+% \cs{@edindex@hyperref} command than at the opening parenthesis.
+% \cs{@edindex@hyperref} start by a closing parenthesis, then followed by \verb+eledmacXXX+ where \verb+XXX+ is the \cs{thelabidx} of the opening \cs{edindex}.
+%    \begin{macrocode}
+      \IfStrEq{\@index@parenthesis}{)}%
+        {%
+        \xdef\@edindex@hyperref{|)eledmac\csuse{xindyparenthesis@\@index@txt}}%
+        \global\csundef{xindyparenthesis@\@index@txt}%
+        }%
+%    \end{macrocode}
+% Write in the .xdy file the attributes of the location. 
+%    \begin{macrocode}
+        {
+        \immediate\write\eledmac@out{%
+          (define-attributes ("eledmac\thelabidx"))^^J
+          \space\space(markup-locref^^J
+            \eledmacmarkuplocrefdepth^^J
+            :open "\string\hyperlink%
+                   \ifledRcol R\fi%
+                   {\edindexlab\thelabidx}%
+                   {\ifdefempty{\@index@command}%
+                     {}%
+                     {\@backslashchar\@index@command}%
+                   {"^^J
+            :close "}}"^^J
+            :attr "eledmac\thelabidx"^^J
+            )
+          }%
+        }%
 %    \end{macrocode}
 % And now, in any other case.
 %    \begin{macrocode}
