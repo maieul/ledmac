@@ -1065,6 +1065,7 @@
 % Note that if you use it in \cs{stanza}, you must call it at the beginning of the verse.
 % \section{The apparatus}
 % \subsection{Commands}
+% \subsubsection{The lemma}
 % \DescribeMacro{\edtext}
 % Within numbered paragraphs, all footnotes and endnotes are generated
 % by the \cs{edtext} macro:
@@ -1129,7 +1130,7 @@
 % \cs{lemma} and \cs{linenum} commands may be used to
 % generate overlapping notes if necessary.)
 %
-% \paragraph{Commands used in {\tt\protect\bslash edtext}'s second argument}
+% \subsubsection{Footnotes}
 %
 % The second argument of the \cs{edtext} macro, \meta{commands},
 % may contain a series of subsidiary commands that generate
@@ -1142,14 +1143,15 @@
 % \DescribeMacro{\Efootnote}
 % \DescribeMacro{\Zfootnote}
 % Six separate series of the footnotes are maintained; each macro
-% takes one argument like \cs{Afootnote}\marg{text}. When all of the five
+% takes one argument like \cs{Afootnote}\marg{text}. 
+% When all of the six
 % are used, the \texttt{A} notes appear in a layer just below the main
 % text, followed by the rest in turn, down to the \texttt{Z} notes at
-% the bottom.  These are the main macros that you will use to construct
-% the critical apparatus of your text. The package provides five
-% layers of notes in the belief that this will be adequate for
-% the most demanding editions.  But it is not hard to add further
-% layers of notes should they be required.
+% the bottom.  
+% These are the main macros that you will use to construct
+% the critical apparatus of your text. 
+%
+% If you need more series of critical notes, please look at \reff{newseries}.
 %
 %\changes{v1.0}{2012/09/15}{Options nonum and nosep in \cs{Xfootnote}.}
 %\changes{v1.20.0}{2015/03/22}{Options fulllines in \cs{Xfootnote}.}\label{Xfootnoteopt}
@@ -1163,6 +1165,7 @@
 %
 % Example: \cs{Afootnote}\verb|[nonum]|\marg{text}.
 %
+% \subsubsection{Endnotes}
 % \DescribeMacro{\Aendnote}
 % \DescribeMacro{\Bendnote}
 % \DescribeMacro{\Cendnote}
@@ -1170,7 +1173,10 @@
 % \DescribeMacro{\Eendnote}
 % \DescribeMacro{\Zendnote}
 % The package also maintains six separate series of endnotes.
-% Like footnotes each macro takes an optional argument and single argument like\\
+%
+% If you do not use endnotes, you should use \verb+noend+ option when loading \Lpack{eledmac}.
+%
+% Like footnotes, each macro takes an optional argument and single argument like\\
 % \cs{Aendnote}\oarg{option}\marg{text}.
 % 
 % \verb+[<option>]+ can contain a comma separated list of value. Available values are: 
@@ -1179,15 +1185,38 @@
 % \item \verb|nosep| to disable the lemma separator for this note. 
 % \end{itemize}
 %
+% \label{doendnotes} Normally, no endnotes are printed: you must use the
+% \cs{doendnotes}\marg{s}, where \meta{s} is a series letter, macro to call for their
+% output at the appropriate point in your document.
+% 
+% \changes{v1.22.0}{2015/04/21}{Add \cs{doendnotesbysection} command.}
+% \changes{v1.22.0}{2015/04/21}{Unify endnotes handbook.}
+% In this case, all the endnotes of the \meta{s} series are printed, for all numbered section.
+% \DescribeMacro{\doendnotesbysection}However, you may want to print the endnotes of one series for the first numbered section, then the endnotes of another series for the first numbered section, then the endnotes of one series for the second numbered section, the endnotes of another series for the second numbered section etc.
+% In this case, use \cs{doendnotesbysection}\marg{s}. 
+% For each value of \meta{s}, the first call of the command will print the notes for the first series, the second call will print the notes for the second series etc.
+% For example, do:
+% \begin{verbatim}
+% \section{Endnotes}
+% \subsection{First text}
+% \doendnotesbysection{A}
+% \doendnotesbysection{B}
+% \subsection{Second text}
+% \doendnotesbysection{A}
+% \doendnotesbysection{B}
+% \end{verbatim}
+% 
 % Note that by default in endnote no separator is used between lemma and the content. 
 % However you can use the \cs{Xendlemmaseparator} macro to define one (\reff{Xendlemmaseparator}).
 %
-% Normally, no endnotes are printed: you must use the
-% \cs{doendnotes} macro described below
-% (\reff{doendnotes}) to call for their
-% output at the appropriate point in your document.
+% As endnotes may be printed at any point in the document they always
+% start with the page number of where they were specified. The
+% macro \cs{printnpnum}\marg{num} is used to print these numbers.
+% Its default definition is: \\
+% \verb?\newcommand*{\printnpnum}[1]{p.#1) }?
 %
-% \paragraph{Paragraph in critical apparatus}
+%
+% \subsubsection{Paragraph in critical apparatus}
 % By default, no paragraph can be made in the notes of critical apparatus. 
 % You can allow it by adding the options \verb+parapparatus+ when loading the package :
 % \begin{verbatim}
@@ -2054,28 +2083,6 @@
 % package.
 %
 %
-% \section{Endnotes}
-%
-% \DescribeMacro{\doendnotes}
-% \DescribeMacro{\endprint}
-% \DescribeMacro{\printnpnum}
-% \phantomsection\label{doendnotes}\relax
-% \cs{doendnotes}\marg{letter} closes the \file{.end} file that contains
-% the text of the endnotes, if it's open, and
-% prints one series of endnotes, as specifed by a series-letter
-% argument, e.g., \verb"\doendnotes{A}". \cs{endprint} is the
-% macro that's called to print each note. It uses
-% \cs{select@lemmafont}
-% to select fonts, just as the footnote
-% macros do (see \reff{notefonts} above).
-%
-% As endnotes may be printed at any point in the document they always
-% start with the page number of where they were specified. The
-% macro \cs{printnpnum}\marg{num} is used to print these numbers.
-% Its default definition is: \\
-% \verb?\newcommand*{\printnpnum}[1]{p.#1) }?
-%
-% If you do not use endnotes, you should use \verb+noend+ option when loading \Lpack{eledpar}.
 %
 % \section{Cross referencing}
 % \changes{v1.12.0}{2014/08/05}{Add hyperlink to crossref (needs \Lpack{hyperref} package).}
@@ -2809,14 +2816,14 @@
 % At the second run, you will see the formating.
 % And consequently, at the third run, you will see the table of contents. 
 %
-% For technical reasons, the page break before \cs{elechapter} can't be added automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbering section.
+% For technical reasons, the page break before \cs{elechapter} can't be added automatically. You have to insert it manually via \cs{beforeeledchapter}, which must be called outside of a numbered section.
 % \DescribeMacro{\noeledsec}
 % If you aren't going to have any \cs{eledxxx} commands, then load \Eledmac{} with \cs{noeledsec} option. 
 % That will suppress the generation of unneeded \file{.eledsec} file, keep memory and make \Lpack{eledmac} faster.
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environment can be used so that same definition/note appears both inside and outside a numbered section.
 % The typographical consequences will resemble the outside numbered sections, based on the styles of the \emph{book} class.
-% However, if you use a package that redefines these environments, these redefinitions won't be available inside the numbering section.
+% However, if you use a package that redefines these environments, these redefinitions won't be available inside the numbered section.
 % You must open any quotation environments inside a \cs{start}-\cs{pend} block, not outside. 
 % A quotation environment MUST not be opened immediately after a \cs{pstart} 
 % and MUST not be closed immediately before a \cs{pend}.
@@ -10427,6 +10434,27 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\doendnotesbysection}
+% \cs{doendnotesbysection} is a variant of the previous macro.
+% While \cs{doendnotes} print endnotes for all numbered section 
+% \cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, for the second section at its second call for the same series, for the third section at its third call for the same series, etc.
+%    \begin{macrocode}
+\newcommand*{\doendnotesbysection}[1]{%
+ \l@dend@close%
+ \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
+ \begingroup%
+    \makeatletter%
+    \def\l@d@section##1{%
+      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
+        {\cslet{#1end}{\endprint}}%
+        {\cslet{#1end}{\@gobblefive}}%
+    }%
+    \input\jobname.end%
+    \global\Xendinsertsep@false%
+ \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\noendnotes}
 % \changes{v1.21.0}{2015/04/13}{\cs{noendnotes} deprecated, prefer noend option.}
 % The \cs{noendnotes} command is deprecated. 
@@ -10706,6 +10734,10 @@
 % We need to be able to modify \Eledmac's footnote macros and restore their
 %    \begin{macrocode}
       \global\csletcs{#1@@footnote}{#1footnote}
+%    \end{macrocode}
+% We need to store the number of time \cs{doendnotesbysection} is called for one series.
+%    \begin{macrocode}
+   \global\expandafter\newcount\csname #1end@bysection\endcsname%
 %    \end{macrocode}
 % \subsubsection{The options}
 %    \begin{macrocode}
@@ -15183,7 +15215,7 @@
 % \begin{macro}{\endquote}
 % \changes{v1.12.0}{2014/08/05}{\cs{ledxxx} sectioning commands are deprecated and replaced by \cs{eledxxx} commands.}
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
-% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbering sections.}
+% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbered sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
 % \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
 % \changes{v1.8.0}{2013/12/13}{Correction of sectioning commands in parallel texts.}
