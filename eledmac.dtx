@@ -10164,6 +10164,12 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+  \ifXendinsertsep@%
+    \hskip\csuse{Xendafternote@#4}%
+    \csuse{Xendsep@#4}%
+  \else%
+    \global\Xendinsertsep@true%
+  \fi%
   \xdef\@currentseries{#4}%
   \def\do##1{%
    \toggletrue{##1@}%
@@ -10192,7 +10198,8 @@
      \csuse{Xendlemmaseparator@#4}%
      \hskip\csuse{Xendafterlemmaseparator@#4}%
     }%
-  #3\par%
+  #3%
+  \nottoggle{Xendparagraph@#4}{\par}{}%
   \togglefalse{fulllines@}%
   \togglefalse{nosep@}%
 }}%
@@ -10348,20 +10355,24 @@
 %
 %
 % \begin{macro}{\doendnotes}
+% \begin{macro}{\ifXendinsertsep@}
 % \cs{doendnotes} is
 % the command you use to print one series of endnotes; it
 % takes one argument: the series letter of the note series you want
 % to print.
+% \cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the end.
 %    \begin{macrocode}
+\newif\ifXendinsertsep@%
 \newcommand*{\doendnotes}[1]{\l@dend@close
    \begingroup
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
       \input\jobname.end
+      \global\Xendinsertsep@false%
    \endgroup}
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 % \begin{macro}{\noendnotes}
 % \changes{v1.21.0}{2015/04/13}{\cs{noendnotes} deprecated, prefer noend option.}
 % The \cs{noendnotes} command is deprecated. 
@@ -10660,7 +10671,6 @@
       \newtoggle{Xendparagraph@#1}%
       \csgdef{Xendafternote@#1}{1em plus.4em minus.4em}%
       \csgdef{Xendsep@#1}{}%
-      \newtoggle{Xendinsertsep@#1}%Internal, not a hook to be used. Set to true a the begin of the first endnote of the series
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
