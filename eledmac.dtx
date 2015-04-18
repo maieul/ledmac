@@ -10427,6 +10427,27 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\doendnotesbysection}
+% \cs{doendnotesbysection} is a variant of the previous macro.
+% While \cs{doendnotes} print endnotes for all numbered section 
+% \cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, for the second section at its second call for the same series, for the third section at its third call for the same series, etc.
+%    \begin{macrocode}
+\newcommand*{\doendnotesbysection}[1]{%
+ \l@dend@close%
+ \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
+ \begingroup%
+    \makeatletter%
+    \def\l@d@section##1{%
+      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
+        {\cslet{#1end}{\endprint}}%
+        {\cslet{#1end}{\@gobblefive}}%
+    }%
+    \input\jobname.end%
+    \global\Xendinsertsep@false%
+ \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\noendnotes}
 % \changes{v1.21.0}{2015/04/13}{\cs{noendnotes} deprecated, prefer noend option.}
 % The \cs{noendnotes} command is deprecated. 
@@ -10706,6 +10727,10 @@
 % We need to be able to modify \Eledmac's footnote macros and restore their
 %    \begin{macrocode}
       \global\csletcs{#1@@footnote}{#1footnote}
+%    \end{macrocode}
+% We need to store the number of time \cs{doendnotesbysection} is called for one series.
+%    \begin{macrocode}
+   \global\expandafter\newcount\csname #1end@bysection\endcsname%
 %    \end{macrocode}
 % \subsubsection{The options}
 %    \begin{macrocode}
