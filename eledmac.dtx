@@ -1170,13 +1170,24 @@
 % \DescribeMacro{\Eendnote}
 % \DescribeMacro{\Zendnote}
 % The package also maintains six separate series of endnotes.
-% Like footnotes each macro takes a single argument like 
-% \cs{Aendnote}\marg{text}.
-% Normally, none of them are printed: you must use the
+% Like footnotes each macro takes an optional argument and single argument like\\
+% \cs{Aendnote}\oarg{option}\marg{text}.
+% 
+% \verb+[<option>]+ can contain a comma separated list of value. Available values are: 
+% \begin{itemize}
+% \item \verb|fulllines| to disable \cs{Xendtwolines} and \cs{Xendmorethantwolines} features for this note (cf. \reff{twolines}).
+% \item \verb|nosep| to disable the lemma separator for this note. 
+% \end{itemize}
+%
+% Note that by default in endnote no separator is used between lemma and the content. 
+% However you can use the \cs{Xendlemmaseparator} macro to define one (\reff{Xendlemmaseparator}).
+%
+% Normally, no endnotes are printed: you must use the
 % \cs{doendnotes} macro described below
 % (\reff{doendnotes}) to call for their
 % output at the appropriate point in your document.
 %
+% \paragraph{Paragraph in critical apparatus}
 % By default, no paragraph can be made in the notes of critical apparatus. 
 % You can allow it by adding the options \verb+parapparatus+ when loading the package :
 % \begin{verbatim}
@@ -1455,9 +1466,10 @@
 % \DescribeMacro{\boxXendlinenum}
 % \changes{v1.20.0}{2015/03/22}{Add \cs{boxXendlinenum}}
 % \cs{boxXendlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} except in endnotes.
-%\subsubsection{Separator between the lemma and the note content}
+%\subsubsection{Separator between the lemma and the note}
+% \paragraph{For footnotes}
 % \DescribeMacro{\lemmaseparator}
-% By default,  in a footnote, the separator between the  lemma and  thenote is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
+% By default,  in a footnote, the separator between the  lemma and  the note is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
 %
 % \DescribeMacro{\beforelemmaseparator}
 % Using \cs{beforelemmaseparator}\oarg{s}\marg{l} you can add some space between lemma and separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
@@ -1470,6 +1482,26 @@
 %
 % \DescribeMacro{\inplaceoflemmaseparator}
 % With \cs{inplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 1~em. 
+%
+
+% \paragraph{For endnotes}\label{Xendlemmaseparator}
+% \changes{v1.22.0}{2015/04/21}{Add option for lemma separator in endnote}
+% \DescribeMacro{\Xendlemmaseparator}
+% By default,  in a endnote, there is no separator between the  lemma and  the note. You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. 
+% An usual value of \verb+<lemmaseparator>+ is \verb+\rbracket+.
+%
+% Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
+%
+% \DescribeMacro{\Xendbeforelemmaseparator}
+% Using \cs{Xendbeforelemmaseparator}\oarg{s}\marg{l} you can add some space between lemma and separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
+%
+% \DescribeMacro{\Xendafterlemmaseparator}
+%  Using \cs{Xendafterlemmaseparator}\oarg{s}\marg{l} you can add some space between separator and note. If your lemma separator is empty, this space won't be printed. The default value is 0.5~em.
+%
+%
+% \DescribeMacro{\Xendinplaceoflemmaseparator}
+% With \cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 0.5~em. 
+%
 %
 % \subsubsection{Font style}
 % \DescribeMacro{\Xnotenumfont}
@@ -1577,7 +1609,7 @@
 % You can add some space after a note by using \cs{afternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\parafootsep}
-% For paragraphed footnotes (see below), you can chooce the separator between each note by \cs{parafootsep}\oarg{s}\marg{l}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
+% For paragraphed footnotes (see below), you can choose the separator between each note by \cs{parafootsep}\oarg{s}\marg{text}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
 %
 % \changes{v1.12.0}{2014/08/05}{New options for ragged-paragraph notes}
 % \DescribeMacro{\Xragged}
@@ -1669,6 +1701,17 @@
 %   \item \cs{Xnoteswidthliketwocolumns}\oarg{s} to create critical notes with a two-column size width. Use \cs{Xnoteswidthliketwocolumns}\oarg{s}\verb+[false]+ to disable it.
 %   \item \cs{notesXwidthliketwocolumns}\oarg{s} to create familiar notes with a two-column size width. Use \cs{notesXwidthliketwocolumns}\oarg{s}\verb+[false]+ to disable it.
 % \end{itemize}
+% \subsubsection{Endnotes in one paragraph}
+% \changes{v1.12.0}{2015/04/21}{Add \cs{Xendparagraph} and related setting.}
+% \DescribeMacro{\Xendparagraph}
+% By default, a new endnote starts a new paragraph.
+% Use \cs{Xendparagraph}\oarg{series} to have all end notes of a same series in one paragraph.
+%
+% \DescribeMacro{\Xendafternote}
+% You can add some space after a endnote by using \cs{Xendafternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
+%
+% \DescribeMacro{\Xendsep}
+%  you can choose the separator between each note by \cs{Xendsep}\oarg{s}\marg{text}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{Xendsep}\verb+{$||$}+.
 % \subsection{Fonts}\label{fonts}
 % One of the most important features of the appearance of the notes,
 % and indeed of your whole document, will be the fonts used. We will
@@ -10173,10 +10216,19 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+  \ifXendinsertsep@%
+    \hskip\csuse{Xendafternote@#4}%
+    \csuse{Xendsep@#4}%
+  \else%
+    \iftoggle{Xendparagraph@#4}%
+      {\global\Xendinsertsep@true}%
+      {}%
+  \fi%
   \xdef\@currentseries{#4}%
-  \IfStrEq{#5}{fulllines}%
-   {\toggletrue{fulllines@}}%
-   {}%
+  \def\do##1{%
+   \toggletrue{##1@}%
+  }%
+  \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{bhookXendnote@#4}%
   \csuse{Xendnotefontsize@#4}%
   {%
@@ -10190,8 +10242,20 @@
       {\select@lemmafont#1|#2}%
       {#2}%
   }%
-  \enskip#3\par%
+  \ifboolexpr{%
+    togl {nosep@}%
+    or test{\ifcsempty{Xendlemmaseparator@#4}}%
+    }%
+    {\hskip\csuse{Xendinplaceoflemmaseparator@#4}}%
+    {\nobreak%
+     \hskip\csuse{Xendbeforelemmaseparator@#4}%
+     \csuse{Xendlemmaseparator@#4}%
+     \hskip\csuse{Xendafterlemmaseparator@#4}%
+    }%
+  #3%
+  \nottoggle{Xendparagraph@#4}{\par}{}%
   \togglefalse{fulllines@}%
+  \togglefalse{nosep@}%
 }}%
 
 \let\l@d@section=\@gobble
@@ -10345,20 +10409,24 @@
 %
 %
 % \begin{macro}{\doendnotes}
+% \begin{macro}{\ifXendinsertsep@}
 % \cs{doendnotes} is
 % the command you use to print one series of endnotes; it
 % takes one argument: the series letter of the note series you want
 % to print.
+% \cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the end.
 %    \begin{macrocode}
+\newif\ifXendinsertsep@%
 \newcommand*{\doendnotes}[1]{\l@dend@close
    \begingroup
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
       \input\jobname.end
+      \global\Xendinsertsep@false%
    \endgroup}
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 % \begin{macro}{\noendnotes}
 % \changes{v1.21.0}{2015/04/13}{\cs{noendnotes} deprecated, prefer noend option.}
 % The \cs{noendnotes} command is deprecated. 
@@ -10618,6 +10686,7 @@
            {\expandonce\content}%
            {#1}%
            {##1}%
+           \@percentchar%
          }%
          \egroup%
          \ignorespaces%
@@ -10649,6 +10718,14 @@
       \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXendnote@#1}{}%
       \csgdef{boxXendlinenum@#1}{0pt}%
+      \csgdef{Xendlemmaseparator@#1}{}%
+      \csgdef{Xendbeforelemmaseparator@#1}{0em}%
+      \csgdef{Xendafterlemmaseparator@#1}{0.5em}%
+      \csgdef{Xendinplaceoflemmaseparator@#1}{0.5em}%
+      
+      \newtoggle{Xendparagraph@#1}%
+      \csgdef{Xendafternote@#1}{1em plus.4em minus.4em}%
+      \csgdef{Xendsep@#1}{}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -10926,6 +11003,14 @@
   \newhookcommand@series{boxXendlinenum}%
   \newhookcommand@series{Xendnotefontsize}
   \newhooktoggle@series{Xendlemmadisablefontselection}
+  \newhookcommand@series{Xendlemmaseparator}
+  \newhookcommand@series{Xendbeforelemmaseparator}
+  \newhookcommand@series{Xendafterlemmaseparator}
+  \newhookcommand@series{Xendinplaceoflemmaseparator}
+  
+  \newhooktoggle@series{Xendparagraph}
+  \newhookcommand@series{Xendafternote}
+  \newhookcommand@series{Xendsep}
 \fi
 %    \end{macrocode}
 % \subsection{Old commands, kept for backward compatibility}
