@@ -241,9 +241,9 @@
 % \changes{v1.21.0}{2015/04/13}{\cs{preXnotes} and \cs{prenotesX} features no longer create problems of overflowing at the bottom of the page.}
 % \changes{v1.21.0}{2015/04/13}{Fix spurious space after first page number in \cs{doendnotes}. oldprintnpnumspace option allows to come back to previous setting}
 % \changes{v1.21.0}{2015/04/13}{\cs{chapter} inside optional argument of \cs{pstart} works when typesetting parallel pages}
-% \changes{v1.22.0}{2015/04/21}{When using hyperref package, internal links in index or with \cs{edlineref} are targeted to the top of the lines they refer, and not to the bottom.}
+% \changes{v1.22.0}{2015/04/21}{When using hyperref package, internal links in index or with \cs{edlineref} are now targeted to the top and not any longer to the bottom of the lines they refer to.}
 % \changes{v1.22.0}{2015/04/21}{Provides support for xindy.}
-% \changes{v1.22.0}{2015/04/21}{Add hyperlink for references to note in index.}
+% \changes{v1.22.0}{2015/04/21}{Adds hyperlink for references to notes in indices.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -657,7 +657,7 @@
 % Using all these levels consumes memory space and processing speed.
 % This is why, if your work does not require all of the A-E, Z series, you can narrow down the available number of series.
 % For example, if you only need A and B series, call the package with \verb+series={A,B}+ option.
-% \item[xindy] and \verb|xindy+hyperref| are related to the use of \verb+xindy+ as index processor (\reff{xindy}).
+% \item[xindy] and \verb|xindy+hyperref| are for selecting \verb+xindy+ as the index processor (\reff{xindy}).
 % \item[widthliketwocolumns] set the width of the text disposed on one column to be the same as the width of the text disposed on two parallel columns with \Lpack{eledpar}. This is useful when alternating between normal and parallel typesetting.
 % \end{description}
 % \section{Text lines and paragraphs numbering}
@@ -1174,26 +1174,25 @@
 % \DescribeMacro{\Zendnote}
 % The package also maintains six separate series of endnotes.
 %
-% If you do not use endnotes, you should use \verb+noend+ option when loading \Lpack{eledmac}.
+% If you do not need the endnotes facility, you should use \verb+noend+ option when loading \Lpack{eledmac}.
 %
-% Like footnotes, each macro takes an optional argument and single argument like\\
+% The mechanism is similar to the one for footnotes: each macro takes one or more optional arguments and one single argument, like:\\
 % \cs{Aendnote}\oarg{option}\marg{text}.
 % 
-% \verb+[<option>]+ can contain a comma separated list of value. Available values are: 
+% \verb+[<option>]+ can contain a comma separated list of values. Allowed values are: 
 % \begin{itemize}
-% \item \verb|fulllines| to disable \cs{Xendtwolines} and \cs{Xendmorethantwolines} features for this note (cf. \reff{twolines}).
-% \item \verb|nosep| to disable the lemma separator for this note. 
+% \item \verb|fulllines| to disable \cs{Xendtwolines} and \cs{Xendmorethantwolines} features for this particular note (cf. \reff{twolines}).
+% \item \verb|nosep| to disable the lemma separator for this particular note. 
 % \end{itemize}
 %
-% \label{doendnotes} Normally, no endnotes are printed: you must use the
-% \cs{doendnotes}\marg{s}, where \meta{s} is a series letter, macro to call for their
-% output at the appropriate point in your document.
+% \label{doendnotes} Normally, endnotes are not printed: you must use the
+% \cs{doendnotes}\marg{s}, where \meta{s} is the letter of the series to be printed. Put this command where you want the corresponding set of endnotes printed.
 % 
 % \changes{v1.22.0}{2015/04/21}{Add \cs{doendnotesbysection} command.}
-% \changes{v1.22.0}{2015/04/21}{Unify endnotes handbook.}
+% \changes{v1.22.0}{2015/04/21}{Standardize endnotes handbook.}
 % In this case, all the endnotes of the \meta{s} series are printed, for all numbered section.
-% \DescribeMacro{\doendnotesbysection}However, you may want to print the endnotes of one series for the first numbered section, then the endnotes of another series for the first numbered section, then the endnotes of one series for the second numbered section, the endnotes of another series for the second numbered section etc.
-% In this case, use \cs{doendnotesbysection}\marg{s}. 
+% \DescribeMacro{\doendnotesbysection}However, you may want to print the endnotes of one given series covering the first numbered section, then the endnotes of another given series covering the first numbered section, then the endnotes of the first given series covering the second numbered section, then the endnotes of the second given series covering the second numbered section, and so forth.
+% In this case, use \cs{doendnotesbysection}\marg{s}.
 % For each value of \meta{s}, the first call of the command will print the notes for the first series, the second call will print the notes for the second series etc.
 % For example, do:
 % \begin{verbatim}
@@ -1206,11 +1205,11 @@
 % \doendnotesbysection{B}
 % \end{verbatim}
 % 
-% Note that by default in endnote no separator is used between lemma and the content. 
+% Note that by default inside endnotes no separator is used between the lemma and the content. 
 % However you can use the \cs{Xendlemmaseparator} macro to define one (\reff{Xendlemmaseparator}).
 %
 % As endnotes may be printed at any point in the document they always
-% start with the page number of where they were specified. The
+% start with the page number where they are called. The
 % macro \cs{printnpnum}\marg{num} is used to print these numbers.
 % Its default definition is: \\
 % \verb?\newcommand*{\printnpnum}[1]{p.#1) }?
@@ -1441,7 +1440,7 @@
 % \changes{v1.18.0}{2015/02/23}{Debug \cs{onlypstartinfootnote} when using \cs{numberonlyfirstinline} and the current line number differs from the previous.}
 % \DescribeMacro{\pstartinfootnote}
 % You can use \cs{pstartinfootnote}\oarg{s} if you want to print the pstart number in the footnote, before the line and subline number. 
-% Use \cs{pstartinfootnote}\oarg{s}\verb+[false]+ to cancel it (\meta{s} can be empty if you want to disable it for every series).
+% Use \cs{pstartinfootnote}\oarg{s}\verb+[false]+ to disable this (\meta{s} can be empty if you want to disable it for every series).
 % Note that when you change the lineation system, the option is automatically switched :
 % \begin{itemize}
 %    \item If you use lineation by pstart, the option is enabled.
@@ -1456,7 +1455,7 @@
 %
 % \DescribeMacro{\onlypstartinfootnote}
 % In combination with \cs{pstartinfootnote}, you can use \cs{onlypstartinfootnote}\oarg{s} if you want to print only the pstart number in the footnote, and not the line and subline number.
-% Use \cs{onlypstartinfootnote}\oarg{s}\verb+[false]+ to cancel it (\meta{s} can be empty if you want to disable it for every series).
+% Use \cs{onlypstartinfootnote}\oarg{s}\verb+[false]+ disable this it (\meta{s} can be empty if you want to disable it for every series).
 % 
 % \DescribeMacro{\beforenumberinfootnote}
 % With \cs{beforenumberinfootnote}\oarg{s}\marg{l}, you can add some space before the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0~pt.
@@ -1466,7 +1465,7 @@
 %
 %\changes{v1.4.3}{2012/12/18}{Add \cs{nonbreakableafternumber}.}
 %\DescribeMacro{\nonbreakableafternumber}
-% By default, the space defined by \cs{afternumberinfootnote} is breakable. With \cs{nonbreakableafternumber}\oarg{s} it becomes nonbreakable. Use \cs{nonbreakableafternumber}\oarg{s}\verb+[false]+ to cancel it (\meta{s} can be empty if you want to disable it for every series).
+% By default, the space defined by \cs{afternumberinfootnote} is breakable. With \cs{nonbreakableafternumber}\oarg{s} it becomes nonbreakable. Use \cs{nonbreakableafternumber}\oarg{s}\verb+[false]+ to disable this (\meta{s} can be empty if you want to disable it for every series).
 %
 % \DescribeMacro{\beforesymlinenum} 
 % With \cs{beforesymlinenum}\oarg{s}\marg{l} you can add some space before the line symbol in a footnote. The default value is value set by \cs{beforenumberinfootnote}.
@@ -1498,7 +1497,7 @@
 %\subsubsection{Separator between the lemma and the note}
 % \paragraph{For footnotes}
 % \DescribeMacro{\lemmaseparator}
-% By default,  in a footnote, the separator between the  lemma and  the note is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
+% By default, in a footnote, the separator between the  lemma and the note is a right bracket (\cs{rbracket}). You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify the series in which it is used. Note that there is a non-breakable space between the lemma and the separator, but a \textbf{breakable} space between the separator and the lemma.
 %
 % \DescribeMacro{\beforelemmaseparator}
 % Using \cs{beforelemmaseparator}\oarg{s}\marg{l} you can add some space between lemma and separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
@@ -1512,24 +1511,24 @@
 % \DescribeMacro{\inplaceoflemmaseparator}
 % With \cs{inplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 1~em. 
 %
-
+% 
 % \paragraph{For endnotes}\label{Xendlemmaseparator}
-% \changes{v1.22.0}{2015/04/21}{Add option for lemma separator in endnote}
+% \changes{v1.22.0}{2015/04/21}{Add option for lemma separator inside endnotes}
 % \DescribeMacro{\Xendlemmaseparator}
-% By default,  in a endnote, there is no separator between the  lemma and  the note. You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change it. The optional argument can be used to specify in which series it is applied. 
-% An usual value of \verb+<lemmaseparator>+ is \verb+\rbracket+.
+% By default, there is no separator inside endnotes between the lemma and the content of the note. You can use \cs{lemmaseparator}\oarg{s}\marg{lemmaseparator} to change this. The optional argument can be used to specify the series in which it is used. 
+% An common value of \verb+<lemmaseparator>+ is \verb+\rbracket+.
 %
-% Note that there is a non-breakable space between lemma and separator, but \textbf{breakable} space between separator and lemma.
+% Note that there is a non-breakable space between the lemma and the separator, but a \textbf{breakable} space between the separator and the lemma.
 %
 % \DescribeMacro{\Xendbeforelemmaseparator}
-% Using \cs{Xendbeforelemmaseparator}\oarg{s}\marg{l} you can add some space between lemma and separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
+% Using \cs{Xendbeforelemmaseparator}\oarg{s}\marg{l} you can add some space between the lemma and the separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
 %
 % \DescribeMacro{\Xendafterlemmaseparator}
-%  Using \cs{Xendafterlemmaseparator}\oarg{s}\marg{l} you can add some space between separator and note. If your lemma separator is empty, this space won't be printed. The default value is 0.5~em.
+%  Using \cs{Xendafterlemmaseparator}\oarg{s}\marg{l} you can add some space between the separator and the content of the note. If your lemma separator is empty, this space won't be printed. The default value is 0.5~em.
 %
 %
 % \DescribeMacro{\Xendinplaceoflemmaseparator}
-% With \cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 0.5~em. 
+% With \cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add some space if you chose to remove the lemma separator. The default value is 0.5~em. 
 %
 %
 % \subsubsection{Font style}
@@ -1638,7 +1637,7 @@
 % You can add some space after a note by using \cs{afternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\parafootsep}
-% For paragraphed footnotes (see below), you can choose the separator between each note by \cs{parafootsep}\oarg{s}\marg{text}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{parafootsep}\verb+{$||$}+.
+% For paragraphed footnotes (see below), you can choose the separator between each note by using \cs{parafootsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{parafootsep}\verb+{$\parallel$}+.
 %
 % \changes{v1.12.0}{2014/08/05}{New options for ragged-paragraph notes}
 % \DescribeMacro{\Xragged}
@@ -1731,16 +1730,16 @@
 %   \item \cs{notesXwidthliketwocolumns}\oarg{s} to create familiar notes with a two-column size width. Use \cs{notesXwidthliketwocolumns}\oarg{s}\verb+[false]+ to disable it.
 % \end{itemize}
 % \subsubsection{Endnotes in one paragraph}
-% \changes{v1.12.0}{2015/04/21}{Add \cs{Xendparagraph} and related setting.}
+% \changes{v1.12.0}{2015/04/21}{Add \cs{Xendparagraph} and related settings.}
 % \DescribeMacro{\Xendparagraph}
-% By default, a new endnote starts a new paragraph.
-% Use \cs{Xendparagraph}\oarg{series} to have all end notes of a same series in one paragraph.
+% By default, any new endnote starts a new paragraph.
+% Use \cs{Xendparagraph}\oarg{series} to have all end notes of one given series set in one paragraph.
 %
 % \DescribeMacro{\Xendafternote}
-% You can add some space after a endnote by using \cs{Xendafternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
+% You can add some space after a endnote series by using \cs{Xendafternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\Xendsep}
-%  you can choose the separator between each note by \cs{Xendsep}\oarg{s}\marg{text}. A common separator is a double pipe (\verb+$||$+), which you can set by \cs{Xendsep}\verb+{$||$}+.
+%  you can choose the separator between each note by \cs{Xendsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{Xendsep}\verb+{$\parallel$}+.
 % \subsection{Fonts}\label{fonts}
 % One of the most important features of the appearance of the notes,
 % and indeed of your whole document, will be the fonts used. We will
@@ -2424,8 +2423,8 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% Note that the file \verb+.idx+ will contains the good reference only after the third run, because of the internal system of indexing with \Lpack{eledmac}.
-% That means you must run three times (Xe/Lua)\LaTeX, then run \verb+makeindex+ and after run again (Xe/Lua)\LaTeX to have a correct indexing.
+% Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \Lpack{eledmac}.
+% That means you must first run three times (Xe/Lua)\LaTeX, then run \verb+makeindex+ and finally run again (Xe/Lua)\LaTeX to get an index with the right page numbers.
 %
 % If the \Lclass{memoir} class or the \Lpack{imakeidx} or \Lpack{indextools} package is used then the macro takes an optional
 % argument, which is the name of a raw index file. For example
@@ -2467,33 +2466,33 @@
 % You can change |\edindexlab| to something else if you need to.
 %
 % \subsection{Using xindy}\label{xindy}
-% If you have decided to use \verb+xindy+ instead of \verb+makeindex+ 
-% to transform your \verb+.idx+ files to \verb+.ind+ files,
-% you must use specific configuration file (\verb+.xdy+) to allow
-% \verb+xindy+ to understand the \Lpack{eledmac} referencs syntaxis in the form:\\
+% Should you decide to use \verb+xindy+ instead of \verb+makeindex+ 
+% to transform your \verb+.idx+ files into \verb+.ind+ files,
+% you must use some specific configuration file (\verb+.xdy+) so that
+% \verb+xindy+ can understand \Lpack{eledmac} reference syntax of which the scheme is:\\
 % \verb+pagenumber-linenumber+
 %
-% Such file is provided in the ``\href{examples/.}{examples}'' folder.
+% An example of such a file is provided in the ``\href{examples/.}{examples}'' folder.
 % Read the xindy handbook to know how to use it.\footnote{Or, for people 
 % who read French, read \url{http://geekographie.maieul.net/174}.}
 %
-% This file also provides commented configuration lines in order to wrap
-% the eledmac lines numbers in parenthesis, 
-% to make a better distinction with page range.
+% This file also provides, with an explanation, the settings that are needed to put
+% eledmac lines numbers in parenthesis, in order
+% to make a better distinction between line numbers and page ranges.
 %
 % In any case, you must load \Lpack{eledmac} with the \verb+xindy+ option,
-% in order to produce a \verb|.xdy| file specific to your document.
-% This file is called by the \verb+.xdy+ example file.
+% in order to generate a \verb|.xdy| file which is specific to your document.
+% This file is needed by the \verb+.xdy+ example file which is in the ``\href{examples/.}{examples}'' folder.
 % Its default name is \verb+eledmac-markup-attr.xdy+,
-% but you can change with providing custom name as argument of the \verb|xindy+hyperref| option.
+% but you can change it by using your own as an argument of the \verb|xindy+hyperref| option.
 %
-% If you use both \verb+xindy+ and the \verb+hyperref+ package,
+% If you chose to use both \verb+xindy+ and the \verb+hyperref+ package,
 % you must do three more things:
 % \begin{enumerate}
 %   \item Use \verb|xindy+hyperref| option when loading the \Lpack{eledmac} package.
-% When running (Xe/Lua)\LaTeX, this option will generate \verb+.xdy+ configuration file will specific setting in order to allow internal hyperlink in the index entry created by \cs{edindex}. 
+% When you run (Xe/Lua)\LaTeX with this option, a \verb+.xdy+ configuration file will be generated with all the settings needed to allow internal hyperlinking in each index entry which is created by \cs{edindex}. 
 %   \item Use \verb+hyperindex=false+ option when loading hyperref.
-%   \item Uncomment --- deleting the beginning's semicolon --- some lines in the <code>.xdy</code> file provided in the ``\href{examples/.}{examples}'' folder in order to restore internal links in the index for classical \verb+index+ command.\footnote{Theses lines are and options are recommended to provide best compatibility between hyperref and xindy, even without using \Lpack{eledmac}.}.
+%   \item Uncomment --- by removing the semicolons at the beginning of the relevant lines --- some lines in the <code>.xdy</code> file provided in the ``\href{examples/.}{examples}'' folder in order to restore internal links in the index to be used by the standard \verb+index+ command.\footnote{These are the recommended lines to provide the best possible compatibility between hyperref and xindy, even without using \Lpack{eledmac}.}.
 % \end{enumerate}
 % \section{Tabular material}
 %
@@ -10421,7 +10420,7 @@
 % the command you use to print one series of endnotes; it
 % takes one argument: the series letter of the note series you want
 % to print.
-% \cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the end.
+% \cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the last one.
 %    \begin{macrocode}
 \newif\ifXendinsertsep@%
 \newcommand*{\doendnotes}[1]{\l@dend@close
@@ -10436,8 +10435,8 @@
 % \end{macro}
 % \begin{macro}{\doendnotesbysection}
 % \cs{doendnotesbysection} is a variant of the previous macro.
-% While \cs{doendnotes} print endnotes for all numbered section 
-% \cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, for the second section at its second call for the same series, for the third section at its third call for the same series, etc.
+% While \cs{doendnotes} print endnotes for all of numbered sections 
+% \cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, then for the second section at its second call for the same series, then for the third section at its third call for the same series, and so on.
 %    \begin{macrocode}
 \newcommand*{\doendnotesbysection}[1]{%
  \l@dend@close%
@@ -10735,7 +10734,7 @@
 %    \begin{macrocode}
       \global\csletcs{#1@@footnote}{#1footnote}
 %    \end{macrocode}
-% We need to store the number of time \cs{doendnotesbysection} is called for one series.
+% We need to store the number of times \cs{doendnotesbysection} is called for one series.
 %    \begin{macrocode}
    \global\expandafter\newcount\csname #1end@bysection\endcsname%
 %    \end{macrocode}
@@ -12890,7 +12889,7 @@
 % This macro is called at the beginning of each critical note.
 % It switches some parameters, 
 % to allow indexing in this note, with reference to page and line number.
-% It also defines \cs{@ledinnote@command} which will be printed as encapsulating command after the \verb+|+.
+% It also defines \cs{@ledinnote@command} which will be printed as an encapsulating command after the \verb+|+.
 %    \begin{macrocode}
 \newcommand{\prepare@edindex@fornote}[1]{%
     \l@dp@rsefootspec#1|%
@@ -12900,9 +12899,9 @@
 % \end{macro}
 % \begin{macro}{\get@edindex@ledinnote@command}
 % The \cs{get@edindex@ledinnote@command} macro defines
-% a \cs{@ledinnote@command} command which is added as attribute (text inserted after \verb+|+) of the next index entry.
+% a \cs{@ledinnote@command} command which is added as an attribute (text inserted after \verb+|+) of the next index entry.
 %
-% Consequently, we write the definite of location reference attribute in the \verb+.xdy+ file.
+% Consequently, we write the definition of the location reference attribute in the \verb+.xdy+ file.
 %    \begin{macrocode}
 \newcommand{\get@edindex@ledinnote@command}{%
   \ifxindy@%
@@ -12931,7 +12930,7 @@
         }%
     \fi%
 %    \end{macrocode}
-% If we not use \verb+xindy+ option, \cs{@ledinnote@command} will produce
+% If we do not use \verb+xindy+ option, \cs{@ledinnote@command} will produce
 % something like \verb+ledinnote{formatingcommand}+.
 %    \begin{macrocode}
   \else%
@@ -12964,12 +12963,12 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\ledinnote}
-% \changes{v1.22.0}{2015/04/21}{\cs{ledinnote} takes an optional  first argument, which is the label for hyperlink.}
+% \changes{v1.22.0}{2015/04/21}{\cs{ledinnote} takes a fisrt optional argument, which is the label for hyperlinks.}
 % \begin{macro}{\ledinnotehyperpage}
 % \begin{macro}{\ledinnotemark}
 % \changes{v1.21.0}{2015/04/13}{Add \cs{ledinnotemark}.}
 % These macros are used to specifiy that an index reference points to a note.
-% Arguments of \cs{ledinnote}  are: \verb+#1+ (optional) the label for the hyperlink, \verb+#2+ command applied to the number, \verb+#3+ the number.
+% Arguments of \cs{ledinnote}  are: \verb+#1+ (optional): the label for the hyperlink, \verb+#2+: command applied to the number, \verb+#3+: the number itself.
 %    \begin{macrocode}
 \newcommandx{\ledinnote}[3][1,usedefault]{%
   \ifboolexpr{%
@@ -13211,7 +13210,7 @@
 %    \begin{macrocode}
 \newcommand{\get@edindex@hyperref}[1]{%
 %    \end{macrocode}
-% We have to disable temporary spaces to work with a \Lpack{xstring} bug (or feature?)
+% We have to disable temporary spaces to work through a \Lpack{xstring} bug (or feature?)
 %    \begin{macrocode}
   \edef\temp@{%
   \catcode`\ =9 %space need for catcode
@@ -13244,7 +13243,7 @@
     }%
 %    \end{macrocode}
 %    \begin{macrocode}
-% If we use both xindy and hyperref, first get  the \cs{index@command} command.
+% If we use both xindy and hyperref, first get the \cs{index@command} command.
 % Then define \cs{@edindex@hyperref} in the form \verb+eledmacXXX+
 %    \begin{macrocode}
     {\ifxindyhyperref@%     
@@ -13254,7 +13253,7 @@
      \gdef\@edindex@hyperref{|eledmac\thelabidx}%
 %    \end{macrocode}
 % If we start a reference range by a opening parenthesis,
-% store the \cs{thelabidx} for the current \cs{edindex}, and then define \cs{@edindex@hyperref} on the form \verb+|(eledmac\thelabidx+.
+% store the \cs{thelabidx} for the current \cs{edindex}, then define \cs{@edindex@hyperref} in the form \verb+|(eledmac\thelabidx+.
 %    \begin{macrocode}
       \IfStrEq{\@index@parenthesis}{(}%
         {%
@@ -13264,7 +13263,7 @@
         {}%
 %    \end{macrocode}
 % This \cs{thelabidx} will be called back at the closing parenthesis, to have the same number in  
-% \cs{@edindex@hyperref} command than at the opening parenthesis.
+% \cs{@edindex@hyperref} command that we had at the opening parenthesis.
 % \cs{@edindex@hyperref} start by a closing parenthesis, then followed by \verb+eledmacXXX+ where \verb+XXX+ is the \cs{thelabidx} of the opening \cs{edindex}.
 %    \begin{macrocode}
       \IfStrEq{\@index@parenthesis}{)}%
@@ -15215,7 +15214,7 @@
 % \begin{macro}{\endquote}
 % \changes{v1.12.0}{2014/08/05}{\cs{ledxxx} sectioning commands are deprecated and replaced by \cs{eledxxx} commands.}
 % \changes{v1.2}{2012/10/08}{Compatibility of \cs{ledchapter} with the \emph{memoir} class.}
-% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside the numbered sections.}
+% \changes{v1.3}{2012/11/01}{\emph{Quotation} and {quote} environment inside numbered sections.}
 % \changes{v1.4.1}{2012/11/16}{New option \emph{noquotation}.}
 % \changes{v1.4.7}{2012/06/07}{Compatibility of sectioning commands with \cs{autopar}.}
 % \changes{v1.8.0}{2013/12/13}{Correction of sectioning commands in parallel texts.}
@@ -16256,9 +16255,9 @@
 %  \item Add \verb+\xdef\@currentseries{#4}+ at the beginning of your own command.
 % \end{itemize}
 % \subsection{Migration to eledmac 1.22.0}
-% The \cs{ledinnote} commands takes now a first optional argument, which is the label for the hyperref. 
-% If you have redefined it, change your redefinition, and consider if you could not 
-% avoid you redefinition by redefining only \cs{ledinnotemark}.
+% The \cs{ledinnote} commands takes now a first optional argument, which is the label for the hyperreference.
+% If you have redefined it, change your redefinition, and check if you can 
+% avoid this redefinition by redefining only \cs{ledinnotemark}.
 % \clearpage
 % \bibliographystyle{alpha}
 % \phantomsection
