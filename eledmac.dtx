@@ -241,6 +241,7 @@
 % \changes{v1.21.0}{2015/04/13}{\cs{preXnotes} and \cs{prenotesX} features no longer create problems of overflowing at the bottom of the page.}
 % \changes{v1.21.0}{2015/04/13}{Fix spurious space after first page number in \cs{doendnotes}. oldprintnpnumspace option allows to come back to previous setting}
 % \changes{v1.21.0}{2015/04/13}{\cs{chapter} inside optional argument of \cs{pstart} works when typesetting parallel pages}
+% \changes{v1.22.0}{2015/04/21}{Fix bug (added on v1.19.2) with \cs{symlinenum} hook when the argument is a not full expandable macro, like \cs{textbardbl}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -10979,7 +10980,10 @@
                     {%Be sure the \prevline exists.
                     \ifcsequal{prevline#2}{lineinfo@}%Try it
                        {%
-                       \IfStrEq{\csuse{symlinenum@#2}}{}%
+                       \expandafter\ifstrempty\expandafter{\csuse{symlinenum@#2}}{}%This test use a complex construction with two expand after and not simple test. The following tests are not working:
+                       %1) single `\ifstrempty{\csuse{symlinenum@#2}}` won't work because it will test `\csuse{symlinenum@#2}` and not the expansion of `\csuse{symlinenum@#2}`. So in never case will be empty.
+                       %2) `\IfStrEq{\csuse{symlinenum@#2}}{}` is problematic for full expansion of \csuse{symlinenum@#2} when the first level of expansion is \textbardbl.
+                       %3) `\ifcsempty{symlinenum@#2}` won't work if user doesn't use `\symlinenum{}`, because the default definition of `\symlinenum@#2` is `\symplinenum` and we need to keep this definition in order to avoid breaking backward compatibility with ledmac (see http://tex.stackexchange.com/a/232734/7712 for an example of problem with `\ifcsempty{symlinenum@#2}` 
                         {%
                             \hspace{\csuse{inplaceofnumber@#2}}%
                         }%
