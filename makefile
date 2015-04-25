@@ -38,6 +38,7 @@ dist: $(PACKAGE) examples
 	$(MAKE) -C examples all
 	ln examples/*pdf eledmac/examples
 	ln examples/*tex eledmac/examples
+	ln examples/*xdy eledmac/examples
 	ln examples/makefile eledmac/examples
 
 	ln $(PACKAGE) eledmac
