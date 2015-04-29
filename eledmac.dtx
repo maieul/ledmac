@@ -1639,7 +1639,8 @@
 % You can add some space after a note by using \cs{afternote}\oarg{s}\marg{l}. The default value is \verb|1em plus.4em minus.4em|.
 %
 % \DescribeMacro{\parafootsep}
-% For paragraphed footnotes (see below), you can choose the separator between each note by using \cs{parafootsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{parafootsep}\verb+{$\parallel$}+.
+% For paragraphed footnotes (see below), you can choose the separator between each note by using \cs{parafootsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{parafootsep}\verb+{$\parallel$}+. 
+% Note that if the symbol defined by \cs{symlinenum} must be used at the begin of a notes, the \cs{parafootsep} is not used before this note.
 %
 % \changes{v1.12.0}{2014/08/05}{New options for ragged-paragraph notes}
 % \DescribeMacro{\Xragged}
@@ -8730,13 +8731,14 @@
 %The command \cs{insertparafootsep}\marg{series} must be called at the beginning of \cs{parafootftm} (and like commands). 
 % \begin{macro}{\prevpage@num} 
 % \changes{v1.8.0}{2013/12/13}{Correct \cs{parafootsep} when using with ledgroup.}
+% \changes{v1.22.1}{2015/04/29}{Correct double symbol when using both \cs{parafootsep} and \cs{symlinenum}.}
 % \begin{macro}{\insertparafootsep}
 %    \begin{macrocode}
 \newcommand{\insertparafootsep}[1]{%
    \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
         {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
       {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-         {\ifcsempty{symplinenum}{\csuse{parafootsep@#1}}{}}%
+         {\IfStrEq{\csuse{symlinenum@#1}}{\csuse{parafootsep@#1}}{}}%
          {\csuse{parafootsep@#1}}%
       }%
       {\csuse{parafootsep@#1}}%
