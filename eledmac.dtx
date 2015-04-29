@@ -244,8 +244,8 @@
 % \changes{v1.22.0}{2015/04/25}{When using hyperref package, internal links in index or with \cs{edlineref} are now targeted to the top and not longer to the bottom of the lines they refer to.}
 % \changes{v1.22.0}{2015/04/25}{Provides support for xindy.}
 % \changes{v1.22.0}{2015/04/25}{Adds hyperlink for references to notes in indices.}
-% \changes{v1.22.0}{2015/04/25}{Fix bug (added on v1.19.2) with \cs{symlinenum} hook when the argument is a not full expandable macro, like \cs{textbardbl}.}
 % \changes{v1.22.0}{2015/04/25}{Fix conflict between noend package option and edtabularx environments}
+% \changes{v1.22.1}{2015/04/29}{Fix bug (added on v1.22.0) with \cs{inplaceofnumber} hook.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1432,7 +1432,7 @@
 % 
 %
 % \DescribeMacro{\symlinenum}
-% For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of the line number. 
+% For setting a particular symbol in place of the line number, you can use \cs{symlinenum}\oarg{s}\marg{symbol} in combination with \cs{numberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of the line number. Note that any command called in \meta{symbol} must be robust. Use \cs{robustify} to robustify a not robust command.
 %
 % \DescribeMacro{\nonumberinfootnote}
 % You can use \cs{nonumberinfootnote}\oarg{s} if you don't want to have the line number in a footnote. To cancel it, use \cs{nonumberinfootnote}\oarg{s}\verb+[false]+.
@@ -3102,7 +3102,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/04/25 v1.22.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/04/29 v1.22.1 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -11063,6 +11063,13 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\textbardbl}
+% \changes{v1.22.1}{2015/04/29}{Robustify \cs{textbardbl}}
+% We need to robustify \cs{textbardbl} in order to allow it use in \cs{IfStrEq} when using as \cs{symlinenum}.
+%    \begin{macrocode}
+% \robustify{\textbardbl}
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\fulllines@}
 %\cs{fulllines@} toggle is used to print the fulllines references, and not the abbreviated form defined by \cs{twolines} and \cs{morethantwolines}.
@@ -11149,10 +11156,7 @@
                     {%Be sure the \prevline exists.
                     \ifcsequal{prevline#2}{lineinfo@}%Try it
                        {%
-                       \expandafter\ifstrempty\expandafter{\csuse{symlinenum@#2}}%This test use a complex construction with two expand after and not simple test. The following tests are not working:
-                       %1) single `\ifstrempty{\csuse{symlinenum@#2}}` won't work because it will test `\csuse{symlinenum@#2}` and not the expansion of `\csuse{symlinenum@#2}`. So in never case will be empty.
-                       %2) `\IfStrEq{\csuse{symlinenum@#2}}{}` is problematic for full expansion of \csuse{symlinenum@#2} when the first level of expansion is \textbardbl.
-                       %3) `\ifcsempty{symlinenum@#2}` won't work if user doesn't use `\symlinenum{}`, because the default definition of `\symlinenum@#2` is `\symplinenum` and we need to keep this definition in order to avoid breaking backward compatibility with ledmac (see http://tex.stackexchange.com/a/232734/7712 for an example of problem with `\ifcsempty{symlinenum@#2}` 
+                       \IfStrEq{\csuse{symlinenum@#2}}{}%
                         {%
                             \hspace{\csuse{inplaceofnumber@#2}}%
                         }%
