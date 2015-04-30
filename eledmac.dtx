@@ -8122,15 +8122,24 @@
 % ending sub-line number: it could come after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+% So, first, print ths start line number.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxstartlinenum@\@currentseries}\bgroup\hfill}%
   \ifl@d@pnum #1\fullstop\fi
   \linenumrep{#2}
+  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
 %    \end{macrocode}
+% Then print the dash + end linuber, or the range symbol.
 % \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
 %        to \cs{printlines}}
 % \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{morethantwolines@\@currentseries}%
@@ -8143,6 +8152,7 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
+  \egroup%
   \endgroup%
 }%
 %    \end{macrocode}
@@ -10423,11 +10433,23 @@
 % ending sub-line number: it could be coming after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+%
+% So, first, print the start lines.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxXendstartlinenum@\@currentseries}\bgroup\hfill}%
   \printnpnum{#1}%
   \ifoldprintnpnumspace@\space\fi%
   \linenumrep{#2}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
+%    \end{macrocode}
+% And now, print the dash + the end line number, or the line number range symbol.
+%    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxXendendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
@@ -10440,7 +10462,9 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-\endgroup}
+  \egroup%
+  \endgroup%
+}%
 
 %    \end{macrocode}
 % \end{macro}
