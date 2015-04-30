@@ -12192,15 +12192,40 @@
 % It always prints the page number, as it should be printed in the end notes.
 % The \cs{twolinesappref} and \cs{morethantwolinesappref} are similar to the footnote
 % hooks and \cs{twolines} \cs{morethantwolines}.
+%
+% So, first declare the default value of the hooks for the pseudo-series appref. 
+% Also declare the internal toggle which are switch by \eledmac{}.
 %    \begin{macrocode}
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 \newtoggle{twolinesbutnotmore@appref}%
 \newtoggle{twolinesonlyinsamepage@appref}%
 
+\xdef\Xendtwolines@apprefwithpage{}%
+\xdef\Xendmorethantwolines@apprefwithpage{}%
+\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
+
+%    \end{macrocode}
+% Note that some of these hooks are declared but no user command can change theirs values. Such hooks are not pertinent for appref and apprefwithpage pseudo-series, but their value are nonetheless tested in some \eledmac's macro.
+%    \begin{macrocode}
+
+\xdef\boxstartlinenum@appref{0pt}
+\xdef\boxendlinenum@appref{0pt}
+
+\xdef\boxXendstartlinenum@apprefwithpage{0pt}
+\xdef\boxXendendlinenum@apprefwithpage{0pt}
+
+%    \end{macrocode}
+% Now, declare the default value of \cs{apprefprefixsingle} and \cs{apprefprefixmore}.
+%    \begin{macrocode}
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
 
+%    \end{macrocode}
+% And now, the main commands: \cs{appref} and \cs{apprefwithpage}.
+% These command call \cs{printlines} and \cs{printendlines}. That is why we have previously declared all hook's values tested inside these last commands.
+%    \begin{macrocode}
 \newcommandx{\appref}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
    {\toggletrue{fulllines@}}%
@@ -12216,11 +12241,6 @@
  \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
  \togglefalse{fulllines@}%
 }%
-
-\xdef\Xendtwolines@apprefwithpage{}%
-\xdef\Xendmorethantwolines@apprefwithpage{}%
-\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
-\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 
 \newcommandx{\apprefwithpage}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
