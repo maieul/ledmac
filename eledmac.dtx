@@ -5915,7 +5915,7 @@
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
-% Our normal lemma is just argument \verb"#1"; but that argument could have
+% \label{@tag}Our normal lemma is just argument \verb"#1"; but that argument could have
 % further invocations of \cs{edtext} within it. We get a copy of the
 % lemma without any \cs{edtext} macros within it by temporarily redefining
 % \cs{edtext} to just copy its first argument and ignore the other,
@@ -6086,10 +6086,16 @@
 % \begin{macro}{\lemma}
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
+% Read about \cs{@tag} in normal \cs{edtext} macro for more details about \cs{sw@list@inedtext} and \cs{no@expands} (\reff{@tag}).
 %    \begin{macrocode}
 \newcommand*{\lemma}[1]{%
   \global\@lemmacommand@true%
-  \global\renewcommand{\@tag}{\no@expands #1}}%
+  \global\renewcommand{\@tag}{%
+    \global\let\sw@list@inedtext@back\sw@list@inedtext%
+    \no@expands #1%
+    \global\let\sw@list@inedtext\sw@list@inedtext@back%
+  }%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6276,14 +6282,14 @@
 % \begin{macro}{\sameword@inedtext}
 % The command called when \cs{sameword} is called in a edtext.
 %    \begin{macrocode}
-\def\sameword@inedtext#1{%
+\newcommandx{\sameword@inedtext}[2][1,usedefault]{%
   \unless\ifledRcol@%
 %    \end{macrocode}
 % First, calculate the number of occurrences of the word in the current line
 %    \begin{macrocode}
-      \ifcsdef{sw@#1@\the\absline@num @\the\section@num}{%
+      \ifcsdef{sw@#2@\the\absline@num @\the\section@num}{%
         \numdef{\prev@line}{\the\absline@num-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@num @\the\section@num}-\csuse{sw@#1@\prev@line @\the\section@num}}%
+        \numdef{\sw@atthisline}{\csuse{sw@#2@\the\absline@num @\the\section@num}-\csuse{sw@#2@\prev@line @\the\section@num}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
 %    \end{macrocode}
@@ -6301,15 +6307,15 @@
 % Then, print the rank, but only if there is more than one occurrence of the word in the current line.
 %    \begin{macrocode}
       \ifnumgreater{\sw@atthisline}{1}%
-          {\showwordrank{#1}{\the@sw}}%
-          {#1}%
+          {\showwordrank{#2}{\the@sw}}%
+          {#2}%
 %    \end{macrocode}
 % And the same for right side.
 %    \begin{macrocode}
   \else%
-      \ifcsdef{sw@#1@\the\absline@numR @\the\section@numR @R}{%
+      \ifcsdef{sw@#2@\the\absline@numR @\the\section@numR @R}{%
         \numdef{\prev@line}{\the\absline@numR-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+        \numdef{\sw@atthisline}{\csuse{sw@#2@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#2@\prev@line @\the\section@numR @R}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
       \ifx\sw@list@inedtextR\empty%
@@ -6318,8 +6324,8 @@
         \gl@p\sw@list@inedtextR\to\the@sw%
       \fi%
         \ifnumgreater{\sw@atthisline}{1}%
-          {\showwordrank{#1}{\the@sw}}%
-          {#1}%
+          {\showwordrank{#2}{\the@sw}}%
+          {#2}%
   \fi%
 }%
 %    \end{macrocode}
