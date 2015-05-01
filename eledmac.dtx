@@ -5868,12 +5868,13 @@
 \newcommand{\@tag}{}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\if@edtext@}
+% \begin{macro}{\@edtext@level}
 % \changes{v1.15.0}{2015/01/12}{New boolean \cs{if@edtext@}.}
-% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}). 
+% \changes{v1.23.0}{2015/04/29}{The boolean \cs{if@edtext@} becomes the counter \cs{edtext@level}.}
+% This counter is increased by 1 at each level of \cs{edtext} (or \cs{critext}). 
 % That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
 %    \begin{macrocode}
-\newif\if@edtext@%
+\newcount\@edtext@level%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\critext}
@@ -5910,7 +5911,7 @@
 % We switch the \cs{@edtext@} flag,
 % to let know to other commands that we are in a  \cs{edtext}.
 %    \begin{macrocode}
-      \@edtext@true%
+      \global\advance\@edtext@level by 1%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
 % Our normal lemma is just argument \verb"#1"; but that argument could have
@@ -5998,7 +5999,7 @@
 % \end{itemize}
 %    \begin{macrocode}
       \global\@noneed@Footnotefalse%
-      \@edtext@false%
+      \global\advance\@edtext@level by -1%
       \global\@lemmacommand@false%
 %    \end{macrocode}
 % If we are outside of a numbered paragraph,
@@ -6190,7 +6191,7 @@
 %    \begin{macrocode}
     \unless\ifx\sw@list\empty%
       \gl@p\sw@list\to\@tempb%
-      \if@edtext@%
+      \ifnum\@edtext@level>0%
         \unless\if@lemmacommand@%
           \xright@appenditem{\@tempb}\to\sw@list@inedtext%
         \else%
@@ -6207,7 +6208,7 @@
     \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
     \unless\ifx\sw@listR\empty%
       \gl@p\sw@listR\to\@tempb%
-      \if@edtext@%
+      \ifnum\@edtext@level>0%
         \unless\if@lemmacommand@%
           \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
         \else%
@@ -10568,7 +10569,7 @@
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
 %    \begin{macrocode}
       \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-          \if@edtext@%
+          \ifnum\@edtext@level>0%
             \begingroup%
             \newcommand{\content}{##2}%
             \ifnumberedpar@%
@@ -11898,7 +11899,7 @@
 % \cs{applabel}, if called in \cs{edtext} will insert automatically both a start and an end label for the current edtext lines.
 %    \begin{macrocode}
 \newcommand*{\applabel}[1]{%
-  \if@edtext@%  
+  \ifnum\@edtext@level>0%  
 %    \end{macrocode}
 % Label should not be already defined.
 %    \begin{macrocode}
