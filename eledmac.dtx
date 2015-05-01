@@ -246,6 +246,7 @@
 % \changes{v1.22.0}{2015/04/25}{Adds hyperlink for references to notes in indices.}
 % \changes{v1.22.0}{2015/04/25}{Fix conflict between noend package option and edtabularx environments}
 % \changes{v1.22.1}{2015/04/29}{Fix bug (added on v1.22.0) with \cs{inplaceofnumber} hook.}
+% \changes{v1.23.0}{2015/04/28}{Compatibility between nofamiliar/nocriticals option and minipage/ledgroup.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -12619,30 +12620,34 @@
 % minipage environment. 
 %    \begin{macrocode}
 \newcommand*{\l@dedbeginmini}{%
-  \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
-  \dolistloop{\@series}%
+  \unless\ifnocritical@%
+    \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
+    \dolistloop{\@series}%
+  \fi%
   }
 \newcommand*{\l@dedendmini}{%
-  \ifl@dpairing
-    \ifledRcol
-      \flush@notesR
-    \else
-      \flush@notes
+  \unless\ifnocritical@%
+    \ifl@dpairing%
+      \ifledRcol%
+        \flush@notesR%
+      \else%
+        \flush@notes%
+      \fi%
     \fi
-  \fi
-  \def\do##1{
-    \ifvoid\csuse{mp##1footins}\else%
-      \ifl@dpairing\ifparledgroup%
-        \ifledRcol%
-          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}
-        \else%
-           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}
-        \fi%
-       \fi\fi%
-       \csuse{mp##1footgroup}{##1}%
-  \fi}%
-  \dolistloop{\@series}%
-  }
+    \def\do##1{%
+      \ifvoid\csuse{mp##1footins}\else%
+        \ifl@dpairing\ifparledgroup%
+          \ifledRcol%
+            \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}%
+          \else%
+             \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}%
+          \fi%
+         \fi\fi%
+         \csuse{mp##1footgroup}{##1}%
+    \fi}%
+    \dolistloop{\@series}%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -12654,11 +12659,18 @@
 % minipage environment. 
 %    \begin{macrocode}
 \newcommand*{\l@dfambeginmini}{%
+ \unless\ifnofamiliar@%
    \def\do##1{\csletcs{vfootnote##1}{mpvfootnote##1}}%
-   \dolistloop{\@series}}
+     \dolistloop{\@series}%
+ \fi%
+}%
+
 \newcommand*{\l@dfamendmini}{%
-  \def\do##1{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
-  \dolistloop{\@series}}
+ \unless\ifnofamiliar@%
+   \def\do##1{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
+   \dolistloop{\@series}%
+ \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
