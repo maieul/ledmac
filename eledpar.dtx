@@ -2020,6 +2020,7 @@
 %    \begin{macrocode}
 \renewcommand*{\@ref}[2]{%
   \ifledRcol
+    \global\advance\@edtext@level by 1%
     \global\insert@countR=#1\relax
     \loop\ifnum\insert@countR>\z@
       \xright@appenditem{\the\absline@numR}\to\insertlines@listR
@@ -2058,11 +2059,31 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2
+    #2
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+    \ifnum\@edtext@level>0%
+      \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtextR@\the\@edtext@level\endcsname}}%
+      \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
+      \letcs{\@tmp}{sw@list@edtextR@\the\@edtext@level}%
+      \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}%
+      \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+      \global\cslet{sw@list@edtextR@\the\@edtext@level}{\@tmp}%
+    \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+    \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
   \else
 %    \end{macrocode}
 % And when not in right text
