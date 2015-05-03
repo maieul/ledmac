@@ -4763,7 +4763,6 @@
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
   \list@clear{\actions@list}%
-  \list@clear{\sw@list}%
   \list@clear{\sw@list@inedtext}%
   }%
 %    \end{macrocode}
@@ -5268,6 +5267,7 @@
   \@ref@reg{#1}{#2}}
 \newcommand*{\@ref@reg}[2]{%
   \global\insert@count=#1\relax
+  \global\advance\@edtext@level by 1%
   \loop\ifnum\insert@count>\z@
     \xright@appenditem{\the\absline@num}\to\insertlines@list
     \global\advance\insert@count \m@ne
@@ -5305,11 +5305,34 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2}
+  #2%
+%    \end{macrocode}
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+  \ifnum\@edtext@level>0%
+    \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtext@\the\@edtext@level\endcsname}}%
+    \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
+    \letcs{\@tmp}{sw@list@edtext@\the\@edtext@level}%
+    \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
+    \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+    \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
+  \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+  \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
+%    \begin{macrocode}
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -6183,14 +6206,11 @@
 %  
 % \end{itemize} 
 
-% \begin{macro}{\sw@list}
 % \begin{macro}{\sw@list@inedtext}
-% So, first, the lists.
+% So, first, the list.
 %    \begin{macrocode}
-\list@create{\sw@list}%
 \list@create{\sw@list@inedtext}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \begin{macro}{\sameword}
 % The hight level macro \cs{sameword}, used by the editor.
@@ -6206,39 +6226,14 @@
 %    \begin{macrocode}
       \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
 %    \end{macrocode}
-% At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
-%    \begin{macrocode}
-    \unless\ifx\sw@list\empty%
-      \gl@p\sw@list\to\@tempb%
-      \ifnum\@edtext@level>0%
-        \unless\if@lemmacommand@%
-          \xright@appenditem{\@tempb}\to\sw@list@inedtext%
-        \else%
-          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtext}{}%
-        \fi%
-      \fi%
-      \global\let\@tempb=\undefined%
-    \fi%
-%    \end{macrocode}
 % Do the same thing if we are in the right columns.
 %    \begin{macrocode}
   \else%
     \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
     \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
-    \unless\ifx\sw@listR\empty%
-      \gl@p\sw@listR\to\@tempb%
-      \ifnum\@edtext@level>0%
-        \unless\if@lemmacommand@%
-          \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
-        \else%
-          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtextR}{}%
-        \fi%
-      \fi%
-      \global\let\@tempb=\undefined%
-    \fi%
   \fi%
 %    \end{macrocode}
-% In any case, print the word.
+% And print the word.
 %    \begin{macrocode}
   #2%
 }%
@@ -6261,10 +6256,9 @@
       \csnumgdef{sw@#1@\prev@line @\the\section@num}{#2-1}%
      }{}%
 %    \end{macrocode}
-% Then, calculate the position of the word in the line, and put it in \cs{sw@list}.
+% Then, calculate the position of the word in the line.
 %    \begin{macrocode}
     \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@num}}%
-    \xright@appenditem{\the@sw}\to\sw@list%
 %    \end{macrocode}
 % And do the same thing for the right side.
 %    \begin{macrocode}
@@ -6275,8 +6269,19 @@
       \csnumgdef{sw@#1@\prev@line @\the\section@numR @R}{#2-1}%
      }{}%
     \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
-    \xright@appenditem{\the@sw}\to\sw@listR%
   \fi%
+% And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
+  \@tempcnta=\@edtext@level
+  \@whilenum{\@tempcnta>0}\do{
+    \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
+      {%
+        \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
+        \xright@appenditem{\the@sw}\to\@tmp%
+        \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
+      }%
+      {}%
+    \advance\@tempcnta by -1%
+  }
 }%
 %    \end{macrocode}
 % \end{macro}
