@@ -1493,10 +1493,38 @@
 % \DescribeMacro{\boxsymlinenum}
 % \cs{boxsymlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} but for the line number symbol.
 % 
-%
+% \changes{v1.23.0}{2015/04/28}{Add \cs{boxlinenumalign} and \cs{boxXendlinenumalign}.}
+% \DescribeMacro{boxlinenumalign}
+% If you put line number in box, it will be aligned left inside the box.
+% However, you can change it using  \cs{boxlinenumalign}\oarg{s}\marg{text} where \meta{text} can be the following:
+% \begin{description}
+%  \item[L] to align left (default value);
+%  \item[R] to align right;
+%  \item[C] to center.
+% \end{description}
+% 
+% \changes{v1.23.0}{2015/04/28}{Add \cs{boxstartlinenum}, \cs{boxXendstartlinenum}, \cs{boxendlinenum}, \cs{boxXendendlinenum}.}
+% When using boxlinenum, \Eledmac{} put all the line number description in the same box. That is, the same box will content: the start line number, the dash and the end line number or the range symbol like \verb+ff.+
+% However, it is possible to box them in two different boxes.
+% \begin{itemize}
+%  \item \cs{boxstartlinenum}\oarg{s}\marg{l} will box the start line number in a box of length \meta{l}. The content will be put at the right of the box.
+%  \item \cs{boxendlinenum}\oarg{s}\marg{l} will box the dash plus the end line number  or the range symbol in a box  of length \meta{l}. The content will be put at the left of the box.
+% \end{itemize}
+% 
+% With these two commands, it is possible to horizontaly align the dash of line number when using critical notes, to obtain something like:
+% \begin{verbatim}
+%   1 
+%  12-23
+%  24ff.
+% \end{verbatim}
 % \DescribeMacro{\boxXendlinenum}
+% \DescribeMacro{\boxXendlinenumalign}
+% \DescribeMacro{\boxXendstartlinenumalign}
+% \DescribeMacro{\boxXendendlinenumalign}
 % \changes{v1.20.0}{2015/03/22}{Add \cs{boxXendlinenum}}
-% \cs{boxXendlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} except in endnotes.
+% \cs{boxXendlinenum}\oarg{s}\marg{l}, \cs{boxXendlinenumalign}\oarg{s}\marg{text},  \cs{boxXendstartlinenum}\oarg{s}\marg{l},  \cs{boxXendendlinenum}\oarg{s}\marg{l} are the same as, respectively, \cs{boxlinenum} and \cs{boxlinenumalign}, \cs{boxstartlinenum}, \cs{boxendlinenum} except in endnotes.
+%
+%
 %\subsubsection{Separator between the lemma and the note}
 % \paragraph{For footnotes}
 % \DescribeMacro{\lemmaseparator}
@@ -8083,7 +8111,8 @@
 % Now we're ready to print it all. If the lineation is by pstart, we print the pstart.
 % \changes{v0.15}{2012/06/11}{Line numbering can be reset at each pstart.}
 %    \begin{macrocode}
-\def\printlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+\def\printlines#1|#2|#3|#4|#5|#6|#7|{%
+  \begingroup%
   \ifluatex%
     \luatextextdir TLT%
   \fi%
@@ -8094,15 +8123,24 @@
 % ending sub-line number: it could come after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+% So, first, print ths start line number.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxstartlinenum@\@currentseries}\bgroup\hfill}%
   \ifl@d@pnum #1\fullstop\fi
   \linenumrep{#2}
+  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
 %    \end{macrocode}
+% Then print the dash + end linuber, or the range symbol.
 % \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
 %        to \cs{printlines}}
 % \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{morethantwolines@\@currentseries}%
@@ -8115,7 +8153,9 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-\endgroup}
+  \egroup%
+  \endgroup%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\normalfootstart}\label{normalvalues}
@@ -10246,7 +10286,13 @@
     \csuse{Xendnotenumfont@#4}%
     \ifdimequal{\csuse{boxXendlinenum@#4}}{0pt}%
       {\printendlines#1|}%
-      {\leavevmode\hbox to \csuse{boxXendlinenum@#4}{\printendlines#1|\hfill}}%
+      {\leavevmode%
+       \hbox to \csuse{boxXendlinenum@#4}%
+       {%
+       \IfSubStr{RC}{\csuse{boxXendlinenumalign@#4}}{\hfill}{}%
+       \printendlines#1|%
+       \IfSubStr{LC}{\csuse{boxXendlinenumalign@#4}}{\hfill}{}%
+      }}%
   }%
   \enspace{%
     \nottoggle{Xendlemmadisablefontselection@#4}%
@@ -10388,11 +10434,23 @@
 % ending sub-line number: it could be coming after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+%
+% So, first, print the start lines.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxXendstartlinenum@\@currentseries}\bgroup\hfill}%
   \printnpnum{#1}%
   \ifoldprintnpnumspace@\space\fi%
   \linenumrep{#2}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
+%    \end{macrocode}
+% And now, print the dash + the end line number, or the line number range symbol.
+%    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxXendendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
@@ -10405,7 +10463,9 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-\endgroup}
+  \egroup%
+  \endgroup%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10527,7 +10587,13 @@
       \csgdef{Xnotenumfont@#1}{\notenumfont}%
       \csgdef{Xnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXnote@#1}{}%
+      
       \csgdef{boxlinenum@#1}{0pt}%
+      \csgdef{boxlinenumalign@#1}{L}%
+      
+      \csgdef{boxstartlinenum@#1}{0pt}%
+      \csgdef{boxendlinenum@#1}{0pt}%
+
       \csgdef{boxsymlinenum@#1}{0pt}%
       \newtoggle{numberonlyfirstinline@#1}%
       \newtoggle{numberonlyfirstintwolines@#1}%
@@ -10754,7 +10820,13 @@
       \csgdef{Xendnotenumfont@#1}{\notenumfont}%
       \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXendnote@#1}{}%
+      
       \csgdef{boxXendlinenum@#1}{0pt}%
+      \csgdef{boxXendlinenumalign@#1}{L}%
+      
+      \csgdef{boxXendstartlinenum@#1}{0pt}%
+      \csgdef{boxXendendlinenum@#1}{0pt}%
+
       \csgdef{Xendlemmaseparator@#1}{}%
       \csgdef{Xendbeforelemmaseparator@#1}{0em}%
       \csgdef{Xendafterlemmaseparator@#1}{0.5em}%
@@ -10974,7 +11046,7 @@
   \newhookcommand@series{Xcolalign}%
   \newhookcommand@series{Xnotenumfont}
   \newhookcommand@series{bhookXnote}
-  \newhookcommand@series{boxsymlinenum} 
+  \newhookcommand@series{boxsymlinenum}%
   \newhookcommand@series{symlinenum}
   \newhookcommand@series{beforenumberinfootnote}
   \newhookcommand@series{afternumberinfootnote}
@@ -10999,7 +11071,13 @@
   \newhookcommand@series@reload{beforeXnotes}
   \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
   \newhookcommand@series{Xnotefontsize}
-  \newhookcommand@series{boxlinenum}
+
+  \newhookcommand@series{boxlinenum}%
+  \newhookcommand@series{boxlinenumalign}%
+
+  \newhookcommand@series{boxstartlinenum}%
+  \newhookcommand@series{boxendlinenum}% 
+  
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
@@ -11037,7 +11115,13 @@
   \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{bhookXendnote}
+  
   \newhookcommand@series{boxXendlinenum}%
+  \newhookcommand@series{boxXendlinenumalign}%
+  
+  \newhookcommand@series{boxXendstartlinenum}%
+  \newhookcommand@series{boxXendendlinenum}% 
+
   \newhookcommand@series{Xendnotefontsize}
   \newhooktoggle@series{Xendlemmadisablefontselection}
   \newhookcommand@series{Xendlemmaseparator}
@@ -11213,9 +11297,12 @@
        \printlinefootnotenumbers{#1}{#2}%
      }%
      {%
-       \hbox to \csuse{boxlinenum@#2}{%
-       \printlinefootnotenumbers{#1}{#2}%
-       \hfill}%
+       \hbox to \csuse{boxlinenum@#2}%
+         {%
+         \IfSubStr{RC}{\csuse{boxlinenumalign@#2}}{\hfill}{}%
+         \printlinefootnotenumbers{#1}{#2}%
+         \IfSubStr{LC}{\csuse{boxlinenumalign@#2}}{\hfill}{}%
+         }%
      }%
 }%
 %    \end{macrocode}
@@ -12131,15 +12218,40 @@
 % It always prints the page number, as it should be printed in the end notes.
 % The \cs{twolinesappref} and \cs{morethantwolinesappref} are similar to the footnote
 % hooks and \cs{twolines} \cs{morethantwolines}.
+%
+% So, first declare the default value of the hooks for the pseudo-series appref. 
+% Also declare the internal toggle which are switch by \eledmac{}.
 %    \begin{macrocode}
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 \newtoggle{twolinesbutnotmore@appref}%
 \newtoggle{twolinesonlyinsamepage@appref}%
 
+\xdef\Xendtwolines@apprefwithpage{}%
+\xdef\Xendmorethantwolines@apprefwithpage{}%
+\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
+
+%    \end{macrocode}
+% Note that some of these hooks are declared but no user command can change theirs values. Such hooks are not pertinent for appref and apprefwithpage pseudo-series, but their value are nonetheless tested in some \eledmac's macro.
+%    \begin{macrocode}
+
+\xdef\boxstartlinenum@appref{0pt}
+\xdef\boxendlinenum@appref{0pt}
+
+\xdef\boxXendstartlinenum@apprefwithpage{0pt}
+\xdef\boxXendendlinenum@apprefwithpage{0pt}
+
+%    \end{macrocode}
+% Now, declare the default value of \cs{apprefprefixsingle} and \cs{apprefprefixmore}.
+%    \begin{macrocode}
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
 
+%    \end{macrocode}
+% And now, the main commands: \cs{appref} and \cs{apprefwithpage}.
+% These command call \cs{printlines} and \cs{printendlines}. That is why we have previously declared all hook's values tested inside these last commands.
+%    \begin{macrocode}
 \newcommandx{\appref}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
    {\toggletrue{fulllines@}}%
@@ -12156,15 +12268,12 @@
  \togglefalse{fulllines@}%
 }%
 
-\xdef\Xendtwolines@apprefwithpage{}%
-\xdef\Xendmorethantwolines@apprefwithpage{}%
-\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
-\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
-
+% \changes{v1.23.0}{2015/04/28}{Debug \cs{Xendtwolines}, \cs{Xendmorethantwolines}, \cs{Xendtwolinesbutnotmore} and \cs{Xendtwolinesonlyinsamepage} when using \cs{apprefwithpage}.}
 \newcommandx{\apprefwithpage}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
    {\toggletrue{fulllines@}}%
    {}%
+ \xdef\@currentseries{apprefwithpage}%
   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
  \togglefalse{fulllines@}%
 }%
