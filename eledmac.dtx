@@ -32,10 +32,19 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{graphicx,eledmac,metalogo}
-\usepackage[columns=1]{idxlayout}
-\let\theglossary\theindex
-\let\endtheglossary\endtheindex
+% Index and Changelog in one column
 \makeatletter
+  \renewenvironment{theglossary}{%
+      \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+      \columnseprule \z@  \columnsep 35\p@
+      \glossary@prologue%
+      \GlossaryParms \let\item\@idxitem \ignorespaces}
+    {\if@restonecol\onecolumn\else\clearpage\fi}
+  \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \columnseprule \z@  \columnsep 35\p@
+    \index@prologue%
+    \IndexParms \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
   \@mparswitchfalse
 \makeatother
 \EnableCrossrefs
