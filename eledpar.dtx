@@ -204,6 +204,7 @@
 % \changes{v1.15.0}{2015/04/13}{Add \cs{AtEveryPstartCall}.}
 % \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \cs{eledchapter} (bug added in v1.13.0).}
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
+% \changes{v1.15.1}{2015/04/28}{Fix bug with nofamiliar / nocritical option of eledmac.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -5311,12 +5312,19 @@
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%
+%    \end{macrocode}
+% First, declare footnote box if there was not declared before.
+% E.g. if familiar or critical notes were disabled by \eledmac{} options.
+%    \begin{macrocode}
     \ifnocritical@%
-      \newbox\csuse{##1footins}
+      \global\newbox\csuse{##1footins}
     \fi
     \ifnofamiliar@%
-      \newbox\csuse{footins##1}
+      \global\newbox\csuse{footins##1}
     \fi
+%    \end{macrocode}
+% And now, add a \cs{newpage} if there is no more footnote to print.
+%    \begin{macrocode}
     \ifvoid\csuse{##1footins}%
       \ifvoid\csuse{footins##1}\else%
         \newpage\null%
