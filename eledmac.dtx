@@ -5983,9 +5983,15 @@
 %    \end{macrocode}
 % We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \cs{sw@inthisedtext}.
 %    \begin{macrocode}
-        \ifcsundef{sw@list@edtext@\the\@edtext@level}%
-          {\global\let\sw@inthisedtext\empty}%
-          {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+      \ifledRcol% 
+        \ifcsundef{sw@list@edtextR@\the\@edtext@level}%
+              {\global\let\sw@inthisedtext\empty}%
+              {\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+      \else%
+         \ifcsundef{sw@list@edtext@\the\@edtext@level}%
+            {\global\let\sw@inthisedtext\empty}%
+            {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+      \fi%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
 % \label{@tag}Our normal lemma is just argument \verb"#1"; but that argument could have
@@ -6356,11 +6362,11 @@
         \numdef{\sw@atthisline}{\csuse{sw@#2@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#2@\prev@line @\the\section@numR @R}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
-      %\ifx\sw@list@inedtextR\empty%
+      \ifx\sw@list@inedtext\empty%
         \def\the@sw{999}%
-      %\else%
-      %  \gl@p\sw@list@inedtextR\to\the@sw%
-      %\fi%
+      \else%
+        \gl@p\sw@list@inedtext\to\the@sw%
+      \fi%
         \ifnumgreater{\sw@atthisline}{1}%
           {\showwordrank{#2}{\the@sw}}%
           {#2}%
@@ -10686,6 +10692,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                     }\to\inserts@listR
