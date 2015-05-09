@@ -5937,6 +5937,16 @@
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
+% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}.}
+%    \begin{macrocode}
+      \begingroup%
+%    \end{macrocode}
+% We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \cs{sw@inthisedtext}.
+%    \begin{macrocode}
+        \ifcsundef{sw@list@edtext@\the\@edtext@level}%
+          {\global\let\sw@inthisedtext\empty}%
+          {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+%    \end{macrocode}
 % \begin{macro}{\@tag}
 % \label{@tag}Our normal lemma is just argument \verb"#1"; but that argument could have
 % further invocations of \cs{edtext} within it. We get a copy of the
@@ -5949,18 +5959,9 @@
 % off the expansion of those control sequences commonly found within text
 % that can cause trouble for us.
 % 
-% When the \cs{@tag} will be expanded, the \cs{sameword} commands found within \verb+#1+, 
-% will empty the \cs{sw@list@inedtext} list.
-% However, the same lemma could be use for multiple notes (\verb+\edtext{X}{\Afootnote{X}\Bfootnote{x}}+).
-% Consequently, we need to keep the \cs{sw@list@inedtext} list for the next use of the same lemma.
-% In order to do that, we backup it before the expansion of \verb+#1+ and restore it after. 
-% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}.}
 %    \begin{macrocode}
-      \begingroup%
         \global\renewcommand{\@tag}{%
-          \global\let\sw@list@inedtext@back\sw@list@inedtext%
           \no@expands #1%
-          \global\let\sw@list@inedtext\sw@list@inedtext@back%
           }%
 %    \end{macrocode}
 % \end{macro}
@@ -6114,9 +6115,7 @@
 \newcommand*{\lemma}[1]{%
   \global\@lemmacommand@true%
   \global\renewcommand{\@tag}{%
-    \global\let\sw@list@inedtext@back\sw@list@inedtext%
     \no@expands #1%
-    \global\let\sw@list@inedtext\sw@list@inedtext@back%
   }%
 }%
 %    \end{macrocode}
@@ -6294,14 +6293,14 @@
 %    \end{macrocode}
 % Just a precaution.
 %    \begin{macrocode}
-      %\ifx\sw@list@inedtext\empty%
+      \ifx\sw@list@inedtext\empty%
         \def\the@sw{999}%
-      %\else%
+      \else%
 %    \end{macrocode}
 % But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for edtext.
 %    \begin{macrocode}
-      %  \gl@p\sw@list@inedtext\to\the@sw%
-      %\fi%
+        \gl@p\sw@list@inedtext\to\the@sw%
+      \fi%
 %    \end{macrocode}
 % Then, print the rank, but only if there is more than one occurrence of the word in the current line.
 %    \begin{macrocode}
@@ -10618,6 +10617,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                      }\to\inserts@list
