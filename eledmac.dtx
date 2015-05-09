@@ -5327,7 +5327,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
-    \let\@sw\@gobbletwo%
+    \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
@@ -6154,6 +6154,7 @@
 % \subsection{Substitute lemma}
 %
 % \begin{macro}{\lemma}
+% \changes{v1.23.0}{2015/04/28}{Fix spurious space after \cs{lemma} command}
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
 % Read about \cs{@tag} in normal \cs{edtext} macro for more details about \cs{sw@list@inedtext} and \cs{no@expands} (\reff{@tag}).
@@ -6163,6 +6164,7 @@
   \global\renewcommand{\@tag}{%
     \no@expands #1%
   }%
+  \ignorespaces%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -6255,20 +6257,29 @@
 %    \begin{macrocode}
 \newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
 %    \end{macrocode}
-% First, increament the counter corresponding to the argument.
+% First, increment the counter corresponding to the argument.
 %    \begin{macrocode}
   \unless\ifledRcol%
       \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
 %    \end{macrocode}
-% Then, write its value to the numbered file
+% Then, write its value to the numbered file. 
+% We check if we use a \cs{lemma} command. If yes, we write the \verb+#1+ as optional argument, if not, we use in any case \verb+inlemma+ as optional argument, because the sameword will be in the lemma of the footnote.
 %    \begin{macrocode}
-      \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
+      \if@lemmacommand@%
+        \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}{#1}}%
+      \else%
+        \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}{inlemma}}%
+      \fi%
 %    \end{macrocode}
 % Do the same thing if we are in the right columns.
 %    \begin{macrocode}
   \else%
     \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
-    \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
+    \if@lemmacommand@%
+      \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}{#1}}%
+    \else%
+      \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}{inlemma}}%
+    \fi%
   \fi%
 %    \end{macrocode}
 % And print the word.
@@ -6280,7 +6291,7 @@
 % \begin{macro}{\@sw}
 % The command printed in the auxiliary files. 
 %    \begin{macrocode}
-\newcommand{\@sw}[2]{%
+\newcommand{\@sw}[3]{%
   \unless\ifledRcol%
 %    \end{macrocode}
 % First, define a counter which store the second argument as value for a each paired absolute line number/first argument
@@ -6310,16 +6321,18 @@
   \fi%
 % And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
   \@tempcnta=\@edtext@level
-  \@whilenum{\@tempcnta>0}\do{
-    \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
-      {%
-        \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
-        \xright@appenditem{\the@sw}\to\@tmp%
-        \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
+  \IfStrEq{#3}{inlemma}{%
+    \@whilenum{\@tempcnta>0}\do{%
+      \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
+        {%
+          \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
+          \xright@appenditem{\the@sw}\to\@tmp%
+          \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
+        }%
+        {}%
+      \advance\@tempcnta by -1%
       }%
-      {}%
-    \advance\@tempcnta by -1%
-  }
+    }{}%
 }%
 %    \end{macrocode}
 % \end{macro}
