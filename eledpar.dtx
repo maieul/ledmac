@@ -34,6 +34,17 @@
 \usepackage[english]{babel}
 \usepackage{graphicx,eledmac,eledpar,metalogo}
 \makeatletter
+  \renewenvironment{theglossary}{%
+      \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+      \columnseprule \z@  \columnsep 35\p@
+      \glossary@prologue%
+      \GlossaryParms \let\item\@idxitem \ignorespaces}
+    {\if@restonecol\onecolumn\else\clearpage\fi}
+  \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \columnseprule \z@  \columnsep 35\p@
+    \index@prologue%
+    \IndexParms \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
   \@mparswitchfalse
 \makeatother
 \EnableCrossrefs
@@ -43,7 +54,6 @@
 \renewcommand{\MakeUppercase}[1]{#1}
 \pagestyle{headings}
 \setcounter{StandardModuleDepth}{1}
-\setcounter{IndexColumns}{2}
 % Some commands are defined here, and not in the commented part, because \externaldocument is required
  \newcommand{\Lpack}[1]{\textsf{#1}}
  \newcommand{\Lclass}[1]{\textsf{#1}}
@@ -194,6 +204,7 @@
 % \changes{v1.15.0}{2015/04/13}{Add \cs{AtEveryPstartCall}.}
 % \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \cs{eledchapter} (bug added in v1.13.0).}
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
+% \changes{v1.15.1}{2015/04/28}{Fix bug with nofamiliar / nocritical option of eledmac.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -2372,13 +2383,14 @@
 % We need to declare these options.
 % We also need boolean flags, and to set them to true when a note series is not printed on one side.
 % We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
+% \changes{v1.15.1}{2015/04/28}{Fix bug with \cs{onlysideX}.}
 %    \begin{macrocode}
-    \unless\ifnocritical@%
-      \csgdef{onlysideX@#1}{}%
-      \global\newbool{keepforXside@#1}%
-    \fi%
     \unless\ifnofamiliar@%
+      \csgdef{onlysideX@#1}{}%
       \global\newbool{keepforsideX@#1}%
+    \fi%
+    \unless\ifnocritical@%
+      \global\newbool{keepforXside@#1}%
       \csgdef{onlyXside@#1}{}%
     \fi%
 %    \end{macrocode}
@@ -5317,12 +5329,19 @@
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%
+%    \end{macrocode}
+% First, declare footnote box if there was not declared before.
+% E.g. if familiar or critical notes were disabled by \eledmac{} options.
+%    \begin{macrocode}
     \ifnocritical@%
-      \newbox\csuse{##1footins}
+      \global\newnamebox{##1footins}
     \fi
     \ifnofamiliar@%
-      \newbox\csuse{footins##1}
+      \global\newnamebox{footins##1}
     \fi
+%    \end{macrocode}
+% And now, add a \cs{newpage} if there is no more footnote to print.
+%    \begin{macrocode}
     \ifvoid\csuse{##1footins}%
       \ifvoid\csuse{footins##1}\else%
         \newpage\null%
