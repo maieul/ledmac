@@ -5327,6 +5327,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
+    \let\@lemma=\relax%
     \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@num
@@ -5346,8 +5347,11 @@
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \cs{@sw}
 % in this lemma, at this level.
+% Also set the boolean about the use of lemma in this edtext level to false.
 %    \begin{macrocode}
      \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+     \providebool{lemmacommand@\the\@edtext@level}%
+     \boolfalse{lemmacommand@\the\@edtext@level}%
 %    \end{macrocode}
 % Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
@@ -5976,6 +5980,10 @@
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
+% By default, we don't use \cs{lemma}
+%    \begin{macrocode}
+      \global\@lemmacommand@false%
+%    \end{macrocode}
 % \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}.}
 %    \begin{macrocode}
       \begingroup%
@@ -6037,6 +6045,19 @@
 %    \begin{macrocode}
         \ignorespaces #2\relax%
 %    \end{macrocode}
+% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+%    \begin{macrocode}
+        \@ifundefined{xpg@main@language}{%if not polyglossia
+           \flag@start}%
+           {\if@RTL\flag@end\else\flag@start\fi%
+           }%
+%    \end{macrocode}
+% We write in the numbered file wether the current \cs{edtext} has a \cs{lemma} in the the second argument.
+%    \begin{macrocode}
+       \if@lemmacommand@%
+         \write\linenum@out{\string\@lemma}%
+       \fi%
+%    \end{macrocode}
 % Finally, we're ready to admit the first argument into the current
 % paragraph.
 %
@@ -6047,10 +6068,6 @@
 % within the expansion of \verb"#2" above, or in \cs{aftergroup}
 % commands within that expansion.
 %    \begin{macrocode}
-        \@ifundefined{xpg@main@language}{%if not polyglossia
-           \flag@start}%
-           {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-           }%
       \endgroup%
       \showlemma{#1}%
 %    \end{macrocode}
@@ -6072,7 +6089,7 @@
            {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
            }%
 %    \end{macrocode}
-% We switch to false some flag.
+% We switch to false some flags.
 % \begin{itemize}
 %    \item The one that checks having footnotes inside a \cs{edtext}.
 %    \item The one that says we are inside a \cs{edtext}.
@@ -6174,6 +6191,15 @@
 % That is useful for some commands which can have a different behavior if the lemma in the note is different from the lemma in the main text.
 %    \begin{macrocode}
 \newif\if@lemmacommand@%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@lemma}
+% The \cs{@lemma} is writed in the numbered file to set which \cs{edtext} has an
+% \cs{lemma} as second argument.
+%    \begin{macrocode}
+\newcommand{\@lemma}{%
+  \booltrue{lemmacommand@\the\@edtext@level}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Substitute line numbers}
@@ -6282,6 +6308,7 @@
 % \begin{macro}{\@sw}
 % The command printed in the auxiliary files. 
 %    \begin{macrocode}
+\newif\if@addsw%
 \newcommand{\@sw}[3]{%
   \unless\ifledRcol%
 %    \end{macrocode}
@@ -6312,18 +6339,22 @@
   \fi%
 % And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
   \@tempcnta=\@edtext@level
-  \IfStrEq{#3}{inlemma}{%
-    \@whilenum{\@tempcnta>0}\do{%
-      \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
-        {%
-          \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
-          \xright@appenditem{\the@sw}\to\@tmp%
-          \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
-        }%
-        {}%
-      \advance\@tempcnta by -1%
+  \@whilenum{\@tempcnta>0}\do{%
+    \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
+      {%
+        \@addswfalse%
+        \notbool{lemmacommand@\the\@tempcnta}%
+          {\@addswtrue}%
+          {\IfSubStr{#3}{\the\@tempcnta}{\@addswtrue}{}}%
+          \if@addsw%
+            \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
+            \xright@appenditem{\the@sw}\to\@tmp%
+            \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
+          \fi%
       }%
-    }{}%
+      {}%
+    \advance\@tempcnta by -1%
+  }%
 }%
 %    \end{macrocode}
 % \end{macro}
