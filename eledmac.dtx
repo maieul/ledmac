@@ -1336,8 +1336,8 @@
 % However, if it is actually present in \cs{lemma}, you must use this method:
 % \begin{itemize}
 %   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[<X>]`. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
-So if you the \cs{lemma} is called in a \cs{edtext} inside a \cs{edtext}, \meta{X} is equal to \verb+2+.
-If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. \meta{X} can also be set to \verb+inlemma+. In this case, that means it is called in lemma of every \cs{edtext} depth.
+% So if you the \cs{lemma} is called in a \cs{edtext} inside a \cs{edtext}, \meta{X} is equal to \verb+2+.
+% If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. \meta{X} can also be set to \verb+inlemma+. In this case, that means it is called in lemma of every \cs{edtext} depth.
 %   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
 % \end{itemize} 
 % Like this:
@@ -6274,17 +6274,72 @@ If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equ
 % The general mechanism is the following:
 % \begin{itemize}
 %    \item \textbf{At the first run}, each \cs{sameword} command increments an \Lpack{etoolbox} counter the name of which contains the argument of the \cs{sameword} commands.
-%    \item Then this counter, associated with the argument of \cs{sameword} is stored (\cs{@sw} command) in the auxiliary file of the current \Lpack{eledmac} section (the \verb+.1+, \verb+.2+… file).
+%    \item Then this counter, associated with the argument of \cs{sameword} is stored,  with the \cs{@sw} command, in the auxiliary file of the current \Lpack{eledmac} section (the \verb+.1+, \verb+.2+… file).
 %    \item \textbf{When this auxiliary file is read at the second run}, different operations are achieved:
+%	\begin{enumerate} 
+%       	\item  Get the rank of each \cs{sameword} in a line (relative rank) from the rank of each \cs{sameword} in all the numbered section (absolute rank):
+%		    \begin{itemize}
+%        		\item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
+%        		\item  For each \cs{sameword} having the same argument,  we substract from its absolute rank the number stored for the paired \cs{sameword} argument and previous absolute line number. Consequently, we obtain the relative rank.
+%			\item See the following example which explain how for same \cs{sameword} absolute ranks are transformed to relative rank.
+%  \begin{verbatim}
+%  At line 1:
+%  absolute rank 1 becomes relative rank 1-0 = 1
+%  1 is stored for this \sameword
+%  At line 2:
+%  absolute rank 2 becomes relative rank 2-1 = 1
+%  absolute rank 3 becomes relative rank 3-2 = 2
+%  3 is stored for this \sameword
+%  At line 3
+%  no \sameword for this line.
+%  4 is stored for this \sameword
+%  At line 4
+%  absolute rank 5 becomes relative rank 5-4 = 1  
+%  \end{verbatim}
+%	       \end{itemize}
+%        \item Create lists of lists of \cs{sameword} by depth of \cs{edtext}.
+% That is: create a list for \cs{edtext} of level~1, a list for \cs{edtext} of level~2, a list for \cs{edtext} of level~3 etc.
+% For each \cs{edtext} in these list, we store all the relative rank of \cs{saweword} which are called as lemma information, that is 1) or called in the first argument of \cs{sameword} 2) or called in the \cs{lemma} macro of the second argument of \cs{sameword} AND marked by the optional argument of \cs{saweword} in first argument of \cs{edtext}.
+%
+% For example, suppose a line with nested \cs{edtext} which contains some 
+% word marked by \cs{sameword} and having the following relative rank:\\
+%
+% 
+%\let\up\textsuperscript
+%bar\up{1} \fbox{%
+%	    \fbox{foo\up{1} foo\up{2} bar\up{2} foo\up{3}} (A)(B)
+%	    foo\up{4} bar\up{3}% 
+%	 } (C)
+%	 \fbox{%
+%	    \fbox{foo\up{5}} (D)
+%	    bar\up{4}
+%	 } (E)
+%
+% In this example, all lemma information for \cs{edtext} is framed. The text in parenthesis is the content of critical notes associated to the preceding frame.
+% As you can see, we have two level of \cs{edtext}.
+%
+%The list for level~1 of \cs{edtext}s is $\{\{1,2,2,3,4,3\},\{5,4\}\}$.
+%
+%The list for level~2 of \cs{edtext}s is $\{\{1,2,2,3\},\{5\}\}$.
+%
+% As you can see, the mandatory argument of \cs{sameword} does not matter: we store the rank informations for every word potentially ambiguous.
+%       \end{enumerate}
+%  \item At the second run, when a critical notes is called, we associate it to the next item of the list associated to is \cs{edtext} level. So, in the previous example:
+%  \begin{itemize}
+%      \item Critical notes (A) and (B) are associated with $\{1,2,2,3\}$.
+%      \item Critical note (C) is associated with $\{1,2,2,3,4,3\}$.
+%      \item Critical note (D) is associated with $\{5\}$.
+%      \item Critical note (E) is associated with $\{5,4\}$.
+%  \end{itemize}
+%  \item At the second run, when a critical note is printed:
 %    \begin{itemize}
-%        \item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
-%        \item A \cs{sw@list} list is filled with the values stored in the auxiliary file. But before doing this we transform these values : we substract from them the number stored for the paired \cs{sameword} argument and previous absolute line number.
-%    \end{itemize}
-%  \item At the second run, when the \cs{sameword} command is called, new operations happen. We first read the first element of the \cs{sw@list}, then delete it from this list, and, if we are inside a \cs{edtext} command, we store it in a \cs{sw@list@inedtext} list.
-%  \item At the second run, when the critical notes are built, the \cs{sameword@inedtext} command is  used instead of \cs{sameword}. Then, we  read the next value of  \cs{sw@list@inedtext} list and remove it from this list.  We send it to the \cs{showwordrank} to be printed after the lemma, but only if the current line has more than one value for the argument of \cs{sameword}.  Otherwise, we just print the lemma, with no number.
-%  
+%         \item The \cs{sameword} command is let  \cs{sameword@inedtext}. 
+%	 \item At each call of this \cs{sameword@inedtext}, we step to the next element of the list associated to the note. Let it be $(n)$ 
+%	 \item For the word marked by \cs{sameword}, we calculate how many time it is called at the current line. To do it, we use the value stored when reading the auxiliary file.
+%        \item If it called more than once in this line, we call \cs{showwordrank} with the word as first argument and $(n)$ as second argument. If the word is called only once, we just print it.
+%   \end{itemize}
 % \end{itemize} 
-
+% After theory, implementation.
 % \begin{macro}{\sameword}
 % The hight level macro \cs{sameword}, used by the editor.
 %    \begin{macrocode}
