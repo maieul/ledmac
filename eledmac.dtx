@@ -1320,6 +1320,8 @@
 %
 % \subsection{Disambiguation of identical words in the apparatus}
 % \changes{v1.15.0}{2015/01/12}{New tools to prevent ambiguous references in lemma}
+% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}.}
+% \changes{v1.23.0}{2015/04/28}{Optional argument of \cs{edtext} can be a comma separated list of \cs{edtext} depth.}
 % Sometimes, the same word occurs twice (or more) in the same line.
 % \Lpack{eledmac} provides  tools to disambiguate references in the critical notes.
 % The lemma will be followed by a reference number if a given word occurs more that once in the same line.
@@ -1335,7 +1337,7 @@
 % \begin{itemize}
 %   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[<X>]`. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
 So if you the \cs{lemma} is called in a \cs{edtext} inside a \cs{edtext}, \meta{X} is equal to \verb+2+.
-If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both \cs{edtext} depth, \meta{X} is \verb+1,2+.
+If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. \meta{X} can also be set to \verb+inlemma+. In this case, that means it is called in lemma of every \cs{edtext} depth.
 %   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
 % \end{itemize} 
 % Like this:
@@ -5991,7 +5993,6 @@ If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equ
 %    \begin{macrocode}
       \global\@lemmacommand@false%
 %    \end{macrocode}
-% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}.}
 %    \begin{macrocode}
       \begingroup%
 %    \end{macrocode}
@@ -6355,7 +6356,7 @@ If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equ
           {\IfSubStr{#3}{\the\@tempcnta}%
             {\@addswtrue}%
             {\IfStrEq{#3}{inlemma}%
-              {\ifnumequal{\@tempcnta}{1}{\@addswtrue}{}}%
+              {\@addswtrue}%
               {}%
               }%
           }%
