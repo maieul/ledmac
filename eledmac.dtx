@@ -6443,26 +6443,29 @@
 \newcommandx{\sameword@inedtext}[2][1,usedefault]{%
   \unless\ifledRcol@%
 %    \end{macrocode}
-% First, calculate the number of occurrences of the word in the current line
-%    \begin{macrocode}
-      \ifcsdef{sw@#2@\the\absline@num @\the\section@num}{%
-        \numdef{\prev@line}{\the\absline@num-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#2@\the\absline@num @\the\section@num}-\csuse{sw@#2@\prev@line @\the\section@num}}%
-        }%
-        {\numdef{\sw@atthisline}{0}}%
-%    \end{macrocode}
 % Just a precaution.
 %    \begin{macrocode}
       \ifx\sw@list@inedtext\empty%
         \def\the@sw{999}%
+        \def\this@absline{notdef}%
       \else%
 %    \end{macrocode}
 % But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for edtext.
 %    \begin{macrocode}
-        \gl@p\sw@list@inedtext\to\the@sw%
+        \gl@p\sw@list@inedtext\to\@tmp%
+        \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
+        \edef\this@absline{\expandafter\@secondoftwo\@tmp}%
       \fi%
 %    \end{macrocode}
-% Then, print the rank, but only if there is more than one occurrence of the word in the current line.
+% First, calculate the number of occurrences of the word in the current line
+%    \begin{macrocode}
+      \ifcsdef{sw@#2@\the\absline@num @\the\section@num}{%
+        \numdef{\prev@line}{\this@absline-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#2@\this@absline @\the\section@num}-\csuse{sw@#2@\prev@line @\the\section@num}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+%    \end{macrocode}
+% Finally, print the rank, but only if there is more than one occurrence of the word in the current line.
 %    \begin{macrocode}
       \ifnumgreater{\sw@atthisline}{1}%
           {\showwordrank{#2}{\the@sw}}%
@@ -6471,16 +6474,19 @@
 % And the same for right side.
 %    \begin{macrocode}
   \else%
-      \ifcsdef{sw@#2@\the\absline@numR @\the\section@numR @R}{%
-        \numdef{\prev@line}{\the\absline@numR-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#2@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#2@\prev@line @\the\section@numR @R}}%
-        }%
-        {\numdef{\sw@atthisline}{0}}%
       \ifx\sw@list@inedtext\empty%
         \def\the@sw{999}%
+        \def\this@absline{notdef}%
       \else%
-        \gl@p\sw@list@inedtext\to\the@sw%
+        \gl@p\sw@list@inedtext\to\@tmp%
+        \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
+        \edef\this@absline{\expandafter\@secondoftwo\@tmp}%       
       \fi%
+      \ifcsdef{sw@#2@\the\absline@numR @\the\section@numR @R}{%
+        \numdef{\prev@line}{\this@absline-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@#2@\this@absline @\the\section@numR @R}-\csuse{sw@#2@\prev@line @\the\section@numR @R}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
         \ifnumgreater{\sw@atthisline}{1}%
           {\showwordrank{#2}{\the@sw}}%
           {#2}%
