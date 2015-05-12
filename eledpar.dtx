@@ -34,6 +34,17 @@
 \usepackage[english]{babel}
 \usepackage{graphicx,eledmac,eledpar,metalogo}
 \makeatletter
+  \renewenvironment{theglossary}{%
+      \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+      \columnseprule \z@  \columnsep 35\p@
+      \glossary@prologue%
+      \GlossaryParms \let\item\@idxitem \ignorespaces}
+    {\if@restonecol\onecolumn\else\clearpage\fi}
+  \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \columnseprule \z@  \columnsep 35\p@
+    \index@prologue%
+    \IndexParms \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
   \@mparswitchfalse
 \makeatother
 \EnableCrossrefs
@@ -43,7 +54,6 @@
 \renewcommand{\MakeUppercase}[1]{#1}
 \pagestyle{headings}
 \setcounter{StandardModuleDepth}{1}
-\setcounter{IndexColumns}{2}
 % Some commands are defined here, and not in the commented part, because \externaldocument is required
  \newcommand{\Lpack}[1]{\textsf{#1}}
  \newcommand{\Lclass}[1]{\textsf{#1}}
@@ -194,6 +204,7 @@
 % \changes{v1.15.0}{2015/04/13}{Add \cs{AtEveryPstartCall}.}
 % \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \cs{eledchapter} (bug added in v1.13.0).}
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
+% \changes{v1.15.1}{2015/04/28}{Fix bug with nofamiliar / nocritical option of eledmac.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -944,7 +955,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/04/13 v1.15.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/05/28 v1.16.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -1488,7 +1499,7 @@
 %
 %
 % \subsection{Line-number counters and lists}
-%
+% \subsubsection{Correspond to those in \Lpack{eledmac} for regular or left text}
 % We need another set of counters and lists for the right text, 
 % corresponding to those in \Lpack{eledmac} for regular or left text.
 %
@@ -1530,8 +1541,6 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
-\list@create{\sw@listR}%
-\list@create{\sw@list@inedtextR}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -1539,6 +1548,14 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\page@numR}
+% The right text page number.
+%    \begin{macrocode}
+\newcount\page@numR
+
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Specific to \Lpack{eledpar}}
 % \begin{macro}{\linesinpar@listL}
 % \begin{macro}{\linesinpar@listR}
 % \begin{macro}{\maxlinesinpar@list}
@@ -1555,13 +1572,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\page@numR}
-% The right text page number.
-%    \begin{macrocode}
-\newcount\page@numR
-
-%    \end{macrocode}
-% \end{macro}
 %
 %
 % \subsection{Reading the line-list file}
@@ -1586,8 +1596,6 @@
     \list@clear{\actions@listR}%
     \list@clear{\linesinpar@listR}%
     \list@clear{\linesonpage@listR}
-    \list@clear{\sw@listR}%
-    \list@clear{\sw@list@inedtextR}%
   \else
     \list@clearing@reg
     \list@clear{\linesinpar@listL}%
@@ -2022,6 +2030,7 @@
 %    \begin{macrocode}
 \renewcommand*{\@ref}[2]{%
   \ifledRcol
+    \global\advance\@edtext@level by 1%
     \global\insert@countR=#1\relax
     \loop\ifnum\insert@countR>\z@
       \xright@appenditem{\the\absline@numR}\to\insertlines@listR
@@ -2043,7 +2052,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
-    \let\@sw\@gobbletwo%
+    \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
@@ -2060,11 +2069,31 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2
+    #2
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+    \ifnum\@edtext@level>0%
+      \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtextR@\the\@edtext@level\endcsname}}%
+      \ifcsundef{sw@list@edtextR@\the\@edtext@level}{\create@this@edtext@level}{}%
+      \letcs{\@tmp}{sw@list@edtextR@\the\@edtext@level}%
+      \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}%
+      \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+      \global\cslet{sw@list@edtextR@\the\@edtext@level}{\@tmp}%
+    \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+    \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
   \else
 %    \end{macrocode}
 % And when not in right text
@@ -2355,13 +2384,14 @@
 % We need to declare these options.
 % We also need boolean flags, and to set them to true when a note series is not printed on one side.
 % We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
+% \changes{v1.15.1}{2015/04/28}{Fix bug with \cs{onlysideX}.}
 %    \begin{macrocode}
-    \unless\ifnocritical@%
-      \csgdef{onlysideX@#1}{}%
-      \global\newbool{keepforXside@#1}%
-    \fi%
     \unless\ifnofamiliar@%
+      \csgdef{onlysideX@#1}{}%
       \global\newbool{keepforsideX@#1}%
+    \fi%
+    \unless\ifnocritical@%
+      \global\newbool{keepforXside@#1}%
       \csgdef{onlyXside@#1}{}%
     \fi%
 %    \end{macrocode}
@@ -5300,12 +5330,19 @@
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%
+%    \end{macrocode}
+% First, declare footnote box if there was not declared before.
+% E.g. if familiar or critical notes were disabled by \eledmac{} options.
+%    \begin{macrocode}
     \ifnocritical@%
-      \newbox\csuse{##1footins}
+      \global\newnamebox{##1footins}
     \fi
     \ifnofamiliar@%
-      \newbox\csuse{footins##1}
+      \global\newnamebox{footins##1}
     \fi
+%    \end{macrocode}
+% And now, add a \cs{newpage} if there is no more footnote to print.
+%    \begin{macrocode}
     \ifvoid\csuse{##1footins}%
       \ifvoid\csuse{footins##1}\else%
         \newpage\null%
