@@ -63,7 +63,7 @@
 % \fi
 %
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{11872}
+% \CheckSum{11878}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -1333,23 +1333,54 @@
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
-% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not already present in \cs{lemma}.
-% However, if it is actually present in \cs{lemma}, you must use this method:
+% If you use the \cs{lemma} command, \Lpack{eledmac} can not know in which occurence of \cs{sameword} in the first argument of \cs{edtext} a  word marked with \cs{sameword} in \cs{lemma} could refer.
+% 
+% For example in the following example:
+% \begin{verbatim}
+%    some thing
+%       \edtext{\sameword{sw}
+%               and other \sameword{sw}
+%               and again \sameword{sw}
+%               it is all}%
+%       }{\lemma{\sameword{sw}\ldots all}}.%
+% \end{verbatim}
+% \Lpack{eledmac} can not know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'' or after ``again''.
+% 
+% Consequently, you have to tell to \Lpack{eledmac} which is the good \cs{sameword} in the first argument of \cs{edtext}: 
 % \begin{itemize}
-%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[<X>]`. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
+%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
+%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument \oarg{X}. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
 % So if the \cs{lemma} is called in a \cs{edtext} inside another \cs{edtext}, \meta{X} is equal to \verb+2+.
 % If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. \meta{X} can also be set to \verb+inlemma+. In this case, that means it is called in lemma of every \cs{edtext} depth.
-%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
 % \end{itemize} 
-% Like this:
-% \begin{verbatim}
-%    \edtext{some thing
-%       \edtext{\sameword[2]{sw}}{\lemma{\sameword{sw} some lemma}\Afootnote{some note of level 2}}
-%    }{
-%      \lemma{some lemma without sw}
-%      \Afootnote{some note of level 1} 
-%     }
-% \end{verbatim}
+% Note that the \cs{edtext} level does not refer to the level the \cs{sameword} is marked in the first argument, but to the level it is marked as content of the \cs{lemma}. 
+
+% In the following schemas, each framed box is \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the uperscripted text is the content of \cs{lemma} for this \cs{edtext} level. The text underscripted at the right of a number is the content of the optional argument of \cs{sameword}.
+% 
+%\fbox{%
+%  \fbox{%
+%	 $1_{inlemma}$ 
+%	 \fbox{$2$}
+%	 $3_2$%
+%       }\textsuperscript{$1$\ldots$3$}%
+%     4
+%     $5_1$ 
+%   }\textsuperscript{1\ldots5}
+%
+% The \cs{sameword} number 3 is called in a \cs{lemma} related to a \cs{edtext} of level 2.
+% It must be marked by ``2''.
+%
+% The \cs{sameword} number 5 is called in a \cs{lemma} related to \cs{edtext} of level 1. It must me marked by ``1''.
+%
+% The \cs{sameword} number is called in two \cs{lemma}s: one related to a \cs{edtext} of level 1, the other related to \cs{edtext} of level ``2''.
+% It must be marked by ``1,2''.
+% However, as \cs{lemma} is called only in level~1 and~2, ``1,2'' could replaced by ``inlemma''.
+%
+% The \cs{sameword} number ``2'' is in the first argument of a \cs{edtext} of level~3 without \cs{lemma} command. There is no need to mark it.
+% 
+%
+% 
+% 
 % \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the number is printed. The default value is
 % \begin{verbatim}
 %\newcommand{\showwordrank}[2]{%
