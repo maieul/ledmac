@@ -1333,7 +1333,7 @@
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
-% If you use the \cs{lemma} command, \Lpack{eledmac} can not know in which occurence of \cs{sameword} in the first argument of \cs{edtext} a  word marked with \cs{sameword} in \cs{lemma} could refer.
+% If you use the \cs{lemma} command, \Lpack{eledmac} can not know to which occurence of \cs{sameword} in the first argument of \cs{edtext} a word marked with \cs{sameword} in \cs{lemma} should refer.
 % 
 % For example in the following example:
 % \begin{verbatim}
@@ -1342,20 +1342,30 @@
 %               and other \sameword{sw}
 %               and again \sameword{sw}
 %               it is all}%
-%       }{\lemma{\sameword{sw}\ldots all}}.%
+%       }{\lemma{\sameword{sw} \ldots all}\Afootnote{critical note}}.%
 % \end{verbatim}
-% \Lpack{eledmac} can not know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'' or after ``again''.
+% \Lpack{eledmac} can not know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'', or after ``again''.
 % 
-% Consequently, you have to tell to \Lpack{eledmac} which is the good \cs{sameword} in the first argument of \cs{edtext}: 
+% Consequently, you have to tell \Lpack{eledmac} which instance of \cs{sameword} in the first argument of \cs{edtext} you want to reference: 
 % \begin{itemize}
 %   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
 %   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument \oarg{X}. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
 % So if the \cs{lemma} is called in a \cs{edtext} inside another \cs{edtext}, \meta{X} is equal to \verb+2+.
-% If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. \meta{X} can also be set to \verb+inlemma+. In this case, that means it is called in lemma of every \cs{edtext} depth.
+% If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. If that word is referenced in the lemma of every \cs{edtext} depth, \meta{X} can also be set to \verb+inlemma+.
 % \end{itemize} 
-% Note that the \cs{edtext} level does not refer to the level the \cs{sameword} is marked in the first argument, but to the level it is marked as content of the \cs{lemma}. 
+% Note that only words that are actually referenced in a \cs{lemma} need the optional argument. Therefore, the first \cs{sameword} in the example above should have ``1'' as its optional argument to be referenced correctly in the lemma.
+%
+% Note also that the \meta{X} does not refer to the level where the \cs{sameword} occurs, but to the level of the \cs{lemma} that refers to that \cs{sameword}. For example: 
+% \begin{verbatim}
+%    \edtext{some \edtext{\sameword[1]{word}}{\Afootnote{om. M}}
+%            and other \sameword{word}
+%            and again a \sameword{word}
+%            it is all}%
+%    }{\lemma{some \sameword{word} \ldots all}\Afootnote{critical note}}.%
+% \end{verbatim}
+% Here the \cs{sameword} occurs in an \cs{edtext} of level 2, but since it is referenced by \cs{lemma} on level 1, it has ``1'' in the optional argument.
 
-% In the following schemas, each framed box is \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the uperscripted text is the content of \cs{lemma} for this \cs{edtext} level. The text underscripted at the right of a number is the content of the optional argument of \cs{sameword}.
+% In the following schema each framed box represents an \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the text in superscript represents the content of \cs{lemma} for that \cs{edtext} level. The text in subscript at the right of a number represents the content of the optional argument of \cs{sameword}.
 % 
 %\fbox{%
 %  \fbox{%
@@ -1367,16 +1377,16 @@
 %     $5_1$ 
 %   }\textsuperscript{1\ldots5}
 %
-% The \cs{sameword} number 3 is called in a \cs{lemma} related to a \cs{edtext} of level 2.
+% The \cs{sameword} number~3 is called in a \cs{lemma} related to an \cs{edtext} of level~2.
 % It must be marked by ``2''.
 %
-% The \cs{sameword} number 5 is called in a \cs{lemma} related to \cs{edtext} of level 1. It must me marked by ``1''.
+% The \cs{sameword} number~5 is called in a \cs{lemma} related to \cs{edtext} of level~1. It must me marked by ``1''.
 %
-% The \cs{sameword} number is called in two \cs{lemma}s: one related to a \cs{edtext} of level 1, the other related to \cs{edtext} of level ``2''.
+% The \cs{sameword} number is called in two \cs{lemma}s: one related to a \cs{edtext} of level~1, the other related to \cs{edtext} of level~2.
 % It must be marked by ``1,2''.
 % However, as \cs{lemma} is called only in level~1 and~2, ``1,2'' could replaced by ``inlemma''.
 %
-% The \cs{sameword} number ``2'' is in the first argument of a \cs{edtext} of level~3 without \cs{lemma} command. There is no need to mark it.
+% The \cs{sameword} number ``2'' is in the first argument of a \cs{edtext} of level~3, but it has no \cs{lemma}-command, so there is no need to mark it.
 % 
 %
 % 
