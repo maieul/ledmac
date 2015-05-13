@@ -259,6 +259,7 @@
 % \changes{v1.22.1}{2015/04/29}{Fix bug (added on v1.22.0) with \cs{inplaceofnumber} hook.}
 % \changes{v1.23.0}{2015/04/28}{Compatibility between nofamiliar/nocriticals option and minipage/ledgroup.}
 % \changes{v1.23.0}{2015/04/28}{Fix error of \cs{iftrue} not closed.}
+% \changes{v1.23.0}{2015/04/28}{Allow use of \cs{sameword} with inputenc managing of UTF-8.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3319,6 +3320,7 @@
 \RequirePackage{suffix}
 \RequirePackage{xstring}
 \RequirePackage{ifluatex}
+\RequirePackage{ifxetex}%
 \RequirePackage{ragged2e}
 %    \end{macrocode}
 % \begin{macro}{\if@RTL}
@@ -6393,25 +6395,45 @@
 %   \end{itemize}
 % \end{itemize} 
 % After theory, implementation.
+% \begin{macro}{\get@sw@txt}
+% As the argument of \cs{sameword} can contain active character if we 
+% use \Lpack{inputenc} with \verb+utf8+ option instead of native UTF-8 engine, 
+% we store its detokenized content in a macro in order to allow dynamic name of macro with \cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
+%
+% Because there is a bug with \cs{detokenize} and \XeTeX\ when using non BMP characters\footnote{\url{http://sourceforge.net/p/xetex/bugs/108/}}, 
+% we detokenize only for not \XeTeX engines. In any case, in \XeTeX, a \cs{csname} construction can contain UTF-8 character without not problem, as UTF-8 characters are not manage with category code, but are read directly as UTF-8 characters.
+%    \begin{macrocode}
+\newcommand{\get@sw@txt}[1]{%
+  \ifxetex%
+    \xdef\sw@txt{#1}%
+  \else%
+    \expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\sameword}
+% \changes{v1.23.0}{2015/04/28}{In order to allow use of \cs{sameword} with inputenc, we detokonize its mandatory argument before using it in control sequence names.}
 % The hight level macro \cs{sameword}, used by the editor.
 %    \begin{macrocode}
-\newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
+\newcommandx{\sameword}[2][1,usedefault]{%
+     \leavevmode%
+     \get@sw@txt{#2}%
 %    \end{macrocode}
-% First, increment the counter corresponding to the argument.
+% Now, the real code. First, increment the counter corresponding to the argument.
 %    \begin{macrocode}
   \unless\ifledRcol%
-      \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
+     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+1}%
 %    \end{macrocode}
 % Then, write its value to the numbered file.  
 %    \begin{macrocode}
-     \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}{#1}}%
+     \protected@write\linenum@out{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt}}{#1}}%
 %    \end{macrocode}
 % Do the same thing if we are in the right columns.
 %    \begin{macrocode}
   \else%
-     \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
-     \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}{#1}}%
+     \csnumgdef{sw@\sw@txt@R}{\csuse{sw@\sw@txt@R}+1}%
+     \protected@write\linenum@outR{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt@R}}{#1}}%
   \fi%
 %    \end{macrocode}
 % And print the word.
@@ -6430,32 +6452,33 @@
 % The command printed in the auxiliary files. 
 %    \begin{macrocode}
 \newcommand{\@sw}[3]{%
+  \get@sw@txt{#1}%
   \unless\ifledRcol%
 %    \end{macrocode}
 % First, define a counter which store the second argument as value for a each paired absolute line number/first argument
 %    \begin{macrocode}
-    \csxdef{sw@#1@\the\absline@num @\the\section@num}{#2}%
+    \csxdef{sw@\sw@txt @\the\absline@num @\the\section@num}{#2}%
 %    \end{macrocode}
 % If  such argument was not defined for the preceding line, define it.
 %    \begin{macrocode}
     \numdef{\prev@line}{\the\absline@num-1}%
-    \ifcsundef{sw@#1@\prev@line @\the\section@num}{%
-      \csnumgdef{sw@#1@\prev@line @\the\section@num}{#2-1}%
+    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@num}{%
+      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@num}{#2-1}%
      }{}%
 %    \end{macrocode}
 % Then, calculate the position of the word in the line.
 %    \begin{macrocode}
-    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@num}}%
+    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
 %    \end{macrocode}
 % And do the same thing for the right side.
 %    \begin{macrocode}
   \else%
-    \csxdef{sw@#1@\the\absline@numR @\the\section@numR @R}{#2}%
+    \csxdef{sw@\sw@txt @\the\absline@numR @\the\section@numR @R}{#2}%
     \numdef{\prev@line}{\the\absline@numR-1}%
-    \ifcsundef{sw@#1@\prev@line @\the\section@numR @R}{%
-      \csnumgdef{sw@#1@\prev@line @\the\section@numR @R}{#2-1}%
+    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@numR @R}{%
+      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@numR @R}{#2-1}%
      }{}%
-    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
   \fi%
 %    \end{macrocode}
 % And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
@@ -6498,6 +6521,7 @@
 % The command called when \cs{sameword} is called in a edtext.
 %    \begin{macrocode}
 \newcommandx{\sameword@inedtext}[2][1,usedefault]{%
+  \get@sw@txt{#2}%
   \unless\ifledRcol@%
 %    \end{macrocode}
 % Just a precaution.
@@ -6516,9 +6540,9 @@
 %    \end{macrocode}
 % First, calculate the number of occurrences of the word in the current line
 %    \begin{macrocode}
-      \ifcsdef{sw@#2@\this@absline @\the\section@num}{%
+      \ifcsdef{sw@\sw@txt @\this@absline @\the\section@num}{%
         \numdef{\prev@line}{\this@absline-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#2@\this@absline @\the\section@num}-\csuse{sw@#2@\prev@line @\the\section@num}}%
+        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@num}-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
 %    \end{macrocode}
@@ -6539,9 +6563,9 @@
         \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
         \edef\this@absline{\expandafter\@secondoftwo\@tmp}%       
       \fi%
-      \ifcsdef{sw@#2@\this@absline @\the\section@numR @R}{%
+      \ifcsdef{sw@\sw@txt @\this@absline @\the\section@numR @R}{%
         \numdef{\prev@line}{\this@absline-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#2@\this@absline @\the\section@numR @R}-\csuse{sw@#2@\prev@line @\the\section@numR @R}}%
+        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@numR @R}-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
         \ifnumgreater{\sw@atthisline}{1}%
