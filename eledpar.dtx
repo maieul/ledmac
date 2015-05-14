@@ -955,7 +955,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/04/13 v1.15.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/05/28 v1.16.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -1499,7 +1499,7 @@
 %
 %
 % \subsection{Line-number counters and lists}
-%
+% \subsubsection{Correspond to those in \Lpack{eledmac} for regular or left text}
 % We need another set of counters and lists for the right text, 
 % corresponding to those in \Lpack{eledmac} for regular or left text.
 %
@@ -1541,8 +1541,6 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
-\list@create{\sw@listR}%
-\list@create{\sw@list@inedtextR}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -1550,6 +1548,14 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\page@numR}
+% The right text page number.
+%    \begin{macrocode}
+\newcount\page@numR
+
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Specific to \Lpack{eledpar}}
 % \begin{macro}{\linesinpar@listL}
 % \begin{macro}{\linesinpar@listR}
 % \begin{macro}{\maxlinesinpar@list}
@@ -1566,13 +1572,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\page@numR}
-% The right text page number.
-%    \begin{macrocode}
-\newcount\page@numR
-
-%    \end{macrocode}
-% \end{macro}
 %
 %
 % \subsection{Reading the line-list file}
@@ -1597,8 +1596,6 @@
     \list@clear{\actions@listR}%
     \list@clear{\linesinpar@listR}%
     \list@clear{\linesonpage@listR}
-    \list@clear{\sw@listR}%
-    \list@clear{\sw@list@inedtextR}%
   \else
     \list@clearing@reg
     \list@clear{\linesinpar@listL}%
@@ -2033,6 +2030,7 @@
 %    \begin{macrocode}
 \renewcommand*{\@ref}[2]{%
   \ifledRcol
+    \global\advance\@edtext@level by 1%
     \global\insert@countR=#1\relax
     \loop\ifnum\insert@countR>\z@
       \xright@appenditem{\the\absline@numR}\to\insertlines@listR
@@ -2054,7 +2052,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
-    \let\@sw\@gobbletwo%
+    \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
@@ -2071,11 +2069,31 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2
+    #2
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+    \ifnum\@edtext@level>0%
+      \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtextR@\the\@edtext@level\endcsname}}%
+      \ifcsundef{sw@list@edtextR@\the\@edtext@level}{\create@this@edtext@level}{}%
+      \letcs{\@tmp}{sw@list@edtextR@\the\@edtext@level}%
+      \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}%
+      \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+      \global\cslet{sw@list@edtextR@\the\@edtext@level}{\@tmp}%
+    \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+    \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
   \else
 %    \end{macrocode}
 % And when not in right text
