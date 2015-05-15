@@ -1329,13 +1329,35 @@
 % Sometimes, the same word occurs twice (or more) in the same line.
 % \Lpack{eledmac} provides  tools to disambiguate references in the critical notes.
 % The lemma will be followed by a reference number if a given word occurs more that once in the same line.
-%
+% 
+% \subsubsection{Basic use}
 % \DescribeMacro{\sameword} To use this tool, you have to mark every occurrence of the potentially ambiguous term with the \cs{sameword} command:
 %   \begin{verbatim}
 %   Lupus \sameword{aut} canis \edtext{\sameword{aut}}{\Afootnote{et}} felix
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
+% \subsubsection{Note about input encoding with UTF-8 processor}
+%
+% If you use UTF-8 processor, like \XeLaTeX\ or \LuaLaTeX, happy are you. 
+% However, you should be careful about the way a same character is encoded.
+%
+% For example the greek character \verb+ᾳ+ can be encoded, in the unicode norm, in two different way:
+% \begin{itemize}
+%  \item GREEK SMALL LETTER ALPHA (U+03B1) + COMBINING GREEK YPOGEGRAMMENI (U+0345)
+%  \item GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI (U+1FB3)
+% \end{itemize}
+%
+% The way this character is encoded in the file depends, in many time, of your computer input system (keyboard).
+%
+% However, by default the \cs{sameword} command consider them as two different characters. In many time, that does not matter, because you use only one way. However, in order to prevent false numbering, you should is one of the following method:
+% \begin{itemize}
+%   \item If you use \XeLaTeX, add this line in your preamble: \verb+ \XeTeXinputnormalization 1+.
+%   \item If you use \LuaLaTeX, use the \Lpack{uninormalize} of Michal Hoftich\footnote{\url{https://github.com/michal-h21/uninormalize}.} with the \verb+buffer+ option set to true.
+% \end{itemize} 
+%
+% With there tools, \XeTeX\ / \LuaTeX\ will dynamicaly normalize unicode input when reading the file. Consquently, you will be sure to have no problem with \cs{sameword} command.
+% \subsubsection{Use with \cs{lemma} command}
 % If you use the \cs{lemma} command, \Lpack{eledmac} can not know to which occurence of \cs{sameword} in the first argument of \cs{edtext} a word marked with \cs{sameword} in \cs{lemma} should refer.
 % 
 % For example in the following example:
@@ -1393,7 +1415,7 @@
 % 
 %
 % 
-% 
+% \subsubsection{Customizing}
 % \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the number is printed. The default value is
 % \begin{verbatim}
 %\newcommand{\showwordrank}[2]{%
