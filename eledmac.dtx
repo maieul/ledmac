@@ -29,10 +29,22 @@
 %            hyperindex=true
               hyperindex=false
              ]{hyperref}
-\usepackage[utf8]{inputenc}
+\usepackage{fontspec}
 \usepackage[english]{babel}
 \usepackage{graphicx,eledmac,metalogo}
+% Index and Changelog in one column
 \makeatletter
+  \renewenvironment{theglossary}{%
+      \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+      \columnseprule \z@  \columnsep 35\p@
+      \glossary@prologue%
+      \GlossaryParms \let\item\@idxitem \ignorespaces}
+    {\if@restonecol\onecolumn\else\clearpage\fi}
+  \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \columnseprule \z@  \columnsep 35\p@
+    \index@prologue%
+    \IndexParms \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
   \@mparswitchfalse
 \makeatother
 \EnableCrossrefs
@@ -42,7 +54,6 @@
 \renewcommand{\MakeUppercase}[1]{#1}
 \pagestyle{headings}
 \setcounter{StandardModuleDepth}{1}
-\setcounter{IndexColumns}{2}
 \begin{document}
   \raggedbottom
   \DocInput{eledmac.dtx}
@@ -52,7 +63,7 @@
 % \fi
 %
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{11649}
+% \CheckSum{11878}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -183,6 +194,7 @@
 % \changes{v0.14}{2012/04/04}{Tweaked \cs{edlabel} to get correct line number if the command is first element of a paragraph.}
 % \changes{v1.0}{2012/09/15}{Some compatibility break with eledmac. Change of name: eledmac.}
 % \changes{v1.1}{2012/09/25}{New package option: parapparatus.}
+% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
 % \changes{v1.4.2}{2012/12/12}{Debug with some special classes.}
 % \changes{v1.4.3}{2012/12/18}{Spurious space after familiar footnotes.}
 % \changes{v1.4.4}{2013/02/18}{Label inside familiar footnotes.}
@@ -190,6 +202,7 @@
 % \changes{v1.4.6}{2013/04/15}{Bug with memoir class introduced by 1.4.5.}
 % \changes{v1.4.8}{2013/07/02}{Corrects a bug with parallel texts introduced by 1.1.}
 % \changes{v1.6.1}{2013/10/27}{Corrects a false hanging verse when a verse is exactly the length of a line.}
+% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
 % \changes{v1.8.0}{2013/12/13}{Compatibility with parledgroup option of eledpar package.}
 % \changes{v1.8.2}{2014/01/31}{Debug compatibility problem with hebrew option of babel package.}
 % \changes{v1.8.3}{2014/02/03}{Fixes spurious spaces added by v1.7.0.}
@@ -246,6 +259,9 @@
 % \changes{v1.22.0}{2015/04/25}{Adds hyperlink for references to notes in indices.}
 % \changes{v1.22.0}{2015/04/25}{Fix conflict between noend package option and edtabularx environments}
 % \changes{v1.22.1}{2015/04/29}{Fix bug (added on v1.22.0) with \cs{inplaceofnumber} hook.}
+% \changes{v1.23.0}{2015/04/28}{Compatibility between nofamiliar/nocriticals option and minipage/ledgroup.}
+% \changes{v1.23.0}{2015/04/28}{Fix error of \cs{iftrue} not closed.}
+% \changes{v1.23.0}{2015/04/28}{Allow use of \cs{sameword} with inputenc managing of UTF-8.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1307,26 +1323,99 @@
 %
 % \subsection{Disambiguation of identical words in the apparatus}
 % \changes{v1.15.0}{2015/01/12}{New tools to prevent ambiguous references in lemma}
+% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the same lemma is used for multiple notes or for nested \cs{edtext}s.}
+% \changes{v1.23.0}{2015/04/28}{Optional argument of \cs{sameword} can be a comma separated list of \cs{edtext} depth.}
+% \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{sameword} when the lemma overlaps multiple line.}
 % Sometimes, the same word occurs twice (or more) in the same line.
 % \Lpack{eledmac} provides  tools to disambiguate references in the critical notes.
 % The lemma will be followed by a reference number if a given word occurs more that once in the same line.
-%
+% 
+% \subsubsection{Basic use}
 % \DescribeMacro{\sameword} To use this tool, you have to mark every occurrence of the potentially ambiguous term with the \cs{sameword} command:
 %   \begin{verbatim}
 %   Lupus \sameword{aut} canis \edtext{\sameword{aut}}{\Afootnote{et}} felix
 %   \end{verbatim} 
 % In this example, \verb+aut+ will be followed, in the critical note, by the exponent \verb+2+ if it is printed in the same line as the first \verb+aut+, but it won't if it is printed in a different line. The number is printed only after the second run.
 %
-% If you use the \cs{lemma} command, \Lpack{eledmac} assumes that the word marked with \cs{sameword} is not already present in \cs{lemma}.
-% However, if it is actually present in \cs{lemma}, you must use this method:
+% \subsubsection{Note about input encoding with UTF-8 processor}
+%
+% If you use UTF-8 processor, like \XeLaTeX\ or \LuaLaTeX, happy are you. 
+% However, you should be careful about the way a same character is encoded.
+%
+% For example the greek character \verb+ᾳ+ can be encoded, in the unicode norm, in two different way:
 % \begin{itemize}
-%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument `[inlemma]`.
-%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
+%  \item GREEK SMALL LETTER ALPHA (U+03B1) + COMBINING GREEK YPOGEGRAMMENI (U+0345)
+%  \item GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI (U+1FB3)
+% \end{itemize}
+%
+% The way this character is encoded in the file depends, in many time, of your computer input system (keyboard).
+%
+% However, by default the \cs{sameword} command consider them as two different characters. In many time, that does not matter, because you use only one way. However, in order to prevent false numbering, you should is one of the following method:
+% \begin{itemize}
+%   \item If you use \XeLaTeX, add this line in your preamble: \verb+ \XeTeXinputnormalization 1+.
+%   \item If you use \LuaLaTeX, use the \Lpack{uninormalize} of Michal Hoftich\footnote{\url{https://github.com/michal-h21/uninormalize}.} with the \verb+buffer+ option set to true.
 % \end{itemize} 
-% Like this:
+%
+% With there tools, \XeTeX\ / \LuaTeX\ will dynamicaly normalize unicode input when reading the file. Consequently, you will be sure to have no problem with \cs{sameword} command.
+% \subsubsection{Use with \cs{lemma} command}
+% If you use the \cs{lemma} command, \Lpack{eledmac} can not know to which occurence of \cs{sameword} in the first argument of \cs{edtext} a word marked with \cs{sameword} in \cs{lemma} should refer.
+% 
+% For example in the following example:
 % \begin{verbatim}
-%   \edtext{\sameword[inlemma]{sw}}{\lemma{\sameword{sw} some lemma}\Afootnote{some note}}
+%    some thing
+%       \edtext{\sameword{sw}
+%               and other \sameword{sw}
+%               and again \sameword{sw}
+%               it is all}%
+%       }{\lemma{\sameword{sw} \ldots all}\Afootnote{critical note}}.%
 % \end{verbatim}
+% \Lpack{eledmac} can not know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'', or after ``again''.
+% 
+% Consequently, you have to tell \Lpack{eledmac} which instance of \cs{sameword} in the first argument of \cs{edtext} you want to reference: 
+% \begin{itemize}
+%   \item In the content of \cs{lemma}, use \cs{sameword} with no optional argument.
+%   \item In the first argument of \cs{edtext}, use \cs{sameword} with the optional argument \oarg{X}. \meta{X} is the depth of the \cs{edtext} where the \cs{lemma} is used.
+% So if the \cs{lemma} is called in a \cs{edtext} inside another \cs{edtext}, \meta{X} is equal to \verb+2+.
+% If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. If that word is referenced in the lemma of every \cs{edtext} depth, \meta{X} can also be set to \verb+inlemma+.
+% \end{itemize} 
+% Note that only words that are actually referenced in a \cs{lemma} need the optional argument. Therefore, the first \cs{sameword} in the example above should have ``1'' as its optional argument to be referenced correctly in the lemma.
+%
+% Note also that the \meta{X} does not refer to the level where the \cs{sameword} occurs, but to the level of the \cs{lemma} that refers to that \cs{sameword}. For example: 
+% \begin{verbatim}
+%    \edtext{some \edtext{\sameword[1]{word}}{\Afootnote{om. M}}
+%            and other \sameword{word}
+%            and again a \sameword{word}
+%            it is all}%
+%    }{\lemma{some \sameword{word} \ldots all}\Afootnote{critical note}}.%
+% \end{verbatim}
+% Here the \cs{sameword} occurs in an \cs{edtext} of level 2, but since it is referenced by \cs{lemma} on level 1, it has ``1'' in the optional argument.
+
+% In the following schema each framed box represents an \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the text in superscript represents the content of \cs{lemma} for that \cs{edtext} level. The text in subscript at the right of a number represents the content of the optional argument of \cs{sameword}.
+% 
+%\fbox{%
+%  \fbox{%
+%	 $1_{inlemma}$ 
+%	 \fbox{$2$}
+%	 $3_2$%
+%       }\textsuperscript{$1$\ldots$3$}%
+%     4
+%     $5_1$ 
+%   }\textsuperscript{1\ldots5}
+%
+% The \cs{sameword} number~3 is called in a \cs{lemma} related to an \cs{edtext} of level~2.
+% It must be marked by ``2''.
+%
+% The \cs{sameword} number~5 is called in a \cs{lemma} related to \cs{edtext} of level~1. It must me marked by ``1''.
+%
+% The \cs{sameword} number is called in two \cs{lemma}s: one related to a \cs{edtext} of level~1, the other related to \cs{edtext} of level~2.
+% It must be marked by ``1,2''.
+% However, as \cs{lemma} is called only in level~1 and~2, ``1,2'' could replaced by ``inlemma''.
+%
+% The \cs{sameword} number ``2'' is in the first argument of a \cs{edtext} of level~3, but it has no \cs{lemma}-command, so there is no need to mark it.
+% 
+%
+% 
+% \subsubsection{Customizing}
 % \DescribeMacro{\showwordrank}You can redefine the \cs{showwordrank} macro to change the way the number is printed. The default value is
 % \begin{verbatim}
 %\newcommand{\showwordrank}[2]{%
@@ -1492,10 +1581,38 @@
 % \DescribeMacro{\boxsymlinenum}
 % \cs{boxsymlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} but for the line number symbol.
 % 
-%
+% \changes{v1.23.0}{2015/04/28}{Add \cs{boxlinenumalign} and \cs{boxXendlinenumalign}.}
+% \DescribeMacro{boxlinenumalign}
+% If you put line number in box, it will be aligned left inside the box.
+% However, you can change it using  \cs{boxlinenumalign}\oarg{s}\marg{text} where \meta{text} can be the following:
+% \begin{description}
+%  \item[L] to align left (default value);
+%  \item[R] to align right;
+%  \item[C] to center.
+% \end{description}
+% 
+% \changes{v1.23.0}{2015/04/28}{Add \cs{boxstartlinenum}, \cs{boxXendstartlinenum}, \cs{boxendlinenum}, \cs{boxXendendlinenum}.}
+% When using boxlinenum, \Eledmac{} put all the line number description in the same box. That is, the same box will contain: the start line number, the dash, and either the end line number or the range symbol (like \verb+ff.+).
+% However, it is possible to box them in two different boxes.
+% \begin{itemize}
+%  \item \cs{boxstartlinenum}\oarg{s}\marg{l} will box the start line number in a box of length \meta{l}. The content will be put at the right of the box.
+%  \item \cs{boxendlinenum}\oarg{s}\marg{l} will box the dash plus the end line number  or the range symbol in a box  of length \meta{l}. The content will be put at the left of the box.
+% \end{itemize}
+% 
+% With these two commands, it is possible to horizontaly align the dash of line number when using critical notes, to obtain something like:
+% \begin{verbatim}
+%   1 
+%  12-23
+%  24ff.
+% \end{verbatim}
 % \DescribeMacro{\boxXendlinenum}
+% \DescribeMacro{\boxXendlinenumalign}
+% \DescribeMacro{\boxXendstartlinenumalign}
+% \DescribeMacro{\boxXendendlinenumalign}
 % \changes{v1.20.0}{2015/03/22}{Add \cs{boxXendlinenum}}
-% \cs{boxXendlinenum}\oarg{s}\marg{l} is the same as \cs{boxlinenum} except in endnotes.
+% \cs{boxXendlinenum}\oarg{s}\marg{l}, \cs{boxXendlinenumalign}\oarg{s}\marg{text},  \cs{boxXendstartlinenum}\oarg{s}\marg{l},  \cs{boxXendendlinenum}\oarg{s}\marg{l} are the same as, respectively, \cs{boxlinenum} and \cs{boxlinenumalign}, \cs{boxstartlinenum}, \cs{boxendlinenum} except in endnotes.
+%
+%
 %\subsubsection{Separator between the lemma and the note}
 % \paragraph{For footnotes}
 % \DescribeMacro{\lemmaseparator}
@@ -1640,7 +1757,7 @@
 %
 % \DescribeMacro{\parafootsep}
 % For paragraphed footnotes (see below), you can choose the separator between each note by using \cs{parafootsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{parafootsep}\verb+{$\parallel$}+. 
-% Note that if the symbol defined by \cs{symlinenum} must be used at the begin of a notes, the \cs{parafootsep} is not used before this note.
+% Note that if the symbol defined by \cs{symlinenum} must be used at the beginning of a note, the \cs{parafootsep} is not used before this note.
 %
 % \changes{v1.12.0}{2014/08/05}{New options for ragged-paragraph notes}
 % \DescribeMacro{\Xragged}
@@ -3103,7 +3220,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/04/29 v1.22.1 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/04/28 v1.23.0 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3216,44 +3333,10 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% Loading package \emph{xargs} to declare commands with optional arguments. 
-% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
-% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings and \emph{iflutex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragging for paragraphed notes.
-% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
-%  \begin{macrocode}
-\RequirePackage{xargs}
-\RequirePackage{etoolbox}
-\reserveinserts{32}
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifluatex}
-\RequirePackage{ragged2e}
-%    \end{macrocode}
-% \begin{macro}{\if@RTL}
-% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
-% But we define it if the bidi package is not loaded.
-%    \begin{macrocode}
-\ifdef{\if@RTL}{}{\newif\if@RTL}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\showlemma}
-% \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
-% It depends on the option.
-% \changes{v0.4}{2004/02/29}{Added \cs{showlemma}}
-%    \begin{macrocode}
-\ifledfinal
-  \newcommand*{\showlemma}[1]{#1}
-\else
-  \newcommand*{\showlemma}[1]{\underline{#1}}
-\fi
-
-%    \end{macrocode}
-% \end{macro}
 % \subsection{Loading packages}
-% Loading package \emph{xargs} to declare commands with optional arguments. 
-% \emph {Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
-% Use \emph{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings, \emph{ifluatex} to test if LuaLaTeX is running, and \Lpack{ragged2e} to manage ragged for paragraphed notes.
-% \changes{v1.4}{2012/11/16}{Compatibility with LuaTeX of RTL notes.}
+% Loading package \Lpack{xargs} to declare commands with optional arguments. 
+% \Lpack{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \cs{csname} etc.).  
+% Use \Lpack{suffix} to declare commands with a starred version, \Lpack{xstring} to work with strings, \Lpack{ifluatex} and \Lpack{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \Lpack{ragged2e} to manage ragged for paragraphed notes.
 %  \begin{macrocode}
 \RequirePackage{xargs}
 \RequirePackage{etoolbox}
@@ -3262,6 +3345,8 @@
 \RequirePackage{xstring}
 \RequirePackage{ifluatex}
 \RequirePackage{ragged2e}
+\RequirePackage{ragged2e}
+\RequirePackage{ifxetex}%
 %    \end{macrocode}
 %
 % \subsection{Boolean flags}
@@ -3297,6 +3382,13 @@
 % \begin{macro}{\if@RTL}
 % The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
 % But we define it as well if the \Lpack{bidi} package is not loaded.
+%    \begin{macrocode}
+\ifdef{\if@RTL}{}{\newif\if@RTL}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\if@RTL}
+% The \cs{if@RTL} is defined by the bidi package, which is sometimes loaded by \emph{polyglossia}. 
+% But we define it if the bidi package is not loaded.
 %    \begin{macrocode}
 \ifdef{\if@RTL}{}{\newif\if@RTL}
 %    \end{macrocode}
@@ -3636,6 +3728,19 @@
 % \end{macro}
 % Here, we define some commands which gobble their arguments.
 % \subsection{Miscellaneous commands}
+% \begin{macro}{\showlemma}
+% \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
+% It depends on the option.
+% \changes{v0.4}{2004/02/29}{Added \cs{showlemma}}
+%    \begin{macrocode}
+\ifledfinal
+  \newcommand*{\showlemma}[1]{#1}
+\else
+  \newcommand*{\showlemma}[1]{\underline{#1}}
+\fi
+
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\linenumberlist}
 % The code for the \verb?\linenumberlist? mechanism was given to Peter Wilson by Wayne
 % Sullivan\index{Sullivan, Wayne} on 2004/02/11.
@@ -4762,8 +4867,6 @@
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
   \list@clear{\actions@list}%
-  \list@clear{\sw@list}%
-  \list@clear{\sw@list@inedtext}%
   }%
 %    \end{macrocode}
 % \end{macro}
@@ -5267,6 +5370,7 @@
   \@ref@reg{#1}{#2}}
 \newcommand*{\@ref@reg}[2]{%
   \global\insert@count=#1\relax
+  \global\advance\@edtext@level by 1%
   \loop\ifnum\insert@count>\z@
     \xright@appenditem{\the\absline@num}\to\insertlines@list
     \global\advance\insert@count \m@ne
@@ -5287,7 +5391,8 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
-    \let\@sw\@gobbletwo%
+    \let\@lemma=\relax%
+    \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
@@ -5304,11 +5409,37 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+% Also set the boolean about the use of lemma in this edtext level to false.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+     \providebool{lemmacommand@\the\@edtext@level}%
+     \boolfalse{lemmacommand@\the\@edtext@level}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2}
+  #2%
+%    \end{macrocode}
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+  \ifnum\@edtext@level>0%
+    \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtext@\the\@edtext@level\endcsname}}%
+    \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
+    \letcs{\@tmp}{sw@list@edtext@\the\@edtext@level}%
+    \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
+    \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+    \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
+  \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+  \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
+%    \begin{macrocode}
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -5754,7 +5885,7 @@
 % nested instances of \cs{edtext}, and other problematic macros, from
 % our lemma. This is similar to what we did in reading the line-list
 % file using \cs{dummy@ref} and various redefinitions---and that's
-% because nested \cs{edtext} macros create nested \cs{@ref} entries
+% because nested \cs{edtext}s macros create nested \cs{@ref} entries
 % in the line-list file.
 %
 % Here's a macro that takes the same arguments as
@@ -5868,12 +5999,14 @@
 \newcommand{\@tag}{}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\if@edtext@}
+% \begin{macro}{\@edtext@level}
 % \changes{v1.15.0}{2015/01/12}{New boolean \cs{if@edtext@}.}
-% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}). 
+% \changes{v1.23.0}{2015/04/28}{The boolean \cs{if@edtext@} becomes the counter \cs{edtext@level}.}
+% This counter is increased by 1 at each level of \cs{edtext} (or \cs{critext}). 
 % That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
 %    \begin{macrocode}
-\newif\if@edtext@%
+\newcount\@edtext@level%
+\@edtext@level=0%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\critext}
@@ -5907,13 +6040,37 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% We switch the \cs{@edtext@} flag,
-% to let know to other commands that we are in a  \cs{edtext}.
+% We increase the \cs{@edtext@} counter to know in which level of \cs{edtext} we are.
 %    \begin{macrocode}
-      \@edtext@true%
+      \global\advance\@edtext@level by 1%
+%    \end{macrocode}
+% By default, we don't use \cs{lemma}
+%    \begin{macrocode}
+      \global\@lemmacommand@false%
+%    \end{macrocode}
+%    \begin{macrocode}
+      \begingroup%
+%    \end{macrocode}
+% We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \cs{sw@inthisedtext}.
+%    \begin{macrocode}
+      \ifledRcol% 
+        \ifcsundef{sw@list@edtextR@\the\@edtext@level}%
+              {\global\let\sw@inthisedtext\empty}%
+              {\ifcsempty{sw@list@edtextR@\the\@edtext@level}%
+		{\global\let\sw@inthisedtext\empty}%
+		{\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+	      }%
+      \else%
+        \ifcsundef{sw@list@edtext@\the\@edtext@level}%
+              {\global\let\sw@inthisedtext\empty}%
+              {\ifcsempty{sw@list@edtext@\the\@edtext@level}%
+		{\global\let\sw@inthisedtext\empty}%
+		{\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+	      }%
+      \fi%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
-% Our normal lemma is just argument \verb"#1"; but that argument could have
+% \label{@tag}Our normal lemma is just argument \verb"#1"; but that argument could have
 % further invocations of \cs{edtext} within it. We get a copy of the
 % lemma without any \cs{edtext} macros within it by temporarily redefining
 % \cs{edtext} to just copy its first argument and ignore the other,
@@ -5923,9 +6080,11 @@
 % original \cs{edtext} restored; within this group we've also turned
 % off the expansion of those control sequences commonly found within text
 % that can cause trouble for us.
+% 
 %    \begin{macrocode}
-      \begingroup%
-        \global\renewcommand{\@tag}{\no@expands #1}%
+        \global\renewcommand{\@tag}{%
+          \no@expands #1%
+          }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\l@d@nums}
@@ -5955,6 +6114,19 @@
 %    \begin{macrocode}
         \ignorespaces #2\relax%
 %    \end{macrocode}
+% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+%    \begin{macrocode}
+        \@ifundefined{xpg@main@language}{%if not polyglossia
+           \flag@start}%
+           {\if@RTL\flag@end\else\flag@start\fi%
+           }%
+%    \end{macrocode}
+% We write in the numbered file wether the current \cs{edtext} has a \cs{lemma} in the the second argument.
+%    \begin{macrocode}
+       \if@lemmacommand@%
+         \write\linenum@out{\string\@lemma}%
+       \fi%
+%    \end{macrocode}
 % Finally, we're ready to admit the first argument into the current
 % paragraph.
 %
@@ -5965,10 +6137,6 @@
 % within the expansion of \verb"#2" above, or in \cs{aftergroup}
 % commands within that expansion.
 %    \begin{macrocode}
-        \@ifundefined{xpg@main@language}{%if not polyglossia
-           \flag@start}%
-           {\if@RTL\flag@end\else\flag@start\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-           }%
       \endgroup%
       \showlemma{#1}%
 %    \end{macrocode}
@@ -5990,7 +6158,7 @@
            {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
            }%
 %    \end{macrocode}
-% We switch to false some flag.
+% We switch to false some flags.
 % \begin{itemize}
 %    \item The one that checks having footnotes inside a \cs{edtext}.
 %    \item The one that says we are inside a \cs{edtext}.
@@ -5998,7 +6166,7 @@
 % \end{itemize}
 %    \begin{macrocode}
       \global\@noneed@Footnotefalse%
-      \@edtext@false%
+      \global\advance\@edtext@level by -1%
       \global\@lemmacommand@false%
 %    \end{macrocode}
 % If we are outside of a numbered paragraph,
@@ -6071,12 +6239,18 @@
 % \subsection{Substitute lemma}
 %
 % \begin{macro}{\lemma}
+% \changes{v1.23.0}{2015/04/28}{Fix spurious space after \cs{lemma} command}
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
 % that's passed on to the notes.
+% Read about \cs{@tag} in normal \cs{edtext} macro for more details about \cs{sw@list@inedtext} and \cs{no@expands} (\reff{@tag}).
 %    \begin{macrocode}
 \newcommand*{\lemma}[1]{%
   \global\@lemmacommand@true%
-  \global\renewcommand{\@tag}{\no@expands #1}}%
+  \global\renewcommand{\@tag}{%
+    \no@expands #1%
+  }%
+  \ignorespaces%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6086,6 +6260,15 @@
 % That is useful for some commands which can have a different behavior if the lemma in the note is different from the lemma in the main text.
 %    \begin{macrocode}
 \newif\if@lemmacommand@%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@lemma}
+% The \cs{@lemma} is writed in the numbered file to set which \cs{edtext} has an
+% \cs{lemma} as second argument.
+%    \begin{macrocode}
+\newcommand{\@lemma}{%
+  \booltrue{lemmacommand@\the\@edtext@level}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Substitute line numbers}
@@ -6152,161 +6335,253 @@
 % The general mechanism is the following:
 % \begin{itemize}
 %    \item \textbf{At the first run}, each \cs{sameword} command increments an \Lpack{etoolbox} counter the name of which contains the argument of the \cs{sameword} commands.
-%    \item Then this counter, associated with the argument of \cs{sameword} is stored (\cs{@sw} command) in the auxiliary file of the current \Lpack{eledmac} section (the \verb+.1+, \verb+.2+… file).
+%    \item Then this counter, associated with the argument of \cs{sameword} is stored,  with the \cs{@sw} command, in the auxiliary file of the current \Lpack{eledmac} section (the \verb+.1+, \verb+.2+… file).
 %    \item \textbf{When this auxiliary file is read at the second run}, different operations are achieved:
+%	\begin{enumerate} 
+%       	\item  Get the rank of each \cs{sameword} in a line (relative rank) from the rank of each \cs{sameword} in all the numbered section (absolute rank):
+%		      \begin{itemize}
+%        		\item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
+%        		\item  For each \cs{sameword} having the same argument,  we substract from its absolute rank the number stored for the paired \cs{sameword} argument and previous absolute line number. Consequently, we obtain the relative rank.
+%			       \item See the following example which explain how for same \cs{sameword} absolute ranks are transformed to relative rank.
+%  \begin{verbatim}
+%  At line 1:
+%  absolute rank 1 becomes relative rank 1-0 = 1
+%  1 is stored for this \sameword and the line 1
+%  At line 2:
+%  absolute rank 2 becomes relative rank 2-1 = 1
+%  absolute rank 3 becomes relative rank 3-2 = 2
+%  3 is stored for this \sameword and the line 2
+%  At line 3:
+%  no \sameword for this line.
+%  3 is stored for this \sameword and the line 3
+%  At line 4:
+%  absolute rank 4 becomes relative rank 4-3 = 1  
+%  3 is stored for this \sameword and the line 4
+%  \end{verbatim}
+%	       \end{itemize}
+%        \item Create lists of lists of \cs{sameword} by depth of \cs{edtext}.
+% That is: create a list for \cs{edtext} of level~1, a list for \cs{edtext} of level~2, a list for \cs{edtext} of level~3 etc.
+% For each \cs{edtext} in these list, we store all the relative rank of \cs{saweword} which are called as lemma information, that is 1) or called in the first argument of \cs{sameword} 2) or called in the \cs{lemma} macro of the second argument of \cs{sameword} AND marked by the optional argument of \cs{saweword} in first argument of \cs{edtext}.
+%
+% For example, suppose a line with nested \cs{edtext}s which contains some 
+% word marked by \cs{sameword} and having the following relative rank:\\
+%
+% 
+%\let\up\textsuperscript
+%bar\up{1} \fbox{%
+%	    \fbox{foo\up{1} foo\up{2} bar\up{2} foo\up{3}} (A)(B)
+%	    foo\up{4} bar\up{3}% 
+%	 } (C)
+%	 \fbox{%
+%	    \fbox{foo\up{5}} (D)
+%	    bar\up{4}
+%	 } (E)
+%
+% In this example, all lemma information for \cs{edtext} is framed. The text in parenthesis is the content of critical notes associated to the preceding frame.
+% As you can see, we have two level of \cs{edtext}.
+%
+%The list for \cs{edtext}s of level~1 is $\{\{1,2,2,3,4,3\},\{5,4\}\}$.
+%
+%The list for \cs{edtext}s of level~2 is $\{\{1,2,2,3\},\{5\}\}$.
+%
+% As you can see, the mandatory argument of \cs{sameword} does not matter: we store the rank informations for every word potentially ambiguous.
+%       \end{enumerate}
+%  \item At the second run, when a critical notes is called, we associate it to the next item of the list associated to is \cs{edtext} level. So, in the previous example:
+%  \begin{itemize}
+%      \item Critical notes (A) and (B) are associated with $\{1,2,2,3\}$.
+%      \item Critical note (C) is associated with $\{1,2,2,3,4,3\}$.
+%      \item Critical note (D) is associated with $\{5\}$.
+%      \item Critical note (E) is associated with $\{5,4\}$.
+%  \end{itemize}
+%  \item At the second run, when a critical note is printed:
 %    \begin{itemize}
-%        \item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
-%        \item A \cs{sw@list} list is filled with the values stored in the auxiliary file. But before doing this we transform these values : we substract from them the number stored for the paired \cs{sameword} argument and previous absolute line number.
-%    \end{itemize}
-%  \item At the second run, when the \cs{sameword} command is called, new operations happen. We first read the first element of the \cs{sw@list}, then delete it from this list, and, if we are inside a \cs{edtext} command, we store it in a \cs{sw@list@inedtext} list.
-%  \item At the second run, when the critical notes are built, the \cs{sameword@inedtext} command is  used instead of \cs{sameword}. Then, we  read the next value of  \cs{sw@list@inedtext} list and remove it from this list.  We send it to the \cs{showwordrank} to be printed after the lemma, but only if the current line has more than one value for the argument of \cs{sameword}.  Otherwise, we just print the lemma, with no number.
-%  
+%         \item The \cs{sameword} command is let  \cs{sameword@inedtext}. 
+%	        \item At each call of this \cs{sameword@inedtext}, we step to the next element of the list associated to the note. Let it be $r$.
+%	      \item For the word marked by \cs{sameword}, we calculate how many time it is called in its line. To do it:
+%           \begin{itemize}
+%            \item We get the absolute line number of the current \cs{sameword}. This absolute line number was stored with list of relative rank for the current \cs{edtext}. That means, in the previous example, that, if the absolute line number of \cs{edtext} was 1, that critical notes (A) and (B) were not associated with  $\{1,2,2,3\}$ but with $\{(1,1),(2,1),(2,1),(3,1)\}$. Such method to know the absolute line number associated to a \cs{sameword} is required because a \cs{edtext} can be overlap many lines, but \cs{sameword} can get it.
+%            \item We get the value associated, when reading the auxiliary file, to the pair compose by the current marked word and the current absolute line number. Let this value be $n$.
+%           \end{itemize}
+%        \item If $n >1 $, that mean the current word appears more than once time in its line. In this case, we call \cs{showwordrank} with the word as first argument and $r$ as second argument. If the word is called only once, we just print it.
+%   \end{itemize}
 % \end{itemize} 
-
-% \begin{macro}{\sw@list}
-% \begin{macro}{\sw@list@inedtext}
-% So, first, the lists.
+% After theory, implementation.
+% \begin{macro}{\get@sw@txt}
+% As the argument of \cs{sameword} can contain active character if we 
+% use \Lpack{inputenc} with \verb+utf8+ option instead of native UTF-8 engine, 
+% we store its detokenized content in a macro in order to allow dynamic name of macro with \cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
+%
+% Because there is a bug with \cs{detokenize} and \XeTeX\ when using non BMP characters\footnote{\url{http://sourceforge.net/p/xetex/bugs/108/}}, 
+% we detokenize only for not \XeTeX engines. In any case, in \XeTeX, a \cs{csname} construction can contain UTF-8 character without not problem, as UTF-8 characters are not manage with category code, but are read directly as UTF-8 characters.
 %    \begin{macrocode}
-\list@create{\sw@list}%
-\list@create{\sw@list@inedtext}%
+\newcommand{\get@sw@txt}[1]{%
+  \ifxetex%
+    \xdef\sw@txt{#1}%
+  \else%
+    \expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}%
+  \fi%
+}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \begin{macro}{\sameword}
+% \changes{v1.23.0}{2015/04/28}{In order to allow use of \cs{sameword} with inputenc, we detokonize its mandatory argument before using it in control sequence names.}
 % The hight level macro \cs{sameword}, used by the editor.
 %    \begin{macrocode}
-\newcommandx{\sameword}[2][1,usedefault]{\leavevmode%
+\newcommandx{\sameword}[2][1,usedefault]{%
+     \leavevmode%
+     \get@sw@txt{#2}%
 %    \end{macrocode}
-% First, increament the counter corresponding to the argument.
+% Now, the real code. First, increment the counter corresponding to the argument.
 %    \begin{macrocode}
-    \unless\ifledRcol%
-      \csnumgdef{sw@#2}{\csuse{sw@#2}+1}%
+  \unless\ifledRcol%
+     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+1}%
 %    \end{macrocode}
-% Then, write its value to the numbered file
+% Then, write its value to the numbered file.  
 %    \begin{macrocode}
-      \protected@write\linenum@out{}{\string\@sw{#2}{\csuse{sw@#2}}}%
-%    \end{macrocode}
-% At the second run, read the \cs{sw@list} next item and, if we are in \cs{edtext}, put it to \cs{sw@list@inedtext}.
-%    \begin{macrocode}
-    \unless\ifx\sw@list\empty%
-      \gl@p\sw@list\to\@tempb%
-      \if@edtext@%
-        \unless\if@lemmacommand@%
-          \xright@appenditem{\@tempb}\to\sw@list@inedtext%
-        \else%
-          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtext}{}%
-        \fi%
-      \fi%
-      \global\let\@tempb=\undefined%
-    \fi%
+     \protected@write\linenum@out{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt}}{#1}}%
 %    \end{macrocode}
 % Do the same thing if we are in the right columns.
 %    \begin{macrocode}
   \else%
-    \csnumgdef{sw@#2@R}{\csuse{sw@#2@R}+1}%
-    \protected@write\linenum@outR{}{\string\@sw{#2}{\csuse{sw@#2@R}}}%
-    \unless\ifx\sw@listR\empty%
-      \gl@p\sw@listR\to\@tempb%
-      \if@edtext@%
-        \unless\if@lemmacommand@%
-          \xright@appenditem{\@tempb}\to\sw@list@inedtextR%
-        \else%
-          \ifstrequal{#1}{inlemma}{\xright@appenditem{\@tempb}\to\sw@list@inedtextR}{}%
-        \fi%
-      \fi%
-      \global\let\@tempb=\undefined%
-    \fi%
+     \csnumgdef{sw@\sw@txt@R}{\csuse{sw@\sw@txt@R}+1}%
+     \protected@write\linenum@outR{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt@R}}{#1}}%
   \fi%
 %    \end{macrocode}
-% In any case, print the word.
+% And print the word.
 %    \begin{macrocode}
   #2%
 }%
 %    \end{macrocode}
 % \end{macro}
+% A flag set to true if a \cs{@sw} relative rank must be added to the list of ranks for a specific \cs{edtext}.
+% \begin{macro}{\if@addsw}
+%    \begin{macrocode}
+\newif\if@addsw%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\@sw}
 % The command printed in the auxiliary files. 
 %    \begin{macrocode}
-\newcommand{\@sw}[2]{%
+\newcommand{\@sw}[3]{%
+  \get@sw@txt{#1}%
   \unless\ifledRcol%
 %    \end{macrocode}
 % First, define a counter which store the second argument as value for a each paired absolute line number/first argument
 %    \begin{macrocode}
-    \csxdef{sw@#1@\the\absline@num @\the\section@num}{#2}%
+    \csxdef{sw@\sw@txt @\the\absline@num @\the\section@num}{#2}%
 %    \end{macrocode}
 % If  such argument was not defined for the preceding line, define it.
 %    \begin{macrocode}
     \numdef{\prev@line}{\the\absline@num-1}%
-    \ifcsundef{sw@#1@\prev@line @\the\section@num}{%
-      \csnumgdef{sw@#1@\prev@line @\the\section@num}{#2-1}%
+    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@num}{%
+      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@num}{#2-1}%
      }{}%
 %    \end{macrocode}
-% Then, calculate the position of the word in the line, and put it in \cs{sw@list}.
+% Then, calculate the position of the word in the line.
 %    \begin{macrocode}
-    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@num}}%
-    \xright@appenditem{\the@sw}\to\sw@list%
+    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
 %    \end{macrocode}
 % And do the same thing for the right side.
 %    \begin{macrocode}
   \else%
-    \csxdef{sw@#1@\the\absline@numR @\the\section@numR @R}{#2}%
+    \csxdef{sw@\sw@txt @\the\absline@numR @\the\section@numR @R}{#2}%
     \numdef{\prev@line}{\the\absline@numR-1}%
-    \ifcsundef{sw@#1@\prev@line @\the\section@numR @R}{%
-      \csnumgdef{sw@#1@\prev@line @\the\section@numR @R}{#2-1}%
+    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@numR @R}{%
+      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@numR @R}{#2-1}%
      }{}%
-    \numdef{\the@sw}{#2-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
-    \xright@appenditem{\the@sw}\to\sw@listR%
+    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
   \fi%
+%    \end{macrocode}
+% And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
+%    \begin{macrocode}
+  \@tempcnta=\@edtext@level
+  \@whilenum{\@tempcnta>0}\do{%
+    \ifcsdef{sw@list@edtext@tmp@\the\@tempcnta}%
+      {%
+        \@addswfalse%
+        \notbool{lemmacommand@\the\@tempcnta}%
+          {\@addswtrue}%
+          {\IfStrEq{#3}{inlemma}%
+            {\@addswtrue}%
+            {%
+             \def\do##1{%
+                \ifnumequal{##1}{\the\@tempcnta}%
+                  {\@addswtrue\listbreak}%
+                  {}%
+             }%
+             \docsvlist{#3}%
+            }%
+          }%
+          \if@addsw%
+            \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
+            \ifledRcol%
+              \xright@appenditem{{\the@sw}{\the\absline@numR}}\to\@tmp%
+            \else%
+              \xright@appenditem{{\the@sw}{\the\absline@num}}\to\@tmp%
+            \fi%
+            \cslet{sw@list@edtext@tmp@\the\@tempcnta}{\@tmp}%
+          \fi%
+      }%
+      {}%
+    \advance\@tempcnta by -1%
+  }%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\sameword@inedtext}
 % The command called when \cs{sameword} is called in a edtext.
 %    \begin{macrocode}
-\def\sameword@inedtext#1{%
+\newcommandx{\sameword@inedtext}[2][1,usedefault]{%
+  \get@sw@txt{#2}%
   \unless\ifledRcol@%
-%    \end{macrocode}
-% First, calculate the number of occurrences of the word in the current line
-%    \begin{macrocode}
-      \ifcsdef{sw@#1@\the\absline@num @\the\section@num}{%
-        \numdef{\prev@line}{\the\absline@num-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@num @\the\section@num}-\csuse{sw@#1@\prev@line @\the\section@num}}%
-        }%
-        {\numdef{\sw@atthisline}{0}}%
 %    \end{macrocode}
 % Just a precaution.
 %    \begin{macrocode}
       \ifx\sw@list@inedtext\empty%
         \def\the@sw{999}%
+        \def\this@absline{-99}%
       \else%
 %    \end{macrocode}
 % But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for edtext.
 %    \begin{macrocode}
-        \gl@p\sw@list@inedtext\to\the@sw%
+        \gl@p\sw@list@inedtext\to\@tmp%
+        \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
+        \edef\this@absline{\expandafter\@secondoftwo\@tmp}%
       \fi%
 %    \end{macrocode}
-% Then, print the rank, but only if there is more than one occurrence of the word in the current line.
+% First, calculate the number of occurrences of the word in the current line
+%    \begin{macrocode}
+      \ifcsdef{sw@\sw@txt @\this@absline @\the\section@num}{%
+        \numdef{\prev@line}{\this@absline-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@num}-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
+        }%
+        {\numdef{\sw@atthisline}{0}}%
+%    \end{macrocode}
+% Finally, print the rank, but only if there is more than one occurrence of the word in the current line.
 %    \begin{macrocode}
       \ifnumgreater{\sw@atthisline}{1}%
-          {\showwordrank{#1}{\the@sw}}%
-          {#1}%
+          {\showwordrank{#2}{\the@sw}}%
+          {#2}%
 %    \end{macrocode}
 % And the same for right side.
 %    \begin{macrocode}
   \else%
-      \ifcsdef{sw@#1@\the\absline@numR @\the\section@numR @R}{%
-        \numdef{\prev@line}{\the\absline@numR-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@#1@\the\absline@numR @\the\section@numR @R}-\csuse{sw@#1@\prev@line @\the\section@numR @R}}%
+      \ifx\sw@list@inedtext\empty%
+        \def\the@sw{999}%
+        \def\this@absline{-99}%
+      \else%
+        \gl@p\sw@list@inedtext\to\@tmp%
+        \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
+        \edef\this@absline{\expandafter\@secondoftwo\@tmp}%       
+      \fi%
+      \ifcsdef{sw@\sw@txt @\this@absline @\the\section@numR @R}{%
+        \numdef{\prev@line}{\this@absline-1}%
+        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@numR @R}-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
         }%
         {\numdef{\sw@atthisline}{0}}%
-      \ifx\sw@list@inedtextR\empty%
-        \def\the@sw{999}%
-      \else%
-        \gl@p\sw@list@inedtextR\to\the@sw%
-      \fi%
         \ifnumgreater{\sw@atthisline}{1}%
-          {\showwordrank{#1}{\the@sw}}%
-          {#1}%
+          {\showwordrank{#2}{\the@sw}}%
+          {#2}%
   \fi%
 }%
 %    \end{macrocode}
@@ -7975,6 +8250,7 @@
         {}%
       }%
       {}%
+     \fi%
     }%
 }%
 %    \end{macrocode}
@@ -8082,7 +8358,8 @@
 % Now we're ready to print it all. If the lineation is by pstart, we print the pstart.
 % \changes{v0.15}{2012/06/11}{Line numbering can be reset at each pstart.}
 %    \begin{macrocode}
-\def\printlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+\def\printlines#1|#2|#3|#4|#5|#6|#7|{%
+  \begingroup%
   \ifluatex%
     \luatextextdir TLT%
   \fi%
@@ -8093,15 +8370,24 @@
 % ending sub-line number: it could come after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+% So, first, print ths start line number.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxstartlinenum@\@currentseries}\bgroup\hfill}%
   \ifl@d@pnum #1\fullstop\fi
   \linenumrep{#2}
+  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
 %    \end{macrocode}
+% Then print the dash + end linuber, or the range symbol.
 % \changes{v0.3}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
 %        to \cs{printlines}}
 % \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
 %    \begin{macrocode}
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{morethantwolines@\@currentseries}%
@@ -8114,7 +8400,12 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-\endgroup}
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {}%
+    {\hfill}%Prevent underfull hbox
+  \egroup%
+  \endgroup%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\normalfootstart}\label{normalvalues}
@@ -10245,7 +10536,13 @@
     \csuse{Xendnotenumfont@#4}%
     \ifdimequal{\csuse{boxXendlinenum@#4}}{0pt}%
       {\printendlines#1|}%
-      {\leavevmode\hbox to \csuse{boxXendlinenum@#4}{\printendlines#1|\hfill}}%
+      {\leavevmode%
+       \hbox to \csuse{boxXendlinenum@#4}%
+       {%
+       \IfSubStr{RC}{\csuse{boxXendlinenumalign@#4}}{\hfill}{}%
+       \printendlines#1|%
+       \IfSubStr{LC}{\csuse{boxXendlinenumalign@#4}}{\hfill}{}%
+      }}%
   }%
   \enspace{%
     \nottoggle{Xendlemmadisablefontselection@#4}%
@@ -10387,11 +10684,23 @@
 % ending sub-line number: it could be coming after the starting
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
+%
+% So, first, print the start lines.
 %    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxXendstartlinenum@\@currentseries}\bgroup\hfill}%
   \printnpnum{#1}%
   \ifoldprintnpnumspace@\space\fi%
   \linenumrep{#2}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
+%    \end{macrocode}
+% And now, print the dash + the end line number, or the line number range symbol.
+%    \begin{macrocode}
+  \ifdimequal{\csuse{boxXendendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxXendendlinenum@\@currentseries}\bgroup}%
   \ifl@d@twolines%
     \ifl@d@morethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
@@ -10404,7 +10713,12 @@
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-\endgroup}
+  \ifdimequal{\csuse{boxXendendlinenum@\@currentseries}}{0pt}%
+    {}%
+    {\hfill}%Prevent underfull hbox
+  \egroup%
+  \endgroup%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10526,7 +10840,13 @@
       \csgdef{Xnotenumfont@#1}{\notenumfont}%
       \csgdef{Xnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXnote@#1}{}%
+      
       \csgdef{boxlinenum@#1}{0pt}%
+      \csgdef{boxlinenumalign@#1}{L}%
+      
+      \csgdef{boxstartlinenum@#1}{0pt}%
+      \csgdef{boxendlinenum@#1}{0pt}%
+
       \csgdef{boxsymlinenum@#1}{0pt}%
       \newtoggle{numberonlyfirstinline@#1}%
       \newtoggle{numberonlyfirstintwolines@#1}%
@@ -10566,9 +10886,10 @@
 % \subsubsection{Create commands for critical apparatus, \cs{Afootnote}, \cs{Bfootnote} etc.}
 % Note the double \# in command: it's because command is made inside another command.
 % \changes{v1.4}{2012/11/16}{Remembers the language of the lemma, in order to create a correct direction for the footnote separator.}
+% \changes{v1.23.0}{2015/04/29}{Prevent spurious spaces when \cs{Afootnote} and similar commands are followed by spaces (bug added on 1.0.0!).}
 %    \begin{macrocode}
       \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-          \if@edtext@%
+          \ifnum\@edtext@level>0%
             \begingroup%
             \newcommand{\content}{##2}%
             \ifnumberedpar@%
@@ -10583,6 +10904,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                     }\to\inserts@listR
@@ -10599,6 +10921,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                      }\to\inserts@list
@@ -10608,11 +10931,11 @@
             \else
                 \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
             \fi%
-            \ignorespaces%
             \endgroup%
           \else%
             \led@err@FootnoteWithoutEdtext%
           \fi%
+   \ignorespaces%
           }
 %    \end{macrocode}
 % We need to be able to modify \Eledmac's footnote macros and restore their
@@ -10752,7 +11075,13 @@
       \csgdef{Xendnotenumfont@#1}{\notenumfont}%
       \csgdef{Xendnotefontsize@#1}{\notefontsetup}%
       \csgdef{bhookXendnote@#1}{}%
+      
       \csgdef{boxXendlinenum@#1}{0pt}%
+      \csgdef{boxXendlinenumalign@#1}{L}%
+      
+      \csgdef{boxXendstartlinenum@#1}{0pt}%
+      \csgdef{boxXendendlinenum@#1}{0pt}%
+
       \csgdef{Xendlemmaseparator@#1}{}%
       \csgdef{Xendbeforelemmaseparator@#1}{0em}%
       \csgdef{Xendafterlemmaseparator@#1}{0.5em}%
@@ -10972,7 +11301,7 @@
   \newhookcommand@series{Xcolalign}%
   \newhookcommand@series{Xnotenumfont}
   \newhookcommand@series{bhookXnote}
-  \newhookcommand@series{boxsymlinenum} 
+  \newhookcommand@series{boxsymlinenum}%
   \newhookcommand@series{symlinenum}
   \newhookcommand@series{beforenumberinfootnote}
   \newhookcommand@series{afternumberinfootnote}
@@ -10997,7 +11326,13 @@
   \newhookcommand@series@reload{beforeXnotes}
   \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
   \newhookcommand@series{Xnotefontsize}
-  \newhookcommand@series{boxlinenum}
+
+  \newhookcommand@series{boxlinenum}%
+  \newhookcommand@series{boxlinenumalign}%
+
+  \newhookcommand@series{boxstartlinenum}%
+  \newhookcommand@series{boxendlinenum}% 
+  
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
@@ -11035,7 +11370,13 @@
   \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{bhookXendnote}
+  
   \newhookcommand@series{boxXendlinenum}%
+  \newhookcommand@series{boxXendlinenumalign}%
+  
+  \newhookcommand@series{boxXendstartlinenum}%
+  \newhookcommand@series{boxXendendlinenum}% 
+
   \newhookcommand@series{Xendnotefontsize}
   \newhooktoggle@series{Xendlemmadisablefontselection}
   \newhookcommand@series{Xendlemmaseparator}
@@ -11211,9 +11552,12 @@
        \printlinefootnotenumbers{#1}{#2}%
      }%
      {%
-       \hbox to \csuse{boxlinenum@#2}{%
-       \printlinefootnotenumbers{#1}{#2}%
-       \hfill}%
+       \hbox to \csuse{boxlinenum@#2}%
+         {%
+         \IfSubStr{RC}{\csuse{boxlinenumalign@#2}}{\hfill}{}%
+         \printlinefootnotenumbers{#1}{#2}%
+         \IfSubStr{LC}{\csuse{boxlinenumalign@#2}}{\hfill}{}%
+         }%
      }%
 }%
 %    \end{macrocode}
@@ -11898,7 +12242,7 @@
 % \cs{applabel}, if called in \cs{edtext} will insert automatically both a start and an end label for the current edtext lines.
 %    \begin{macrocode}
 \newcommand*{\applabel}[1]{%
-  \if@edtext@%  
+  \ifnum\@edtext@level>0%  
 %    \end{macrocode}
 % Label should not be already defined.
 %    \begin{macrocode}
@@ -12129,15 +12473,40 @@
 % It always prints the page number, as it should be printed in the end notes.
 % The \cs{twolinesappref} and \cs{morethantwolinesappref} are similar to the footnote
 % hooks and \cs{twolines} \cs{morethantwolines}.
+%
+% So, first declare the default value of the hooks for the pseudo-series appref. 
+% Also declare the internal toggle which are switch by \eledmac{}.
 %    \begin{macrocode}
 \xdef\twolines@appref{}%
 \xdef\morethantwolines@appref{}%
 \newtoggle{twolinesbutnotmore@appref}%
 \newtoggle{twolinesonlyinsamepage@appref}%
 
+\xdef\Xendtwolines@apprefwithpage{}%
+\xdef\Xendmorethantwolines@apprefwithpage{}%
+\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
+
+%    \end{macrocode}
+% Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for appref and apprefwithpage pseudo-series, but their values are nonetheless tested in some  macros.
+%    \begin{macrocode}
+
+\xdef\boxstartlinenum@appref{0pt}
+\xdef\boxendlinenum@appref{0pt}
+
+\xdef\boxXendstartlinenum@apprefwithpage{0pt}
+\xdef\boxXendendlinenum@apprefwithpage{0pt}
+
+%    \end{macrocode}
+% Now, declare the default value of \cs{apprefprefixsingle} and \cs{apprefprefixmore}.
+%    \begin{macrocode}
 \newcommand\apprefprefixsingle{}%
 \newcommand\apprefprefixmore{}%
 
+%    \end{macrocode}
+% And now, the main commands: \cs{appref} and \cs{apprefwithpage}.
+% These commands call \cs{printlines} and \cs{printendlines}. That is why we have previously declared all hooks values tested inside these last commands.
+%    \begin{macrocode}
 \newcommandx{\appref}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
    {\toggletrue{fulllines@}}%
@@ -12154,15 +12523,12 @@
  \togglefalse{fulllines@}%
 }%
 
-\xdef\Xendtwolines@apprefwithpage{}%
-\xdef\Xendmorethantwolines@apprefwithpage{}%
-\newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
-\newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
-
+% \changes{v1.23.0}{2015/04/28}{Debug \cs{Xendtwolines}, \cs{Xendmorethantwolines}, \cs{Xendtwolinesbutnotmore} and \cs{Xendtwolinesonlyinsamepage} when using \cs{apprefwithpage}.}
 \newcommandx{\apprefwithpage}[2][1,usedefault]{%
  \IfStrEq{#1}{fulllines}%
    {\toggletrue{fulllines@}}%
    {}%
+ \xdef\@currentseries{apprefwithpage}%
   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
  \togglefalse{fulllines@}%
 }%
@@ -12618,30 +12984,34 @@
 % minipage environment. 
 %    \begin{macrocode}
 \newcommand*{\l@dedbeginmini}{%
-  \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
-  \dolistloop{\@series}%
+  \unless\ifnocritical@%
+    \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
+    \dolistloop{\@series}%
+  \fi%
   }
 \newcommand*{\l@dedendmini}{%
-  \ifl@dpairing
-    \ifledRcol
-      \flush@notesR
-    \else
-      \flush@notes
+  \unless\ifnocritical@%
+    \ifl@dpairing%
+      \ifledRcol%
+        \flush@notesR%
+      \else%
+        \flush@notes%
+      \fi%
     \fi
-  \fi
-  \def\do##1{
-    \ifvoid\csuse{mp##1footins}\else%
-      \ifl@dpairing\ifparledgroup%
-        \ifledRcol%
-          \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}
-        \else%
-           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}
-        \fi%
-       \fi\fi%
-       \csuse{mp##1footgroup}{##1}%
-  \fi}%
-  \dolistloop{\@series}%
-  }
+    \def\do##1{%
+      \ifvoid\csuse{mp##1footins}\else%
+        \ifl@dpairing\ifparledgroup%
+          \ifledRcol%
+            \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}%
+          \else%
+             \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}%
+          \fi%
+         \fi\fi%
+         \csuse{mp##1footgroup}{##1}%
+    \fi}%
+    \dolistloop{\@series}%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -12653,11 +13023,18 @@
 % minipage environment. 
 %    \begin{macrocode}
 \newcommand*{\l@dfambeginmini}{%
+ \unless\ifnofamiliar@%
    \def\do##1{\csletcs{vfootnote##1}{mpvfootnote##1}}%
-   \dolistloop{\@series}}
+     \dolistloop{\@series}%
+ \fi%
+}%
+
 \newcommand*{\l@dfamendmini}{%
-  \def\do##1{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
-  \dolistloop{\@series}}
+ \unless\ifnofamiliar@%
+   \def\do##1{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
+   \dolistloop{\@series}%
+ \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -16269,6 +16646,8 @@
 % The \cs{ledinnote} commands takes now a first optional argument, which is the label for the hyperreference.
 % If you have redefined it, change your redefinition, and check if you can 
 % avoid this redefinition by redefining only \cs{ledinnotemark}.
+% \subsection{Migration to eledmac 1.23.0}
+% People must delete the numbered auxiliary file before new run after update of eledmac.
 % \clearpage
 % \bibliographystyle{alpha}
 % \phantomsection
