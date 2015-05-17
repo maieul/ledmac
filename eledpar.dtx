@@ -352,8 +352,7 @@
 % the right text, requiring a total of 10240 boxes. If you need more chunks
 % then you can increase \cs{maxchunks}. The \cs{maxchunks} must be called in the preamble.
 %
-% TeX has a limited number of boxes; if you get an error
-% message along the lines of `no room for a new box', then load the package etex, which needs pdflatex or xelatex. If you \cs{maxchunks} is too little
+% If you \cs{maxchunks} is too little
 %you can get a \Eledmac{} error message along the
 % lines: `Too many \cs{pstart} without printing. Some text will be lost.'
 % then you will have to either increase \cs{maxchunks} or use the
@@ -383,7 +382,9 @@
 % \begin{pairs}
 % \begin{Leftside} ... \end{Leftside}
 % \begin{Rightside} ... \end{Rightside}
+% \end{pairs}
 % \Columns
+% \begin{pairs}
 % \begin{Leftside} ... \end{Leftside}
 % ...
 % \end{pairs}
@@ -694,6 +695,7 @@
 % to both left and right texts, and after making sure that all previous
 % notes have been output. For example, along the lines of:
 % \begin{verbatim}
+% \begin{pages}
 % \begin{Leftside}
 %   \beginnumbering
 %   ...
@@ -702,7 +704,9 @@
 %   \beginnumbering
 %   ...
 % \end{Rightside}
+% \end{pages}
 % \Pages
+% \begin{pages}
 % \begin{Leftside}
 %   \memorydump
 %   ...
@@ -711,7 +715,7 @@
 %   \memorydump
 %   ...
 % \end{verbatim}
-%
+% \end{pages}
 % \DescribeMacro{\Rlineflag}
 % The value of \cs{Rlineflag} is appended to the line numbers of the
 % right texts. Its default definition is: \\
@@ -886,8 +890,8 @@
 %      \pend
 %      \endnumbering
 %    \end{Rightside}
-%   \Pages
 %   \end{pages}
+%   \Pages
 % \end{verbatim}
 % You can add sectioning a sectioning command, following this scheme:
 % \begin{verbatim}
@@ -1086,6 +1090,16 @@
   \eledpar@error{You call a new Leftside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
 \newcommand*{\led@err@Rightside@PreviousNotPrinted}{%
   \eledpar@error{You call a new Rightside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@err@Pages@InsideEnv}
+% \begin{macro}{\led@err@Columns@InsideEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@InsideEnv}{%
+  \eledpar@error{\string\Pages\space must be called *outside* of the `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@InsideEnv}{%
+  \eledpar@error{\string\Columns\space must be called *outside* of the `pairs` environment}{\@ehc}}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -3763,10 +3777,10 @@
 %     \fi}
 % \end{verbatim}
 % This is for a single chunk. However, as we are probably dealing 
-% with several chunks at a time, the above is nor really relevant. I think
+% with several chunks at a time, the above is nor really relevant. Peter Wilson thinks
 % that it is likely with parallel text that there is no real need to add
 % back any penalties; even if there was, they would have to match across the
-% left and right lines. So, I end up with the following.
+% left and right lines. So, Peter Wilson ends up with the following.
 %
 %    \begin{macrocode}
 \newcommand*{\add@penaltiesL}{}
@@ -4719,6 +4733,9 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingcolumnstrue}}
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \ifl@dpairing%
+    \led@err@Columns@InsideEnv%
+  \fi%
   \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -5099,7 +5116,10 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
- \l@dprintingpagestrue%
+  \l@dprintingpagestrue%
+  \ifl@dpairing%
+    \led@err@Pages@InsideEnv%
+  \fi%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
   \typeout{}%
