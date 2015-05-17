@@ -993,6 +993,12 @@
 \DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifsameparallelpagenumber}
+%    \begin{macrocode}
+\newif\ifsameparallelpagenumber%
+\DeclareOption{sameparallelpagenumber}{\sameparallelpagenumbertrue}%
+%    \end{macro}
+% \end{macro}
 %    \begin{macrocode}
 \ProcessOptions%
 %    \end{macrocode}
@@ -5100,6 +5106,10 @@
     \writtenlinesLfalse%
     \writtenlinesRfalse%
 %    \end{macrocode}
+%   Sometime, people want to have the same page number in left and right sides. That is delegated to the \cs{init@sameparallelpage@number} command. 
+%    \begin{macrocode}
+    \init@sameparallelpage@number
+%    \end{macrocode}
 % The footnotes are printed in a different way from expected in \Lpack{eledmac}, as we may want to print the notes on one side only.
 %    \begin{macrocode}
     \let\print@Xnotes\print@Xnotes@forpages%
@@ -5333,8 +5343,10 @@
     \global\instanzaLfalse%
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
+ \finish@sameparallelpage@number%In order to have continuous page number
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -5430,6 +5442,7 @@
 \newcommand*{\clearl@drightpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
   \newpage%
+  \stepcounter{sameparallelpage@number}%
   \ifodd\c@page
     \led@err@RightOnLeftPage
     \hbox{}%
@@ -5832,6 +5845,41 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Same page number in both side}
+% The \verb+sameparallelpagenumber+ allow to have the same page number for the left and the right side.
+% We can not do it by changing the value of the \verb|page| counter, since its value is used to determine whether a page is left or right.
+% Consequently, we have to do it by patching \cs{thepage} inside a \cs{Pages} macro.
+%
+%
+% \begin{macro}{\init@sameparallelpage@number}
+% This macro is called at the beginning of \cs{Pages}.
+% It patches the \cs{thepage} macro in order to
+% and to use the value of \verb+sameparallelpage@number+ \LaTeX counter instead of those of \verb+page+ \LaTeX counter.
+% As we are inside a group, the patch is local, and, consequently, the page printed after the \cs{Pages} will use the normal page number scheme.
+%
+% The value of \verb+sameparallelpage@number+ is increase by 1 when we change from right page to left page.
+%    \begin{macrocode}
+\newcounter{sameparallelpage@number}
+\newcommand{\init@sameparallelpage@number}{%
+  \setcounter{sameparallelpage@number}{\c@page}%
+  \ifsameparallelpagenumber%
+    \patchcmd{\thepage}{page}{sameparallelpage@number}{}{}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro} 
+% \begin{macro}{\finish@sameparallelpage@number}
+% This macro is called at the end of \cs{Pages}.
+% If the \verb+sameparallelpage@number+ is enabled,
+% it set the page number to the last value of \verb+sameparallelpage@number+ counter, in order to have a continuity of page numbering between pages printed with \cs{Pages} and normal pages.
+%   \begin{macrocode}
+\newcommand{\finish@sameparallelpage@number}{%
+  \ifsameparallelpagenumber%
+    \setcounter{page}{\c@sameparallelpage@number}%
+  \fi%
+}%
+%   \end{macrocode}
+% \end{macro}
 % \section{Sections' titles' commands}
 % As switching from left to right pages does not clear the page since v1.13.0,
 % but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
