@@ -262,6 +262,7 @@
 % \changes{v1.23.0}{2015/04/28}{Compatibility between nofamiliar/nocriticals option and minipage/ledgroup.}
 % \changes{v1.23.0}{2015/04/28}{Fix error of \cs{iftrue} not closed.}
 % \changes{v1.23.0}{2015/04/28}{Allow use of \cs{sameword} with inputenc managing of UTF-8.}
+% \changes{v1.23.0}{2015/04/28}{Error message when using \cs{beginnumbering}…\cs{endnumbering} without \cs{pstart}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3521,6 +3522,7 @@
 % \begin{macro}{\led@err@PendNotNumbered}
 % \begin{macro}{\led@err@PendNoPstart}
 % \begin{macro}{\led@err@AutoparNotNumbered}
+% \begin{macro}{\led@err@NumberingWithoutPstart}
 %    \begin{macrocode}
 \newcommand*{\led@err@PstartNotNumbered}{%
   \eledmac@error{\string\pstart\space must be used within a 
@@ -3536,7 +3538,10 @@
 \newcommand*{\led@err@AutoparNotNumbered}{%
   \eledmac@error{\string\autopar\space must be used within a 
                 numbered section}{\@ehc}}
+\newcommand*{\led@err@NumberingWithoutPstart}{%
+  \eledmac@error{\string\beginnumbering...\string\endnumbering\space without \string\pstart}{\@ehc}}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -3710,6 +3715,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+
 %
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
@@ -3983,6 +3989,9 @@
   \ifnumbering
     \global\numberingfalse
     \normal@pars
+    \ifnum\l@dnumpstartsL=0%
+      \led@err@NumberingWithoutPstart%
+    \fi%
     \ifl@dpairing
       \global\pst@rtedLfalse
     \else
