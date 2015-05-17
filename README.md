@@ -1,7 +1,7 @@
 #Overview
-The eledmac package is for typesetting critical editions. It is a LaTeX port, and extension, of the plain TeX EDMAC, TABMAC and EDSTANZA macros. The eledpar package is an extension of eledmac enabling parallel typesetting in columns or on facing pages.
+The eledmac package is for typesetting critical editions.  The eledpar package is an extension of eledmac enabling parallel typesetting in columns or on facing pages.
 
-Eledmac and eledpar are successors of ledmac and ledpar.
+Eledmac and eledpar are successors of ledmac and ledpar. Ledmac was a LaTeX port, and extension, of the plain TeX EDMAC, TABMAC and EDSTANZA macros.
 
 The package is available on [CTAN](http://www.ctan.org/pkg/eledmac).
 
@@ -66,7 +66,7 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 #Help
 
 - [Users list](http://geekographie.maieul.net/146)
-- [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/eledmac)
+- [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/ledmac)
 
 #Debug and feature requests
 
