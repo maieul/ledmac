@@ -1093,6 +1093,16 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@err@Pages@InsideEnv}
+% \begin{macro}{\led@err@Columns@InsideEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@InsideEnv}{%
+  \eledpar@error{\string\Pages\space must be called *outside* of the `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@InsideEnv}{%
+  \eledpar@error{\string\Columns\space must be called *outside* of the `pairs` environment}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \section{Sectioning commands}
 %
@@ -4723,6 +4733,9 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingcolumnstrue}}
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \ifl@dpairing%
+    \led@err@Columns@InsideEnv%
+  \fi%
   \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -5103,7 +5116,10 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
- \l@dprintingpagestrue%
+  \l@dprintingpagestrue%
+  \ifl@dpairing%
+    \led@err@Pages@InsideEnv%
+  \fi%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
   \typeout{}%
