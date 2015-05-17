@@ -206,6 +206,7 @@
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
 % \changes{v1.16.0}{2015/04/28}{Fix bug with nofamiliar / nocritical option of eledmac.}
 % \changes{v1.16.0}{2015/04/28}{Error message when using \cs{beginnumbering}…\cs{endnumbering} without \cs{pstart}.}
+% \changes{v1.16.0}{2015/04/28}{Error message when starting a Leftside/a Rightside while the previous one has not been yet typeset.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1060,6 +1061,16 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@Leftside@PreviousNotPrinted}
+% \begin{macro}{\led@err@Rightside@PreviousNotPrinted}
+%    \begin{macrocode}
+\newcommand*{\led@err@Leftside@PreviousNotPrinted}{%
+  \eledpar@error{You call a new Leftside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
+\newcommand*{\led@err@Rightside@PreviousNotPrinted}{%
+  \eledpar@error{You call a new Rightside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \section{Sectioning commands}
 %
@@ -2622,6 +2633,9 @@
 % \changes{v0.3}{2005/02/10}{Added hooks into Leftside environment}
 %    \begin{macrocode}
 \newenvironment{Leftside}{%
+  \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname\else%
+   \led@err@Leftside@PreviousNotPrinted% 
+  \fi%
   \ledRcolfalse
   \setcounter{pstartL}{1}
   \let\pstart\pstartL
@@ -2663,6 +2677,9 @@
 % ensures that the right right text code will be used.
 %    \begin{macrocode}
 \newenvironment{Rightside}{%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname\else%
+   \led@err@Rightside@PreviousNotPrinted% 
+  \fi%
   \ledRcoltrue
   \let\beginnumbering\beginnumberingR
   \let\endnumbering\endnumberingR
