@@ -68,14 +68,14 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 - [Users list](http://geekographie.maieul.net/146)
 - [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/eledmac)
 
-#Debug
+#Debug and feature requests
 
 Suggestions and bug reports are welcome.
 
 Maïeul Rouquette is the only one maintainer. To help him in his work, please follow these rules:
 
 - Go to the [issues page](https://github.com/maieul/ledmac/issues).
-- Open *one issue by problem*, even if problems are similar.
+- Open *one issue for each problem*, even if problems are similar.
 - Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.
 - Once the problem has a possible solution, Maïeul Rouquette will send you a zip file and ask you to test it:
