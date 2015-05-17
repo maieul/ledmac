@@ -50,7 +50,6 @@
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
-%%\OnlyDescription
 \renewcommand{\MakeUppercase}[1]{#1}
 \pagestyle{headings}
 \setcounter{StandardModuleDepth}{1}
@@ -483,7 +482,17 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
-% \subsection{Setting} 
+% \subsection{Page number}
+% \changes{v1.15.0}{2015/04/28}{Add sameparallelpagenumber option.}
+% By default, \cs{Pages} use the standard \LaTeX\ page number scheme.
+% That means page are numbered in a continues way from the left side to the right side: left pages are even, right pages are even.
+% 
+% \DescribeMacro{\sameparallelpagenumbertrue}\DescribeMacro{\sameparallelpagenumbertrue}However, you can use the package option \verb+sameparallelpagenumber+ to have the same page number for both left and right side.
+% In this case, this setting will apply only for pages typeset by \cs{Pages}, not for ``normal'' pages.
+% 
+% You can also switch the two system using \cs{sameparallelpagenumbertrue} and \cs{sameparallelpagenumberfalse}.
+%
+% \subsection{Setting the page breaking} 
 % \DescribeMacro{\goalfraction}
 % When doing parallel pages \Eledpar{} has to guess where TeX is going to 
 % put pagebreaks and hopefully get there first in order to put the pair of
@@ -972,9 +981,12 @@
 \let\shiftedversesfalse\shiftedpstartsfalse
 \DeclareOption{shiftedverses}{\shiftedpstartstrue}
 \DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
-\DeclareOption{parledgroup}{\parledgrouptrue}
 %    \end{macrocode}
 % \end{macro}
+% The \verb+parledgroup+ can be called either on \Eledmac or \Eledpar.
+%    \begin{macrocode}
+\DeclareOption{parledgroup}{\parledgrouptrue}
+%    \end{macrocode}
 % \begin{macro}{\ifwidthliketwocolumns}
 % The \cs{widthliketwocolumns} option can be called both in eledpar and eledmac.
 % \changes{v1.9.0}{2014/09/16}{Added widthliketwocolumns option}
@@ -982,13 +994,19 @@
 \DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifsameparallelpagenumber}
+%    \begin{macrocode}
+\newif\ifsameparallelpagenumber%
+\DeclareOption{sameparallelpagenumber}{\sameparallelpagenumbertrue}%
+%    \end{macro}
+% \end{macro}
 %    \begin{macrocode}
 \ProcessOptions%
 %    \end{macrocode}
 %  As noted above, much of the code is a duplication of the original
 % \Eledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
-% I use `R' or `L' in the names of macros for the right and left code.
+% we use `R' or `L' in the names of macros for the right and left code.
 % The specifics of `L' and `R' are normally hidden from the user by
 % letting the \verb?Leftside? and \verb?Rightside? environments set things
 % up appropriately.
@@ -5034,6 +5052,7 @@
 %
 % This is considerably more complicated than parallel columns.
 %
+% \subsection{Specific counters}
 % \begin{macro}{\numpagelinesL}
 % \begin{macro}{\numpagelinesR}
 % \begin{macro}{\l@dminpagelines}
@@ -5048,6 +5067,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Main macro}
 % \begin{macro}{\Pages}
 % \changes{v1.8.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % \changes{v1.8.3}{2014/08/31}{Debug blank pages when using optional argument in the last \cs{pend}.}
@@ -5090,6 +5110,10 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
+%    \end{macrocode}
+%   Sometime, people want to have the same page number in left and right sides. That is delegated to the \cs{init@sameparallelpage@number} command. 
+%    \begin{macrocode}
+    \init@sameparallelpage@number
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \Lpack{eledmac}, as we may want to print the notes on one side only.
 %    \begin{macrocode}
@@ -5324,12 +5348,15 @@
     \global\instanzaLfalse%
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
+ \finish@sameparallelpage@number%In order to have continuous page number
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
+
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsection{Ensure all notes be printed at the end of parallel pages} 
 % \begin{macro}{\finish@Pages@notes}
 % This macro ensures that all long notes are printed at the end of \cs{Pages} typessetting, and that there is no more long notes left for the next pages.
 %    \begin{macrocode}
@@ -5362,6 +5389,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Struts}
 % \begin{macro}{\ledstrutL}
 % \begin{macro}{\ledstrutR}
 % Struts inserted into leftand right text lines.
@@ -5374,7 +5402,8 @@
 % \end{macro}
 % \end{macro}
 %
-%
+% 
+% \subsection{Page clearing}
 % \begin{macro}{\cleartoevenpage}
 % \begin{macro}{\cleartol@devenpage}
 % \cs{cleartoevenpage}, which is defined in the memoir class, 
@@ -5418,6 +5447,7 @@
 \newcommand*{\clearl@drightpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
   \newpage%
+  \stepcounter{sameparallelpage@number}%
   \ifodd\c@page
     \led@err@RightOnLeftPage
     \hbox{}%
@@ -5428,6 +5458,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Lines managing}
 % \begin{macro}{\getlinesfromparlistL}
 % \begin{macro}{\@cs@linesinparL}
 % \begin{macro}{\getlinesfromparlistR}
@@ -5528,6 +5559,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Page break managing}
 % \begin{macro}{\ifl@dsamepage}
 % \begin{macro}{\l@dsamepagetrue}
 % \begin{macro}{\l@dsamepagefalse}
@@ -5695,6 +5727,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Getting boxes content}
 % \begin{macro}{\get@nextboxL}
 % \begin{macro}{\get@nextboxR}
 % \changes{v0.11}{2012/06/11}{Change \cs{get@nextboxL} and \cs{get@nextboxR} to allow to disable line numbering (like in eledmac 0.15).}
@@ -5817,6 +5850,41 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Same page number in both side}
+% The \verb+sameparallelpagenumber+ allow to have the same page number for the left and the right side.
+% We can not do it by changing the value of the \verb|page| counter, since its value is used to determine whether a page is left or right.
+% Consequently, we have to do it by patching \cs{thepage} inside a \cs{Pages} macro.
+%
+%
+% \begin{macro}{\init@sameparallelpage@number}
+% This macro is called at the beginning of \cs{Pages}.
+% It patches the \cs{thepage} macro in order to
+% and to use the value of \verb+sameparallelpage@number+ \LaTeX counter instead of those of \verb+page+ \LaTeX counter.
+% As we are inside a group, the patch is local, and, consequently, the page printed after the \cs{Pages} will use the normal page number scheme.
+%
+% The value of \verb+sameparallelpage@number+ is increase by 1 when we change from right page to left page.
+%    \begin{macrocode}
+\newcounter{sameparallelpage@number}
+\newcommand{\init@sameparallelpage@number}{%
+  \setcounter{sameparallelpage@number}{\c@page}%
+  \ifsameparallelpagenumber%
+    \patchcmd{\thepage}{page}{sameparallelpage@number}{}{}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro} 
+% \begin{macro}{\finish@sameparallelpage@number}
+% This macro is called at the end of \cs{Pages}.
+% If the \verb+sameparallelpage@number+ is enabled,
+% it set the page number to the last value of \verb+sameparallelpage@number+ counter, in order to have a continuity of page numbering between pages printed with \cs{Pages} and normal pages.
+%   \begin{macrocode}
+\newcommand{\finish@sameparallelpage@number}{%
+  \ifsameparallelpagenumber%
+    \setcounter{page}{\c@sameparallelpage@number}%
+  \fi%
+}%
+%   \end{macrocode}
+% \end{macro}
 % \section{Sections' titles' commands}
 % As switching from left to right pages does not clear the page since v1.13.0,
 % but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
