@@ -263,6 +263,7 @@
 % \changes{v1.23.0}{2015/04/28}{Fix error of \cs{iftrue} not closed.}
 % \changes{v1.23.0}{2015/04/28}{Allow use of \cs{sameword} with inputenc managing of UTF-8.}
 % \changes{v1.23.0}{2015/04/28}{Error message when using \cs{beginnumbering}…\cs{endnumbering} without \cs{pstart}.}
+% \changes{v1.23.0}{2015/04/28}{New tools to ensure the line-list file use the right version of commands when upgrading the eledmac version.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3493,6 +3494,12 @@
   \eledmac@warning{Can't find line-list file #1}}
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@warn@LineFileObsolete}
+%    \begin{macrocode}
+\newcommand*{\led@warn@Obsolete}[1]{%
+  \eledmac@warning{Line-list file #1 was obsolete. We have not read it. Please run LaTeX again.}}
+%    \end{macrocode}
+% \end{macro}
 %
 % \begin{macro}{\led@warn@BadAdvancelineSubline}
 % \begin{macro}{\led@warn@BadAdvancelineLine}
@@ -4935,6 +4942,24 @@
 % that modifies the action-code list: again, this is so that they
 % can be turned off easily for nested calls of \cs{@ref}.
 %
+% \begin{macro}{\line@list@version}
+% The \cs{line@list@version} check if the line-list file does not refers to older command of \Lpack{eledmac}. 
+% In this case, we stop reading the line-list file.
+% Consequently, \cs{line@list@version} should be the first line of a line-number file.
+%    \begin{macrocode}
+\newcommand{\line@list@version}[1]{%
+  \IfStrEq{#1}{\this@line@list@version}%
+    {}%
+    {\ifledRcol%
+       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
+     \else%
+       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
+     \fi%
+     \endinput%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\@nl}
 % \begin{macro}{\@nl@reg}
 % \changes{v1.12.0}{2014/08/05}{To ensure compatibility with \cs{musixtex}, \cs{@l} becomes \cs{@l}. Consequently, \cs{@l@reg} becomes \cs{@nl@reg}.}
@@ -5499,6 +5524,16 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\this@line@list@version}
+% The commands allowed in the line-list file and there arguments
+% can change between two version of \Eledmac. 
+% The \cs{this@line@list@version} command is upgraded when it happens.
+% It is written in the file list.
+% If we process a line-list file which used a older version, that means the commands used insided are deprecated, and we can't use them. 
+%    \begin{macrocode}
+\newcommand{\this@line@list@version}{1}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\line@list@stuff}
 % The \cs{line@list@stuff}\marg{file} macro, which
 % is called by \cs{beginnumbering}, performs
@@ -5526,6 +5561,7 @@
      \immediate\closeout\linenum@out%
      \global\first@linenum@out@false%
      \immediate\openout\linenum@out=#1\relax%
+     \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
   \else
 %    \end{macrocode}
 % If we get here, then this is
