@@ -263,7 +263,7 @@
 % \changes{v1.23.0}{2015/04/28}{Fix error of \cs{iftrue} not closed.}
 % \changes{v1.23.0}{2015/04/28}{Allow use of \cs{sameword} with inputenc managing of UTF-8.}
 % \changes{v1.23.0}{2015/04/28}{Error message when using \cs{beginnumbering}…\cs{endnumbering} without \cs{pstart}.}
-% \changes{v1.23.0}{2015/04/28}{New tools to ensure the line-list file use the right version of commands when upgrading the eledmac version.}
+% \changes{v1.23.0}{2015/04/28}{New tools to ensure the line-list file uses the right version of commands when upgrading the eledmac version.}
 % \changes{v1.23.0}{2015/04/28}{Fix bug with \cs{skipnumbering} called immediately after a \cs{pstart}.}
 % \changes{v1.23.0}{2015/04/28}{Fix spurious space with \cs{skipnumbering} (bug added on v1.21.0).}
 % \hyphenation{man-u-script man-u-scripts}
@@ -1344,26 +1344,27 @@
 %
 % \subsubsection{Note about input encoding with UTF-8 processor}
 %
-% If you use UTF-8 processor, like \XeLaTeX\ or \LuaLaTeX, happy are you. 
-% However, you should be careful about the way a same character is encoded.
+% If you use UTF-8 processor, like \XeLaTeX\ or \LuaLaTeX, there should not be any glitches. 
+% However, pay attention to how characters are encoded. Similar-looking characters may be represented differently in unicode numbering.
 %
-% For example the greek character \verb+ᾳ+ can be encoded, in the unicode norm, in two different way:
+% For instance, in Greek, \verb+ᾳ+ has two possible unicode numbers:
 % \begin{itemize}
 %  \item GREEK SMALL LETTER ALPHA (U+03B1) + COMBINING GREEK YPOGEGRAMMENI (U+0345)
 %  \item GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI (U+1FB3)
 % \end{itemize}
 %
-% The way this character is encoded in the file depends, in many time, of your computer input system (keyboard).
+% Which unicode number you use depends, many times, on your keyboard configuration (the computer-input system).
 %
-% However, by default the \cs{sameword} command consider them as two different characters. In many time, that does not matter, because you use only one way. However, in order to prevent false numbering, you should is one of the following method:
+%  Inside \eledmac, the \cs{sameword] command considers these two unicodes options as different characters. If you use only one unicode number consistently, the distinction will probably make no difference to how your text looks, but \cs{sameword} will process the text inaccurately, based on the unicode numbers. To prevent this, do the following:
 % \begin{itemize}
 %   \item If you use \XeLaTeX, add this line in your preamble: \verb+ \XeTeXinputnormalization 1+.
 %   \item If you use \LuaLaTeX, use the \Lpack{uninormalize} of Michal Hoftich\footnote{\url{https://github.com/michal-h21/uninormalize}.} with the \verb+buffer+ option set to true.
 % \end{itemize} 
 %
-% With there tools, \XeTeX\ / \LuaTeX\ will dynamicaly normalize unicode input when reading the file. Consequently, you will be sure to have no problem with \cs{sameword} command.
+% With these tools, \XeTeX\ / \LuaTeX\ will dynamicaly normalize unicode input when reading the file. 
+% Consequently, you will have no problems with the \cs{sameword} command.
 % \subsubsection{Use with \cs{lemma} command}
-% If you use the \cs{lemma} command, \Lpack{eledmac} can not know to which occurence of \cs{sameword} in the first argument of \cs{edtext} a word marked with \cs{sameword} in \cs{lemma} should refer.
+% If you use the \cs{lemma} command, \Lpack{eledmac} cannot know to which occurence of \cs{sameword} in the first argument of \cs{edtext} a word marked with \cs{sameword} in \cs{lemma} should refer.
 % 
 % For example in the following example:
 % \begin{verbatim}
@@ -1374,7 +1375,7 @@
 %               it is all}%
 %       }{\lemma{\sameword{sw} \ldots all}\Afootnote{critical note}}.%
 % \end{verbatim}
-% \Lpack{eledmac} can not know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'', or after ``again''.
+% \Lpack{eledmac} cannot know if the ``sw'' in \cs{lemma} refers to the word after ``thing'', after ``other'', or after ``again''.
 % 
 % Consequently, you have to tell \Lpack{eledmac} which instance of \cs{sameword} in the first argument of \cs{edtext} you want to reference: 
 % \begin{itemize}
@@ -1383,7 +1384,7 @@
 % So if the \cs{lemma} is called in a \cs{edtext} inside another \cs{edtext}, \meta{X} is equal to \verb+2+.
 % If the \cs{lemma} is called in a \cs{edtext} ``of first level'', \meta{X} is equal to \verb|1|. If the lemma is called in both 1 and 2 \cs{edtext} depth, \meta{X} is \verb+1,2+. If that word is referenced in the lemma of every \cs{edtext} depth, \meta{X} can also be set to \verb+inlemma+.
 % \end{itemize} 
-% Note that only words that are actually referenced in a \cs{lemma} need the optional argument. Therefore, the first \cs{sameword} in the example above should have ``1'' as its optional argument to be referenced correctly in the lemma.
+% Note that only words that are actually referenced in a \cs{lemma} need the optional argument. Therefore, the first \cs{sameword} in the example above should have ``1'' as its optional argument, to be referenced correctly in the lemma.
 %
 % Note also that the \meta{X} does not refer to the level where the \cs{sameword} occurs, but to the level of the \cs{lemma} that refers to that \cs{sameword}. For example: 
 % \begin{verbatim}
@@ -1395,7 +1396,7 @@
 % \end{verbatim}
 % Here the \cs{sameword} occurs in an \cs{edtext} of level 2, but since it is referenced by \cs{lemma} on level 1, it has ``1'' in the optional argument.
 
-% In the following schema each framed box represents an \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the text in superscript represents the content of \cs{lemma} for that \cs{edtext} level. The text in subscript at the right of a number represents the content of the optional argument of \cs{sameword}.
+% In the following schema, each framed box represents an \cs{edtext} level. Each number is an occurrence of \cs{sameword}. After a framed box, the text in superscript represents the content of \cs{lemma} for that \cs{edtext} level. The text in subscript at the right of a number represents the content of the optional argument of \cs{sameword}.
 % 
 %\fbox{%
 %  \fbox{%
@@ -1410,7 +1411,7 @@
 % The \cs{sameword} number~3 is called in a \cs{lemma} related to an \cs{edtext} of level~2.
 % It must be marked by ``2''.
 %
-% The \cs{sameword} number~5 is called in a \cs{lemma} related to \cs{edtext} of level~1. It must me marked by ``1''.
+% The \cs{sameword} number~5 is called in a \cs{lemma} related to \cs{edtext} of level~1. It must be marked by ``1''.
 %
 % The \cs{sameword} number is called in two \cs{lemma}s: one related to a \cs{edtext} of level~1, the other related to \cs{edtext} of level~2.
 % It must be marked by ``1,2''.
@@ -4945,7 +4946,7 @@
 % can be turned off easily for nested calls of \cs{@ref}.
 %
 % \begin{macro}{\line@list@version}
-% The \cs{line@list@version} check if the line-list file does not refers to older command of \Lpack{eledmac}. 
+% The \cs{line@list@version} check if the line-list file does not refers to the older commands of \Lpack{eledmac}. 
 % In this case, we stop reading the line-list file.
 % Consequently, \cs{line@list@version} should be the first line of a line-number file.
 %    \begin{macrocode}
@@ -5446,7 +5447,7 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
 %    \end{macrocode}
-% Create a list which will store all the second argument of  each \cs{@sw}
+% Create a list which stores every second argument of  each \cs{@sw}
 % in this lemma, at this level.
 % Also set the boolean about the use of lemma in this edtext level to false.
 %    \begin{macrocode}
@@ -5527,7 +5528,7 @@
 % \end{macro}
 %
 % \begin{macro}{\this@line@list@version}
-% The commands allowed in the line-list file and there arguments
+% The commands allowed in the line-list file and their arguments
 % can change between two version of \Eledmac. 
 % The \cs{this@line@list@version} command is upgraded when it happens.
 % It is written in the file list.
@@ -6312,7 +6313,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@lemma}
-% The \cs{@lemma} is writed in the numbered file to set which \cs{edtext} has an
+% The \cs{@lemma} is written in the numbered file to set which \cs{edtext} has an
 % \cs{lemma} as second argument.
 %    \begin{macrocode}
 \newcommand{\@lemma}{%
@@ -6461,7 +6462,7 @@
 % we store its detokenized content in a macro in order to allow dynamic name of macro with \cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
 %
 % Because there is a bug with \cs{detokenize} and \XeTeX\ when using non BMP characters\footnote{\url{http://sourceforge.net/p/xetex/bugs/108/}}, 
-% we detokenize only for not \XeTeX engines. In any case, in \XeTeX, a \cs{csname} construction can contain UTF-8 character without not problem, as UTF-8 characters are not manage with category code, but are read directly as UTF-8 characters.
+% we detokenize only for not \XeTeX engines. In any case, in \XeTeX, a \cs{csname} construction can contain UTF-8 characters without a problem, as UTF-8 characters are not managed with category code, but instead read directly as UTF-8 characters.
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
   \ifxetex%
@@ -6473,7 +6474,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\sameword}
-% \changes{v1.23.0}{2015/04/28}{In order to allow use of \cs{sameword} with inputenc, we detokonize its mandatory argument before using it in control sequence names.}
+% \changes{v1.23.0}{2015/04/28}{In order to allow use of \cs{sameword} with inputenc, we detokenize its mandatory argument before using it in control sequence names.}
 % The hight level macro \cs{sameword}, used by the editor.
 %    \begin{macrocode}
 \newcommandx{\sameword}[2][1,usedefault]{%
@@ -6541,7 +6542,7 @@
     \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
   \fi%
 %    \end{macrocode}
-% And now, add it  in the list of \cs{@sw} for the current edtext, in all depth.
+%  And now, add it to the list of \cs{@sw} for the current edtext, in all depth.
 %    \begin{macrocode}
   \@tempcnta=\@edtext@level
   \@whilenum{\@tempcnta>0}\do{%
@@ -10953,7 +10954,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
-                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                     }\to\inserts@listR
@@ -10970,7 +10971,7 @@
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
-                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be push to  \sw@list@inedtext when the notes will be expanded.
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                      }\to\inserts@list
