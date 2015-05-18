@@ -34,7 +34,6 @@ dist: $(PACKAGE) examples
 	rm -rf eledmac
 	mkdir eledmac
 	mkdir eledmac/examples
-	$(MAKE) -C examples clean
 	$(MAKE) -C examples all
 	ln examples/*pdf eledmac/examples
 	ln examples/*tex eledmac/examples
