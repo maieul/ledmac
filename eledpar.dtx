@@ -30,20 +30,29 @@
 %              hyperindex=true
               hyperindex=false
              ]{hyperref}
-\usepackage[utf8]{inputenc}
+\usepackage{fontspec}
 \usepackage[english]{babel}
 \usepackage{graphicx,eledmac,eledpar,metalogo}
 \makeatletter
+  \renewenvironment{theglossary}{%
+      \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+      \columnseprule \z@  \columnsep 35\p@
+      \glossary@prologue%
+      \GlossaryParms \let\item\@idxitem \ignorespaces}
+    {\if@restonecol\onecolumn\else\clearpage\fi}
+  \def\theindex{\@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \columnseprule \z@  \columnsep 35\p@
+    \index@prologue%
+    \IndexParms \let\item\@idxitem \ignorespaces}
+  \def\endtheindex{\if@restonecol\onecolumn\else\clearpage\fi}
   \@mparswitchfalse
 \makeatother
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
-%%\OnlyDescription
 \renewcommand{\MakeUppercase}[1]{#1}
 \pagestyle{headings}
 \setcounter{StandardModuleDepth}{1}
-\setcounter{IndexColumns}{2}
 % Some commands are defined here, and not in the commented part, because \externaldocument is required
  \newcommand{\Lpack}[1]{\textsf{#1}}
  \newcommand{\Lclass}[1]{\textsf{#1}}
@@ -66,7 +75,7 @@
 %
 % \fi
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{4996}
+% \CheckSum{5040}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -194,6 +203,9 @@
 % \changes{v1.15.0}{2015/04/13}{Add \cs{AtEveryPstartCall}.}
 % \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \cs{eledchapter} (bug added in v1.13.0).}
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \cs{AtEveryPstart} or \cs{AtEveryPend} with a command which prints nothing}
+% \changes{v1.16.0}{2015/04/28}{Fix bug with nofamiliar / nocritical option of eledmac.}
+% \changes{v1.16.0}{2015/04/28}{Error message when using \cs{beginnumbering}…\cs{endnumbering} without \cs{pstart}.}
+% \changes{v1.16.0}{2015/04/28}{Error message when starting a Leftside/a Rightside while the previous one has not been yet typeset.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -239,6 +251,7 @@
 %
 % \Lpack{eledpar} provides many tools and options. Normally, they are all documented in this file.
 % Also provided is a help folder, ``\href{examples/.}{examples}''. The folder contains additional examples (although not for all cases).
+% Examples starting by ``3-'' are for basic uses, those starting by ``4-'' are for advanced uses.
 %
 % To report bugs, please go to ledmac's GitHub page and click ``New Issue'': \url{https://github.com/maieul/ledmac/issues/}. You must open an account with github.com to access my page (maieul/ledmac).  GitHub accounts are free for open-source users. You can report bug in English or in French (better).
 %
@@ -340,8 +353,7 @@
 % the right text, requiring a total of 10240 boxes. If you need more chunks
 % then you can increase \cs{maxchunks}. The \cs{maxchunks} must be called in the preamble.
 %
-% TeX has a limited number of boxes; if you get an error
-% message along the lines of `no room for a new box', then load the package etex, which needs pdflatex or xelatex. If you \cs{maxchunks} is too little
+% If you \cs{maxchunks} is too little
 %you can get a \Eledmac{} error message along the
 % lines: `Too many \cs{pstart} without printing. Some text will be lost.'
 % then you will have to either increase \cs{maxchunks} or use the
@@ -371,7 +383,9 @@
 % \begin{pairs}
 % \begin{Leftside} ... \end{Leftside}
 % \begin{Rightside} ... \end{Rightside}
+% \end{pairs}
 % \Columns
+% \begin{pairs}
 % \begin{Leftside} ... \end{Leftside}
 % ...
 % \end{pairs}
@@ -471,7 +485,17 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
-% \subsection{Setting} 
+% \subsection{Page number}
+% \changes{v1.15.0}{2015/04/28}{Add sameparallelpagenumber option.}
+% By default, \cs{Pages} use the standard \LaTeX\ page number scheme.
+% That means page are numbered in a continues way from the left side to the right side: left pages are even, right pages are even.
+% 
+% \DescribeMacro{\sameparallelpagenumbertrue}\DescribeMacro{\sameparallelpagenumbertrue}However, you can use the package option \verb+sameparallelpagenumber+ to have the same page number for both left and right side.
+% In this case, this setting will apply only for pages typeset by \cs{Pages}, not for ``normal'' pages.
+% 
+% You can also switch the two system using \cs{sameparallelpagenumbertrue} and \cs{sameparallelpagenumberfalse}.
+%
+% \subsection{Setting the page breaking} 
 % \DescribeMacro{\goalfraction}
 % When doing parallel pages \Eledpar{} has to guess where TeX is going to 
 % put pagebreaks and hopefully get there first in order to put the pair of
@@ -484,7 +508,7 @@
 % onto an even page, try reducing it, for instance by: \\
 % \verb?\renewcommand*{\goalfraction}{0.8}?
 % \subsection{Critical and familiar footnotes}
-% Of course, in ``FFacing pages'',  the \Lpack{eledmac} both critical and familiar footnotes can be used.
+% Of course, in ``Facing pages'',  the \Lpack{eledmac} both critical and familiar footnotes can be used.
 % However, some specific points must  be taken into consideration.
 % \subsubsection{Note size setting}
 % Since \Lpack{eledpar} v.1.13.0, long notes in facing pages can flow from left to right pages, and \emph{vice-versa}.
@@ -672,6 +696,7 @@
 % to both left and right texts, and after making sure that all previous
 % notes have been output. For example, along the lines of:
 % \begin{verbatim}
+% \begin{pages}
 % \begin{Leftside}
 %   \beginnumbering
 %   ...
@@ -680,7 +705,9 @@
 %   \beginnumbering
 %   ...
 % \end{Rightside}
+% \end{pages}
 % \Pages
+% \begin{pages}
 % \begin{Leftside}
 %   \memorydump
 %   ...
@@ -689,7 +716,7 @@
 %   \memorydump
 %   ...
 % \end{verbatim}
-%
+% \end{pages}
 % \DescribeMacro{\Rlineflag}
 % The value of \cs{Rlineflag} is appended to the line numbers of the
 % right texts. Its default definition is: \\
@@ -864,8 +891,8 @@
 %      \pend
 %      \endnumbering
 %    \end{Rightside}
-%   \Pages
 %   \end{pages}
+%   \Pages
 % \end{verbatim}
 % You can add sectioning a sectioning command, following this scheme:
 % \begin{verbatim}
@@ -944,7 +971,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/04/13 v1.15.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/05/28 v1.16.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -960,9 +987,12 @@
 \let\shiftedversesfalse\shiftedpstartsfalse
 \DeclareOption{shiftedverses}{\shiftedpstartstrue}
 \DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
-\DeclareOption{parledgroup}{\parledgrouptrue}
 %    \end{macrocode}
 % \end{macro}
+% The \verb+parledgroup+ can be called either on \Eledmac or \Eledpar.
+%    \begin{macrocode}
+\DeclareOption{parledgroup}{\parledgrouptrue}
+%    \end{macrocode}
 % \begin{macro}{\ifwidthliketwocolumns}
 % The \cs{widthliketwocolumns} option can be called both in eledpar and eledmac.
 % \changes{v1.9.0}{2014/09/16}{Added widthliketwocolumns option}
@@ -970,13 +1000,19 @@
 \DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\ifsameparallelpagenumber}
+%    \begin{macrocode}
+\newif\ifsameparallelpagenumber%
+\DeclareOption{sameparallelpagenumber}{\sameparallelpagenumbertrue}%
+%    \end{macro}
+% \end{macro}
 %    \begin{macrocode}
 \ProcessOptions%
 %    \end{macrocode}
 %  As noted above, much of the code is a duplication of the original
 % \Eledmac{} code to handle the extra box(es) for the right hand side text,
 % and sometimes for the left hand side as well. In order to distinguish
-% I use `R' or `L' in the names of macros for the right and left code.
+% we use `R' or `L' in the names of macros for the right and left code.
 % The specifics of `L' and `R' are normally hidden from the user by
 % letting the \verb?Leftside? and \verb?Rightside? environments set things
 % up appropriately.
@@ -1048,6 +1084,26 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@Leftside@PreviousNotPrinted}
+% \begin{macro}{\led@err@Rightside@PreviousNotPrinted}
+%    \begin{macrocode}
+\newcommand*{\led@err@Leftside@PreviousNotPrinted}{%
+  \eledpar@error{You call a new Leftside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
+\newcommand*{\led@err@Rightside@PreviousNotPrinted}{%
+  \eledpar@error{You call a new Rightside environment while the previous one has not been typeset by \string\Pages\space or \string\Columns}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@err@Pages@InsideEnv}
+% \begin{macro}{\led@err@Columns@InsideEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@InsideEnv}{%
+  \eledpar@error{\string\Pages\space must be called *outside* of the `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@InsideEnv}{%
+  \eledpar@error{\string\Columns\space must be called *outside* of the `pairs` environment}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \section{Sectioning commands}
 %
@@ -1135,6 +1191,9 @@
   \ifnumberingR
     \global\numberingRfalse
     \normal@pars
+    \ifnum\l@dnumpstartsL=0%
+      \led@err@NumberingWithoutPstart%
+    \fi%
     \ifl@dpairing
       \global\pst@rtedRfalse
     \else
@@ -1488,7 +1547,7 @@
 %
 %
 % \subsection{Line-number counters and lists}
-%
+% \subsubsection{Correspond to those in \Lpack{eledmac} for regular or left text}
 % We need another set of counters and lists for the right text, 
 % corresponding to those in \Lpack{eledmac} for regular or left text.
 %
@@ -1530,8 +1589,6 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
-\list@create{\sw@listR}%
-\list@create{\sw@list@inedtextR}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -1539,6 +1596,14 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\page@numR}
+% The right text page number.
+%    \begin{macrocode}
+\newcount\page@numR
+
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Specific to \Lpack{eledpar}}
 % \begin{macro}{\linesinpar@listL}
 % \begin{macro}{\linesinpar@listR}
 % \begin{macro}{\maxlinesinpar@list}
@@ -1555,13 +1620,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\page@numR}
-% The right text page number.
-%    \begin{macrocode}
-\newcount\page@numR
-
-%    \end{macrocode}
-% \end{macro}
 %
 %
 % \subsection{Reading the line-list file}
@@ -1586,8 +1644,6 @@
     \list@clear{\actions@listR}%
     \list@clear{\linesinpar@listR}%
     \list@clear{\linesonpage@listR}
-    \list@clear{\sw@listR}%
-    \list@clear{\sw@list@inedtextR}%
   \else
     \list@clearing@reg
     \list@clear{\linesinpar@listL}%
@@ -2022,6 +2078,7 @@
 %    \begin{macrocode}
 \renewcommand*{\@ref}[2]{%
   \ifledRcol
+    \global\advance\@edtext@level by 1%
     \global\insert@countR=#1\relax
     \loop\ifnum\insert@countR>\z@
       \xright@appenditem{\the\absline@numR}\to\insertlines@listR
@@ -2043,7 +2100,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
-    \let\@sw\@gobbletwo%
+    \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
@@ -2060,11 +2117,32 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
-%
-% Finally, execute the second argument of \cs{@ref} again,
+% Create a list which will store all the second argument of  each \cs{@sw}
+% in this lemma, at this level.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2
+    #2
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+    \ifnum\@edtext@level>0%
+      \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtextR@\the\@edtext@level\endcsname}}%
+      \ifcsundef{sw@list@edtextR@\the\@edtext@level}{\create@this@edtext@level}{}%
+      \letcs{\@tmp}{sw@list@edtextR@\the\@edtext@level}%
+      \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}%
+      \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+      \global\cslet{sw@list@edtextR@\the\@edtext@level}{\@tmp}%
+    \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+    \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
+%    \begin{macrocode}
   \else
 %    \end{macrocode}
 % And when not in right text
@@ -2153,6 +2231,7 @@
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=#1
+     \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%     
   \else
      \if@minipage%
        \leavevmode%
@@ -2355,13 +2434,14 @@
 % We need to declare these options.
 % We also need boolean flags, and to set them to true when a note series is not printed on one side.
 % We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
+% \changes{v1.16.0}{2015/04/28}{Fix bug with \cs{onlysideX}.}
 %    \begin{macrocode}
-    \unless\ifnocritical@%
-      \csgdef{onlysideX@#1}{}%
-      \global\newbool{keepforXside@#1}%
-    \fi%
     \unless\ifnofamiliar@%
+      \csgdef{onlysideX@#1}{}%
       \global\newbool{keepforsideX@#1}%
+    \fi%
+    \unless\ifnocritical@%
+      \global\newbool{keepforXside@#1}%
       \csgdef{onlyXside@#1}{}%
     \fi%
 %    \end{macrocode}
@@ -2587,6 +2667,9 @@
 % \changes{v0.3}{2005/02/10}{Added hooks into Leftside environment}
 %    \begin{macrocode}
 \newenvironment{Leftside}{%
+  \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname\else%
+   \led@err@Leftside@PreviousNotPrinted% 
+  \fi%
   \ledRcolfalse
   \setcounter{pstartL}{1}
   \let\pstart\pstartL
@@ -2628,6 +2711,9 @@
 % ensures that the right right text code will be used.
 %    \begin{macrocode}
 \newenvironment{Rightside}{%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname\else%
+   \led@err@Rightside@PreviousNotPrinted% 
+  \fi%
   \ledRcoltrue
   \let\beginnumbering\beginnumberingR
   \let\endnumbering\endnumberingR
@@ -3693,10 +3779,10 @@
 %     \fi}
 % \end{verbatim}
 % This is for a single chunk. However, as we are probably dealing 
-% with several chunks at a time, the above is nor really relevant. I think
+% with several chunks at a time, the above is nor really relevant. Peter Wilson thinks
 % that it is likely with parallel text that there is no real need to add
 % back any penalties; even if there was, they would have to match across the
-% left and right lines. So, I end up with the following.
+% left and right lines. So, Peter Wilson ends up with the following.
 %
 %    \begin{macrocode}
 \newcommand*{\add@penaltiesL}{}
@@ -4649,6 +4735,9 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingcolumnstrue}}
 %    \begin{macrocode}
 \newcommand*{\Columns}{%
+  \ifl@dpairing%
+    \led@err@Columns@InsideEnv%
+  \fi%
   \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4999,6 +5088,7 @@
 %
 % This is considerably more complicated than parallel columns.
 %
+% \subsection{Specific counters}
 % \begin{macro}{\numpagelinesL}
 % \begin{macro}{\numpagelinesR}
 % \begin{macro}{\l@dminpagelines}
@@ -5013,6 +5103,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Main macro}
 % \begin{macro}{\Pages}
 % \changes{v1.8.0}{2014/07/28}{Modify \cs{Pages} to enable to add section's title.}
 % \changes{v1.8.3}{2014/08/31}{Debug blank pages when using optional argument in the last \cs{pend}.}
@@ -5027,7 +5118,10 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
- \l@dprintingpagestrue%
+  \l@dprintingpagestrue%
+  \ifl@dpairing%
+    \led@err@Pages@InsideEnv%
+  \fi%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
   \typeout{}%
@@ -5055,6 +5149,10 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
+%    \end{macrocode}
+%   Sometime, people want to have the same page number in left and right sides. That is delegated to the \cs{init@sameparallelpage@number} command. 
+%    \begin{macrocode}
+    \init@sameparallelpage@number
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \Lpack{eledmac}, as we may want to print the notes on one side only.
 %    \begin{macrocode}
@@ -5289,23 +5387,33 @@
     \global\instanzaLfalse%
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
+ \finish@sameparallelpage@number%In order to have continuous page number
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
+
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsection{Ensure all notes be printed at the end of parallel pages} 
 % \begin{macro}{\finish@Pages@notes}
 % This macro ensures that all long notes are printed at the end of \cs{Pages} typessetting, and that there is no more long notes left for the next pages.
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%
+%    \end{macrocode}
+% First, declare footnote box if there was not declared before.
+% E.g. if familiar or critical notes were disabled by \eledmac{} options.
+%    \begin{macrocode}
     \ifnocritical@%
-      \newbox\csuse{##1footins}
+      \global\newnamebox{##1footins}
     \fi
     \ifnofamiliar@%
-      \newbox\csuse{footins##1}
+      \global\newnamebox{footins##1}
     \fi
+%    \end{macrocode}
+% And now, add a \cs{newpage} if there is no more footnote to print.
+%    \begin{macrocode}
     \ifvoid\csuse{##1footins}%
       \ifvoid\csuse{footins##1}\else%
         \newpage\null%
@@ -5320,6 +5428,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Struts}
 % \begin{macro}{\ledstrutL}
 % \begin{macro}{\ledstrutR}
 % Struts inserted into leftand right text lines.
@@ -5332,7 +5441,8 @@
 % \end{macro}
 % \end{macro}
 %
-%
+% 
+% \subsection{Page clearing}
 % \begin{macro}{\cleartoevenpage}
 % \begin{macro}{\cleartol@devenpage}
 % \cs{cleartoevenpage}, which is defined in the memoir class, 
@@ -5376,6 +5486,7 @@
 \newcommand*{\clearl@drightpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
   \newpage%
+  \stepcounter{sameparallelpage@number}%
   \ifodd\c@page
     \led@err@RightOnLeftPage
     \hbox{}%
@@ -5386,6 +5497,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Lines managing}
 % \begin{macro}{\getlinesfromparlistL}
 % \begin{macro}{\@cs@linesinparL}
 % \begin{macro}{\getlinesfromparlistR}
@@ -5486,6 +5598,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Page break managing}
 % \begin{macro}{\ifl@dsamepage}
 % \begin{macro}{\l@dsamepagetrue}
 % \begin{macro}{\l@dsamepagefalse}
@@ -5653,6 +5766,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Getting boxes content}
 % \begin{macro}{\get@nextboxL}
 % \begin{macro}{\get@nextboxR}
 % \changes{v0.11}{2012/06/11}{Change \cs{get@nextboxL} and \cs{get@nextboxR} to allow to disable line numbering (like in eledmac 0.15).}
@@ -5775,6 +5889,41 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Same page number in both side}
+% The \verb+sameparallelpagenumber+ allow to have the same page number for the left and the right side.
+% We can not do it by changing the value of the \verb|page| counter, since its value is used to determine whether a page is left or right.
+% Consequently, we have to do it by patching \cs{thepage} inside a \cs{Pages} macro.
+%
+%
+% \begin{macro}{\init@sameparallelpage@number}
+% This macro is called at the beginning of \cs{Pages}.
+% It patches the \cs{thepage} macro in order to
+% and to use the value of \verb+sameparallelpage@number+ \LaTeX counter instead of those of \verb+page+ \LaTeX counter.
+% As we are inside a group, the patch is local, and, consequently, the page printed after the \cs{Pages} will use the normal page number scheme.
+%
+% The value of \verb+sameparallelpage@number+ is increase by 1 when we change from right page to left page.
+%    \begin{macrocode}
+\newcounter{sameparallelpage@number}
+\newcommand{\init@sameparallelpage@number}{%
+  \setcounter{sameparallelpage@number}{\c@page}%
+  \ifsameparallelpagenumber%
+    \patchcmd{\thepage}{page}{sameparallelpage@number}{}{}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro} 
+% \begin{macro}{\finish@sameparallelpage@number}
+% This macro is called at the end of \cs{Pages}.
+% If the \verb+sameparallelpage@number+ is enabled,
+% it set the page number to the last value of \verb+sameparallelpage@number+ counter, in order to have a continuity of page numbering between pages printed with \cs{Pages} and normal pages.
+%   \begin{macrocode}
+\newcommand{\finish@sameparallelpage@number}{%
+  \ifsameparallelpagenumber%
+    \setcounter{page}{\c@sameparallelpage@number}%
+  \fi%
+}%
+%   \end{macrocode}
+% \end{macro}
 % \section{Sections' titles' commands}
 % As switching from left to right pages does not clear the page since v1.13.0,
 % but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
