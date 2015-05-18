@@ -9,7 +9,7 @@ all:$(OBJ)
 %.pdf: %.tex
 	latexmk $<
 
-lualatex-parallel-rtl.pdf: lualatex-parallel-rtl.tex
+3-eledpar_pages_different_languages_lualatex.pdf: 3-eledpar_pages_different_languages_lualatex.tex
 	lualatex $<
 
 clean:
