@@ -23,11 +23,11 @@ README: README.md
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx 
-	@pdflatex $*.dtx
+	@xelatex $*.dtx
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
-	@pdflatex $*.dtx
-	@pdflatex $*.dtx
+	@xelatex $*.dtx
+	@xelatex $*.dtx
 
 
 dist: $(PACKAGE) examples
