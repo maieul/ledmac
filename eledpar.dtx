@@ -208,6 +208,7 @@
 % \changes{v1.16.0}{2015/05/18}{Error message when starting a Leftside/a Rightside while the previous one has not been yet typeset.}
 % \changes{v1.16.0}{2015/05/18}{Error message when calling \cs{Pages} inside `pages' environment and \cs{Columns} inside `pairs' environment.}
 % \changes{v1.16.0}{2015/05/18}{New package option sameparallelpagenumber to have the same page number for both left and right side.}
+% \changes{v1.16.1}{2015/05/20}{Write information about line-list file version in the correct file.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -973,7 +974,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/05/18 v1.16.0 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/05/20 v1.16.1 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -2102,6 +2103,7 @@
     \let\sub@action=\relax
     \let\set@line@action=\relax
     \let\@lab=\relax
+    \let\@lemma=\relax
     \let\@sw\@gobblethree%
     #2
     \global\endpage@num=\page@numR
@@ -2123,6 +2125,11 @@
 % in this lemma, at this level.
 %    \begin{macrocode}
      \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+%    \end{macrocode}
+% Declare and init boolean for lemma in this level.
+%    \begin{macrocode}
+     \providebool{lemmacommand@\the\@edtext@level}%
+     \boolfalse{lemmacommand@\the\@edtext@level}%
 %    \end{macrocode}
 % Execute the second argument of \cs{@ref} again,
 % to perform for real all the commands within it.
@@ -2233,7 +2240,7 @@
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=#1
-     \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%     
+     \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
   \else
      \if@minipage%
        \leavevmode%

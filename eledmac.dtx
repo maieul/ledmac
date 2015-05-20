@@ -266,6 +266,7 @@
 % \changes{v1.23.0}{2015/05/18}{New tools to ensure the line-list file uses the right version of commands when upgrading the eledmac version.}
 % \changes{v1.23.0}{2015/05/18}{Fix bug with \cs{skipnumbering} called immediately after a \cs{pstart}.}
 % \changes{v1.23.0}{2015/05/18}{Fix spurious space with \cs{skipnumbering} (bug added on v1.21.0).}
+% \changes{v1.23.1}{2015/05/20}{Fix bug with \cs{lemma} command in the right side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3226,7 +3227,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/05/18 v1.23.0 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/05/20 v1.23.1 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -5534,7 +5535,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used insided are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{1}%
+\newcommand{\this@line@list@version}{2}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -6174,7 +6175,11 @@
 % We write in the numbered file wether the current \cs{edtext} has a \cs{lemma} in the the second argument.
 %    \begin{macrocode}
        \if@lemmacommand@%
-         \write\linenum@out{\string\@lemma}%
+         \ifledRcol%
+           \write\linenum@outR{\string\@lemma}%
+         \else%
+           \write\linenum@out{\string\@lemma}%
+         \fi%
        \fi%
 %    \end{macrocode}
 % Finally, we're ready to admit the first argument into the current
