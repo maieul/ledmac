@@ -209,6 +209,7 @@
 % \changes{v1.16.0}{2015/05/18}{Error message when calling \cs{Pages} inside `pages' environment and \cs{Columns} inside `pairs' environment.}
 % \changes{v1.16.0}{2015/05/18}{New package option sameparallelpagenumber to have the same page number for both left and right side.}
 % \changes{v1.16.1}{2015/05/20}{Write information about line-list file version in the correct file.}
+% \changes{v1.16.2}{2015/05/29}{Fix bug when adding empty lines before a \cs{pend} in combination with some specific penalties setting.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -974,7 +975,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/05/20 v1.16.1 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/05/29 v1.16.2 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -2858,6 +2859,13 @@
     \global\l@dnumpstartsL=\l@dc@maxchunks%
   \fi%
   \global\setnamebox{l@dLcolrawbox\the\l@dnumpstartsL}=\vbox\bgroup%
+%    \end{macrocode}
+% We set all the usual interline penalties to zero; this ensures that there'll
+% be no large interline penalties to prevent us from slicing the
+% paragraph into pieces. These penalties revert to the values
+% that you set when the group for the \cs{vbox} ends. 
+%    \begin{macrocode}
+  \l@dzeropenalties%
   \ifautopar\else%
     \ifnumberpstart%
       \ifsidepstartnum%
@@ -2913,6 +2921,7 @@
     \global\l@dnumpstartsR=\l@dc@maxchunks%
   \fi%
   \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
+    \l@dzeropenalties%
     \ifautopar\else%
       \ifnumberpstart%
         \ifsidepstartnum\else%
@@ -2950,13 +2959,11 @@
     \led@err@PendNoPstart%
   \fi%
 %    \end{macrocode}
-% We set all the usual interline penalties to zero and then immediately
+% We immediately
 % call \cs{endgraf} to end the paragraph; this ensures that there'll
 % be no large interline penalties to prevent us from slicing the
-% paragraph into pieces. These penalties revert to the values
-% that you set when the group for the \cs{vbox} ends. 
+% paragraph into pieces.  
 %    \begin{macrocode}
-  \l@dzeropenalties%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
@@ -2993,7 +3000,6 @@
   \ifnumberedpar@ \else%
     \led@err@PendNoPstart%
   \fi%
-  \l@dzeropenalties%
   \endgraf\global\num@linesR=\prevgraf\egroup%
   \global\par@lineR=0%
   \endgroup%
