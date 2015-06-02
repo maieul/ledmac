@@ -5110,28 +5110,48 @@
 % The \cs{Columns@print@before@pstart} and \cs{Columns@print@after@pend} print the content of the optional argument of \cs{pstart} / \cs{pend}. If this content is not empty, it also print the separator.
 %    \begin{macrocode}
 \newcommand{\Columns@print@before@pstart}{%
-  \csuse{before@pstartL@\the\l@dpscL}%
   \ifboolexpr{%
     test{\ifcsstring{before@pstartL@\the\l@dpscL}{\at@every@pstart}}%
     and test {\ifcsstring{before@pstartR@\the\l@dpscR}{\at@every@pstart}}%
     and test {\ifdefempty{\at@every@pstart}}}%
        {}%
-       {\print@columnseparator}%
-    \csuse{before@pstartR@\the\l@dpscR}%
+       {%
+         \hb@xt@ \hsize{%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+           \par\parbox[t][][t]{\Lcolwidth}{%
+             \csuse{before@pstartL@\the\l@dpscL}%
+           }%
+           \print@columnseparator%
+           \parbox[t][][t]{\Rcolwidth}{%
+             \csuse{before@pstartR@\the\l@dpscR}%
+           }%
+           \ifdefstring{\columns@position}{R}{}{\hfill}%
+         }%
+       }%
     \global\csundef{before@pstartL@\the\l@dpscL}%
     \global\csundef{before@pstartR@\the\l@dpscR}%
 }%
 \newcommand{\Columns@print@after@pend}{%
-  \csuse{after@pendL@\the\l@dpscL}%
   \ifboolexpr{%
     test{\ifcsstring{after@pendL@\the\l@dpscL}{\at@every@pend}}%
     and test {\ifcsstring{after@pendR@\the\l@dpscR}{\at@every@pend}}%
     and test {\ifdefempty{\at@every@pend}}}%
-      {}%
-      {\print@columnseparator}%
-  \csuse{after@pendR@\the\l@dpscR}%
-  \global\csundef{after@pendR@\the\l@dpscR}%
-  \global\csundef{after@pendL@\the\l@dpscL}%
+       {}%
+       {%
+         \hb@xt@ \hsize{%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+           \parbox[t][][t]{\Lcolwidth}{%
+             \csuse{after@pendL@\the\l@dpscL}%
+           }%
+           \print@columnseparator%
+           \parbox[t][][t]{\Rcolwidth}{%
+             \csuse{after@pendR@\the\l@dpscR}%
+           }%
+           \ifdefstring{\columns@position}{R}{}{\hfill}%
+         }%
+       }%
+    \global\csundef{after@pendL@\the\l@dpscL}%
+    \global\csundef{after@pendR@\the\l@dpscR}%
 }%
 %    \end{macrocode}
 % \end{macro}
