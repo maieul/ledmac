@@ -210,6 +210,7 @@
 % \changes{v1.16.0}{2015/05/18}{New package option sameparallelpagenumber to have the same page number for both left and right side.}
 % \changes{v1.16.1}{2015/05/20}{Write information about line-list file version in the correct file.}
 % \changes{v1.16.2}{2015/05/29}{Fix bug when adding empty lines before a \cs{pend} in combination with some specific penalties setting.}
+% \changes{v1.17.0}{2015/06/02}{Add compatibility of optional argument of \cs{pstart}/\cs{pend} and \cs{AtEveryPstart}/\cs{AtEveryPend} with two columns mode.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -975,7 +976,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledpar}[2015/05/29 v1.16.2 eledmac extension for parallel texts]%
+\ProvidesPackage{eledpar}[2015/06/02 v1.17.0 eledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % Few commands use \cs{xspace} command.
@@ -4787,6 +4788,10 @@
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
+% We print the optional argument of \cs{pstart} or the argument of \cs{AtEveryPstart}.
+%    \begin{macrocode}
+      \Columns@print@before@pstart%
+%    \end{macrocode}
 % Check if there is text yet to be processed in at least one of
 % the two current chunks, and also whether the left and right languages 
 % are the same
@@ -4855,6 +4860,7 @@
            \write\linenum@outR{\string\@set[1]}
            \resetprevline@
         \fi
+        \Columns@print@after@pend%
     \repeat
 %    \end{macrocode}
 % Having output all chunks, make sure all notes have been output,
@@ -5099,6 +5105,57 @@
 % \end{macro}
 % \end{macro}
 % 
+% \begin{macro}{\Columns@print@before@pstart}
+% \begin{macro}{\Columns@print@after@pend}
+% The \cs{Columns@print@before@pstart} and \cs{Columns@print@after@pend} print the content of the optional argument of \cs{pstart} / \cs{pend}. If this content is not empty, it also print the separator.
+%    \begin{macrocode}
+\newcommand{\Columns@print@before@pstart}{%
+  \ifboolexpr{%
+    test{\ifcsstring{before@pstartL@\the\l@dpscL}{\at@every@pstart}}%
+    and test {\ifcsstring{before@pstartR@\the\l@dpscR}{\at@every@pstart}}%
+    and test {\ifdefempty{\at@every@pstart}}}%
+       {}%
+       {%
+         \hb@xt@ \hsize{%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+           \par\parbox[t][][t]{\Lcolwidth}{%
+             \csuse{before@pstartL@\the\l@dpscL}%
+           }%
+           \print@columnseparator%
+           \parbox[t][][t]{\Rcolwidth}{%
+             \csuse{before@pstartR@\the\l@dpscR}%
+           }%
+           \ifdefstring{\columns@position}{R}{}{\hfill}%
+         }%
+       }%
+    \global\csundef{before@pstartL@\the\l@dpscL}%
+    \global\csundef{before@pstartR@\the\l@dpscR}%
+}%
+\newcommand{\Columns@print@after@pend}{%
+  \ifboolexpr{%
+    test{\ifcsstring{after@pendL@\the\l@dpscL}{\at@every@pend}}%
+    and test {\ifcsstring{after@pendR@\the\l@dpscR}{\at@every@pend}}%
+    and test {\ifdefempty{\at@every@pend}}}%
+       {}%
+       {%
+         \hb@xt@ \hsize{%
+           \ifdefstring{\columns@position}{L}{}{\hfill }%
+           \parbox[t][][t]{\Lcolwidth}{%
+             \csuse{after@pendL@\the\l@dpscL}%
+           }%
+           \print@columnseparator%
+           \parbox[t][][t]{\Rcolwidth}{%
+             \csuse{after@pendR@\the\l@dpscR}%
+           }%
+           \ifdefstring{\columns@position}{R}{}{\hfill}%
+         }%
+       }%
+    \global\csundef{after@pendL@\the\l@dpscL}%
+    \global\csundef{after@pendR@\the\l@dpscR}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Parallel pages}
 %
 % This is considerably more complicated than parallel columns.
@@ -5852,10 +5909,6 @@
         \parledgroup@notes@endL
         \parledgroup@correction@notespacing@final{L}
       \else
-%    \end{macrocode}
-% Add the content of the optional argument of the last \cs{pend}.
-%    \begin{macrocode}
-        \print@last@after@pendLtrue%
 %    \end{macrocode}
 %    \begin{macrocode}
       \fi
