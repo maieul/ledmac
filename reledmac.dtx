@@ -1032,7 +1032,10 @@
 % the number for that particular line to be hidden; namely, no line number will print.
 % Note that if you use it in \cs{stanza}, you must call it at the beginning of the verse.
 % \section{The apparatus}
-% \subsection{Commands}
+% \subsection{Terminology}
+% We call ``critical notes'' notes which refer to both a lemma, that is a part of text and a line number.
+% We call ``familiar notes'' notes which refer to a footnote mark in the main text.
+% \subsection{Critical notes}
 % \subsubsection{The lemma}
 % \DescribeMacro{\edtext}
 % Within numbered paragraphs, all footnotes and endnotes are generated
@@ -1392,8 +1395,90 @@
 %}
 % \end{verbatim}
 %
-% \subsection{Alternate footnote formatting}
-% If you just launch into \Eledmac{} using the commands outlined
+% \subsection{Familiar notes} \label{sec:desc:familiar}
+% 
+%
+%   The \Lpack{footmisc} package~\cite{FOOTMISC} by Robin 
+% Fairbairns\index{Fairbairns, Robin} has an option whereby 
+% sequential footnote
+% marks in the text can be separated by 
+% commas\textsuperscript{3,4} like so.
+% As a convenience \Eledmac{} provides this automatically.
+%
+% \DescribeMacro{\multfootsep}
+% \cs{multfootsep} is used as the separator between footnote markers.
+% Its default definition is: \\
+% \verb?\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}? \\
+% and can be changed if necessary.
+%
+% \DescribeMacro{\footnoteA}
+% \DescribeMacro{\footnoteB}
+% \DescribeMacro{\footnoteC}
+% \DescribeMacro{\footnoteD}
+% \DescribeMacro{\footnoteE}
+% \DescribeMacro{\footnoteZ}
+%    As well as the standard \LaTeX\ footnotes generated via \cs{footnote},
+% the package also provides
+% six series of additional footnotes called \cs{footnoteA} through
+% \cs{footnoteZ}. These have the familiar marker in the text, and 
+% the marked text at the foot of the page can be formated using
+% any of the styles described for the critical footnotes. Note that
+% the `regular' footnotes have the series letter at the end of the macro
+% name whereas the critical footnotes have the series letter at the start
+% of the name.
+%
+% \DescribeMacro{\footnormalX}
+% \DescribeMacro{\footparagraphX}
+% \DescribeMacro{\foottwocolX}
+% \DescribeMacro{\footthreecolX}
+%  Each of the \verb?\foot...X? macros takes one argument which is the 
+% series letter (e.g., \texttt{B}). \cs{footnormalX} is the typical
+% footnote format. With \cs{footparagraphX} the series is typeset as one
+% paragraph, with \cs{foottwocolX} the notes are set in two columns, and are
+% set in three columns with \cs{footthreecolX}.
+%
+% \DescribeMacro{\thefootnoteA}
+% \DescribeMacro{\bodyfootmarkA}
+% \DescribeMacro{\footfootmarkA}
+% As well as using the \verb?\foot...X? macros to specify the general 
+% footnote arrangement for a series, each series uses a set of macros for
+% styling the marks. The mark numbering scheme is defined by the
+% \cs{thefootnoteA} macro; the default is: \\
+% \verb?\renewcommand*{\thefootnoteA}{\arabic{footnoteA}}?\\
+% The appearance of the mark in the text is controlled by \cs{bodyfootmarkA}
+% which is defined as: \\
+% \verb?\newcommand*{\bodyfootmarkA}{%? \\
+% \verb?  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmarkA}}}}? \\
+% The command \cs{footfootmarkA} controls the appearance of the mark at the
+% start of the footnote text. It is defined as: \\
+% \verb?\newcommand*{\footfootmarkA}{\textsuperscript{\@nameuse{@thefnmarkA}}}?
+%
+%    There are similar command triples for the other series.
+%
+% Additional footnote series can be easily defined: you just have to use \cs{newseries}, defined above (see \reff{newseries}).
+%
+% \subsection{Position of critical and familiar footnotes}
+% \DescribeMacro{\fnpos}\DescribeMacro{\mpfnpos}
+% There is a historical incoherence in \Lpack{(e)ledmac}. The familiar footnotes are
+% before the critical footnotes in a normal page, but after in a minipage or in a ledgroup.
+% However, it is possible to change the relative position of both types of footnotes.
+% If you want to have familiar footnotes after critical footnotes in a normal page, use:
+% \begin{verbatim}
+% \fnpos{critical-familiar}
+% \end{verbatim}
+% Or, if you want a minipage or ledgroup to have critical footnotes after familiar footnotes, use:
+% \begin{verbatim}
+% \mpfnpos{familiar-critical}
+% \end{verbatim}
+% \subsection{Display options}
+% \label{displayoptions}
+% \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
+% Since version 1.0, some commands can be used to change the display of the footnotes. All can have an optional argument \oarg{s}, which is the letter of the series --- or a list of letters separated by comma --- depending on which option is applied.
+%
+% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use some relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote, except for commands concerning the place kept by the notes --- including blank space. 
+%
+% \subsubsection{Position of notes of the same series}
+% If you just launch into \macpackage using the commands outlined
 % above, you will get a standard layout for your text and notes.  You
 % may be happy to accept this at the very beginning, while you
 % get the hang of things, but the standard layout is not particularly
@@ -1429,14 +1514,21 @@
 % This would make the A-notes ordinary, B-notes would be in three
 % columns, and the bottom layer of notes would be formed into
 % a paragraph on each page.
-
 %
-% \subsection{Display options}
-% \label{displayoptions}
-% \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
-% Since version 1.0, some commands can be used to change the display of the footnotes. All can have an optional argument \oarg{s}, which is the letter of the series --- or a list of letters separated by comma --- depending on which option is applied.
-%
-% When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use some relative unity\footnote{Like \verb|em| which is the width of a mg.}, it will be relative to fontsize of the footnote, except for commands concerning the place kept by the notes --- including blank space. 
+%    You should set up the page layout parameters, and in particular the
+% \cs{baselineskip} of the footnotes, before you call any
+% of these macros because their action depends on these; 
+% too much or too little space will be allotted for the notes on
+% the page if these macros use the wrong
+% values.\footnote{\phantomsection\label{nobreaks}There
+% is one tiny proviso about using paragraphed notes: you shouldn't
+% force any explicit line-breaks inside such notes: do not use
+% {\tt \bslash par},
+% {\tt \bslash break}, or {\tt \bslash penalty=-10000}.  If
+% you must have a line-break for some obscure reason, just suggest
+% the break very strongly: {\tt \bslash penalty=-9999} will do
+% the trick. \reff{nobreak} explains why this restriction
+% is necessary.}
 %
 % \subsubsection{Control line number printing}
 % \DescribeMacro{\numberonlyfirstinline}
@@ -1794,23 +1886,7 @@
 % Actually, for technical purposes, one paragraphed note is considered as one block. 
 % Consequently, it can't be broken between two pages, even if you used these commands. 
 % The debug is in the todolist.
-%\subsection{Page layout}
-%    You should set up the page layout parameters, and in particular the
-% \cs{baselineskip} of the footnotes (this is done for you if you
-% use the standard \cs{notefontsetup}), before you call any
-% of these macros because their action depends on these; 
-% too much or too little space will be allotted for the notes on
-% the page if these macros use the wrong
-% values.\footnote{\phantomsection\label{nobreaks}There
-% is one tiny proviso about using paragraphed notes: you shouldn't
-% force any explicit line-breaks inside such notes: do not use
-% {\tt \bslash par},
-% {\tt \bslash break}, or {\tt \bslash penalty=-10000}.  If
-% you must have a line-break for some obscure reason, just suggest
-% the break very strongly: {\tt \bslash penalty=-9999} will do
-% the trick. \reff{nobreak} explains why this restriction
-% is necessary.}
-%
+% \subsubsection{Footnotes and the \parpackage columns} 
 % \changes{v1.13.0}{2014/09/16}{Add \cs{Xnoteswidthliketwocolumns} and \cs{notesXwidthliketwocolumns}}
 % \DescribeMacro{Xnoteswidthliketwocolumns}\DescribeMacro{notesXwidthliketwocolumns}
 % If you use \Lpack{eledpar} \cs{columns} macro, you can call :
@@ -1829,7 +1905,27 @@
 %
 % \DescribeMacro{\Xendsep}
 %  you can choose the separator between each note by \cs{Xendsep}\oarg{s}\marg{text}. A common separator is the double pipe (\verb+$||$+), which you can set by using \cs{Xendsep}\verb+{$\parallel$}+.
-% \subsection{Fonts}\label{fonts}
+% \subsection{Changing series}
+% \subsubsection{Create a new series}\label{newseries}
+%
+% If you need more than six series of critical footnotes you can
+% create extra series, using \cs{newseries} command. For example to create G and H series \cs{newseries}\verb+G,H+.
+% 
+% \subsubsection{Delete series}
+% As the number of series which are defined increases, \Eledmac{} gets slower.
+% If you do not need all of the six standard series (A, B, C, D, E, Z),
+% you can load the package with the \verb+series+ option. 
+% For example if you need only series~A and~B, use:
+% \begin{verbatim}
+% \usepackage[series={A,B}]{eledmac}
+% \end{verbatim}
+% \subsubsection{Series order}
+% The default series order is the one called with the \verb+series+ option of the package, or, if this option is not used, A, B, C, D, E, Z. 
+% Series order determines footnotes order.
+%
+% \DescribeMacro{seriesatbegin}\DescribeMacro{seriesatend} However in some specific cases, you need to change the series order at some point inside the document.
+% You can use \cs{seriesatbegin}\marg{<s>} to pull up a given series \verb+<s>+ to the beginning, or \cs{seriesatend}\marg{<s>} to push it down to the end.
+% \section{Fonts}\label{fonts}
 % One of the most important features of the appearance of the notes,
 % and indeed of your whole document, will be the fonts used. We will
 % first describe the commands that give you control over the
@@ -1918,26 +2014,6 @@
 % formatted in the same way.
 %
 %
-% \subsection{Changing series}
-% \subsubsection{Create a new series}\label{newseries}
-%
-% If you need more than six series of critical footnotes you can
-% create extra series, using \cs{newseries} command. For example to create G and H series \cs{newseries}\verb+G,H+.
-% 
-% \subsubsection{Delete series}
-% As the number of series which are defined increases, \Eledmac{} gets slower.
-% If you do not need all of the six standard series (A, B, C, D, E, Z),
-% you can load the package with the \verb+series+ option. 
-% For example if you need only series~A and~B, use:
-% \begin{verbatim}
-% \usepackage[series={A,B}]{eledmac}
-% \end{verbatim}
-% \subsubsection{Series order}
-% The default series order is the one called with the \verb+series+ option of the package, or, if this option is not used, A, B, C, D, E, Z. 
-% Series order determines footnotes order.
-%
-% \DescribeMacro{seriesatbegin}\DescribeMacro{seriesatend} However in some specific cases, you need to change the series order at some point inside the document.
-% You can use \cs{seriesatbegin}\marg{<s>} to pull up a given series \verb+<s>+ to the beginning, or \cs{seriesatend}\marg{<s>} to push it down to the end.
 % \section{Verse}\label{verse}
 %
 %
@@ -2428,81 +2504,6 @@
 % \DescribeMacro{\sidenotesep}
 % If you have two or more sidenotes for the same line, they are separated by a comma.
 % But if you want to change this separator, you can redefine the macro \cs{sidenotesep}.
-% \section{Familiar footnotes} \label{sec:desc:familiar}
-% 
-%
-%   The \Lpack{footmisc} package~\cite{FOOTMISC} by Robin 
-% Fairbairns\index{Fairbairns, Robin} has an option whereby 
-% sequential footnote
-% marks in the text can be separated by 
-% commas\textsuperscript{3,4} like so.
-% As a convenience \Eledmac{} provides this automatically.
-%
-% \DescribeMacro{\multfootsep}
-% \cs{multfootsep} is used as the separator between footnote markers.
-% Its default definition is: \\
-% \verb?\providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}? \\
-% and can be changed if necessary.
-%
-% \DescribeMacro{\footnoteA}
-% \DescribeMacro{\footnoteB}
-% \DescribeMacro{\footnoteC}
-% \DescribeMacro{\footnoteD}
-% \DescribeMacro{\footnoteE}
-% \DescribeMacro{\footnoteZ}
-%    As well as the standard \LaTeX\ footnotes generated via \cs{footnote},
-% the package also provides
-% six series of additional footnotes called \cs{footnoteA} through
-% \cs{footnoteZ}. These have the familiar marker in the text, and 
-% the marked text at the foot of the page can be formated using
-% any of the styles described for the critical footnotes. Note that
-% the `regular' footnotes have the series letter at the end of the macro
-% name whereas the critical footnotes have the series letter at the start
-% of the name.
-%
-% \DescribeMacro{\footnormalX}
-% \DescribeMacro{\footparagraphX}
-% \DescribeMacro{\foottwocolX}
-% \DescribeMacro{\footthreecolX}
-%  Each of the \verb?\foot...X? macros takes one argument which is the 
-% series letter (e.g., \texttt{B}). \cs{footnormalX} is the typical
-% footnote format. With \cs{footparagraphX} the series is typeset as one
-% paragraph, with \cs{foottwocolX} the notes are set in two columns, and are
-% set in three columns with \cs{footthreecolX}.
-%
-% \DescribeMacro{\thefootnoteA}
-% \DescribeMacro{\bodyfootmarkA}
-% \DescribeMacro{\footfootmarkA}
-% As well as using the \verb?\foot...X? macros to specify the general 
-% footnote arrangement for a series, each series uses a set of macros for
-% styling the marks. The mark numbering scheme is defined by the
-% \cs{thefootnoteA} macro; the default is: \\
-% \verb?\renewcommand*{\thefootnoteA}{\arabic{footnoteA}}?\\
-% The appearance of the mark in the text is controlled by \cs{bodyfootmarkA}
-% which is defined as: \\
-% \verb?\newcommand*{\bodyfootmarkA}{%? \\
-% \verb?  \hbox{\textsuperscript{\normalfont\@nameuse{@thefnmarkA}}}}? \\
-% The command \cs{footfootmarkA} controls the appearance of the mark at the
-% start of the footnote text. It is defined as: \\
-% \verb?\newcommand*{\footfootmarkA}{\textsuperscript{\@nameuse{@thefnmarkA}}}?
-%
-%    There are similar command triples for the other series.
-%
-% Additional footnote series can be easily defined: you just have to use \cs{newseries}, defined above (see \reff{newseries}).
-%
-% \subsection{Position of the familiar footnotes}
-% \DescribeMacro{\fnpos}\DescribeMacro{\mpfnpos}
-% There is a historical incoherence in \Lpack{(e)ledmac}. The familiar footnotes are
-% before the critical footnotes in a normal page, but after in a minipage or in a ledgroup.
-% However, it is possible to change the relative position of both types of footnotes.
-% If you want to have familiar footnotes after critical footnotes in a normal page, use:
-% \begin{verbatim}
-% \fnpos{critical-familiar}
-% \end{verbatim}
-% Or, if you want a minipage or ledgroup to have critical footnotes after familiar footnotes, use:
-% \begin{verbatim}
-% \mpfnpos{familiar-critical}
-% \end{verbatim}
 % \section{Indexing}
 %
 % \DescribeMacro{\edindex}
