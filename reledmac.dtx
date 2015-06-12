@@ -5770,25 +5770,14 @@
 % \section{Marking text for notes}
 % \label{text}\relax
 %
-% The \cs{edtext} (or \cs{critext}) macro is used to create all 
+% The \cs{edtext} macro is used to create all 
 % footnotes and endnotes,
 % as well as to print the portion of the main text to which a given note
 % or notes is keyed. The idea is to have that lemma appear only once in
 % the \file{.tex} file: all instances of it in the main text and in the
 % notes are copied from that one appearance.
 %
-% For convenience, I will use \cs{*text} when I do not need to distinguish
-% between \cs{edtext} and \cs{critext}.
-% The \cs{*text} macros take two arguments, the only difference between
-% \cs{edtext} and \cs{critext} is how the second argument is delineated.
-%
-% \cs{critext} requires two arguments. At any point within numbered
-% text, you use it by saying:
-% \begin{verbatim}
-%    \critext{#1}#2/
-% \end{verbatim}
-% Similarly \cs{edtext} requires the same two arguments
-% but you use it by saying:
+% The \cs{edtext} macros take two arguments.
 % \begin{verbatim}
 %    \edtext{#1}{#2}
 % \end{verbatim}
@@ -5799,19 +5788,11 @@
 % main text, and is also used as a lemma for notes to it.
 %
 % \item \verb"#2" is a series of subsidiary macros that generate
-% various kinds of notes. With \cs{critext} the \verb"/" after \verb"#2" \emph{must} appear:
-% it marks the end of the macro. (\thetexbook,
-% p.\,204, points out that when
-% additional text to be matched follows the arguments like this, spaces
-% following the macro are not skipped, which is very desirable since
-% this macro will never be used except within text. Having an
-% explicit terminator also helps keep things straight when nested
-% calls to \cs{critext} are used.)  Braces around
-% \verb"#2" are optional with \cs{critext} and required for \cs{edtext}.
+% various kinds of notes. 
 % \end{itemize}
 %
-% The \cs{*text} macro may be used (somewhat) recursively; that
-% is, \cs{*text} may be used within its own first argument. The
+% The \cs{edtext} macro may be used (somewhat) recursively; that
+% is, \cs{edtext} may be used within its own first argument. The
 % code would be much simpler without this feature, but nested notes
 % will commonly be necessary: it's quite likely that we'll have an
 % explanatory note for a long passage and notes on variants for
@@ -5824,14 +5805,14 @@
 % overcome any limitations of this system, albeit with extra
 % effort.
 %
-% The recursive operation of \cs{*text} will fail if you try to use a copy
-% that is called something other than \cs{*text}. In order to handle
-% recursion, \cs{*text} needs to redefine its own definition temporarily
+% The recursive operation of \cs{edtext} will fail if you try to use a copy
+% that is called something other than \cs{edtext}. In order to handle
+% recursion, \cs{edtext} needs to redefine its own definition temporarily
 % at one point, and that doesn't work if the macro you are calling is
-% not actually named \cs{*text}. There's no problem as long as \cs{*text}
-% is not invoked in the first argument. If you want to call \cs{*text}
+% not actually named \cs{edtext}. There's no problem as long as \cs{edtext}
+% is not invoked in the first argument. If you want to call \cs{edtext}
 % something else, it is best to create instead a macro that expands
-% to an invocation of \cs{*text}, rather than copying \cs{*text} and giving
+% to an invocation of \cs{edtext}, rather than copying \cs{edtext} and giving
 % it a new name; otherwise you will need to add an appropriate
 % definition for your new macro to \cs{morenoexpands}.
 %
@@ -5852,7 +5833,7 @@
 % to store and recall this kind of information if they need it.
 %
 %
-% \subsection{{\tt \protect\bslash edtext} (and {\tt \protect\bslash critext})
+% \subsection{{\tt \protect\bslash edtext})
 %  itself}
 %
 % The various note-generating macros might want to request that
@@ -5894,7 +5875,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\dummy@text}
+% \begin{macro}{\dummy@edtext}
 % We now need to define a number of macros that allow us to weed out
 % nested instances of \cs{edtext}, and other problematic macros, from
 % our lemma. This is similar to what we did in reading the line-list
@@ -5902,21 +5883,10 @@
 % because nested \cs{edtext}s macros create nested \cs{@ref} entries
 % in the line-list file.
 %
-% Here's a macro that takes the same arguments as
-% \cs{critext} but merely returns the first argument and ignores
-% the second.
-%    \begin{macrocode}
-\long\def\dummy@text#1#2/{#1}
-%    \end{macrocode}
-% \end{macro}
 %
-% \begin{macro}{\dummy@edtext}
-% \LaTeX\ users are not used to delimited arguments, so we provide
-% a \cs{edtext} macro as well.
 %    \begin{macrocode}
 \newcommand{\dummy@edtext}[2]{#1}
 %    \end{macrocode}
-% \end{macro}
 % 
 % \begin{macro}{\dummy@edtext@showlemma}
 % Some time, we want to obtain only the first argument of \cs{edtext}, while also wrapping it in \cs{showlemma}. For example, when printing a \cs{eledsection}.
@@ -5996,7 +5966,6 @@
   \let\startlock=\relax \let\endlock=\relax
   \let\edlabel=\@gobble 
   \let\setline=\@gobble \let\advanceline=\@gobble
-  \let\critext=\dummy@text
   \let\sameword\sameword@inedtext%
   \let\edtext=\dummy@edtext
   \l@dtabnoexpands
@@ -6016,34 +5985,19 @@
 % \begin{macro}{\@edtext@level}
 % \changes{v1.15.0}{2015/01/12}{New boolean \cs{if@edtext@}.}
 % \changes{v1.23.0}{2015/05/18}{The boolean \cs{if@edtext@} becomes the counter \cs{edtext@level}.}
-% This counter is increased by 1 at each level of \cs{edtext} (or \cs{critext}). 
+% This counter is increased by 1 at each level of \cs{edtext}. 
 % That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
 %    \begin{macrocode}
 \newcount\@edtext@level%
 \@edtext@level=0%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\critext}
-% \changes{v1.16.0}{2014/01/23}{\cs{critext} and \cs{edtext} are now defined only in eledmac, not in \Lpack{eledpar}. Debug wrong numbering when using \cs{sameword} + \Lpack{eledpar} + \cs{tag} command.}
-% Now we begin \cs{critext} itself. The definition requires a \verb"/" after
-% the arguments: this eliminates the possibility of problems about
-% knowing where \verb"#2" ends. This also changes the handling of spaces
-% following an invocation of the macro: normally such spaces are
-% skipped, but in this case they're significant because \verb"#2" is
-% a `delimited parameter'. Since \cs{critext} is always used in running
-% text, it seems more appropriate to pay attention to spaces than to
-% skip them.
+% \changes{v1.16.0}{2014/01/23}{\cs{edtext} is now defined only in eledmac, not in \Lpack{eledpar}. Debug wrong numbering when using \cs{sameword} + \Lpack{eledpar} + \cs{tag} command.}
 %
-% \changes{v1.17.0}{2015/02/09}{The historical \cs{critext} now just refers to \cs{edtext} (code refactoring).}
-% Since v.1.17.0, \cs{critext} only refers to \cs{edtext}.
-%    \begin{macrocode}
-\long\def\critext#1#2/{\edtext{#1}{#2}}%
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\edtext}
-% \changes{v0.4.0}{2004/02/29}{Added \cs{showlemma} to \cs{edtext} (and \cs{critext})}
-% \changes{v1.4.0}{2012/11/16}{Compatibility of \cs{edtext} (and \cs{critext}) with the right-to-left direction (with Polyglossia).}
+% \changes{v0.4.0}{2004/02/29}{Added \cs{showlemma} to \cs{edtext}}
+% \changes{v1.4.0}{2012/11/16}{Compatibility of \cs{edtext} with the right-to-left direction (with Polyglossia).}
 % \changes{v1.17.0}{2015/02/09}{Error message when calling \cs{edtext} outside of a numbered paragraph.}
 % When executed, \cs{edtext} first ensures that we're in
 % horizontal mode. 
@@ -6215,11 +6169,11 @@
 % \end{macro}
 % \begin{macro}{\set@line}
 % The \cs{set@line} macro
-% is called by \cs{critext} to put the line-reference field and
+% is called by \cs{edtext} to put the line-reference field and
 % font specifier for the current block of text into \cs{l@d@nums}.
 %
-% One instance of \cs{critext} may generate several notes, or it
-% may generate none---it's legitimate for argument \verb"#2" to \cs{critext} to
+% One instance of \cs{edtext} may generate several notes, or it
+% may generate none---it's legitimate for argument \verb"#2" to \cs{edtext} to
 % be empty. But \cs{flag@start} and \cs{flag@end} induce the generation of
 % a single entry in \cs{line@list} during the next run, and it's vital
 % to also remove one and only one \cs{line@list} entry here.
@@ -6274,7 +6228,7 @@
 %
 % \begin{macro}{\if@lemmacommand@}
 % \changes{v1.15.0}{2015/01/12}{New boolean \cs{iflemmacommand@}.}
-% This boolean is set to TRUE inside a \cs{edtext} (or \cs{critext}) when a \cs{lemma} command is called. 
+% This boolean is set to TRUE inside a \cs{edtext} when a \cs{lemma} command is called. 
 % That is useful for some commands which can have a different behavior if the lemma in the note is different from the lemma in the main text.
 %    \begin{macrocode}
 \newif\if@lemmacommand@%
@@ -12426,8 +12380,8 @@
 % numbers to those at \verb"\label{elephant}".  The point of this is
 % to be able to manufacture footnote line references to passages
 % which can't be specified in the normal way as the first argument
-% to \cs{critext} for one reason or another.  Using \cs{xxref} in the
-% second argument of \cs{critext} lets you set things up at least
+% to \cs{edtext} for one reason or another.  Using \cs{xxref} in the
+% second argument of \cs{edtext} lets you set things up at least
 % semi-automatically.
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
@@ -14405,18 +14359,12 @@
 %
 % \begin{macro}{\EDTEXT}
 % \begin{macro}{\xedtext}
-% \begin{macro}{\CRITEXT}
-% \begin{macro}{\xcritext}
-% We need to be able to modify the |\edtext| and |\critext| macros
+% We need to be able to modify the |\edtext| macros
 % and also restore their original definitions.
 %    \begin{macrocode}
 \let\EDTEXT=\edtext
 \newcommand{\xedtext}[2]{\EDTEXT{#1}{#2}}
-\let\CRITEXT=\critext
-\long\def\xcritext #1#2/{\CRITEXT{#1}{#2}/}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -14594,24 +14542,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l@dmodforcritext}
-% \begin{macro}{\l@drestoreforcritext}
-% Modify and restore various macros for when |\critext| is used.
-%    \begin{macrocode}
-\newcommand{\l@dmodforcritext}{%
-  \let\critext\relax%
-  \def\do##1{\global\csletcs{##1footnote}{l@dgobbledarg}}
-  \dolistloop{\@series}%
-  \let\edindex\nulledindex%
-  \let\linenum\@gobble}
-\newcommand{\l@drestoreforcritext}{%
-  \def\do##1{\csdef{##1footnote}##1##2/{\csuse{##1@@footnote}{##1}{##2}}}
-  \dolistloop{\@series}%
-  \let\edindex\xedindex}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\l@dmodforedtext}
 % \begin{macro}{\l@drestoreforedtext}
@@ -14698,7 +14628,6 @@
 % Gathers some lets and other code that is common to the |*verteilen*| macros.
 %    \begin{macrocode}
 \newcommand{\letsforverteilen}{%
-  \let\critext\xcritext
   \let\edtext\xedtext
   \let\edindex\xedindex
   \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
@@ -15545,28 +15474,16 @@
 % \end{environment}
 % \end{environment}
 %
-%  Here's the code for enabling |\edtext| (instead of |\critext|).
 %
-% \begin{macro}{\usingcritext}
 % \begin{macro}{\disablel@dtabfeet}
 % \begin{macro}{\enablel@dtabfeet}
-% \begin{macro}{\usingedtext}
-% Declarations for using |\critext{}.../| or using |\edtext{}{}| inside
+% Declarations for using  or using \cs{edtext} inside
 % tabulars.
 % The default at this point is for |\edtext|.
 %    \begin{macrocode}
-\newcommand{\usingcritext}{%
-  \def\disablel@dtabfeet{\l@dmodforcritext}%
-  \def\enablel@dtabfeet{\l@drestoreforcritext}}
-\newcommand{\usingedtext}{%
-  \def\disablel@dtabfeet{\l@dmodforedtext}%
-  \def\enablel@dtabfeet{\l@drestoreforedtext}}
-
-\usingedtext
-
+\newcommand\disablel@dtabfeet{\l@dmodforedtext}%
+\newcommand\enablel@dtabfeet{\l@drestoreforedtext}%
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -16318,124 +16235,7 @@
 % \section{Some things to do when changing version}
 % \subsection{Migrating from edmac} \label{sec:lastuser}
 %
-% If you have never used \edmac, ignore this section. If you have used
-% \edmac{} and are starting on a completely new document, ignore this section.
-% Only read this section if you are converting an original \edmac{}
-% document to use \eledmac.
-%
-%    The package still provides the original \cs{text} command, but it is
-% (a) deprecated, and 
-% (b) its name has been changed\footnote{A name like \cs{text} is  likely to be defined by
-% other \LaTeX\ packages (it certainly is by the AMS packages) and it
-% seems sensible to try and avoid clashes with other definitions.} 
-% to \cs{critext}; 
-% use the \cs{edtext} macro instead. However, if you do
-% use \cs{critext} (the new name for \cs{text}), the following is a reminder.
-%
-%
-% \DescribeMacro{\critext}
-% Within numbered paragraphs, footnotes and endnotes are generated
-% by forms of the \cs{critext} macro:
-% \begin{verse}
-% \cs{critext}\marg{lemma}\meta{commands}\verb"/"
-% \end{verse}
-%
-%
-% The \meta{lemma} argument is the lemma in the main text: \cs{critext}
-% both prints this as part of the text, and makes it available to the
-% \meta{commands} you specify to generate notes. The \verb"/" at the
-% end terminates the command; it is part of the macro's definition so
-% that spaces after the macro will be treated as significant.
-%
-% For example:
-% \egstart
-% \begin{verbatim}
-% I saw my friend \critext{Smith}
-% \Afootnote{Jones C, D.}/
-% on Tuesday.
-% \end{verbatim}
-% \egmid
-% 1\enspace I saw my friend\\
-% 2\enspace Smith on Tuesday.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 2} Smith] Jones C, D.
-% \egend
-%
-% The lemma \verb"Smith" is printed as part of this sentence in
-% the text, and is also made available to the footnote
-% that specifies a variant, \verb"Jones C, D". The footnote macro
-% is supplied with the line number at which the lemma appears
-% in the main text.
-%
-% The \meta{lemma} may contain further \cs{critext} commands.
-%  Nesting makes
-% it possible to print an explanatory note on a long passage together with
-% notes on variants for individual words within the passage. For
-% example:
-% \egstart
-% \begin{verbatim}
-% \critext{I saw my friend
-%   \critext{Smith}{\Afootnote{Jones
-%   C, D.}/ on Tuesday.}
-%   \Bfootnote{The date was
-%   July 16, 1954.}
-% /
-% \end{verbatim}
-% \egmid
-% 1\enspace I saw my friend\\
-% 2\enspace Smith on Tuesday.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 2} Smith] Jones C, D.\smallskip
-% \hrule width 1.5cm
-% \strut {\bf 1--2} I saw my friend \\
-% Smith on Tuesday.] The\\ date was
-% July 16, 1954.
-% \egend
-%
-% However, \cs{critext} cannot handle overlapping but unnested
-% notes---for example, one note covering lines 10--15, and another
-% covering 12--18; a \cs{critext} that starts in the \meta{lemma}
-% argument of another \cs{critext} must end there, too. (The
-% \cs{lemma} and \cs{linenum} commands may be used to
-% generate overlapping notes if necessary.)
-%
-% The second argument of the \cs{critext} macro, \meta{commands},
-% is the same as the second argument to the \cs{edtext} macro.
-%
-%
-% It is possible to define aliases for \cs{critext}, which
-% can be easier to type. You can make a single character substitute
-% for \cs{critext} by saying this:
-% \begin{verbatim}
-% \catcode`\<=\active
-% \let<=\critext
-% \end{verbatim}
-%
-% Then you might say \verb"<{Smith}\variant{Jones}/". This of course
-% destroys the ability to use \verb"<" in any new macro definitions, so
-% long as it remains in effect; hence it should be used with care.
-%
-% Changing the character at the end of the command requires more work:
-% \begin{verbatim}
-% \catcode`\<=\active
-% \def\xtext#1#2>{\critext{#1}{#2}/}
-% \let<=\xtext
-% \end{verbatim}
-% This allows you to say \verb"<{Smith}\Afootnote{Jones}>".
-%
-% Aliases for \cs{critext}
-% of the first kind shown here also can't be nested---that is,
-% you can't use the alias in the text that forms the first argument
-% to \cs{critext}. (See section~\ref{text} to find out why.) Aliases of
-% the second kind may be nested without any problem.
-%
-%
-% If you really have to use |\critext| in any of the tabular or
-% array environments, then |\edtext| must not be used in the same
-% environment. If you use |\critext| in one of these environments
-% then you have to issue the declaration |\usingcritext| beforehand.
-% The declaration |\usingedtext| must be issued to revert to the
-% default assumption that |\edtext| will be used.
+% The \cs{critext} commands is not anymore supported by \thispackagename. Use \cs{edtext} instead. 
 %
 % \subsection{Migration from ledmac to eledmac}\label{migration}
 % In eledmac, some changes were made in the code to allow for easy customization.
@@ -16545,6 +16345,7 @@
 % \emph{Deprecated command} 	& \emph{Replaced by} \\
 % \hline
 % \endhead
+% \cs{critext}			& \cs{edtext}			 \\
 % \cs{falseverse}		& \cs{newverse}    \\
 % \cs{ledchapter} 		& \cs{eledchapter} \\
 % \cs{ledsection}		& \cs{eledsection} \\
@@ -16556,7 +16357,9 @@
 % \cs{noendnotes} 		& Package option \verb+noendnotes+ \\
 % \end{longtable}
 % 
-% The \verb+ledsecnolinenumber+ option has been deleted, because linked to deprecated commands.
+% The \verb+ledsecnolinenumber+ option has been deleted, because linked to deprecated commands. 
+%
+% The \cs{usingedtext} and \cs{usingcritext} commands are also deprecated. 
 % 
 % \clearpage
 % \bibliographystyle{alpha}
