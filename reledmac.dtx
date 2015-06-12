@@ -290,7 +290,7 @@
 % \renewcommand{\egend}{%
 %    \end{minipage}\par\endgroup}
 %
-% \title{\Lpack{\eledmac} \\
+% \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -632,10 +632,14 @@
 % \DescribeMacro{\beginnumbering}
 % \DescribeMacro{\endnumbering}
 % Each section of numbered text must be preceded by
-% \cs{beginnumbering} and followed by \cs{endnumbering}, like: \\
-% \cs{beginnumbering} \\
-% \meta{text} \\
-% \cs{endnumbering}
+% \cs{beginnumbering} and followed by \cs{endnumbering}, like this: \\
+% \egstart
+% \begin{verbatim}
+% \beginnumbering
+% text
+% \endnumbering
+% \end{verbatim}
+% \egend
 %
 % The \cs{beginnumbering} macro resets the line number to zero,
 % reads an auxiliary file called \meta{jobname}.\file{nn} (where
@@ -652,7 +656,9 @@
 % \cs{beginnumbering} and \cs{endnumbering} commands. But your text
 % will most often contain chapter or other divisions marking sections
 % that should be independently numbered, and these will be appropriate
-% places to begin new numbered sections. \Eledmac{} has to read and store
+% places to begin new numbered sections. 
+%
+% \Macpackage has to read and store
 % in memory
 % a certain amount of information about the entire section when it
 % encounters a \cs{beginnumbering} command, so it speeds up the
@@ -665,12 +671,16 @@
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % Within a numbered section, each paragraph of numbered text must
-% be marked using the \cs{pstart} and \cs{pend} commands: \\
-% \cs{pstart} \\
-% \meta{paragraph of text} \\
-% \cs{pend}
+% be marked using the \cs{pstart} and \cs{pend} commands like this: \\
+% \egstart
+% \begin{verbatim} 
+% \pstart
+% Paragraph of text. 
+% \pend
+% \end{verbatim}
+% \egend
 %
-% Text that appears within a numbered section but isn't marked with
+% Text that appears within a numbered section but is not marked with
 % \cs{pstart} and \cs{pend} will not be numbered.
 %
 % The following example shows the proper section and paragraph
@@ -697,46 +707,8 @@
 % \pend
 % \endnumbering
 % \end{verbatim}
-% \egmid
-% {\parskip0pt \count255=0
-% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
-% This is a sample paragraph\par
-% with lines numbered\par
-% automatically.\smallskip
-%
-% This paragraph too\par
-% has its lines automatically\par
-% numbered.\smallskip
-%
-% \everypar{\hbox to 1.5em{\hfil}}
-% The lines of this paragraph\par
-% are not numbered.\smallskip
-%
-% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
-% And here the numbering\par
-% begins again.\par}
 % \egend
 %
-% \subsubsection{Content before specific \cs{pstart} and after \cs{pend}}\label{pstart:optionalarg}
-% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}
-% Both \cs{pstart} and \cs{pend} can take a optional argument, in brackets. 
-% Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
-% If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
-%
-% For example, \Lpack{eledmac} does not insert \cs{parskip} between paragraphs. This feature allows you to insert it:
-% \begin{verbatim}
-% \parskip=2\baselineskip% Set the skip between paragraphs
-% \AtEveryPend{\vskip\parskip}% Apply after every \Pend
-% \end{verbatim}
-
-%. This feature is also useful when typesetting verses (see~\reff{verse}) or \Lpack{eledpar} (see~\reff{eledpar}).
-%
-% A \cs{noindent} is automatically added before this argument.
-% \subsubsection{Content before every \cs{pstart} and after every \cs{pend}}
-% \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}
-% \label{AtEveryPstart} \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
-% You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
-% Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
 % \subsubsection{Producting automatically \cs{pstart}\ldots{}\cs{pend}}
 % \DescribeMacro{\autopar}
 % You can use \cs{autopar} to avoid the nuisance of this paragraph markup
@@ -757,15 +729,6 @@
 %   \endnumbering
 % \endgroup
 % \end{verbatim}
-% \egmid
-% {\parskip0pt \count255=0
-% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
-% A paragraph of numbered\par
-% text.\smallskip
-%
-% Another paragraph of\par
-% numbered text.\par}
-% \egend
 %
 % \cs{autopar} fails, however, on paragraphs that start with a
 % \verb"{" or with any other command that starts a new group before it
@@ -777,8 +740,24 @@
 % rites', \textit{TUGboat} \textbf{12} (1991),
 % pp.\,257--258.\protect\index{Beeton, Barbara Ann Neuhaus Friend}}
 %
+% \subsubsection{Content before specific \cs{pstart} and after specific \cs{pend}}\label{pstart:optionalarg}
+% \changes{v1.12.0}{2014/08/05}{Optional arguments for \cs{pstart} and \cs{pend}.}
+% \DescribeMacro{\AtEveryPstart}
+% \DescribeMacro{\AtEveryPend}
+% Both \cs{pstart} and \cs{pend} can take a optional argument, in brackets. 
+% Its content will be printed before the beginning of \cs{pstart} / after the end of  \cs{pend} instead of the argument of \cs{AtEveryPstart} / \cs{AtEveryPend}.
+% If you need to start a \cs{pstart} by brackets, or to add brackets after a \cs{pend}, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
+%
+%. This feature is also useful when typesetting verses (see~\reff{verse}) or \Lpack{eledpar} (see~\reff{eledpar}).
+%
+% A \cs{noindent} is automatically added before this argument.
+% \subsubsection{Content before every \cs{pstart} and after every \cs{pend}}
+% \changes{v1.15.0}{2015/01/12}{New commands \cs{AtEveryPstart} and \cs{AtEveryPend}.}
+% \label{AtEveryPstart} \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
+% You can use both \cs{AtEveryPstart} and \cs{AtEveryPend}.
+% Their arguments will be printed before every \cs{pstart} begins / after  every \cs{pend} ends.
 % \subsubsection{Numbering paragraphs (\cs{pstart})}
-%\changes{v0.12.0}{2011/10/01}{Possibility to number \cs{pstart}.}
+% \changes{v0.12.0}{2011/10/01}{Possibility to number \cs{pstart}.}
 % It is possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. 
 % You can redefine the command \DescribeMacro{\thepstart}\cs{thepstart} to change style. 
 % You can change the value of the pstart number by using \emph{after} \cs{beginnumbering}:
@@ -788,19 +767,21 @@
 % On each \cs{beginnumbering} the numbering restarts.
 % \changes{v0.15.0}{2012/06/11}{Possibility to print \cs{pstart} number inside.}
 %
+% \DescribeMacro{\sidepstartnumtrue}
 % With the \cs{sidepstartnumtrue} command, the number of \cs{pstart} will be printed inside. In this case, the line number will be not printed.
 %
 % \changes{v1.1.0}{2012/09/25}{Add \cs{labelpstarttrue}.}
+% \DescribeMacro{\labelpstarttrue}
 % With the \cs{labelpstarttrue} command, a \cs{label} added just after  a \cs{pstart} will refer to the number of this pstart.
 % \subsubsection{Languages written in Right to Left}
 % If you use languages written in right to left, we \LuaLaTeX\ or \XeLaTeX, so
 % you must switch text direction \cs{before} the \cs{pstart} command. 
 % \subsubsection{Memory limits}
-% \textbf{This paragraph is kept for history, but problem described below should not appear with \Lpack{eledmac}.}
+% \textbf{This paragraph is kept for history, but problem described below should not appear with \eledmac and later.}
 % \DescribeMacro{\pausenumbering}
 % \DescribeMacro{\resumenumbering}
-% \phantomsection\label{pause}\relax
-% \Eledmac{} stores a lot of information about line numbers and
+% \label{pause}
+% \Macpackage stores a lot of information about line numbers and
 % footnotes in memory as it goes through a numbered section.  But
 % at the end of such a section, it empties its memory out, so to
 % speak.  If your text has a very long numbered section it is
@@ -829,25 +810,21 @@
 % \pend
 % \endnumbering
 % \end{verbatim}
-% \egmid
-% {\parskip0pt \count255=0
-% \everypar{\advance \count255 by 1 \hbox to 1.5em{\the\count255\hfil}}
-% Paragraph of\par
-% text.\medskip
-%
-% Another paragraph.\par}
 % \egend
+
 %
 % We have
 % defined these commands as two macros, in case you find it necessary
 % to insert text between numbered sections without disturbing the
 % line numbering.  But if you are really just using these macros to
 % save memory, you might as well say
+% \egstart
 % \begin{verbatim}
 % \newcommand{\memorybreak}{\pausenumbering\resumenumbering}
 % \end{verbatim}
 % and say \cs{memorybreak} between the relevant \cs{pend} and
 % \cs{pstart}.
+% \egend
 %
 % \subsection{Lineation commands}
 % \subsubsection{Disabling lineation}
@@ -856,7 +833,7 @@
 % \subsubsection{Setting lineation start and step}
 % \DescribeMacro{\firstlinenum}
 % \DescribeMacro{\linenumincrement}
-%    By default, \Eledmac{} numbers every 5th line. There are two counters,
+%    By default, \macpackage numbers every 5th line. There are two counters,
 % \verb?firstlinenum? and \verb?linenumincrement?, that control this
 % behaviour; they can be changed using \cs{firstlinenum}\marg{num} and
 % \cs{linenumincrement}\marg{num}. \cs{firstlinenum} specifies the first 
@@ -870,6 +847,7 @@
 % \DescribeMacro{\sublinenumincrement}
 % There are similar commands, \cs{firstsublinenum}\marg{num} and 
 % \cs{sublinenumincrement}\marg{num} for controlling sub-line numbering.
+%
 % \DescribeMacro{\linenumberlist}
 % You can define \cs{linenumberlist} to specify a non-uniform distribution
 % of printed line numbers. For example: \\
@@ -884,13 +862,16 @@
 % is that specified by the combination of the \texttt{firstlinenum},
 % \texttt{linenumincrement}, \texttt{firstsublinenum} and
 % \texttt{linenumincrement} counter values.
+%
 % \subsubsection{Setting lineation reset}
 % \DescribeMacro{\lineation}
 % \changes{v1.0.0}{2012/09/15}{Debug in lineation command}
 % Lines can be numbered either by page, by pstart or by section; you specify
 % this using the \cs{lineation}\marg{arg}
 % macro, where \meta{arg} is either
-% \texttt{page}, \texttt{pstart} or \texttt{section}. You may only use this command at places
+% \texttt{page}, \texttt{pstart} or \texttt{section}. 
+
+% You may only use this command at places
 % where numbering is not in effect; you can't change the lineation system
 % within a section. You can change it between sections: they don't all
 % have to use the same lineation system. 
@@ -940,6 +921,7 @@
 % commands described here allow you to put such modifications
 % into effect.
 %
+% \subsubsection{Sublineation}
 % \DescribeMacro{\startsub}
 % \DescribeMacro{\endsub}
 % You insert the \cs{startsub} and \cs{endsub} commands in your text
@@ -957,6 +939,7 @@
 % or sub-line depending on what it started out as, even if that
 % changes in the middle.
 %
+% \subsubsection{Locking lineation}
 % \DescribeMacro{\startlock}
 % \DescribeMacro{\endlock}
 % The \cs{startlock} command, used in running text, locks the
@@ -978,6 +961,7 @@
 % argument is a word, either \texttt{first}, \texttt{last}, or \texttt{all}.
 % The package initially sets this as \verb"\lockdisp{first}".
 %
+% \subsubsection{Setting and changing line number}
 % \DescribeMacro{\setline}
 % \DescribeMacro{\advanceline}
 % In some cases you may want to modify the line numbers that are
@@ -994,16 +978,17 @@
 % line number; it may be positive or negative.
 %
 % \DescribeMacro{\setlinenum}
-% The \verb?\setline? and \verb?\advanceline? macros should only be used
-% within a \verb?\pstart...\pend? group. The \cs{setlinenum}\marg{num}
+% The \cs{setline} and \cs{advanceline} macros should only be used
+% within a \cs{pstart}\ldots\cs{pend} group. The \cs{setlinenum}\marg{num}
 % command can be used outside such a group, for example between
-% a \verb?pend? and a \verb?\pstart?. It sets the line number 
+% a \cs{pend} and a \cs{pstart}. It sets the line number 
 % to \meta{num}. 
-% It has no effect if used within a \verb?\pstart...\pend? group
+% It has no effect if used within a \cs{pstart}\ldots\cs{pend} group.
 %
+% \subsubsection{Line number style}
 % \DescribeMacro{\linenumberstyle}
 % \DescribeMacro{\sublinenumberstyle}
-%  Line numbers are nomally printed as arabic numbers. You can
+%  Line numbers are normally printed as arabic numbers. You can
 % use \cs{linenumberstyle}\marg{style} to change the numbering style.
 % \meta{style} must be one of:
 % \begin{itemize}
@@ -1019,6 +1004,7 @@
 % Similarly \cs{sublinenumberstyle}\marg{style} can be used to change
 % the numbering style of sub-line numbers, which is normally arabic numerals.
 %
+% \subsubsection{Skipping and hidding number}
 % \DescribeMacro{\skipnumbering}
 % When inserted into a numbered line the macro \cs{skipnumbering} causes
 % the numbering of that particular line to be skipped; that is, the line 
@@ -5371,8 +5357,8 @@
   \ifnum\@edtext@level>0%
     \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtext@\the\@edtext@level\endcsname}}%
     \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
-    \letcs{\@tmp}{sw@list@edtext@\the\@edtext@level}%
-    \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
+    \letcs{@tmp}{sw@list@edtext@\the\@edtext@level}%
+    \letcs{@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
     \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
     \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
   \fi%
@@ -6426,7 +6412,7 @@
             }%
           }%
           \if@addsw%
-            \letcs{\@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
+            \letcs{@tmp}{sw@list@edtext@tmp@\the\@tempcnta}%
             \ifledRcol%
               \xright@appenditem{{\the@sw}{\the\absline@numR}}\to\@tmp%
             \else%
@@ -12341,8 +12327,8 @@
    \StrDel{\csuse{the@@label#1}}{\Rlineflag}[\@tempa]%
      \StrDel{\csuse{the@@label#2}}{\Rlineflag}[\@tempb]%
   \else%
-   \letcs{\@tempa}{the@@label#1}%
-   \letcs{\@tempb}{the@@label#2}%
+   \letcs{@tempa}{the@@label#1}%
+   \letcs{@tempb}{the@@label#2}%
  \fi%
    \linenum{\@tempa|%
     \@tempb}}}%
