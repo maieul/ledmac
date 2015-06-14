@@ -27,6 +27,8 @@ README: README.md
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
 	@xelatex $*.dtx
+	@makeindex -s gind.ist -o $*.ind $*.idx
+	@makeindex -s gglo.ist -o $*.gls $*.glo
 	@xelatex $*.dtx
 
 
