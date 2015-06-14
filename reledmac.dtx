@@ -4037,680 +4037,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \section{Line counting}
-% \label{lineation}\relax
-%
-% \subsection{Choosing the system of lineation}
-% \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
-% Line number can be reset at each section (default) ; at each page ; at each pstart.
-% Here we define
-% internal codes for these systems and the macros.
-%
-%
-% \begin{macro}{\ifbypstart@}
-% \begin{macro}{\bypstart@true}
-% \begin{macro}{\bypstart@false}
-% \begin{macro}{\ifbypage@}
-% \begin{macro}{\bypage@true}
-% \begin{macro}{\bypage@false}
-% The \cs{ifbypage@} and \cs{ifbypstart@} flag specifie the current lineation
-% system: \begin{itemize}
-% \item line-of-page: \verb|bypstart@ = false| and \verb|bypage@ = true|.
-% \item line-of-pstart: \verb|bypstart@ = true| and \verb|bypage@ = false|.
-% \end{itemize}
-% \Ledmacpackage will use the line-of-section system unless instructed otherwise.
-%    \begin{macrocode}
-\newif\ifbypage@
-\newif\ifbypstart@
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\lineation}
-% \cs{lineation}\marg{word} is the macro you use to select the 
-% lineation system.
-% Its argument is a string: either \verb+page+, \verb+section+ or \verb+pstart+.
-%    \begin{macrocode}
-\newcommand*{\lineation}[1]{{
-%    \end{macrocode}
-% We can't change the lineation system inside numbering section.
-%    \begin{macrocode}
-  \ifnumbering
-    \led@err@LineationInNumbered
-  \else
-%   \end{macrocode}
-% If the argument is \verb+page+.
-%   \begin{macrocode}
-    \def\@tempa{#1}\def\@tempb{page}%
-    \ifx\@tempa\@tempb
-        \global\bypage@true
-        \global\bypstart@false
-        \unless\ifnocritical@%
-          \pstartinfootnote[][false]%
-        \fi%
-%   \end{macrocode}
-% If the argument is \verb+pstart+.
-%   \begin{macrocode}
-    \else
-       \def\@tempb{pstart}%
-       \ifx\@tempa\@tempb
-           \global\bypage@false
-           \global\bypstart@true
-           \unless\ifnocritical@%
-             \pstartinfootnote%
-           \fi%
-%   \end{macrocode}
-% And finally, if the argument is \verb+section+ (default).
-%   \begin{macrocode}
-       \else
-          \def\@tempb{section}
-          \ifx\@tempa\@tempb
-           \global\bypage@false
-           \global\bypstart@false
-           \unless\ifnocritical@%
-             \pstartinfootnote[][false]%
-           \fi%
-%    \end{macrocode}
-% In other case, it is an error.
-%    \begin{macrocode}
-	   \else
-            \led@warn@BadLineation
-        \fi
-       \fi
-    \fi
-  \fi}}
-%    \end{macrocode}
-% \end{macro}
-% \subsection{Line number margin}
-% \begin{macro}{\linenummargin}
-% \begin{macro}{\line@margin}
-% \begin{macro}{\l@dgetline@margin}
-% \cs{linenummargin}\marg{word} specify which margin 
-% line numbers are in; it takes one argument, a string, which value can be
-% \verb+left+ ;  \verb+right+;  \verb+inner+ or
-% \verb+outer+.
-%
-% The selection is recorded in the count \cs{line@margin}:
-% $0$ for left, $1$ for right, $2$ for outer, and $3$ for inner.
-% \changes{v0.7.0}{2005/02/23}{Added \cs{l@dgetline@margin}}
-%    \begin{macrocode}
-\newcount\line@margin
-\newcommand*{\linenummargin}[1]{{%
-  \l@dgetline@margin{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \global\line@margin=\@l@dtempcntb
-  \fi}}
-\newcommand*{\l@dgetline@margin}[1]{%
-  \def\@tempa{#1}\def\@tempb{left}%
-  \ifx\@tempa\@tempb
-    \@l@dtempcntb \z@
-  \else
-     \def\@tempb{right}%
-     \ifx\@tempa\@tempb
-       \@l@dtempcntb \@ne
-     \else
-       \def\@tempb{outer}%
-       \ifx\@tempa\@tempb
-         \@l@dtempcntb \tw@
-       \else
-         \def\@tempb{inner}%
-         \ifx\@tempa\@tempb
-           \@l@dtempcntb \thr@@
-         \else
-           \led@warn@BadLinenummargin
-           \@l@dtempcntb \m@ne
-         \fi
-       \fi
-     \fi
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \subsection{Line number initialization and increment}
-% \begin{macro}{\c@firstlinenum}
-% \begin{macro}{\c@linenumincrement}
-% The following counters tell \macpackage which lines should be
-% printed with line numbers. \verb+firstlinenum+ is the number of the
-% first line in each section that gets a number;
-% \verb+linenumincrement+
-% is the difference between successive numbered lines. The initial
-% values of these counters produce labels on lines $5$, $10$, $15$, etc.
-% \verb+linenumincrement+ must be at least $1$.
-% 
-%    \begin{macrocode}
-\newcounter{firstlinenum}
-  \setcounter{firstlinenum}{5}
-\newcounter{linenumincrement}
-  \setcounter{linenumincrement}{5}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\c@firstsublinenum}
-% \begin{macro}{\c@sublinenumincrement}
-% The following parameters are just like \verb+firstlinenum+ and
-% \verb+linenumincrement+, but for sub-line numbers.
-% \verb+sublinenumincrement+ must be at least $1$.
-%
-%    \begin{macrocode}
-\newcounter{firstsublinenum}
-  \setcounter{firstsublinenum}{5}
-\newcounter{sublinenumincrement}
-  \setcounter{sublinenumincrement}{5}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\firstlinenum}
-% \begin{macro}{\linenumincrement}
-% \begin{macro}{\firstsublinenum}
-% \begin{macro}{\sublinenumincrement}
-% These macros can be used to set the corresponding counters.
-% \changes{v0.7.0}{2005/02/18}{Added \cs{firstlinenum}, \cs{linenumincrement},
-%              \cs{firstsublinenum} and \cs{linenumincrement}}
-%    \begin{macrocode}
-\newcommand*{\firstlinenum}[1]{%
-  \setcounter{firstlinenum}{#1}%
-}%
-\newcommand*{\linenumincrement}[1]{%
-  \setcounter{linenumincrement}{#1}%
-}%
-\newcommand*{\firstsublinenum}[1]{%
-  \setcounter{firstsublinenum}{#1}%
-}%
-\newcommand*{\sublinenumincrement}[1]{%
-  \setcounter{sublinenumincrement}{#1}%
-}%
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \subsection{Line number locking} 
-% \begin{macro}{\lockdisp}
-% \begin{macro}{\lock@disp}
-% \begin{macro}{\l@dgetlock@disp}
-% When line locking is being used, the \cs{lockdisp}\marg{word} macro
-% specifies whether a line number---if one is due to
-% appear---should be printed on the first printed line or on the
-% last, or by all of them.
-% Its argument is a word, either
-% \verb+first+, \verb+last+, or \verb+all+.  
-% Initially, it is set to \verb+first+.
-%
-% \cs{lock@disp} encodes the selection: $0$ for first, $1$ for last,
-% $2$ for all.
-% \changes{v0.7.0}{2005/02/23}{Added \cs{l@dgetlock@disp}}
-%    \begin{macrocode}
-\newcount\lock@disp
-\newcommand{\lockdisp}[1]{{%
-  \l@dgetlock@disp{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \global\lock@disp=\@l@dtempcntb
-  \else
-    \led@warn@BadLockdisp
-  \fi}}
-\newcommand*{\l@dgetlock@disp}[1]{
-  \def\@tempa{#1}\def\@tempb{first}%
-  \ifx\@tempa\@tempb
-    \@l@dtempcntb \z@
-  \else
-     \def\@tempb{last}%
-     \ifx\@tempa\@tempb
-       \@l@dtempcntb \@ne
-     \else
-       \def\@tempb{all}%
-       \ifx\@tempa\@tempb
-         \@l@dtempcntb \tw@
-       \else
-         \@l@dtempcntb \m@ne
-       \fi
-     \fi
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\sublockdisp}
-% \begin{macro}{\sublock@disp}
-% The same questions about where to print the line number apply to
-% sub-lines, and these are the analogous macros for dealing with
-% the problem.
-%    \begin{macrocode}
-\newcount\sublock@disp
-\newcommand{\sublockdisp}[1]{{%
-  \l@dgetlock@disp{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \global\sublock@disp=\@l@dtempcntb
-  \else
-    \led@warn@BadSublockdisp
-  \fi}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \subsection{Line number style}
-% \begin{macro}{\linenumberstyle}
-% \begin{macro}{\linenumrep}
-% \begin{macro}{\linenumr@p}
-% \begin{macro}{\sublinenumberstyle}
-% \begin{macro}{\sublinenumrep}
-% \begin{macro}{\sublinenumr@p}
-% We provide a mechanism for using different representations of the
-% line numbers, not just the normal arabic.
-%
-% NOTE: In v0.7 \cs{linenumrep} and \cs{sublinenumrep} replaced
-% the internal \cs{linenumr@p} and \cs{sublinenumr@p}.
-%
-% \cs{linenumberstyle} and \cs{sublinenumberstyle} are user level
-% macros for setting the number representation (\cs{linenumrep}
-% and \cs{sublinenumrep}) for line and sub-line numbers.
-% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumberstyle} and \cs{sublinenumberstyle}}
-% \changes{v0.7.0}{2005/02/18}{Using \cs{linenumrep} instead of \cs{linenumr@p}}
-% \changes{v0.7.0}{2005/02/18}{Using \cs{sublinenumrep} instead of \cs{sublinenumr@p}}
-%    \begin{macrocode}
-\newcommand*{\linenumberstyle}[1]{%
-  \def\linenumrep##1{\@nameuse{@#1}{##1}}}
-\newcommand*{\sublinenumberstyle}[1]{%
-  \def\sublinenumrep##1{\@nameuse{@#1}{##1}}}
-%    \end{macrocode}
-% Initialise the number styles to arabic.
-%    \begin{macrocode}
-\linenumberstyle{arabic}
-  \let\linenumr@p\linenumrep
-\sublinenumberstyle{arabic}
-  \let\sublinenumr@p\sublinenumrep
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \subsection{Line number printing}
-% \begin{macro}{\leftlinenum}
-% \begin{macro}{\rightlinenum}
-% \begin{macro}{\linenumsep}
-% \begin{macro}{\numlabfont}
-% \begin{macro}{\ledlinenum}
-% \cs{leftlinenum} and \cs{rightlinenum} are the macros that are
-% called to print marginal line numbers on
-% a page, for left- and right-hand margins respectively.
-% They are made easy to access and change, since you may
-% want to change the styling in some way. 
-% These standard versions
-% illustrate the general sort of thing that will be needed; they are
-% based on the \cs{leftheadline} macro in \thetexbook, p.\,416.
-%
-% Whatever these macros output gets printed in a box that will be
-% put into the appropriate margin without any space between it and the
-% line of text. 
-% You will generally want a kern between a line number and
-% the text, and \cs{linenumsep} is provided as a standard way of
-% storing its size. Line numbers are usually printed in a smaller
-% font, and \cs{numlabfont} is provided as a standard name for that
-% font. When called, these macros
-% will be executed within a group, so font changes and the like will
-% remain local.
-%
-% \cs{ledlinenum} typesets the line (and subline) number.
-% 
-%   The original \cs{numlabfont} specification is equivalent to 
-% the \LaTeX\ \cs{scriptsize} for a 10pt document.
-% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenum@rep}
-%           to \cs{leftlinenum} and \cs{rightlinenum}}
-% \changes{v0.7.0}{2005/02/18}{Added \cs{ledlinenum} for use by
-%              \cs{leftlinenum} and \cs{rightlinenum}}
-%    \begin{macrocode}
-\newlength{\linenumsep}
-  \setlength{\linenumsep}{1pc}
-\newcommand*{\numlabfont}{\normalfont\scriptsize}
-\newcommand*{\ledlinenum}{%
-  \bgroup%
-  \ifluatex%
-    \luatextextdir TLT%
-  \fi%
-  \numlabfont\linenumrep{\line@num}%
-  \ifsublines@
-    \ifnum\subline@num>0\relax
-      \unskip\fullstop\sublinenumrep{\subline@num}%
-    \fi
-  \fi%
-  \egroup%
-}%
-
-\newcommand*{\leftlinenum}{%
-  \ledlinenum
-  \kern\linenumsep}
-\newcommand*{\rightlinenum}{%
-  \kern\linenumsep
-  \ledlinenum}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \subsection{Line number counters and lists}
-%
-% Footnote references using line numbers rather than symbols can't be
-% generated in one pass, because we do not know the line numbers till we
-% ship out the pages. It would be possible if footnotes were never keyed
-% to more than one line; but some footnotes gloss passages that may run
-% for several lines, and they must be tied to the first line of the
-% passage glossed. And even one-line passages require two passes if we
-% want line-per-page numbering rather than line-per-section numbering.
-%
-% So we run \LaTeX\ over the text several times, and each time save
-% information about page and line numbers in a `line-list file' to
-% be used during the next pass. At the start of each section---whenever
-% \cs{beginnumbering} is executed---the line-list file
-% for that section
-% is read, and the information from it is encoded into a few list
-% macros.
-%
-% We need first to define the different line numbers that are involved
-% in these macros, and the associated counters.
-%
-% \begin{macro}{\line@num}
-% The count \cs{line@num} stores the line number that is used in
-% marginal line numbering and in notes: counting either by section, page or pstart, depending on your
-% choice for this section. This may be qualified by \cs{subline@num}.
-%    \begin{macrocode}
-\newcount\line@num
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\subline@num}
-% The count \cs{subline@num} stores
-% a sub-line number that qualifies \cs{line@num}. For example,
-% line $10$ might have sub-line numbers $1$, $2$ and $3$, which might be
-% printed as lines $10.1$, $10.2$, $10.3$.
-%    \begin{macrocode}
-\newcount\subline@num
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\ifsublines@}
-% \begin{macro}{\sublines@true}
-% \begin{macro}{\sublines@false}
-% We maintain an associated flag, \cs{ifsublines@},
-% to tell us whether we're within
-% a sub-line range or not.
-%
-% You may wonder why we do not just use the value of \cs{subline@num}
-% to determine this---treating anything greater than $0$ as an
-% indication that sub-lineation is on. We need a separate flag because
-% sub-lineation can be used together with line-number locking in odd
-% ways: several pieces of a logical line might be interrupted by
-% pieces of sub-lineated text, and those sub-line numbers should not
-% return to zero until the next change in the major line number. This
-% is common in the typesetting of English Renaissance verse
-% drama\index{Middleton, Thomas}, in which stage directions are
-% given sub-line numbers: a single line of verse may be
-% interrupted by several stage directions.
-%    \begin{macrocode}
-\newif\ifsublines@
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\absline@num}
-% The count \cs{absline@num} stores the
-% absolute number of lines since the start
-% of the section: that is, the number we have actually printed, no matter
-% what numbers we attached to them.
-% This value is never printed on an output page, though
-% \cs{line@num} will often be equal to it. It is used internally to
-% keep track of where notes are to appear and where new
-% pages start: using this value rather than \cs{line@num} is a lot
-% simpler, because it does not depend on the lineation system in use.
-%    \begin{macrocode}
-\newcount\absline@num
-%    \end{macrocode}
-% \end{macro}
-%
-% We will call \cs{absline@num} numbers ``absolute'' numbers, and
-% \cs{line@num} and \cs{subline@num} numbers ``visible'' numbers.
-%
-% \subsection{Line number locking counter}
-% \begin{macro}{\@lock}
-% \begin{macro}{\sub@lock}
-% The counts \cs{@lock} and \cs{sub@lock}
-% tell us the state of line-number
-% and sub-line-number locking. $0$ means we are not within a locked set of
-% lines; $1$ means we are at the first line in the set; $2$, at some
-% intermediate line; and $3$, at the last line.
-%    \begin{macrocode}
-\newcount\@lock
-\newcount\sub@lock
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \subsection{Line number associated to lemma}
-% \begin{macro}{\line@list}
-% \begin{macro}{\insertlines@list}
-% \begin{macro}{\actionlines@list}
-% \begin{macro}{\actions@list}
-% Now we can define the list macros that will be created from the
-% line-list file.  We will maintain the following lists:
-% \begin{itemize}\addtolength{\itemsep}{-1ex}
-% \item \cs{line@list}: the page and line numbers for every
-% lemma marked by \cs{edtext}.
-% There are seven pieces of information, separated by vertical bars:
-% \label{linenumbers}
-% \begin{enumerate}\addtolength{\itemsep}{-1ex}
-% \item the starting page,
-% \item line, and
-% \item sub-line numbers, followed by the
-% \item ending page,
-% \item line, and
-% \item sub-line numbers, and then the
-% \item font specifier for the lemma.
-% \end{enumerate}
-%
-%
-% These line numbers are all visible numbers.
-% The font specifier is a set of four codes for font encoding, 
-% family, series, and shape, separated by \verb"/" characters.  
-% Thus a lemma that
-% started on page $23$, line $35$ and
-% went on until page $24$, line $3$
-% (with no sub-line numbering), and was typeset in a normal roman font
-% would have a line list entry like this: \\
-% \verb"23|35|0|24|3|0|OT1/cmr/m/n".
-%
-% There is one item in this list for every lemma marked by
-% \cs{edtext}, even if there are several notes to that lemma, or no
-% notes at all. \cs{edtext} reads the data in this list, making it
-% available for use in the text of notes.
-%
-% \item \cs{insertlines@list}: the line numbers of lines that have
-% footnotes or other insertions.
-% These are the absolute numbers where the corresponding
-% lemmas begin. This list contains one entry for every footnote in the
-% section; one lemma may contribute no footnotes or many footnotes.
-% This list is used by \cs{add@inserts} within \cs{do@line}, to tell
-% it where to insert notes.
-%
-% \item \cs{actionlines@list}: a list of absolute line numbers at
-% which we are to perform special
-% actions; these actions are specified by the \cs{actions@list} list
-% defined below.
-%
-% \item \cs{actions@list}: action codes corresponding to the line
-% numbers in \cs{actionlines@list}. These codes tell \macpackage what action
-% it is supposed to take at each of these lines. One action, the
-% page-start action, is generated behind the scenes by \macpackage{} itself;
-% the others, for specifying sub-lineation, line-number locking, and
-% line-number alteration, are generated only by explicit commands in
-% your input file. The page-start and line-number-alteration actions
-% require arguments, to specify the new values for the page or line
-% numbers; instead of storing those arguments in another list, we have
-% chosen the action-code values so that they can encode both the action
-% and the argument in these cases. Action codes greater than $-1000$
-% are page-start actions, and the code value is the page number; action
-% codes less than $-5000$ specify line numbers, and the code value is
-% a transformed version of the line number; action codes between these
-% two values specify other actions which require no argument.
-%
-% Here is the full list of action codes and their meanings:
-%
-% Any number greater than $-1000$ is a page-start action: the line number
-% associated with it is the first line on a page, and the action number is
-% the page number. (The cutoff of $-1000$ is chosen because negative
-% page-number values are used by some macro packages; we assume that
-% page-number values less than $-1000$ are not common.)
-% Page-start action codes are added to the list by
-% the \cs{page@action} macro, which is (indirectly) triggered by the
-% workings of the \cs{page@start} macro; that macro should always be
-% called in the output routine, just before the page contents are
-% assembled. \Eledmac{} calls it in \cs{pagecontents}.
-%
-% The action code $-1001$ specifies the start of sub-lineation: meaning
-% that, starting with the next line, we should be advancing
-% \cs{subline@num} at each start-of-line command, rather than
-% \cs{line@num}.
-%
-% The action code $-1002$ specifies the end of sub-lineation. At the
-% next start-of-line, we should clear the sub-line counter and start
-% advancing the line number. The action codes for starting and ending
-% sub-lineation are added to the list by the \cs{sub@action} macro, as
-% called to implement the \cs{startsub} and \cs{endsub} macros.
-%
-% The action code $-1003$ specifies the start of line number locking.
-% After the number for the current line is computed, it will remain
-% at that value through the next line that has an action code to end
-% locking.
-%
-% The action code $-1004$ specifies the end of line number locking.
-%
-% The action code $-1005$ specifies the start of sub-line number locking.
-% After the number for the current sub-line is computed, it will remain
-% at that value through the next sub-line that has an action code to end
-% locking.
-%
-% The action code $-1006$ specifies the end of sub-line number locking.
-%
-% The four action codes for line and sub-line number locking are added
-% to the list by the \cs{do@lockon} and \cs{do@lockoff} macros, as called
-% to implement the \cs{startlock} and \cs{endlock} macros.
-%
-% An action code of $-5000$ or less sets the current visible line
-% number (either the line number or the sub-line number, whichever is
-% currently being advanced) to a specific positive value. The value of
-% the code is $-(5000+n)$, where $n$ is the value (always $\ge 0$)
-% assigned to the current line number. Action codes of this type are
-% added to the list by the \cs{set@line@action} macro, as called to
-% implement the \cs{advanceline} and \cs{setline} macros: this action only
-% occurs when the user has specified some change to the line numbers
-% using those macros. Normally \macpackage{} computes the visible line numbers
-% from the absolute line numbers with reference to the other
-% action codes and the settings they invoke; it does not require an
-% entry in the action-code list for every line.
-%
-% Here are the commands to create these lists:
-%
-%    \begin{macrocode}
-\list@create{\line@list}
-\list@create{\insertlines@list}
-\list@create{\actionlines@list}
-\list@create{\actions@list}
-
-%    \end{macrocode}
-%
-% \end{itemize}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% 
-% \begin{macro}{\page@num}
-% \begin{macro}{\endpage@num}
-% \begin{macro}{\endline@num}
-% \begin{macro}{\endsubline@num}
-% We will need some counts while we read the line-list,
-% for the page number and the ending page, line, and sub-line numbers.
-% Some of these will be used again later on, when we are acting on the
-% data in our list macros.
-%    \begin{macrocode}
-\newcount\page@num
-\newcount\endpage@num
-\newcount\endline@num
-\newcount\endsubline@num
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\ifnoteschanged@}
-% \begin{macro}{\noteschanged@true}
-% \begin{macro}{\noteschanged@false}
-% If the number of the footnotes in a section is different from what it was
-% during the last run, or if this is the very first time you've run
-% \LaTeX,
-% on this file, the information from the line-list used to place the
-% notes will be wrong, and some notes will probably be misplaced.
-% When this happens, we prefer
-% to give a single error message for the whole section rather than
-% messages at every point where we notice the problem, because
-% we do not really know where in the section notes were added or removed,
-% and the solution in any case is simply to run \LaTeX\ two more times;
-% there is no fix needed to the document. The
-% \cs{ifnoteschanged@} flag is set if such
-% a change in the number of notes is discovered at any point.
-%    \begin{macrocode}
-\newif\ifnoteschanged@
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \DescribeMacro{\resetprevline@}
-% Inside the apparatus, at each note, the line number is stored in a macro called \cs{prevlineX},
-% where X is the letter of the current series.
-% This macro is called when using \cs{numberonlyfirstinline}.
-% This macro must be reset at the same time as the line number.
-% The \cs{resetprevline@} does this resetting for every series.
-% \begin{macro}{\resetprevline@}
-%    \begin{macrocode}
-\newcommand*{\resetprevline@}{%
-    \def\do##1{\global\csundef{prevline##1}}%
-    \dolistloop{\@series}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \DescribeMacro{\resetprevpage@num}
-% Inside the apparatus, at each note, the page number is stored in a macro called \cs{prevpageX@num},
-% where X is the letter of the current series.
-% This macro is called when using \cs{parafootsep}.
-% This macro must be reset at the beginning of each numbered section
-% The \cs{resetprevpage@} command resets this macro for every series.
-% \begin{macro}{\resetprevpage@}
-%    \begin{macrocode}
-\newcommand*{\resetprevpage@num}{%
-    \def\do##1{\ifcsdef{prevpage##1@num}{\global\csname prevpage##1@num\endcsname=0}{}}%
-    \dolistloop{\@series}%
-}
-%    \end{macrocode}
-% \end{macro}
 % \section{List macros}
 %
 % Reminder: compare these with the \LaTeX\ list macros in case they
@@ -5780,6 +5106,680 @@
 % \end{macro}
 % \end{macro}
 %
+% \section{Line counting}
+% \label{lineation}\relax
+%
+% \subsection{Choosing the system of lineation}
+% \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
+% Line number can be reset at each section (default) ; at each page ; at each pstart.
+% Here we define
+% internal codes for these systems and the macros.
+%
+%
+% \begin{macro}{\ifbypstart@}
+% \begin{macro}{\bypstart@true}
+% \begin{macro}{\bypstart@false}
+% \begin{macro}{\ifbypage@}
+% \begin{macro}{\bypage@true}
+% \begin{macro}{\bypage@false}
+% The \cs{ifbypage@} and \cs{ifbypstart@} flag specifie the current lineation
+% system: \begin{itemize}
+% \item line-of-page: \verb|bypstart@ = false| and \verb|bypage@ = true|.
+% \item line-of-pstart: \verb|bypstart@ = true| and \verb|bypage@ = false|.
+% \end{itemize}
+% \Ledmacpackage will use the line-of-section system unless instructed otherwise.
+%    \begin{macrocode}
+\newif\ifbypage@
+\newif\ifbypstart@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\lineation}
+% \cs{lineation}\marg{word} is the macro you use to select the 
+% lineation system.
+% Its argument is a string: either \verb+page+, \verb+section+ or \verb+pstart+.
+%    \begin{macrocode}
+\newcommand*{\lineation}[1]{{
+%    \end{macrocode}
+% We can't change the lineation system inside numbering section.
+%    \begin{macrocode}
+  \ifnumbering
+    \led@err@LineationInNumbered
+  \else
+%   \end{macrocode}
+% If the argument is \verb+page+.
+%   \begin{macrocode}
+    \def\@tempa{#1}\def\@tempb{page}%
+    \ifx\@tempa\@tempb
+        \global\bypage@true
+        \global\bypstart@false
+        \unless\ifnocritical@%
+          \pstartinfootnote[][false]%
+        \fi%
+%   \end{macrocode}
+% If the argument is \verb+pstart+.
+%   \begin{macrocode}
+    \else
+       \def\@tempb{pstart}%
+       \ifx\@tempa\@tempb
+           \global\bypage@false
+           \global\bypstart@true
+           \unless\ifnocritical@%
+             \pstartinfootnote%
+           \fi%
+%   \end{macrocode}
+% And finally, if the argument is \verb+section+ (default).
+%   \begin{macrocode}
+       \else
+          \def\@tempb{section}
+          \ifx\@tempa\@tempb
+           \global\bypage@false
+           \global\bypstart@false
+           \unless\ifnocritical@%
+             \pstartinfootnote[][false]%
+           \fi%
+%    \end{macrocode}
+% In other case, it is an error.
+%    \begin{macrocode}
+	   \else
+            \led@warn@BadLineation
+        \fi
+       \fi
+    \fi
+  \fi}}
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Line number margin}
+% \begin{macro}{\linenummargin}
+% \begin{macro}{\line@margin}
+% \begin{macro}{\l@dgetline@margin}
+% \cs{linenummargin}\marg{word} specify which margin 
+% line numbers are in; it takes one argument, a string, which value can be
+% \verb+left+ ;  \verb+right+;  \verb+inner+ or
+% \verb+outer+.
+%
+% The selection is recorded in the count \cs{line@margin}:
+% $0$ for left, $1$ for right, $2$ for outer, and $3$ for inner.
+% \changes{v0.7.0}{2005/02/23}{Added \cs{l@dgetline@margin}}
+%    \begin{macrocode}
+\newcount\line@margin
+\newcommand*{\linenummargin}[1]{{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne
+    \global\line@margin=\@l@dtempcntb
+  \fi}}
+\newcommand*{\l@dgetline@margin}[1]{%
+  \def\@tempa{#1}\def\@tempb{left}%
+  \ifx\@tempa\@tempb
+    \@l@dtempcntb \z@
+  \else
+     \def\@tempb{right}%
+     \ifx\@tempa\@tempb
+       \@l@dtempcntb \@ne
+     \else
+       \def\@tempb{outer}%
+       \ifx\@tempa\@tempb
+         \@l@dtempcntb \tw@
+       \else
+         \def\@tempb{inner}%
+         \ifx\@tempa\@tempb
+           \@l@dtempcntb \thr@@
+         \else
+           \led@warn@BadLinenummargin
+           \@l@dtempcntb \m@ne
+         \fi
+       \fi
+     \fi
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \subsection{Line number initialization and increment}
+% \begin{macro}{\c@firstlinenum}
+% \begin{macro}{\c@linenumincrement}
+% The following counters tell \macpackage which lines should be
+% printed with line numbers. \verb+firstlinenum+ is the number of the
+% first line in each section that gets a number;
+% \verb+linenumincrement+
+% is the difference between successive numbered lines. The initial
+% values of these counters produce labels on lines $5$, $10$, $15$, etc.
+% \verb+linenumincrement+ must be at least $1$.
+% 
+%    \begin{macrocode}
+\newcounter{firstlinenum}
+  \setcounter{firstlinenum}{5}
+\newcounter{linenumincrement}
+  \setcounter{linenumincrement}{5}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\c@firstsublinenum}
+% \begin{macro}{\c@sublinenumincrement}
+% The following parameters are just like \verb+firstlinenum+ and
+% \verb+linenumincrement+, but for sub-line numbers.
+% \verb+sublinenumincrement+ must be at least $1$.
+%
+%    \begin{macrocode}
+\newcounter{firstsublinenum}
+  \setcounter{firstsublinenum}{5}
+\newcounter{sublinenumincrement}
+  \setcounter{sublinenumincrement}{5}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\firstlinenum}
+% \begin{macro}{\linenumincrement}
+% \begin{macro}{\firstsublinenum}
+% \begin{macro}{\sublinenumincrement}
+% These macros can be used to set the corresponding counters.
+% \changes{v0.7.0}{2005/02/18}{Added \cs{firstlinenum}, \cs{linenumincrement},
+%              \cs{firstsublinenum} and \cs{linenumincrement}}
+%    \begin{macrocode}
+\newcommand*{\firstlinenum}[1]{%
+  \setcounter{firstlinenum}{#1}%
+}%
+\newcommand*{\linenumincrement}[1]{%
+  \setcounter{linenumincrement}{#1}%
+}%
+\newcommand*{\firstsublinenum}[1]{%
+  \setcounter{firstsublinenum}{#1}%
+}%
+\newcommand*{\sublinenumincrement}[1]{%
+  \setcounter{sublinenumincrement}{#1}%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Line number locking} 
+% \begin{macro}{\lockdisp}
+% \begin{macro}{\lock@disp}
+% \begin{macro}{\l@dgetlock@disp}
+% When line locking is being used, the \cs{lockdisp}\marg{word} macro
+% specifies whether a line number---if one is due to
+% appear---should be printed on the first printed line or on the
+% last, or by all of them.
+% Its argument is a word, either
+% \verb+first+, \verb+last+, or \verb+all+.  
+% Initially, it is set to \verb+first+.
+%
+% \cs{lock@disp} encodes the selection: $0$ for first, $1$ for last,
+% $2$ for all.
+% \changes{v0.7.0}{2005/02/23}{Added \cs{l@dgetlock@disp}}
+%    \begin{macrocode}
+\newcount\lock@disp
+\newcommand{\lockdisp}[1]{{%
+  \l@dgetlock@disp{#1}%
+  \ifnum\@l@dtempcntb>\m@ne
+    \global\lock@disp=\@l@dtempcntb
+  \else
+    \led@warn@BadLockdisp
+  \fi}}
+\newcommand*{\l@dgetlock@disp}[1]{
+  \def\@tempa{#1}\def\@tempb{first}%
+  \ifx\@tempa\@tempb
+    \@l@dtempcntb \z@
+  \else
+     \def\@tempb{last}%
+     \ifx\@tempa\@tempb
+       \@l@dtempcntb \@ne
+     \else
+       \def\@tempb{all}%
+       \ifx\@tempa\@tempb
+         \@l@dtempcntb \tw@
+       \else
+         \@l@dtempcntb \m@ne
+       \fi
+     \fi
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\sublockdisp}
+% \begin{macro}{\sublock@disp}
+% The same questions about where to print the line number apply to
+% sub-lines, and these are the analogous macros for dealing with
+% the problem.
+%    \begin{macrocode}
+\newcount\sublock@disp
+\newcommand{\sublockdisp}[1]{{%
+  \l@dgetlock@disp{#1}%
+  \ifnum\@l@dtempcntb>\m@ne
+    \global\sublock@disp=\@l@dtempcntb
+  \else
+    \led@warn@BadSublockdisp
+  \fi}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsection{Line number style}
+% \begin{macro}{\linenumberstyle}
+% \begin{macro}{\linenumrep}
+% \begin{macro}{\linenumr@p}
+% \begin{macro}{\sublinenumberstyle}
+% \begin{macro}{\sublinenumrep}
+% \begin{macro}{\sublinenumr@p}
+% We provide a mechanism for using different representations of the
+% line numbers, not just the normal arabic.
+%
+% NOTE: In v0.7 \cs{linenumrep} and \cs{sublinenumrep} replaced
+% the internal \cs{linenumr@p} and \cs{sublinenumr@p}.
+%
+% \cs{linenumberstyle} and \cs{sublinenumberstyle} are user level
+% macros for setting the number representation (\cs{linenumrep}
+% and \cs{sublinenumrep}) for line and sub-line numbers.
+% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumberstyle} and \cs{sublinenumberstyle}}
+% \changes{v0.7.0}{2005/02/18}{Using \cs{linenumrep} instead of \cs{linenumr@p}}
+% \changes{v0.7.0}{2005/02/18}{Using \cs{sublinenumrep} instead of \cs{sublinenumr@p}}
+%    \begin{macrocode}
+\newcommand*{\linenumberstyle}[1]{%
+  \def\linenumrep##1{\@nameuse{@#1}{##1}}}
+\newcommand*{\sublinenumberstyle}[1]{%
+  \def\sublinenumrep##1{\@nameuse{@#1}{##1}}}
+%    \end{macrocode}
+% Initialise the number styles to arabic.
+%    \begin{macrocode}
+\linenumberstyle{arabic}
+  \let\linenumr@p\linenumrep
+\sublinenumberstyle{arabic}
+  \let\sublinenumr@p\sublinenumrep
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \subsection{Line number printing}
+% \begin{macro}{\leftlinenum}
+% \begin{macro}{\rightlinenum}
+% \begin{macro}{\linenumsep}
+% \begin{macro}{\numlabfont}
+% \begin{macro}{\ledlinenum}
+% \cs{leftlinenum} and \cs{rightlinenum} are the macros that are
+% called to print marginal line numbers on
+% a page, for left- and right-hand margins respectively.
+% They are made easy to access and change, since you may
+% want to change the styling in some way. 
+% These standard versions
+% illustrate the general sort of thing that will be needed; they are
+% based on the \cs{leftheadline} macro in \thetexbook, p.\,416.
+%
+% Whatever these macros output gets printed in a box that will be
+% put into the appropriate margin without any space between it and the
+% line of text. 
+% You will generally want a kern between a line number and
+% the text, and \cs{linenumsep} is provided as a standard way of
+% storing its size. Line numbers are usually printed in a smaller
+% font, and \cs{numlabfont} is provided as a standard name for that
+% font. When called, these macros
+% will be executed within a group, so font changes and the like will
+% remain local.
+%
+% \cs{ledlinenum} typesets the line (and subline) number.
+% 
+%   The original \cs{numlabfont} specification is equivalent to 
+% the \LaTeX\ \cs{scriptsize} for a 10pt document.
+% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenum@rep}
+%           to \cs{leftlinenum} and \cs{rightlinenum}}
+% \changes{v0.7.0}{2005/02/18}{Added \cs{ledlinenum} for use by
+%              \cs{leftlinenum} and \cs{rightlinenum}}
+%    \begin{macrocode}
+\newlength{\linenumsep}
+  \setlength{\linenumsep}{1pc}
+\newcommand*{\numlabfont}{\normalfont\scriptsize}
+\newcommand*{\ledlinenum}{%
+  \bgroup%
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
+  \numlabfont\linenumrep{\line@num}%
+  \ifsublines@
+    \ifnum\subline@num>0\relax
+      \unskip\fullstop\sublinenumrep{\subline@num}%
+    \fi
+  \fi%
+  \egroup%
+}%
+
+\newcommand*{\leftlinenum}{%
+  \ledlinenum
+  \kern\linenumsep}
+\newcommand*{\rightlinenum}{%
+  \kern\linenumsep
+  \ledlinenum}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Line number counters and lists}
+%
+% Footnote references using line numbers rather than symbols can't be
+% generated in one pass, because we do not know the line numbers till we
+% ship out the pages. It would be possible if footnotes were never keyed
+% to more than one line; but some footnotes gloss passages that may run
+% for several lines, and they must be tied to the first line of the
+% passage glossed. And even one-line passages require two passes if we
+% want line-per-page numbering rather than line-per-section numbering.
+%
+% So we run \LaTeX\ over the text several times, and each time save
+% information about page and line numbers in a `line-list file' to
+% be used during the next pass. At the start of each section---whenever
+% \cs{beginnumbering} is executed---the line-list file
+% for that section
+% is read, and the information from it is encoded into a few list
+% macros.
+%
+% We need first to define the different line numbers that are involved
+% in these macros, and the associated counters.
+%
+% \begin{macro}{\line@num}
+% The count \cs{line@num} stores the line number that is used in
+% marginal line numbering and in notes: counting either by section, page or pstart, depending on your
+% choice for this section. This may be qualified by \cs{subline@num}.
+%    \begin{macrocode}
+\newcount\line@num
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\subline@num}
+% The count \cs{subline@num} stores
+% a sub-line number that qualifies \cs{line@num}. For example,
+% line $10$ might have sub-line numbers $1$, $2$ and $3$, which might be
+% printed as lines $10.1$, $10.2$, $10.3$.
+%    \begin{macrocode}
+\newcount\subline@num
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\ifsublines@}
+% \begin{macro}{\sublines@true}
+% \begin{macro}{\sublines@false}
+% We maintain an associated flag, \cs{ifsublines@},
+% to tell us whether we're within
+% a sub-line range or not.
+%
+% You may wonder why we do not just use the value of \cs{subline@num}
+% to determine this---treating anything greater than $0$ as an
+% indication that sub-lineation is on. We need a separate flag because
+% sub-lineation can be used together with line-number locking in odd
+% ways: several pieces of a logical line might be interrupted by
+% pieces of sub-lineated text, and those sub-line numbers should not
+% return to zero until the next change in the major line number. This
+% is common in the typesetting of English Renaissance verse
+% drama\index{Middleton, Thomas}, in which stage directions are
+% given sub-line numbers: a single line of verse may be
+% interrupted by several stage directions.
+%    \begin{macrocode}
+\newif\ifsublines@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\absline@num}
+% The count \cs{absline@num} stores the
+% absolute number of lines since the start
+% of the section: that is, the number we have actually printed, no matter
+% what numbers we attached to them.
+% This value is never printed on an output page, though
+% \cs{line@num} will often be equal to it. It is used internally to
+% keep track of where notes are to appear and where new
+% pages start: using this value rather than \cs{line@num} is a lot
+% simpler, because it does not depend on the lineation system in use.
+%    \begin{macrocode}
+\newcount\absline@num
+%    \end{macrocode}
+% \end{macro}
+%
+% We will call \cs{absline@num} numbers ``absolute'' numbers, and
+% \cs{line@num} and \cs{subline@num} numbers ``visible'' numbers.
+%
+% \subsection{Line number locking counter}
+% \begin{macro}{\@lock}
+% \begin{macro}{\sub@lock}
+% The counts \cs{@lock} and \cs{sub@lock}
+% tell us the state of line-number
+% and sub-line-number locking. $0$ means we are not within a locked set of
+% lines; $1$ means we are at the first line in the set; $2$, at some
+% intermediate line; and $3$, at the last line.
+%    \begin{macrocode}
+\newcount\@lock
+\newcount\sub@lock
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsection{Line number associated to lemma}
+% \begin{macro}{\line@list}
+% \begin{macro}{\insertlines@list}
+% \begin{macro}{\actionlines@list}
+% \begin{macro}{\actions@list}
+% Now we can define the list macros that will be created from the
+% line-list file.  We will maintain the following lists:
+% \begin{itemize}\addtolength{\itemsep}{-1ex}
+% \item \cs{line@list}: the page and line numbers for every
+% lemma marked by \cs{edtext}.
+% There are seven pieces of information, separated by vertical bars:
+% \label{linenumbers}
+% \begin{enumerate}\addtolength{\itemsep}{-1ex}
+% \item the starting page,
+% \item line, and
+% \item sub-line numbers, followed by the
+% \item ending page,
+% \item line, and
+% \item sub-line numbers, and then the
+% \item font specifier for the lemma.
+% \end{enumerate}
+%
+%
+% These line numbers are all visible numbers.
+% The font specifier is a set of four codes for font encoding, 
+% family, series, and shape, separated by \verb"/" characters.  
+% Thus a lemma that
+% started on page $23$, line $35$ and
+% went on until page $24$, line $3$
+% (with no sub-line numbering), and was typeset in a normal roman font
+% would have a line list entry like this: \\
+% \verb"23|35|0|24|3|0|OT1/cmr/m/n".
+%
+% There is one item in this list for every lemma marked by
+% \cs{edtext}, even if there are several notes to that lemma, or no
+% notes at all. \cs{edtext} reads the data in this list, making it
+% available for use in the text of notes.
+%
+% \item \cs{insertlines@list}: the line numbers of lines that have
+% footnotes or other insertions.
+% These are the absolute numbers where the corresponding
+% lemmas begin. This list contains one entry for every footnote in the
+% section; one lemma may contribute no footnotes or many footnotes.
+% This list is used by \cs{add@inserts} within \cs{do@line}, to tell
+% it where to insert notes.
+%
+% \item \cs{actionlines@list}: a list of absolute line numbers at
+% which we are to perform special
+% actions; these actions are specified by the \cs{actions@list} list
+% defined below.
+%
+% \item \cs{actions@list}: action codes corresponding to the line
+% numbers in \cs{actionlines@list}. These codes tell \macpackage what action
+% it is supposed to take at each of these lines. One action, the
+% page-start action, is generated behind the scenes by \macpackage{} itself;
+% the others, for specifying sub-lineation, line-number locking, and
+% line-number alteration, are generated only by explicit commands in
+% your input file. The page-start and line-number-alteration actions
+% require arguments, to specify the new values for the page or line
+% numbers; instead of storing those arguments in another list, we have
+% chosen the action-code values so that they can encode both the action
+% and the argument in these cases. Action codes greater than $-1000$
+% are page-start actions, and the code value is the page number; action
+% codes less than $-5000$ specify line numbers, and the code value is
+% a transformed version of the line number; action codes between these
+% two values specify other actions which require no argument.
+%
+% Here is the full list of action codes and their meanings:
+%
+% Any number greater than $-1000$ is a page-start action: the line number
+% associated with it is the first line on a page, and the action number is
+% the page number. (The cutoff of $-1000$ is chosen because negative
+% page-number values are used by some macro packages; we assume that
+% page-number values less than $-1000$ are not common.)
+% Page-start action codes are added to the list by
+% the \cs{page@action} macro, which is (indirectly) triggered by the
+% workings of the \cs{page@start} macro; that macro should always be
+% called in the output routine, just before the page contents are
+% assembled. \Eledmac{} calls it in \cs{pagecontents}.
+%
+% The action code $-1001$ specifies the start of sub-lineation: meaning
+% that, starting with the next line, we should be advancing
+% \cs{subline@num} at each start-of-line command, rather than
+% \cs{line@num}.
+%
+% The action code $-1002$ specifies the end of sub-lineation. At the
+% next start-of-line, we should clear the sub-line counter and start
+% advancing the line number. The action codes for starting and ending
+% sub-lineation are added to the list by the \cs{sub@action} macro, as
+% called to implement the \cs{startsub} and \cs{endsub} macros.
+%
+% The action code $-1003$ specifies the start of line number locking.
+% After the number for the current line is computed, it will remain
+% at that value through the next line that has an action code to end
+% locking.
+%
+% The action code $-1004$ specifies the end of line number locking.
+%
+% The action code $-1005$ specifies the start of sub-line number locking.
+% After the number for the current sub-line is computed, it will remain
+% at that value through the next sub-line that has an action code to end
+% locking.
+%
+% The action code $-1006$ specifies the end of sub-line number locking.
+%
+% The four action codes for line and sub-line number locking are added
+% to the list by the \cs{do@lockon} and \cs{do@lockoff} macros, as called
+% to implement the \cs{startlock} and \cs{endlock} macros.
+%
+% An action code of $-5000$ or less sets the current visible line
+% number (either the line number or the sub-line number, whichever is
+% currently being advanced) to a specific positive value. The value of
+% the code is $-(5000+n)$, where $n$ is the value (always $\ge 0$)
+% assigned to the current line number. Action codes of this type are
+% added to the list by the \cs{set@line@action} macro, as called to
+% implement the \cs{advanceline} and \cs{setline} macros: this action only
+% occurs when the user has specified some change to the line numbers
+% using those macros. Normally \macpackage{} computes the visible line numbers
+% from the absolute line numbers with reference to the other
+% action codes and the settings they invoke; it does not require an
+% entry in the action-code list for every line.
+%
+% Here are the commands to create these lists:
+%
+%    \begin{macrocode}
+\list@create{\line@list}
+\list@create{\insertlines@list}
+\list@create{\actionlines@list}
+\list@create{\actions@list}
+
+%    \end{macrocode}
+%
+% \end{itemize}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% 
+% \begin{macro}{\page@num}
+% \begin{macro}{\endpage@num}
+% \begin{macro}{\endline@num}
+% \begin{macro}{\endsubline@num}
+% We will need some counts while we read the line-list,
+% for the page number and the ending page, line, and sub-line numbers.
+% Some of these will be used again later on, when we are acting on the
+% data in our list macros.
+%    \begin{macrocode}
+\newcount\page@num
+\newcount\endpage@num
+\newcount\endline@num
+\newcount\endsubline@num
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\ifnoteschanged@}
+% \begin{macro}{\noteschanged@true}
+% \begin{macro}{\noteschanged@false}
+% If the number of the footnotes in a section is different from what it was
+% during the last run, or if this is the very first time you've run
+% \LaTeX,
+% on this file, the information from the line-list used to place the
+% notes will be wrong, and some notes will probably be misplaced.
+% When this happens, we prefer
+% to give a single error message for the whole section rather than
+% messages at every point where we notice the problem, because
+% we do not really know where in the section notes were added or removed,
+% and the solution in any case is simply to run \LaTeX\ two more times;
+% there is no fix needed to the document. The
+% \cs{ifnoteschanged@} flag is set if such
+% a change in the number of notes is discovered at any point.
+%    \begin{macrocode}
+\newif\ifnoteschanged@
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \DescribeMacro{\resetprevline@}
+% Inside the apparatus, at each note, the line number is stored in a macro called \cs{prevlineX},
+% where X is the letter of the current series.
+% This macro is called when using \cs{numberonlyfirstinline}.
+% This macro must be reset at the same time as the line number.
+% The \cs{resetprevline@} does this resetting for every series.
+% \begin{macro}{\resetprevline@}
+%    \begin{macrocode}
+\newcommand*{\resetprevline@}{%
+    \def\do##1{\global\csundef{prevline##1}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \DescribeMacro{\resetprevpage@num}
+% Inside the apparatus, at each note, the page number is stored in a macro called \cs{prevpageX@num},
+% where X is the letter of the current series.
+% This macro is called when using \cs{parafootsep}.
+% This macro must be reset at the beginning of each numbered section
+% The \cs{resetprevpage@} command resets this macro for every series.
+% \begin{macro}{\resetprevpage@}
+%    \begin{macrocode}
+\newcommand*{\resetprevpage@num}{%
+    \def\do##1{\ifcsdef{prevpage##1@num}{\global\csname prevpage##1@num\endcsname=0}{}}%
+    \dolistloop{\@series}%
+}
+%    \end{macrocode}
+% \end{macro}
 % \section{Marking text for notes}
 % \label{text}\relax
 %
