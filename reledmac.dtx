@@ -973,8 +973,8 @@
 % them all. (This assumes that, on the basis of the settings of
 % the previous parameters, it is necessary to display a line number for
 % this line.)  You specify your preference using \cs{lockdisp}\marg{arg}; its
-% argument is a word, either \texttt{first}, \texttt{last}, or \texttt{all}.
-% The package initially sets this as \verb"\lockdisp{first}".
+% argument is a word, either \verb+first+, \verb+last+, or \verb+all+.
+% The package initially sets this as \cs{lockdisp}\verb+{first}+.
 %
 % \subsubsection{Setting and changing line number}
 % \DescribeMacro{\setline}
@@ -4042,14 +4042,10 @@
 %
 % \subsection{Choosing the system of lineation}
 % \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
-% Sometimes you want line numbers that start at $1$ at the top of each
-% page; sometimes you want line numbers that start at $1$ at each \cs{pstart}; other times you want line numbers that start at $1$ at the start
-% of each section and increase regardless of page breaks.
-% \Eledmac{} can do it either way, and you can switch from one to the
-% other within one work.
-% But you have to choose one or the other for all line numbers and
-% line references within each section. Here we will define
-% internal codes for these systems and the macros you use to select them.
+% Line number can be reset at each section (default) ; at each page ; at each pstart.
+% Here we define
+% internal codes for these systems and the macros.
+%
 %
 % \begin{macro}{\ifbypstart@}
 % \begin{macro}{\bypstart@true}
@@ -4062,7 +4058,7 @@
 % \item line-of-page: \verb|bypstart@ = false| and \verb|bypage@ = true|.
 % \item line-of-pstart: \verb|bypstart@ = true| and \verb|bypage@ = false|.
 % \end{itemize}
-% \Eledmac{} will use the line-of-section system unless instructed otherwise.
+% \Ledmacpackage will use the line-of-section system unless instructed otherwise.
 %    \begin{macrocode}
 \newif\ifbypage@
 \newif\ifbypstart@
@@ -4077,12 +4073,18 @@
 % \begin{macro}{\lineation}
 % \cs{lineation}\marg{word} is the macro you use to select the 
 % lineation system.
-% Its argument is a string: either \texttt{page} or \texttt{section} or \texttt{pstart}.
+% Its argument is a string: either \verb+page+, \verb+section+ or \verb+pstart+.
 %    \begin{macrocode}
-\newcommand*{\lineation}[1]{{%
+\newcommand*{\lineation}[1]{{
+%    \end{macrocode}
+% We can't change the lineation system inside numbering section.
+%    \begin{macrocode}
   \ifnumbering
     \led@err@LineationInNumbered
   \else
+%   \end{macrocode}
+% If the argument is \verb+page+.
+%   \begin{macrocode}
     \def\@tempa{#1}\def\@tempb{page}%
     \ifx\@tempa\@tempb
         \global\bypage@true
@@ -4090,6 +4092,9 @@
         \unless\ifnocritical@%
           \pstartinfootnote[][false]%
         \fi%
+%   \end{macrocode}
+% If the argument is \verb+pstart+.
+%   \begin{macrocode}
     \else
        \def\@tempb{pstart}%
        \ifx\@tempa\@tempb
@@ -4098,6 +4103,9 @@
            \unless\ifnocritical@%
              \pstartinfootnote%
            \fi%
+%   \end{macrocode}
+% And finally, if the argument is \verb+section+ (default).
+%   \begin{macrocode}
        \else
           \def\@tempb{section}
           \ifx\@tempa\@tempb
@@ -4106,7 +4114,10 @@
            \unless\ifnocritical@%
              \pstartinfootnote[][false]%
            \fi%
-          \else
+%    \end{macrocode}
+% In other case, it is an error.
+%    \begin{macrocode}
+	   \else
             \led@warn@BadLineation
         \fi
        \fi
@@ -4114,20 +4125,14 @@
   \fi}}
 %    \end{macrocode}
 % \end{macro}
-%
+% \subsection{Line number margin}
 % \begin{macro}{\linenummargin}
 % \begin{macro}{\line@margin}
 % \begin{macro}{\l@dgetline@margin}
-% You call \cs{linenummargin}\marg{word} to specify which margin you want your
-% line numbers in; it takes one argument, a string.
-% You can put the line numbers in the same margin on every page using
-% \texttt{left} or \texttt{right}; or you can use \texttt{inner} or
-% \texttt{outer} to get them in the inner or outer margins. (These last
-% two options assume that even-numbered pages will be on the
-% left-hand side of every opening in your book.)
-% You can change this within a numbered section, but the
-% change may not take effect just when you'd like; if it's done between
-% paragraphs nothing surprising should happen.
+% \cs{linenummargin}\marg{word} specify which margin 
+% line numbers are in; it takes one argument, a string, which value can be
+% \verb+left+ ;  \verb+right+;  \verb+inner+ or
+% \verb+outer+.
 %
 % The selection is recorded in the count \cs{line@margin}:
 % $0$ for left, $1$ for right, $2$ for outer, and $3$ for inner.
@@ -4167,16 +4172,16 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \subsection{Line number initialization and increment}
 % \begin{macro}{\c@firstlinenum}
 % \begin{macro}{\c@linenumincrement}
-% The following counters tell \Eledmac{} which lines should be
-% printed with line numbers. \texttt{firstlinenum} is the number of the
+% The following counters tell \macpackage which lines should be
+% printed with line numbers. \verb+firstlinenum+ is the number of the
 % first line in each section that gets a number;
-% \texttt{linenumincrement}
+% \verb+linenumincrement+
 % is the difference between successive numbered lines. The initial
 % values of these counters produce labels on lines $5$, $10$, $15$, etc.
-% \texttt{linenumincrement} must be at least $1$.
+% \verb+linenumincrement+ must be at least $1$.
 % 
 %    \begin{macrocode}
 \newcounter{firstlinenum}
@@ -4189,9 +4194,9 @@
 %
 % \begin{macro}{\c@firstsublinenum}
 % \begin{macro}{\c@sublinenumincrement}
-% The following parameters are just like \texttt{firstlinenum} and
-% \texttt{linenumincrement}, but for sub-line numbers.
-% \texttt{sublinenumincrement} must be at least $1$.
+% The following parameters are just like \verb+firstlinenum+ and
+% \verb+linenumincrement+, but for sub-line numbers.
+% \verb+sublinenumincrement+ must be at least $1$.
 %
 %    \begin{macrocode}
 \newcounter{firstsublinenum}
@@ -4211,10 +4216,18 @@
 % \changes{v0.7.0}{2005/02/18}{Added \cs{firstlinenum}, \cs{linenumincrement},
 %              \cs{firstsublinenum} and \cs{linenumincrement}}
 %    \begin{macrocode}
-\newcommand*{\firstlinenum}[1]{\setcounter{firstlinenum}{#1}}
-\newcommand*{\linenumincrement}[1]{\setcounter{linenumincrement}{#1}}
-\newcommand*{\firstsublinenum}[1]{\setcounter{firstsublinenum}{#1}}
-\newcommand*{\sublinenumincrement}[1]{\setcounter{sublinenumincrement}{#1}}
+\newcommand*{\firstlinenum}[1]{%
+  \setcounter{firstlinenum}{#1}%
+}%
+\newcommand*{\linenumincrement}[1]{%
+  \setcounter{linenumincrement}{#1}%
+}%
+\newcommand*{\firstsublinenum}[1]{%
+  \setcounter{firstsublinenum}{#1}%
+}%
+\newcommand*{\sublinenumincrement}[1]{%
+  \setcounter{sublinenumincrement}{#1}%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -4222,15 +4235,17 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Line number locking} 
 % \begin{macro}{\lockdisp}
 % \begin{macro}{\lock@disp}
 % \begin{macro}{\l@dgetlock@disp}
 % When line locking is being used, the \cs{lockdisp}\marg{word} macro
 % specifies whether a line number---if one is due to
 % appear---should be printed on the first printed line or on the
-% last, or by all of them. Its argument is a word, either
-% \texttt{first}, \texttt{last}, or \texttt{all}.  
-% Initially, it is set to \texttt{first}.
+% last, or by all of them.
+% Its argument is a word, either
+% \verb+first+, \verb+last+, or \verb+all+.  
+% Initially, it is set to \verb+first+.
 %
 % \cs{lock@disp} encodes the selection: $0$ for first, $1$ for last,
 % $2$ for all.
@@ -4285,7 +4300,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \subsection{Line number style}
 % \begin{macro}{\linenumberstyle}
 % \begin{macro}{\linenumrep}
 % \begin{macro}{\linenumr@p}
@@ -4298,9 +4313,9 @@
 % NOTE: In v0.7 \cs{linenumrep} and \cs{sublinenumrep} replaced
 % the internal \cs{linenumr@p} and \cs{sublinenumr@p}.
 %
-% \verb?\linenumberstyle? and \verb?\sublinenumberstyle? are user level
-% macros for setting the number represention (\verb?\linenumrep?
-% and \verb?\sublinenumrep?) for line and sub-line numbers.
+% \cs{linenumberstyle} and \cs{sublinenumberstyle} are user level
+% macros for setting the number representation (\cs{linenumrep}
+% and \cs{sublinenumrep}) for line and sub-line numbers.
 % \changes{v0.3.0}{2004/02/14}{Added \cs{linenumberstyle} and \cs{sublinenumberstyle}}
 % \changes{v0.7.0}{2005/02/18}{Using \cs{linenumrep} instead of \cs{linenumr@p}}
 % \changes{v0.7.0}{2005/02/18}{Using \cs{sublinenumrep} instead of \cs{sublinenumr@p}}
@@ -4324,7 +4339,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \subsection{Line number printing}
 % \begin{macro}{\leftlinenum}
 % \begin{macro}{\rightlinenum}
 % \begin{macro}{\linenumsep}
@@ -4333,14 +4348,16 @@
 % \cs{leftlinenum} and \cs{rightlinenum} are the macros that are
 % called to print marginal line numbers on
 % a page, for left- and right-hand margins respectively.
-% They're made easy to access and change, since you may
-% often want to change the styling in some way. These standard versions
-% illustrate the general sort of thing that will be needed; they're
+% They are made easy to access and change, since you may
+% want to change the styling in some way. 
+% These standard versions
+% illustrate the general sort of thing that will be needed; they are
 % based on the \cs{leftheadline} macro in \thetexbook, p.\,416.
 %
 % Whatever these macros output gets printed in a box that will be
 % put into the appropriate margin without any space between it and the
-% line of text. You'll generally want a kern between a line number and
+% line of text. 
+% You will generally want a kern between a line number and
 % the text, and \cs{linenumsep} is provided as a standard way of
 % storing its size. Line numbers are usually printed in a smaller
 % font, and \cs{numlabfont} is provided as a standard name for that
