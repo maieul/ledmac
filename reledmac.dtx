@@ -4039,8 +4039,6 @@
 %
 % \section{List macros}
 %
-% Reminder: compare these with the \LaTeX\ list macros in case they
-% would be suitable instead.
 %
 % We will make heavy use of lists of information, which will be built
 % up and taken apart by the following macros; they are
@@ -4052,21 +4050,34 @@
 % of doing so have defined their interface in such a way that it is
 % not sensitive to details of the underlying code.
 %
+% The historical list tools of \ledmac are keept, because in many cause there are more useful than \Lpack{etoolbox}'s lists.
+% They allows to get and delete the first element of a list in one operation. They also expands the items add to the list.
+%
+% However, \Lpack{etoolbox}'s lists are more useful to loop on them.
+% Consequently, depending of what we need, we use one or either.
+%
+% It could be nice to unify them to the \LaTeX3 list, however such migration would take quite time with some risk of error, for a gain which will be minor.
+%
 % \begin{macro}{\list@create}
-% The \cs{list@create} macro creates a new list. In this version of
-% \Eledmac{} this macro doesn't do anything beyond initializing an empty
-% list macro, but in future versions it may do more.
+% The \cs{list@create} macro creates a new list. 
+% This macro does not do anything beyond initializing an empty
+% list macro.
+% 
 %    \begin{macrocode}
-\newcommand*{\list@create}[1]{\global\let#1=\empty}
+\newcommand*{\list@create}[1]{%
+  \global\let#1=\empty%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\list@clear}
 % The \cs{list@clear} macro just initializes a list to the empty list;
-% in this version of \Eledmac{} it is no different from
-% \cs{list@create}.
+% it is no different from
+% \cs{list@create} in its effect, but it is in its semantic .
 %    \begin{macrocode}
-\newcommand*{\list@clear}[1]{\global\let#1=\empty}
+\newcommand*{\list@clear}[1]{%
+  \global\let#1=\empty%
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4074,7 +4085,7 @@
 % \begin{macro}{\led@toksa}
 % \begin{macro}{\led@toksb}
 % \cs{xright@appenditem} expands an item and appends it to the right
-% end of a list macro. We want the expansion because we'll often
+% end of a list macro. We want the expansion because we will often
 % be using this to store the current value of a counter.
 % \cs{xright@appenditem} creates global control sequences, like \cs{xdef}, and uses two
 % temporary token-list registers, \cs{@toksa} and \cs{@toksb}.
@@ -4107,7 +4118,7 @@
 % item from a list and places it in a
 % control sequence. You say \verb"\gl@p\l\to\z"
 % (where \verb"\l" is the list macro, and
-% \verb"\z" receives the left item). \verb"\l" is assumed nonempty: say
+% \verb"\z" receives the left item). \verb"\l" is assumed nonempty:use
 % \verb"\ifx\l\empty" to test for an empty \verb"\l". The control
 % sequences created by \cs{gl@p} are all global.
 %    \begin{macrocode}
@@ -4115,995 +4126,6 @@
 \long\def\gl@poff\\#1#2\gl@poff#3#4{\gdef#4{#1}\gdef#3{#2}}
 
 %    \end{macrocode}
-% \end{macro}
-%
-% \subsection{Reading the line-list file}
-%
-%
-% \begin{macro}{\read@linelist}
-% \cs{read@linelist}\marg{file} is the control sequence
-% that's called by \cs{beginnumbering}
-% (via \cs{line@list@stuff}) to open and process a
-% line-list file; its argument is the name of the file.
-% \phantomsection\label{readlinelist}
-%    \begin{macrocode}
-\newread\@inputcheck
-\newcommand*{\read@linelist}[1]{%
-  \list@clearing@reg
-%    \end{macrocode}
-%
-% When the file is there we start a new group and make some special
-% definitions we'll need to process it: it's a sequence of \TeX\
-% commands, but they require a few special settings. We make [ and
-% ] become grouping characters: they're used that way in the
-% line-list file, because we need to write them out one at a time
-% rather than in balanced pairs, and it's easier to just use
-% something other than real braces. @ must become a letter, since
-% this is run in the ordinary \LaTeX\ context. We ignore carriage
-% returns, since if we're in horizontal mode they can get
-% interpreted as spaces to be printed.
-%
-%
-% Our line, page, and line-locking counters were already zeroed
-% by \cs{line@list@stuff} if this is being called from within
-% \cs{beginnumbering}; sub-lineation will be turned off as well
-% in that case. On the other hand,
-% if this is being called from \cs{resumenumbering}, those things
-% should still have the values they had when \cs{pausenumbering}
-% was executed.
-%
-%   If the file is not there, we print an informative message.
-%
-% Now, after these preliminaries, we start interpreting the file.
-%
-%
-%    \begin{macrocode}
-  \get@linelistfile{#1}%
-  \endgroup  
-%    \end{macrocode}
-%
-% When the reading is done, we're all through with the
-% line-list file. All the information we needed
-% from it will now be encoded in our list macros.
-%
-% Finally, we
-% initialize the \cs{next@actionline} and \cs{next@action} macros,
-% which specify where and what the next action to be taken is.
-%    \begin{macrocode}
-  \global\page@num=\m@ne
-  \ifx\actionlines@list\empty
-      \gdef\next@actionline{1000000}%
-  \else
-      \gl@p\actionlines@list\to\next@actionline
-      \gl@p\actions@list\to\next@action
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\list@clearing@reg}
-% Clears the lists for \cs{read@linelist}
-% \changes{v0.7.0}{2005/02/22}{Added \cs{list@clearing@reg}}
-%    \begin{macrocode}
-\newcommand*{\list@clearing@reg}{%
-  \list@clear{\line@list}%
-  \list@clear{\insertlines@list}%
-  \list@clear{\actionlines@list}%
-  \list@clear{\actions@list}%
-  }%
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\get@linelistfile}
-% \Eledmac{} can take advantage of the \LaTeX\ `safe file input' macros
-% to get the line-list file.
-% \changes{v0.7.0}{2005/02/22}{Added \cs{get@linelistfile}}
-%    \begin{macrocode}
-\newcommand*{\get@linelistfile}[1]{%
-  \InputIfFileExists{#1}{%
-    \global\noteschanged@false
-    \begingroup
-      \catcode`\[=1 \catcode`\]=2
-      \makeatletter \catcode`\^^M=9}{%
-    \led@warn@NoLineFile{#1}%
-    \global\noteschanged@true
-    \begingroup}%
-}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% This version of \cs{read@linelist} creates list macros
-% containing data for the entire section, so they could get rather
-% large. It would be no more difficult to read the line-list file
-% incrementally rather than all at once: we could read, at the
-% start of each paragraph, only the commands relating to that
-% paragraph. But this would require that we
-% have two line-lists open at once, one for reading, one for
-% writing, and on systems without version numbers we'd have to do
-% some file renaming outside of \LaTeX\  for that to work. We've
-% retained this slower approach to avoid that sort of hacking
-% about, but have provided the \cs{pausenumbering} and
-% \cs{resumenumbering} macros to help you if you run into
-% macro memory limitations (see \reff{pause} above).
-%
-% \subsection{Commands within the line-list file}
-%
-% This section defines the commands that can appear within a
-% line-list file. They all have very short names because we are
-% likely to be writing very large numbers of them out. One macro,
-% \cs{@nl}, is especially short, since it will be written to the
-% line-list file once for every line of text in a numbered section.
-% (Another of these commands, \cs{@lab}, will be introduced in a
-% later section, among the cross-referencing commands it is
-% associated with.)
-%
-% When these commands modify the various page and line counters,
-% they deliberately do not say \cs{global}. This is because we
-% want them to affect only the counter values within the current
-% group when nested calls of \cs{@ref} occur. (The code assumes
-% throughout that the value of \cs{globaldefs} is zero.)
-%
-% The macros with \verb"action" in their names contain all the code
-% that modifies the action-code list: again, this is so that they
-% can be turned off easily for nested calls of \cs{@ref}.
-%
-% \begin{macro}{\line@list@version}
-% The \cs{line@list@version} check if the line-list file does not refers to the older commands of \Lpack{eledmac}. 
-% In this case, we stop reading the line-list file.
-% Consequently, \cs{line@list@version} should be the first line of a line-number file.
-%    \begin{macrocode}
-\newcommand{\line@list@version}[1]{%
-  \IfStrEq{#1}{\this@line@list@version}%
-    {}%
-    {\ifledRcol%
-       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
-     \else%
-       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
-     \fi%
-     \endinput%
-    }%
-}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\@nl}
-% \begin{macro}{\@nl@reg}
-% \changes{v1.12.0}{2014/08/05}{To ensure compatibility with \cs{musixtex}, \cs{@l} becomes \cs{@l}. Consequently, \cs{@l@reg} becomes \cs{@nl@reg}.}
-% \cs{@nl} does everything related to the start of a
-% new line of numbered text.
-%
-% In order to get the \verb?\setlinenum? to work Peter Wilson had to slip in some new
-% code at the start of the macro, to get the timing of the actions
-% correct. The problem was that his original naive implementation
-% of \verb?\setlinenum? had a unfortunate tendency to change the
-% number of the last line of the \emph{preceding} paragraph. 
-% The new code is sort of based on the page number handling and
-% \verb?\setline? It seems
-% that a lot of fiddling with the line number internals is required.
-%
-% In November 2004 in order to accurately determine page numbers Peter Wilson added 
-% these to the macro. It is now: \\
-% \cs{@nl}\marg{page counter number}\marg{printed page number} \\
-% I don't (yet) use the printed number (i.e., the \verb?\thepage?) but
-% it may come in handy later. The macro \cs{fix@page} checks if a new
-% page has started.
-% 
-% \changes{v0.3.0}{2004/02/14}{Added a bunch of code to \cs{@nl} for handling
-%                          \cs{setlinenum}}
-% \changes{v0.6.0}{2004/11/16}{Extended \cs{@nl} to include the page number}
-% \changes{v0.6.0}{2004/11/16}{Added \cs{fix@page} to \cs{@nl}}
-% \changes{v0.7.0}{2005/02/22}{Added \cs{@nl@reg}}
-%    \begin{macrocode}
-\newcommand{\@nl}[2]{%
-  \fix@page{#1}%
-  \@nl@reg}
-\newcommand*{\@nl@reg}{%
-  \ifx\l@dchset@num\relax \else
-    \advance\absline@num \@ne
-    \set@line@action
-    \let\l@dchset@num=\relax
-    \advance\absline@num \m@ne
-    \advance\line@num \m@ne
-  \fi
-%    \end{macrocode}
-%
-% First increment the absolute line-number, and perform
-% deferred actions relating to page starts and sub-lines.
-%    \begin{macrocode}
-  \advance\absline@num \@ne
-         \ifx\next@page@num\relax \else
-             \page@action
-             \let\next@page@num=\relax
-         \fi
-         \ifx\sub@change\relax \else
-            \ifnum\sub@change>\z@
-               \sublines@true
-            \else
-               \sublines@false
-            \fi
-            \sub@action
-            \let\sub@change=\relax
-         \fi
-%    \end{macrocode}
-%
-% Fix the lock counters, if necessary. A value of $1$ is advanced to
-% $2$; $3$ advances to $0$; other values are unchanged.
-%    \begin{macrocode}
-         \ifcase\@lock
-            \or
-               \@lock \tw@
-            \or \or
-               \@lock \z@
-         \fi
-         \ifcase\sub@lock
-            \or
-               \sub@lock \tw@
-            \or \or
-               \sub@lock \z@
-         \fi
-%    \end{macrocode}
-%
-% Now advance the visible line number, unless it's been locked.
-%    \begin{macrocode}
-         \ifsublines@
-              \ifnum\sub@lock<\tw@
-                \advance\subline@num \@ne
-              \fi
-         \else
-              \ifnum\@lock<\tw@
-                \advance\line@num \@ne \subline@num \z@
-              \fi
-         \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-% \begin{macro}{\last@page@num}
-% \begin{macro}{\fix@page}
-%  \cs{fix@page} basically replaces \cs{@page}. It determines whether or not
-% a new page has been started, based on the page values held by \cs{@nl}.
-% \changes{v0.6.0}{2004/11/16}{Added \cs{last@page@num} and \cs{fix@page}}
-%    \begin{macrocode}
-\newcount\last@page@num
-  \last@page@num=-10000
-\newcommand*{\fix@page}[1]{%
-  \ifnum #1=\last@page@num
-  \else
-    \ifbypage@
-      \csxdef{lastlinenumberon@\the\last@page@num}{\the\line@num}%
-      \line@num=\z@ \subline@num=\z@
-    \fi
-    \page@num=#1\relax
-    \last@page@num=#1\relax
-    \def\next@page@num{#1}%
-    \listxadd{\normal@page@break}{\the\absline@num}
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\@pend}
-% \begin{macro}{\@pendR}
-% \begin{macro}{\@lopL}
-% \begin{macro}{\@lopR}
-% These don't do anything at this point, but will have been added to the 
-% auxiliary file(s) if the \Lpack{eledpar} package has been used. They
-% are just here to stop \Lpack{\eledmac} from moaning if the \Lpack{eledpar}
-% is used for one run and then not for the following one.
-% \changes{v0.6.0}{2004/11/16}{Added \cs{@pend},\cs{@pendR}, \cs{@lopL} and 
-%        \cs{@lopR} in anticipation of parallel processing}
-%    \begin{macrocode}
-\newcommand*{\@pend}[1]{}
-\newcommand*{\@pendR}[1]{}
-\newcommand*{\@lopL}[1]{}
-\newcommand*{\@lopR}[1]{}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\sub@on}
-% \begin{macro}{\sub@off}
-% The \cs{sub@on} and \cs{sub@off} macros
-% turn sub-lineation on and off\/: but not directly, since such changes
-% don't really take effect until the next line of text. Instead
-% they set a flag that notifies \cs{@nl} of the necessary action.
-%    \begin{macrocode}
-\newcommand*{\sub@on}{\ifsublines@
-     \let\sub@change=\relax
-  \else
-     \def\sub@change{1}%
-  \fi}
-\newcommand*{\sub@off}{\ifsublines@
-     \def\sub@change{-1}%
-  \else
-     \let\sub@change=\relax
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\@adv}
-% The \cs{@adv}\marg{num} macro advances
-% the current visible line number by the amount specified as
-% its argument. This is used to implement \cs{advanceline}.
-%    \begin{macrocode}
-\newcommand*{\@adv}[1]{\ifsublines@
-       \advance\subline@num by #1\relax
-       \ifnum\subline@num<\z@
-         \led@warn@BadAdvancelineSubline
-          \subline@num \z@
-       \fi
-  \else
-       \advance\line@num by #1\relax
-       \ifnum\line@num<\z@
-         \led@warn@BadAdvancelineLine
-          \line@num \z@
-       \fi
-  \fi
-  \set@line@action}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@set}
-% The \cs{@set}\marg{num} macro sets
-% the current visible line number to the value specified as
-% its argument.  This is used to implement \cs{setline}.
-%    \begin{macrocode}
-\newcommand*{\@set}[1]{\ifsublines@
-    \subline@num=#1\relax
-  \else
-    \line@num=#1\relax
-  \fi
-  \set@line@action}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@d@set}
-% \begin{macro}{\l@dchset@num}
-% The \cs{l@d@set}\marg{num} macro sets
-% the line number for the next \verb?\pstart...? to the value specified as
-% its argument.  This is used to implement \cs{setlinenum}.
-%
-% \verb?\l@dchset@num? is a flag to the \verb?\@l? macro. If it is not
-% \verb?\relax? then a linenumber change is to be done.
-%    \begin{macrocode}
-\newcommand*{\l@d@set}[1]{%
-  \line@num=#1\relax
-  \advance\line@num \@ne
-  \def\l@dchset@num{#1}}
-\let\l@dchset@num\relax
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-
-%
-% \begin{macro}{\page@action}
-% \cs{page@action}
-% adds an entry to the action-code list to change the page number.
-%    \begin{macrocode}
-\newcommand*{\page@action}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \xright@appenditem{\next@page@num}\to\actions@list}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\set@line@action}
-% \cs{set@line@action} adds an entry to the action-code
-% list to change the visible line number.
-%    \begin{macrocode}
-\newcommand*{\set@line@action}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \ifsublines@
-       \@l@dtempcnta=-\subline@num
-  \else
-       \@l@dtempcnta=-\line@num
-  \fi
-  \advance\@l@dtempcnta by -5000
-  \xright@appenditem{\the\@l@dtempcnta}\to\actions@list}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\sub@action}
-% \cs{sub@action}
-% adds an entry to the action-code list to turn sub-lineation on or
-% off, according to the current value of the \cs{ifsublines@} flag.
-%    \begin{macrocode}
-\newcommand*{\sub@action}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \ifsublines@
-      \xright@appenditem{-1001}\to\actions@list
-  \else
-      \xright@appenditem{-1002}\to\actions@list
-  \fi}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\lock@on}
-% \begin{macro}{\do@lockon}
-% \begin{macro}{\do@lockonL}
-% \cs{lock@on}
-% adds an entry to the action-code list to turn line number
-% locking on. The current setting of the sub-lineation flag tells us
-% whether this applies to line numbers or sub-line numbers.
-%
-% Adding commands to the action list is slow, and it's very often the
-% case that a lock-on command is immediately followed by a lock-off
-% command in the line-list file, and therefore really does nothing.
-% We use a look-ahead scheme here to detect such pairs, and add nothing
-% to the line-list in those cases.
-%    \begin{macrocode}
-\newcommand*{\lock@on}{\futurelet\next\do@lockon}
-\newcommand*{\do@lockon}{%
-  \ifx\next\lock@off
-    \global\let\lock@off=\skip@lockoff
-  \else
-    \do@lockonL
-  \fi}
-\newcommand*{\do@lockonL}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \ifsublines@
-    \xright@appenditem{-1005}\to\actions@list
-    \ifnum\sub@lock=\z@
-      \sub@lock \@ne
-    \else
-      \ifnum\sub@lock=\thr@@
-        \sub@lock \@ne
-      \fi
-    \fi
-  \else
-    \xright@appenditem{-1003}\to\actions@list
-    \ifnum\@lock=\z@
-      \@lock \@ne
-    \else
-      \ifnum\@lock=\thr@@
-        \@lock \@ne
-      \fi
-    \fi
-  \fi}
-  
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\lock@off}
-% \begin{macro}{\do@lockoff}
-% \begin{macro}{\do@lockoffL}
-% \begin{macro}{\skip@lockoff}
-% \cs{lock@off} adds an entry to the action-code list
-% to turn line number locking off.
-%    \begin{macrocode}
-\newcommand*{\do@lockoffL}{%
-  \xright@appenditem{\the\absline@num}\to\actionlines@list
-  \ifsublines@
-    \xright@appenditem{-1006}\to\actions@list
-    \ifnum\sub@lock=\tw@
-      \sub@lock \thr@@
-    \else
-      \sub@lock \z@
-    \fi
-  \else
-    \xright@appenditem{-1004}\to\actions@list
-    \ifnum\@lock=\tw@
-      \@lock \thr@@
-    \else
-      \@lock \z@
-    \fi
-  \fi}
-\newcommand*{\do@lockoff}{\do@lockoffL}
-\newcommand*{\skip@lockoff}{\global\let\lock@off=\do@lockoff}
-\global\let\lock@off=\do@lockoff
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\n@num}
-% These macros implement the \cs{skipnumbering} command. 
-% They use a new action code, namely 1007.
-% \changes{v0.7.0}{2005/02/22}{Added \cs{n@num}}
-% \changes{v1.21.0}{2015/04/13}{\cs{n@num} defined only one time for both \Eledmac{} and \Eledpar{}}
-% \changes{v1.21.0}{2015/04/13}{\cs{n@num@ref} deleted}
-%    \begin{macrocode}
-\newcommand*{\n@num}{%
-  \ifledRcol%
-    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-    \xright@appenditem{-1007}\to\actions@listR
-  \else%
-    \xright@appenditem{\the\absline@num}\to\actionlines@list%
-    \xright@appenditem{-1007}\to\actions@list%
-  \fi%
-}%
-
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\n@num@stanza}
-% This macro implements the \cs{skipnumbering} for stanza command. 
-% It uses a new action code, namely 1008.
-%    \begin{macrocode}
-\newcommand*{\n@num@stanza}{%
-  \ifledRcol%
-    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
-    \xright@appenditem{-1008}\to\actions@listR%
-  \else%
-    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
-    \xright@appenditem{-1008}\to\actions@list%
-  \fi%
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\ifl@dhidenumber}
-% \begin{macro}{\hidenumbering}
-% \cs{hidenumbering} hides number in margin. 
-% It uses action code 1009.
-% \begin{macro}{\h@num}
-%    \begin{macrocode}
-\newif\ifl@dhidenumber
-\newcommand*{\hidenumbering}{
-  \ifledRcol%
-    \write\linenum@outR{\string\hide@num}%
-  \else%
-    \write\linenum@out{\string\hide@num}%
-  \fi%
-}%
-\newcommand*{\hide@num}{%
-  \ifledRcol%
-    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
-    \xright@appenditem{-1009}\to\actions@listR%
-  \else%
-    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
-    \xright@appenditem{-1009}\to\actions@list%
-  \fi%
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\@ref}
-% \begin{macro}{\insert@count}
-% \cs{@ref}
-% marks the start of a passage, for creation of a footnote reference.
-% It takes two arguments:
-% \begin{itemize}\addtolength{\itemsep}{-1ex}
-% \item \verb"#1", the number of entries to add to \cs{insertlines@list}
-% for this reference. \SpecialMainIndex{\insert@count}
-% This value, here and within \cs{edtext},
-% which computes it and writes it to the line-list file,
-% will be stored in the count \cs{insert@count}.
-%    \begin{macrocode}
-\newcount\insert@count
-%    \end{macrocode}
-%
-% \item \verb"#2", a sequence of other line-list-file commands, executed to
-% determine the ending line-number. (This may also include other
-% \cs{@ref} commands, corresponding to uses of \cs{edtext}
-% within the first argument of another instance of \cs{edtext}.)
-% \end{itemize}
-%
-% \begin{macro}{\dummy@ref}
-% When nesting of \cs{@ref} commands does occur, it's necessary to
-% temporarily redefine \cs{@ref} within \cs{@ref}, so that we're only
-% doing one of these at a time.
-%    \begin{macrocode}
-\newcommand*{\dummy@ref}[2]{#2}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@ref@reg}
-% The first thing \cs{@ref} (i.e. \cs{@ref@reg}) itself does is to add 
-% the specified number
-% of items to the \cs{insertlines@list} list.
-% \changes{v0.7.0}{2005/02/22}{Added \cs{@ref@reg}}
-%    \begin{macrocode}
-\newcommand*{\@ref}[2]{%
-  \@ref@reg{#1}{#2}}
-\newcommand*{\@ref@reg}[2]{%
-  \global\insert@count=#1\relax
-  \global\advance\@edtext@level by 1%
-  \loop\ifnum\insert@count>\z@
-    \xright@appenditem{\the\absline@num}\to\insertlines@list
-    \global\advance\insert@count \m@ne
-  \repeat
-%    \end{macrocode}
-%
-% Next, process the second argument to determine the page
-% and line numbers for the end of this lemma.
-% We temporarily equate \cs{@ref} to a different macro that just executes
-% its argument, so that nested \cs{@ref} commands are just skipped
-% this time. Some other macros need to be temporarily redefined to
-% suppress their action.
-%    \begin{macrocode}
-  \begingroup
-    \let\@ref=\dummy@ref
-    \let\@lopL\@gobble
-    \let\page@action=\relax
-    \let\sub@action=\relax
-    \let\set@line@action=\relax
-    \let\@lab=\relax
-    \let\@lemma=\relax%
-    \let\@sw\@gobblethree%
-    #2
-    \global\endpage@num=\page@num
-    \global\endline@num=\line@num
-    \global\endsubline@num=\subline@num
-  \endgroup
-%    \end{macrocode}
-%
-% Now store all the information about the location of the lemma's
-% start and end in \cs{line@list}.
-%    \begin{macrocode}
-    \xright@appenditem%
-      {\the\page@num|\the\line@num|%
-       \ifsublines@ \the\subline@num \else 0\fi|%
-       \the\endpage@num|\the\endline@num|%
-       \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
-%    \end{macrocode}
-% Create a list which stores every second argument of  each \cs{@sw}
-% in this lemma, at this level.
-% Also set the boolean about the use of lemma in this edtext level to false.
-%    \begin{macrocode}
-     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
-     \providebool{lemmacommand@\the\@edtext@level}%
-     \boolfalse{lemmacommand@\the\@edtext@level}%
-%    \end{macrocode}
-% Execute the second argument of \cs{@ref} again,
-% to perform for real all the commands within it.
-%    \begin{macrocode}
-  #2%
-%    \end{macrocode}
-% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
-% the global list of list of \cs{@sw} for a \cs{edtext} depth.
-%    \begin{macrocode}
-  \ifnum\@edtext@level>0%
-    \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtext@\the\@edtext@level\endcsname}}%
-    \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
-    \letcs{\@tmp}{sw@list@edtext@\the\@edtext@level}%
-    \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
-    \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
-    \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
-  \fi%
-%    \end{macrocode}
-% Decrease edtext level counter.
-%    \begin{macrocode}
-  \global\advance\@edtext@level by -1% 
-%    \end{macrocode}
-%    \begin{macrocode}
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \subsection{Writing to the line-list file}
-%
-% We've now defined all the counters, lists, and commands involved in
-% reading the line-list file at the start of a section. Now we'll
-% cover the commands that \Eledmac{} uses within the text of a
-% section to write commands out to the line-list.
-%
-% \begin{macro}{\linenum@out}
-% The file will be opened on output stream \cs{linenum@out}.
-%    \begin{macrocode}
-\newwrite\linenum@out
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\iffirst@linenum@out@}
-% \begin{macro}{\first@linenum@out@true}
-% \begin{macro}{\first@linenum@out@false}
-% Once any file is opened on this stream, we keep it open forever, or
-% else switch to another file that we keep open. The reason is that
-% we want the output routine to write the page number for every page
-% to this file; otherwise we'd have to write it at the start of
-% every line.
-% But it's not very easy for the output routine to tell whether an
-% output stream is open or not. There's no way to test the status of
-% a particular output stream directly, and
-% the asynchronous nature of output routines makes the
-% status hard to determine by other means.
-%
-% We can manage pretty well by means of the \cs{iffirst@linenum@out@}
-% flag; its inelegant name suggests the nature of the problem that
-% made its creation necessary. It's set
-% to be \verb"true" before any \cs{linenum@out} file is opened. When such a file
-% is opened for the first time, it's done using \cs{immediate}, so that
-% it will at once be safe for the output routine to write to it; we then
-% set this flag to \verb"false".
-%    \begin{macrocode}
-\newif\iffirst@linenum@out@
-  \first@linenum@out@true
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\this@line@list@version}
-% The commands allowed in the line-list file and their arguments
-% can change between two version of \Eledmac. 
-% The \cs{this@line@list@version} command is upgraded when it happens.
-% It is written in the file list.
-% If we process a line-list file which used a older version, that means the commands used insided are deprecated, and we can't use them. 
-%    \begin{macrocode}
-\newcommand{\this@line@list@version}{2}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\line@list@stuff}
-% The \cs{line@list@stuff}\marg{file} macro, which
-% is called by \cs{beginnumbering}, performs
-% all the line-list operations needed at the start of a section.
-% Its argument is the name of the line-list file.
-%    \begin{macrocode}
-\newcommand*{\line@list@stuff}[1]{%
-%    \end{macrocode}
-%
-% First, use the commands of the previous section to interpret the
-% line-list file from the last run.
-%    \begin{macrocode}
-  \read@linelist{#1}%
-%    \end{macrocode}
-%
-% Now close the current output line-list file, if any, and open a new one.
-% The first time we open a line-list file for output, we do it using
-% \cs{immediate}, and clear the \cs{iffirst@linenum@out@} flag.
-% \changes{v0.2.2}{2003/11/09}{Added initial write of page number in 
-%                           \cs{line@list@stuff}}
-% \changes{v0.7.0}{2005/02/25}{Deleted \cs{page@start} from \cs{line@list@stuff}}
-% \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
-%    \begin{macrocode}
-  \iffirst@linenum@out@
-     \immediate\closeout\linenum@out%
-     \global\first@linenum@out@false%
-     \immediate\openout\linenum@out=#1\relax%
-     \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
-  \else
-%    \end{macrocode}
-% If we get here, then this is
-% not the first line-list we've seen, so we
-% don't open or close the files immediately.
-%    \begin{macrocode}
-     \if@minipage%
-       \leavevmode%
-     \fi%
-     \closeout\linenum@out%
-     \openout\linenum@out=#1\relax%
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\new@line}
-% The \cs{new@line} macro sends the \cs{@nl} command to the line-list
-% file, to mark the start of a new text line, and its page number.
-% \changes{v0.6.0}{2004/11/16}{Extended \cs{new@line} to output page numbers}
-%    \begin{macrocode}
-\newcommand*{\new@line}{%
-  \IfStrEq{\led@pb@setting}{after}%
-    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\thepage+1}%
-        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
-      }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
-    }%
-    {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
-  {}%
-  \IfStrEq{\led@pb@setting}{before}%
-    {\numdef{\next@absline}{\the\absline@num+1}%
-    \xifinlist{\next@absline}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@page+1}%
-        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
-        }%
-        {\write\linenum@out{\string\n@l[\the\c@page][\thepage]}}%
-      }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
-    }%
-    {}%
-  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@nl[\the\c@page][\thepage]}]%
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\if@noneed@Footnote}
-% \cs{if@noneed@Footnote} is a boolean to check if we have to print a error message when a \cs{edtext} is called without any footnotes.
-% \begin{macro}{\flag@start}
-% \begin{macro}{\flag@end}
-% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} and \cs{flag@end} are now defined only one time for eledmac and eledpar}
-% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} send a error message when a \cs{edtext} is done without insert (note)}
-% \changes{v1.12.8}{2014/09/12}{\cs{flag@start} don't send a error message when a \cs{edtext} is done without insert (note) but have a endnote}
-% We enclose a lemma marked by \cs{edtext} in
-% \cs{flag@start} and \cs{flag@end}: these send the \cs{@ref}
-% command to the line-list file. \cs{edtext} is responsible for
-% setting the value of \cs{insert@count} appropriately; it
-% actually gets done by the various footnote macros.
-%    \begin{macrocode}
-\newif\if@noneed@Footnote%
-
-\newcommand*{\flag@start}{%
-  \ifledRcol%
-    \edef\next{\write\linenum@outR{%
-                  \string\@ref[\the\insert@countR][}}%
-    \next%
-    \ifnum\insert@countR<1%
-      \if@noneed@Footnote\else%
-        \led@err@EdtextWithoutFootnote%
-      \fi%
-    \fi%
-  \else%
-    \edef\next{\write\linenum@out{%
-                  \string\@ref[\the\insert@count][}}%
-    \next%
-    \ifnum\insert@count<1%
-      \if@noneed@Footnote\else%
-        \led@err@EdtextWithoutFootnote%
-      \fi%
-    \fi%
-  \fi}%
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\page@start}
-% Originally the commentary was: \cs{page@start} writes a command to the line-list
-% file noting the current page number;
-% when used within an output routine, this should be called so as to place
-% its \cs{write} within the box that gets shipped out, and as close to
-% the top of that box as possible.
-%
-% However, in October 2004 Alexej Krukov\index{Krukov, Alexej} discovered that
-% when processing long paragraphs that included Russian, Greek and Latin texts
-% \Eledmac{} would go into an infinite loop, emitting thousands of blank pages.
-% This was caused by being unable to find an appropriate place in the
-% output routine. A different algorithm is now used for getting page numbers.
-% \changes{v0.6.0}{2004/11/16}{Made \cs{page@start} a no-op}
-%    \begin{macrocode}
-\newcommand*{\page@start}{}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\startsub}
-% \begin{macro}{\endsub}
-% \changes{v1.15.0}{2015/01/12}{Restore subline feature (disabled by mistake in v1.8.0).}
-% \cs{startsub} and \cs{endsub}
-% turn sub-lineation on and off, by writing
-% appropriate instructions to the line-list file.  When
-% sub-lineation is in effect, the line number counter is frozen and
-% the sub-line counter advances instead. If one of these commands
-% appears in the middle of a line, it doesn't take effect until the
-% next line; in other words, a line is counted as a line or
-% sub-line depending on what it started out as, even if that
-% changes in the middle.
-%
-% We tinker with \cs{lastskip} because a command of either sort
-% really needs to be attached to the last word preceding the change, not
-% the first word that follows the change. This is because sub-lineation
-% will often turn on and off in mid-line---stage directions, for example,
-% often are mixed with dialogue in that way---and when a line is mixed
-% we want to label it using the system that was in effect at its start.
-% But when sub-lineation begins at the very start of a line we have a
-% problem, if we don't put in this code.
-%    \begin{macrocode}
-\newcommand*{\startsub}{\dimen0\lastskip
-  \ifdim\dimen0>0pt \unskip \fi
-  \write\linenum@out{\string\sub@on}%
-  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
-\def\endsub{\dimen0\lastskip
-  \ifdim\dimen0>0pt \unskip \fi
-  \write\linenum@out{\string\sub@off}%
-  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\advanceline}
-% You can use \cs{advanceline}\marg{num}
-% in running text to advance the current visible
-% line-number by a specified value, positive or negative.
-%    \begin{macrocode}
-\newcommand*{\advanceline}[1]{\write\linenum@out{\string\@adv[#1]}}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\setline}
-% You can use \cs{setline}\marg{num}
-% in running text (i.e., within \verb?\pstart...\pend?) to set the 
-% current visible
-% line-number to a specified positive value.
-%    \begin{macrocode}
-\newcommand*{\setline}[1]{%
-  \ifnum#1<\z@
-    \led@warn@BadSetline
-  \else
-    \write\linenum@out{\string\@set[#1]}%
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\setlinenum}
-% You can use \cs{setlinenum}\marg{num}
-% before a \verb?\pstart? to set the visible line-number to a specified 
-% positive value. It writes a \verb?\l@d@set? command to the line-list file.
-%    \begin{macrocode}
-\newcommand*{\setlinenum}[1]{%
-  \ifnum#1<\z@
-    \led@warn@BadSetlinenum
-  \else
-    \write\linenum@out{\string\l@d@set[#1]}%
-  \fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\startlock}
-% \begin{macro}{\endlock}
-% You can use \cs{startlock} or \cs{endlock}
-% in running text to start or end line number locking at
-% the current line. They decide whether line numbers or sub-line numbers
-% are affected, depending on the current state of the sub-lineation flags.
-%    \begin{macrocode}
-\newcommand*{\startlock}{\write\linenum@out{\string\lock@on}}
-\def\endlock{\write\linenum@out{\string\lock@off}}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\ifl@dskipnumber}
-% \begin{macro}{\ifl@dskipversenumber}
-% \begin{macro}{\l@dskipnumbertrue}
-% \begin{macro}{\l@dskipnumberfalse}
-% \begin{macro}{\skipnumbering}
-% In numbered text \cs{skipnumbering} will suspend the numbering
-% for that particular line.
-% \changes{v0.7.0}{2005/02/22}{Added \cs{skipnumbering} and supports}
-% \changes{v1.21.0}{2015/04/13}{\cs{skipnumbering} defined only one time for both \Eledmac{} and \Eledpar{}.}
-% \changes{v1.21.0}{2015/04/13}{Correct \cs{skipnumbering} for stanza.}
-% \changes{v1.21.0}{2015/04/13}{Delete \cs{skipnumbering@reg}.}
-%    \begin{macrocode}
-\newif\ifl@dskipnumber
-\newif\ifl@dskipversenumber%
-\newcommand*{\skipnumbering}{%
-  \leavevmode%
-  \ifledRcol%
-    \ifinstanza%
-       \write\linenum@outR{\string\n@num@stanza}%
-    \else%
-      \write\linenum@outR{\string\n@num}%
-    \fi%
-    \advanceline{-1}%
-  \else%
-    \ifinstanza%
-       \write\linenum@out{\string\n@num@stanza}%
-    \else%
-      \write\linenum@out{\string\n@num}%
-    \fi%
-    \advanceline{-1}%
-  \fi%
-}%
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 %
 % \section{Line counting}
@@ -5780,6 +4802,980 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Reading the line-list file}
+%
+%
+% \begin{macro}{\read@linelist}
+% \cs{read@linelist}\marg{file} is the control sequence
+% that  is called by \cs{beginnumbering}
+% (via \cs{line@list@stuff}) to open and process a
+% line-list file; its argument is the name of the file.
+% \phantomsection\label{readlinelist}
+%    \begin{macrocode}
+\newread\@inputcheck
+\newcommand*{\read@linelist}[1]{%
+  \list@clearing@reg
+%    \end{macrocode}
+%
+% When the file is there we start a new group and make some special
+% definitions we will need to process it.
+% It is  a sequence of \TeX\
+% commands, but they require a few special settings. 
+% We make [ and
+% ] become grouping characters: they are used that way in the
+% line-list file, because we need to write them out one at a time
+% rather than in balanced pairs, and it is easier to just use
+% something other than real braces. @ must become a letter, since
+% this is run in the ordinary \LaTeX\ context. We ignore carriage
+% returns, since if we are in horizontal mode they can get
+% interpreted as spaces to be printed.
+%
+%
+% Our line, page, and line-locking counters were already zeroed
+% by \cs{line@list@stuff} if this is being called from within
+% \cs{beginnumbering}; sub-lineation will be turned off as well
+% in that case. On the other hand,
+% if this is being called from \cs{resumenumbering}, those things
+% should still have the values they had when \cs{pausenumbering}
+% was executed.
+%
+%   If the file is not there, we print an informative message.
+%
+% Now, after these preliminaries, we start interpreting the file.
+%
+%
+%    \begin{macrocode}
+  \get@linelistfile{#1}%
+  \endgroup  
+%    \end{macrocode}
+%
+% When the reading is done, we are all through with the
+% line-list file. All the information we needed
+% from it will now be encoded in our list macros.
+%
+% Finally, we
+% initialize the \cs{next@actionline} and \cs{next@action} macros,
+% which specify where and what the next action to be taken is.
+%    \begin{macrocode}
+  \global\page@num=\m@ne
+  \ifx\actionlines@list\empty
+      \gdef\next@actionline{1000000}%
+  \else
+      \gl@p\actionlines@list\to\next@actionline
+      \gl@p\actions@list\to\next@action
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\list@clearing@reg}
+% Clears the lists for \cs{read@linelist}
+% \changes{v0.7.0}{2005/02/22}{Added \cs{list@clearing@reg}}
+%    \begin{macrocode}
+\newcommand*{\list@clearing@reg}{%
+  \list@clear{\line@list}%
+  \list@clear{\insertlines@list}%
+  \list@clear{\actionlines@list}%
+  \list@clear{\actions@list}%
+  }%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\get@linelistfile}
+% \Macpackage{} can take advantage of the \LaTeX\ `safe file input' macros
+% to get the line-list file.
+% \changes{v0.7.0}{2005/02/22}{Added \cs{get@linelistfile}}
+%    \begin{macrocode}
+\newcommand*{\get@linelistfile}[1]{%
+  \InputIfFileExists{#1}{%
+    \global\noteschanged@false
+    \begingroup
+      \catcode`\[=1 \catcode`\]=2
+      \makeatletter \catcode`\^^M=9}{%
+    \led@warn@NoLineFile{#1}%
+    \global\noteschanged@true
+    \begingroup}%
+}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% This version of \cs{read@linelist} creates list macros
+% containing data for the entire section, so they could get rather
+% large. It would be no more difficult to read the line-list file
+% incrementally rather than all at once: we could read, at the
+% start of each paragraph, only the commands relating to that
+% paragraph. But this would require that we
+% have two line-lists open at once, one for reading, one for
+% writing, and on systems without version numbers we would have to do
+% some file renaming outside of \LaTeX\  for that to work. We have
+% retained this slower approach to avoid that sort of hacking
+% about, but have provided the \cs{pausenumbering} and
+% \cs{resumenumbering} macros to help you if you run into
+% macro memory limitations (see \reff{pause} above).
+%
+% \subsection{Commands within the line-list file}
+%
+% This section defines the commands that can appear within a
+% line-list file. They all have very short names because we are
+% likely to be writing very large numbers of them out. One macro,
+% \cs{@nl}, is especially short, since it will be written to the
+% line-list file once for every line of text in a numbered section.
+% (Another of these commands, \cs{@lab}, will be introduced in a
+% later section, among the cross-referencing commands it is
+% associated with.)
+%
+% When these commands modify the various page and line counters,
+% they deliberately do not say \cs{global}. This is because we
+% want them to affect only the counter values within the current
+% group when nested calls of \cs{@ref} occur. (The code assumes
+% throughout that the value of \cs{globaldefs} is zero.)
+%
+% The macros with \verb"action" in their names contain all the code
+% that modifies the action-code list: again, this is so that they
+% can be turned off easily for nested calls of \cs{@ref}.
+%
+% \begin{macro}{\line@list@version}
+% The \cs{line@list@version} check if the line-list file does not refers to the older commands of \macpackage. 
+% In this case, we stop reading the line-list file.
+% Consequently, \cs{line@list@version} must be the first line of a line-number file.
+%    \begin{macrocode}
+\newcommand{\line@list@version}[1]{%
+  \IfStrEq{#1}{\this@line@list@version}%
+    {}%
+    {\ifledRcol%
+       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
+     \else%
+       \led@warn@Obsolete{\jobname.\extensionchars\the\section@num}%
+     \fi%
+     \endinput%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@nl}
+% \begin{macro}{\@nl@reg}
+% \changes{v1.12.0}{2014/08/05}{To ensure compatibility with \cs{musixtex}, \cs{@l} becomes \cs{@l}. Consequently, \cs{@l@reg} becomes \cs{@nl@reg}.}
+% \cs{@nl} does everything related to the start of a
+% new line of numbered text.
+%
+% In order to get the \cs{\setlinenum} to work Peter Wilson had to slip in some new
+% code at the start of the macro, to get the timing of the actions
+% correct. The problem was that his original naive implementation
+% of \cs{setlinenum} had a unfortunate tendency to change the
+% number of the last line of the \emph{preceding} paragraph. 
+% The new code is sort of based on the page number handling and
+% \cs{setline}.
+% It seems
+% that a lot of fiddling with the line number internals is required.
+%
+% In November 2004 in order to accurately determine page numbers Peter Wilson added 
+% these to the macro. It is now: \\
+% \cs{@nl}\marg{page counter number}\marg{printed page number} \\
+% We do not (yet) use the printed number (i.e., the \cs{thepage}) but
+% it may come in handy later. The macro \cs{fix@page} checks if a new
+% page has started.
+% 
+% \changes{v0.3.0}{2004/02/14}{Added a bunch of code to \cs{@nl} for handling
+%                          \cs{setlinenum}}
+% \changes{v0.6.0}{2004/11/16}{Extended \cs{@nl} to include the page number}
+% \changes{v0.6.0}{2004/11/16}{Added \cs{fix@page} to \cs{@nl}}
+% \changes{v0.7.0}{2005/02/22}{Added \cs{@nl@reg}}
+%    \begin{macrocode}
+\newcommand{\@nl}[2]{%
+  \fix@page{#1}%
+  \@nl@reg}
+\newcommand*{\@nl@reg}{%
+  \ifx\l@dchset@num\relax \else
+    \advance\absline@num \@ne
+    \set@line@action
+    \let\l@dchset@num=\relax
+    \advance\absline@num \m@ne
+    \advance\line@num \m@ne
+  \fi
+%    \end{macrocode}
+%
+% First increment the absolute line-number, and perform
+% deferred actions relating to page starts and sub-lines.
+%    \begin{macrocode}
+  \advance\absline@num \@ne
+         \ifx\next@page@num\relax \else
+             \page@action
+             \let\next@page@num=\relax
+         \fi
+         \ifx\sub@change\relax \else
+            \ifnum\sub@change>\z@
+               \sublines@true
+            \else
+               \sublines@false
+            \fi
+            \sub@action
+            \let\sub@change=\relax
+         \fi
+%    \end{macrocode}
+%
+% Fix the lock counters, if necessary. A value of $1$ is advanced to
+% $2$; $3$ advances to $0$; other values are unchanged.
+%    \begin{macrocode}
+         \ifcase\@lock
+            \or
+               \@lock \tw@
+            \or \or
+               \@lock \z@
+         \fi
+         \ifcase\sub@lock
+            \or
+               \sub@lock \tw@
+            \or \or
+               \sub@lock \z@
+         \fi
+%    \end{macrocode}
+%
+% Now advance the visible line number, unless it has been locked.
+%    \begin{macrocode}
+         \ifsublines@
+              \ifnum\sub@lock<\tw@
+                \advance\subline@num \@ne
+              \fi
+         \else
+              \ifnum\@lock<\tw@
+                \advance\line@num \@ne \subline@num \z@
+              \fi
+         \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\last@page@num}
+% \begin{macro}{\fix@page}
+%  \cs{fix@page} basically replaces \cs{@page}. It determines whether or not
+% a new page has been started, based on the page values held by \cs{@nl}.
+% \changes{v0.6.0}{2004/11/16}{Added \cs{last@page@num} and \cs{fix@page}}
+%    \begin{macrocode}
+\newcount\last@page@num
+  \last@page@num=-10000
+\newcommand*{\fix@page}[1]{%
+  \ifnum #1=\last@page@num
+  \else
+    \ifbypage@
+      \csxdef{lastlinenumberon@\the\last@page@num}{\the\line@num}%
+      \line@num=\z@ \subline@num=\z@
+    \fi
+    \page@num=#1\relax
+    \last@page@num=#1\relax
+    \def\next@page@num{#1}%
+    \listxadd{\normal@page@break}{\the\absline@num}
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@pend}
+% \begin{macro}{\@pendR}
+% \begin{macro}{\@lopL}
+% \begin{macro}{\@lopR}
+% These do not do anything at this point, but will have been added to the 
+% auxiliary file(s) if the  \parpackage package has been used. They
+% are just here to stop \macpackage from moaning if the \parpackage 
+% is used for one run and then not for the following one.
+% \changes{v0.6.0}{2004/11/16}{Added \cs{@pend},\cs{@pendR}, \cs{@lopL} and 
+%        \cs{@lopR} in anticipation of parallel processing}
+%    \begin{macrocode}
+\newcommand*{\@pend}[1]{}
+\newcommand*{\@pendR}[1]{}
+\newcommand*{\@lopL}[1]{}
+\newcommand*{\@lopR}[1]{}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\sub@on}
+% \begin{macro}{\sub@off}
+% The \cs{sub@on} and \cs{sub@off} macros
+% turn sub-lineation on and off\/: but not directly, since such changes
+% do not really take effect until the next line of text. Instead
+% they set a flag that notifies \cs{@nl} of the necessary action.
+%    \begin{macrocode}
+\newcommand*{\sub@on}{\ifsublines@
+     \let\sub@change=\relax
+  \else
+     \def\sub@change{1}%
+  \fi}
+\newcommand*{\sub@off}{\ifsublines@
+     \def\sub@change{-1}%
+  \else
+     \let\sub@change=\relax
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@adv}
+% The \cs{@adv}\marg{num} macro advances
+% the current visible line number by the amount specified as
+% its argument. This is used to implement \cs{advanceline}.
+%    \begin{macrocode}
+\newcommand*{\@adv}[1]{\ifsublines@
+       \advance\subline@num by #1\relax
+       \ifnum\subline@num<\z@
+         \led@warn@BadAdvancelineSubline
+          \subline@num \z@
+       \fi
+  \else
+       \advance\line@num by #1\relax
+       \ifnum\line@num<\z@
+         \led@warn@BadAdvancelineLine
+          \line@num \z@
+       \fi
+  \fi
+  \set@line@action}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@set}
+% The \cs{@set}\marg{num} macro sets
+% the current visible line number to the value specified as
+% its argument.  This is used to implement \cs{setline}.
+%    \begin{macrocode}
+\newcommand*{\@set}[1]{\ifsublines@
+    \subline@num=#1\relax
+  \else
+    \line@num=#1\relax
+  \fi
+  \set@line@action}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@d@set}
+% \begin{macro}{\l@dchset@num}
+% The \cs{l@d@set}\marg{num} macro sets
+% the line number for the next \cs{pstart} to the value specified as
+% its argument.  This is used to implement \cs{setlinenum}.
+%
+% \cs{l@dchset@num} is a flag to the \cs{@nl}? macro. If it is not
+% \cs{relax} then a linenumber change is to be done.
+%    \begin{macrocode}
+\newcommand*{\l@d@set}[1]{%
+  \line@num=#1\relax
+  \advance\line@num \@ne
+  \def\l@dchset@num{#1}}
+\let\l@dchset@num\relax
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+
+%
+% \begin{macro}{\page@action}
+% \cs{page@action}
+% adds an entry to the action-code list to change the page number.
+%    \begin{macrocode}
+\newcommand*{\page@action}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \xright@appenditem{\next@page@num}\to\actions@list}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\set@line@action}
+% \cs{set@line@action} adds an entry to the action-code
+% list to change the visible line number.
+%    \begin{macrocode}
+\newcommand*{\set@line@action}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+       \@l@dtempcnta=-\subline@num
+  \else
+       \@l@dtempcnta=-\line@num
+  \fi
+  \advance\@l@dtempcnta by -5000
+  \xright@appenditem{\the\@l@dtempcnta}\to\actions@list}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\sub@action}
+% \cs{sub@action}
+% adds an entry to the action-code list to turn sub-lineation on or
+% off, according to the current value of the \cs{ifsublines@} flag.
+%    \begin{macrocode}
+\newcommand*{\sub@action}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+      \xright@appenditem{-1001}\to\actions@list
+  \else
+      \xright@appenditem{-1002}\to\actions@list
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\lock@on}
+% \begin{macro}{\do@lockon}
+% \begin{macro}{\do@lockonL}
+% \cs{lock@on}
+% adds an entry to the action-code list to turn line number
+% locking on. The current setting of the sub-lineation flag tells us
+% whether this applies to line numbers or sub-line numbers.
+%
+% Adding commands to the action list is slow, and it is very often the
+% case that a lock-on command is immediately followed by a lock-off
+% command in the line-list file, and therefore really does nothing.
+% We use a look-ahead scheme here to detect such pairs, and add nothing
+% to the line-list in those cases.
+%    \begin{macrocode}
+\newcommand*{\lock@on}{\futurelet\next\do@lockon}
+\newcommand*{\do@lockon}{%
+  \ifx\next\lock@off
+    \global\let\lock@off=\skip@lockoff
+  \else
+    \do@lockonL
+  \fi}
+\newcommand*{\do@lockonL}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+    \xright@appenditem{-1005}\to\actions@list
+    \ifnum\sub@lock=\z@
+      \sub@lock \@ne
+    \else
+      \ifnum\sub@lock=\thr@@
+        \sub@lock \@ne
+      \fi
+    \fi
+  \else
+    \xright@appenditem{-1003}\to\actions@list
+    \ifnum\@lock=\z@
+      \@lock \@ne
+    \else
+      \ifnum\@lock=\thr@@
+        \@lock \@ne
+      \fi
+    \fi
+  \fi}
+  
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\lock@off}
+% \begin{macro}{\do@lockoff}
+% \begin{macro}{\do@lockoffL}
+% \begin{macro}{\skip@lockoff}
+% \cs{lock@off} adds an entry to the action-code list
+% to turn line number locking off.
+%    \begin{macrocode}
+\newcommand*{\do@lockoffL}{%
+  \xright@appenditem{\the\absline@num}\to\actionlines@list
+  \ifsublines@
+    \xright@appenditem{-1006}\to\actions@list
+    \ifnum\sub@lock=\tw@
+      \sub@lock \thr@@
+    \else
+      \sub@lock \z@
+    \fi
+  \else
+    \xright@appenditem{-1004}\to\actions@list
+    \ifnum\@lock=\tw@
+      \@lock \thr@@
+    \else
+      \@lock \z@
+    \fi
+  \fi}
+\newcommand*{\do@lockoff}{\do@lockoffL}
+\newcommand*{\skip@lockoff}{\global\let\lock@off=\do@lockoff}
+\global\let\lock@off=\do@lockoff
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\n@num}
+% These macros implement the \cs{skipnumbering} command. 
+% They use action code 1007.
+% \changes{v0.7.0}{2005/02/22}{Added \cs{n@num}}
+% \changes{v1.21.0}{2015/04/13}{\cs{n@num} defined only one time for both \Eledmac{} and \Eledpar{}}
+% \changes{v1.21.0}{2015/04/13}{\cs{n@num@ref} deleted}
+%    \begin{macrocode}
+\newcommand*{\n@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR
+    \xright@appenditem{-1007}\to\actions@listR
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%
+    \xright@appenditem{-1007}\to\actions@list%
+  \fi%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\n@num@stanza}
+% This macro implements the \cs{skipnumbering} for stanza command. 
+% It uses  action code 1008.
+%    \begin{macrocode}
+\newcommand*{\n@num@stanza}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1008}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1008}\to\actions@list%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifl@dhidenumber}
+% \begin{macro}{\hidenumbering}
+% \cs{hidenumbering} hides number in margin. 
+% It uses action code 1009.
+% \begin{macro}{\h@num}
+%    \begin{macrocode}
+\newif\ifl@dhidenumber
+\newcommand*{\hidenumbering}{
+  \ifledRcol%
+    \write\linenum@outR{\string\hide@num}%
+  \else%
+    \write\linenum@out{\string\hide@num}%
+  \fi%
+}%
+\newcommand*{\hide@num}{%
+  \ifledRcol%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1009}\to\actions@listR%
+  \else%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%%
+    \xright@appenditem{-1009}\to\actions@list%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\@ref}
+% \begin{macro}{\insert@count}
+% \cs{@ref}
+% marks the start of a passage, for creation of a footnote reference.
+% It takes two arguments:
+% \begin{itemize}
+% \item \verb"#1", the number of entries to add to \cs{insertlines@list}
+% for this reference. \SpecialMainIndex{\insert@count}
+% This value, here and within \cs{edtext},
+% which computes it and writes it to the line-list file,
+% will be stored in the count \cs{insert@count}.
+%    \begin{macrocode}
+\newcount\insert@count
+%    \end{macrocode}
+%
+% \item \verb"#2", a sequence of other line-list-file commands, executed to
+% determine the ending line-number. (This may also include other
+% \cs{@ref} commands, corresponding to uses of \cs{edtext}
+% within the first argument of another instance of \cs{edtext}.)
+% \end{itemize}
+%
+% \begin{macro}{\dummy@ref}
+% When nesting of \cs{@ref} commands does occur, it is necessary to
+% temporarily redefine \cs{@ref} within \cs{@ref}, so that we are only
+% doing one of these at a time.
+%    \begin{macrocode}
+\newcommand*{\dummy@ref}[2]{#2}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@ref@reg}
+% The first thing \cs{@ref} (i.e. \cs{@ref@reg}) itself does is to add 
+% the specified number
+% of items to the \cs{insertlines@list} list.
+% \changes{v0.7.0}{2005/02/22}{Added \cs{@ref@reg}}
+%    \begin{macrocode}
+\newcommand*{\@ref}[2]{%
+  \@ref@reg{#1}{#2}}
+\newcommand*{\@ref@reg}[2]{%
+  \global\insert@count=#1\relax
+  \global\advance\@edtext@level by 1%
+  \loop\ifnum\insert@count>\z@
+    \xright@appenditem{\the\absline@num}\to\insertlines@list
+    \global\advance\insert@count \m@ne
+  \repeat
+%    \end{macrocode}
+%
+% Next, process the second argument to determine the page
+% and line numbers for the end of this lemma.
+% We temporarily equate \cs{@ref} to a different macro that just executes
+% its argument, so that nested \cs{@ref} commands are just skipped
+% this time. Some other macros need to be temporarily redefined to
+% suppress their action.
+%    \begin{macrocode}
+  \begingroup
+    \let\@ref=\dummy@ref
+    \let\@lopL\@gobble
+    \let\page@action=\relax
+    \let\sub@action=\relax
+    \let\set@line@action=\relax
+    \let\@lab=\relax
+    \let\@lemma=\relax%
+    \let\@sw\@gobblethree%
+    #2
+    \global\endpage@num=\page@num
+    \global\endline@num=\line@num
+    \global\endsubline@num=\subline@num
+  \endgroup
+%    \end{macrocode}
+%
+% Now store all the information about the location of the lemma's
+% start and end in \cs{line@list}.
+%    \begin{macrocode}
+    \xright@appenditem%
+      {\the\page@num|\the\line@num|%
+       \ifsublines@ \the\subline@num \else 0\fi|%
+       \the\endpage@num|\the\endline@num|%
+       \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
+%    \end{macrocode}
+% Create a list which stores every second argument of  each \cs{@sw}
+% in this lemma, at this level.
+% Also set the boolean about the use of lemma in this edtext level to false.
+%    \begin{macrocode}
+     \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
+     \providebool{lemmacommand@\the\@edtext@level}%
+     \boolfalse{lemmacommand@\the\@edtext@level}%
+%    \end{macrocode}
+% Execute the second argument of \cs{@ref} again,
+% to perform for real all the commands within it.
+%    \begin{macrocode}
+  #2%
+%    \end{macrocode}
+% Now, we store the list of \cs{@sw} of this current \cs{edtext} as an element of
+% the global list of list of \cs{@sw} for a \cs{edtext} depth.
+%    \begin{macrocode}
+  \ifnum\@edtext@level>0%
+    \def\create@this@edtext@level{\expandafter\list@create\expandafter{\csname sw@list@edtext@\the\@edtext@level\endcsname}}%
+    \ifcsundef{sw@list@edtext@\the\@edtext@level}{\create@this@edtext@level}{}%
+    \letcs{\@tmp}{sw@list@edtext@\the\@edtext@level}%
+    \letcs{\@tmpp}{sw@list@edtext@tmp@\the\@edtext@level}
+    \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
+    \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
+  \fi%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+  \global\advance\@edtext@level by -1% 
+%    \end{macrocode}
+%    \begin{macrocode}
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Writing to the line-list file}
+%
+% We have now defined all the counters, lists, and commands involved in
+% reading the line-list file at the start of a section. Now we will
+% cover the commands that \macpackage uses within the text of a
+% section to write commands out to the line-list.
+%
+% \begin{macro}{\linenum@out}
+% The file will be opened on output stream \cs{linenum@out}.
+%    \begin{macrocode}
+\newwrite\linenum@out
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\iffirst@linenum@out@}
+% \begin{macro}{\first@linenum@out@true}
+% \begin{macro}{\first@linenum@out@false}
+% Once any file is opened on this stream, we keep it open forever, or
+% else switch to another file that we keep open. The reason is that
+% we want the output routine to write the page number for every page
+% to this file; otherwise we would have to write it at the start of
+% every line.
+% But it is not very easy for the output routine to tell whether an
+% output stream is open or not. There is no way to test the status of
+% a particular output stream directly, and
+% the asynchronous nature of output routines makes the
+% status hard to determine by other means.
+%
+% We can manage pretty well by means of the \cs{iffirst@linenum@out@}
+% flag; its inelegant name suggests the nature of the problem that
+% made its creation necessary. It is set
+% to be \verb"true" before any \cs{linenum@out} file is opened. When such a file
+% is opened for the first time, it is done using \cs{immediate}, so that
+% it will at once be safe for the output routine to write to it; we then
+% set this flag to \verb"false".
+%    \begin{macrocode}
+\newif\iffirst@linenum@out@
+  \first@linenum@out@true
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\this@line@list@version}
+% The commands allowed in the line-list file and their arguments
+% can change between two version of \macpackage. 
+% The \cs{this@line@list@version} command is upgraded when it happens.
+% It is written in the file list.
+% If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
+%    \begin{macrocode}
+\newcommand{\this@line@list@version}{2}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\line@list@stuff}
+% The \cs{line@list@stuff}\marg{file} macro, which
+% is called by \cs{beginnumbering}, performs
+% all the line-list operations needed at the start of a section.
+% Its argument is the name of the line-list file.
+%    \begin{macrocode}
+\newcommand*{\line@list@stuff}[1]{%
+%    \end{macrocode}
+%
+% First, use the commands of the previous section to interpret the
+% line-list file from the last run.
+%    \begin{macrocode}
+  \read@linelist{#1}%
+%    \end{macrocode}
+%
+% Now close the current output line-list file, if any, and open a new one.
+% The first time we open a line-list file for output, we do it using
+% \cs{immediate}, and clear the \cs{iffirst@linenum@out@} flag.
+% \changes{v0.2.2}{2003/11/09}{Added initial write of page number in 
+%                           \cs{line@list@stuff}}
+% \changes{v0.7.0}{2005/02/25}{Deleted \cs{page@start} from \cs{line@list@stuff}}
+% \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
+%    \begin{macrocode}
+  \iffirst@linenum@out@
+     \immediate\closeout\linenum@out%
+     \global\first@linenum@out@false%
+     \immediate\openout\linenum@out=#1\relax%
+     \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+  \else
+%    \end{macrocode}
+% If we get here, then this is
+% not the first line-list we have seen, so we
+% do not open or close the files immediately.
+%    \begin{macrocode}
+     \if@minipage%
+       \leavevmode%
+     \fi%
+     \closeout\linenum@out%
+     \openout\linenum@out=#1\relax%
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\new@line}
+% The \cs{new@line} macro sends the \cs{@nl} command to the line-list
+% file, to mark the start of a new text line, and its page number.
+% \changes{v0.6.0}{2004/11/16}{Extended \cs{new@line} to output page numbers}
+%    \begin{macrocode}
+\newcommand*{\new@line}{%
+  \IfStrEq{\led@pb@setting}{after}%
+    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
+      {\xifinlist{\the\absline@num}{\normal@page@break}%
+        {\numgdef{\@next@page}{\thepage+1}%
+        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
+      }%
+      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+    }%
+    {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
+  {}%
+  \IfStrEq{\led@pb@setting}{before}%
+    {\numdef{\next@absline}{\the\absline@num+1}%
+    \xifinlist{\next@absline}{\l@prev@nopb}%
+      {\xifinlist{\the\absline@num}{\normal@page@break}%
+        {\numgdef{\nc@page}{\c@page+1}%
+        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+        }%
+        {\write\linenum@out{\string\n@l[\the\c@page][\thepage]}}%
+      }%
+      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+    }%
+    {}%
+  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@nl[\the\c@page][\thepage]}]%
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\if@noneed@Footnote}
+% \cs{if@noneed@Footnote} is a boolean to check if we have to print a error message when a \cs{edtext} is called without any critical notes.
+%
+% \begin{macro}{\flag@start}
+% \begin{macro}{\flag@end}
+% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} and \cs{flag@end} are now defined only one time for eledmac and eledpar}
+% \changes{v1.12.3}{2014/08/15}{\cs{flag@start} send a error message when a \cs{edtext} is done without insert (note)}
+% \changes{v1.12.8}{2014/09/12}{\cs{flag@start} do not send a error message when a \cs{edtext} is done without insert (note) but have a endnote}
+% We enclose a lemma marked by \cs{edtext} in
+% \cs{flag@start} and \cs{flag@end}: these send the \cs{@ref}
+% command to the line-list file. \cs{edtext} is responsible for
+% setting the value of \cs{insert@count} appropriately; it
+% actually gets done by the various footnote macros.
+%    \begin{macrocode}
+\newif\if@noneed@Footnote%
+
+\newcommand*{\flag@start}{%
+  \ifledRcol%
+    \edef\next{\write\linenum@outR{%
+                  \string\@ref[\the\insert@countR][}}%
+    \next%
+    \ifnum\insert@countR<1%
+      \if@noneed@Footnote\else%
+        \led@err@EdtextWithoutFootnote%
+      \fi%
+    \fi%
+  \else%
+    \edef\next{\write\linenum@out{%
+                  \string\@ref[\the\insert@count][}}%
+    \next%
+    \ifnum\insert@count<1%
+      \if@noneed@Footnote\else%
+        \led@err@EdtextWithoutFootnote%
+      \fi%
+    \fi%
+  \fi}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\startsub}
+% \begin{macro}{\endsub}
+% \changes{v1.15.0}{2015/01/12}{Restore subline feature (disabled by mistake in v1.8.0).}
+% \cs{startsub} and \cs{endsub}
+% turn sub-lineation on and off, by writing
+% appropriate instructions to the line-list file.  When
+% sub-lineation is in effect, the line number counter is frozen and
+% the sub-line counter advances instead. If one of these commands
+% appears in the middle of a line, it does not take effect until the
+% next line; in other words, a line is counted as a line or
+% sub-line depending on what it started out as, even if that
+% changes in the middle.
+%
+% We tinker with \cs{lastskip} because a command of either sort
+% really needs to be attached to the last word preceding the change, not
+% the first word that follows the change. This is because sub-lineation
+% will often turn on and off in mid-line---stage directions, for example,
+% often are mixed with dialogue in that way---and when a line is mixed
+% we want to label it using the system that was in effect at its start.
+% But when sub-lineation begins at the very start of a line we have a
+% problem, if we don't put in this code.
+%    \begin{macrocode}
+\newcommand*{\startsub}{\dimen0\lastskip
+  \ifdim\dimen0>0pt \unskip \fi
+  \write\linenum@out{\string\sub@on}%
+  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
+\def\endsub{\dimen0\lastskip
+  \ifdim\dimen0>0pt \unskip \fi
+  \write\linenum@out{\string\sub@off}%
+  \ifdim\dimen0>0pt \hskip\dimen0 \fi}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\advanceline}
+% You can use \cs{advanceline}\marg{num}
+% in running text to advance the current visible
+% line-number by a specified value, positive or negative.
+%    \begin{macrocode}
+\newcommand*{\advanceline}[1]{\write\linenum@out{\string\@adv[#1]}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\setline}
+% You can use \cs{setline}\marg{num}
+% in running text (i.e., within \cs{pstart}...\cs{pend}) to set the 
+% current visible
+% line-number to a specified positive value.
+%    \begin{macrocode}
+\newcommand*{\setline}[1]{%
+  \ifnum#1<\z@
+    \led@warn@BadSetline
+  \else
+    \write\linenum@out{\string\@set[#1]}%
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\setlinenum}
+% You can use \cs{setlinenum}\marg{num}
+% before a \cs{pstart} to set the visible line-number to a specified 
+% positive value. It writes a \cs{l@d@set} command to the line-list file.
+%    \begin{macrocode}
+\newcommand*{\setlinenum}[1]{%
+  \ifnum#1<\z@
+    \led@warn@BadSetlinenum
+  \else
+    \write\linenum@out{\string\l@d@set[#1]}%
+  \fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\startlock}
+% \begin{macro}{\endlock}
+% You can use \cs{startlock} or \cs{endlock}
+% in running text to start or end line number locking at
+% the current line. They decide whether line numbers or sub-line numbers
+% are affected, depending on the current state of the sub-lineation flags.
+%    \begin{macrocode}
+\newcommand*{\startlock}{\write\linenum@out{\string\lock@on}}
+\def\endlock{\write\linenum@out{\string\lock@off}}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\ifl@dskipnumber}
+% \begin{macro}{\ifl@dskipversenumber}
+% \begin{macro}{\l@dskipnumbertrue}
+% \begin{macro}{\l@dskipnumberfalse}
+% \begin{macro}{\skipnumbering}
+% In numbered text \cs{skipnumbering} will suspend the numbering
+% for that particular line.
+% \changes{v0.7.0}{2005/02/22}{Added \cs{skipnumbering} and supports}
+% \changes{v1.21.0}{2015/04/13}{\cs{skipnumbering} defined only one time for both \Eledmac{} and \Eledpar{}.}
+% \changes{v1.21.0}{2015/04/13}{Correct \cs{skipnumbering} for stanza.}
+% \changes{v1.21.0}{2015/04/13}{Delete \cs{skipnumbering@reg}.}
+%    \begin{macrocode}
+\newif\ifl@dskipnumber
+\newif\ifl@dskipversenumber%
+\newcommand*{\skipnumbering}{%
+  \leavevmode%
+  \ifledRcol%
+    \ifinstanza%
+       \write\linenum@outR{\string\n@num@stanza}%
+    \else%
+      \write\linenum@outR{\string\n@num}%
+    \fi%
+    \advanceline{-1}%
+  \else%
+    \ifinstanza%
+       \write\linenum@out{\string\n@num@stanza}%
+    \else%
+      \write\linenum@out{\string\n@num}%
+    \fi%
+    \advanceline{-1}%
+  \fi%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
 % \section{Marking text for notes}
 % \label{text}\relax
 %
