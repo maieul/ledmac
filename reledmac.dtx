@@ -1252,7 +1252,7 @@
 % \egend
 %
 % \DescribeMacro{\linenum}
-% \phantomsection\label{linenum}\relax
+% \label{linenum}
 % You can use \cs{linenum}\marg{arg} to change the line numbers passed to
 % the notes. The notes are actually given seven parameters: the page,
 % line, and sub-line number for the start of the lemma; the same
@@ -5786,7 +5786,7 @@
 % the \file{.tex} file: all instances of it in the main text and in the
 % notes are copied from that one appearance.
 %
-% The \cs{edtext} macros take two arguments.
+% The \cs{edtext} macro takes two arguments.
 % \begin{verbatim}
 %    \edtext{#1}{#2}
 % \end{verbatim}
@@ -5803,11 +5803,12 @@
 % The \cs{edtext} macro may be used (somewhat) recursively; that
 % is, \cs{edtext} may be used within its own first argument. The
 % code would be much simpler without this feature, but nested notes
-% will commonly be necessary: it's quite likely that we'll have an
+% will commonly be necessary: it is quite likely that we will have an
 % explanatory note for a long passage and notes on variants for
 % individual words within that passage. The situation we can't
-% handle is overlapping notes that aren't nested: for example, one
-% note covering lines 10--15, and another covering 12--18. You can
+% handle is overlapping notes that are not nested: for example, one
+% note covering lines 10--15, and another covering 12--18.
+% You can
 % handle such cases by using the \cs{lemma} and \cs{linenum}
 % macros within \verb"#2": they alter the copy of the lemma and the
 % line numbers that are passed to the notes, and hence allow you to
@@ -5817,8 +5818,8 @@
 % The recursive operation of \cs{edtext} will fail if you try to use a copy
 % that is called something other than \cs{edtext}. In order to handle
 % recursion, \cs{edtext} needs to redefine its own definition temporarily
-% at one point, and that doesn't work if the macro you are calling is
-% not actually named \cs{edtext}. There's no problem as long as \cs{edtext}
+% at one point, and that does not work if the macro you are calling is
+% not actually named \cs{edtext}. There  is no problem as long as \cs{edtext}
 % is not invoked in the first argument. If you want to call \cs{edtext}
 % something else, it is best to create instead a macro that expands
 % to an invocation of \cs{edtext}, rather than copying \cs{edtext} and giving
@@ -5833,16 +5834,17 @@
 % is appended to the list macro \cs{inserts@list}, and when \cs{pend}
 % completes the paragraph it inserts all the notes at the proper places.
 %
-% Note that we don't provide previous-note information, although it's
-% often wanted; your own macros must handle that. We can't do it
+%
+% Note that we do not provide previous-note information, although it is
+% often wanted; your own macros must handle that. We ca not do it
 % correctly without keeping track of what kind of notes have gone past:
-% it's not just a matter of remembering the line numbers associated with
-% the previous invocation of \cs{*text}, because that might have been for
+% it is not just a matter of remembering the line numbers associated with
+% the previous invocation of \cs{edtext}, because that might have been for
 % a different kind of note. It is preferable for your footnote macros
 % to store and recall this kind of information if they need it.
 %
 %
-% \subsection{{\tt \protect\bslash edtext})
+% \subsection{\cs{edtext}
 %  itself}
 %
 % The various note-generating macros might want to request that
@@ -5888,7 +5890,7 @@
 % We now need to define a number of macros that allow us to weed out
 % nested instances of \cs{edtext}, and other problematic macros, from
 % our lemma. This is similar to what we did in reading the line-list
-% file using \cs{dummy@ref} and various redefinitions---and that's
+% file using \cs{dummy@ref} and various redefinitions---and that is
 % because nested \cs{edtext}s macros create nested \cs{@ref} entries
 % in the line-list file.
 %
@@ -5905,12 +5907,12 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% We're going to need another macro that takes one argument and ignores
+% We are going to need another macro that takes one argument and ignores
 % it entirely. This is supplied by the \LaTeX\ \cs{@gobble}\marg{arg}.
 %
 % \begin{macro}{\no@expands}
 % \begin{macro}{\morenoexpands}
-% We need to turn off macro expansion for certain sorts of macros we're
+% We need to turn off macro expansion for certain sorts of macros we are
 % likely to see within the lemma and within the notes.
 %
 % The first class is font-changing macros. We suppress expansion for
@@ -5924,7 +5926,7 @@
 % effect.
 %
 % A second sort to turn off includes a few of the accent macros.
-% Most are not a problem: an accent that's expanded to an \cs{accent}
+% Most are not a problem: an accent that is expanded to an \cs{accent}
 % command may be harder to read but it works just the same. The
 % ones that cause problems are: those that use alignments---\TeX\
 % seems to get confused about the difference between alignment
@@ -5933,11 +5935,11 @@
 % is.
 %
 % (The \cs{copyright} macro defined in \PlainTeX\ has this sort of
-% problem as well, but isn't used enough to bother with. That macro,
+% problem as well, but is not used enough to bother with. That macro,
 % and any other that causes trouble, will get by all right if you put
 % a \cs{protect} in front of it in your file.)
 %
-% We also need to eliminate all \Eledmac{} macros like \cs{edlabel} and
+% We also need to eliminate all \macpackage macros like \cs{edlabel} and
 % \cs{setline} that write things to auxiliary files: that writing
 % should be done only once. And we make
 % \cs{edtext} itself, if it appears within its own
@@ -5948,7 +5950,7 @@
 % a version of your own when you need to add more expansion
 % suppressions as needed with your macros. That makes it possible
 % to make such additions without needing to copy or modify the
-% standard \Eledmac{} code. If you define your own
+% standard \macpackage code. If you define your own
 % \cs{morenoexpands}, you must be very careful about spaces: if the
 % macro adds any spaces to the text when it runs, extra space
 % will appear in the main text when \cs{edtext} is used.
@@ -5963,10 +5965,10 @@
 % One way around the problem, if it takes this form,
 % is to ensure that those characters are \emph{always} active; within
 % languages that make no special use of them, their associated
-% control sequences should simply return the proper character.)
+% control sequences should simply return the proper character. A simpler solution is to avoid active character, using \LuaTeX\ or \XeLaTeX.)
 % \changes{v0.2.0}{2003/07/25}{Added \cs{l@dtabnoexpands} to \cs{no@expands}}
 % \changes{v0.2.1}{203/08/25}{Removed some \cs{let}s from \cs{no@expands}.
-%    These were in \edmac{} but I feel that they should not have been as they
+%    These were in \edmac{} but Peter Wilson feels that they should not have been as they
 %    disabled page/line refs in a footnotes}
 % \changes{v1.0.0}{2012/09/15}{Change to be compatible with new features}
 %    \begin{macrocode}
@@ -5987,7 +5989,7 @@
 % \end{macro}
 %
 % \begin{macro}{\@tag}
-% Now, we define an empty \cs{@tag} command. It will be redefine by \cs{edtext}: its value is the first args. It will be used by the \cs{Xfootnote} commands.
+% Now, we define an empty \cs{@tag} command. It will be redefine by \cs{edtext}: its value is the first argument. It will be used by the \cs{Xfootnote} commands.
 %    \begin{macrocode}
 \newcommand{\@tag}{}
 %    \end{macrocode}
@@ -6002,14 +6004,14 @@
 \@edtext@level=0%
 %    \end{macrocode}
 % \end{macro}
-% \changes{v1.16.0}{2014/01/23}{\cs{edtext} is now defined only in eledmac, not in \Lpack{eledpar}. Debug wrong numbering when using \cs{sameword} + \Lpack{eledpar} + \cs{tag} command.}
+% \changes{v1.16.0}{2014/01/23}{\cs{edtext} is now defined only in \eledmac, not in \eledpar. Debug wrong numbering when using \cs{sameword} + \Lpack{eledpar} + \cs{tag} command.}
 %
 %
 % \begin{macro}{\edtext}
 % \changes{v0.4.0}{2004/02/29}{Added \cs{showlemma} to \cs{edtext}}
 % \changes{v1.4.0}{2012/11/16}{Compatibility of \cs{edtext} with the right-to-left direction (with Polyglossia).}
 % \changes{v1.17.0}{2015/02/09}{Error message when calling \cs{edtext} outside of a numbered paragraph.}
-% When executed, \cs{edtext} first ensures that we're in
+% When executed, \cs{edtext} first ensures that we are in
 % horizontal mode. 
 %    \begin{macrocode}
 \newcommand{\edtext}[2]{\leavevmode%
@@ -6022,7 +6024,7 @@
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
-% By default, we don't use \cs{lemma}
+% By default, we do not use \cs{lemma}
 %    \begin{macrocode}
       \global\@lemmacommand@false%
 %    \end{macrocode}
@@ -6055,7 +6057,7 @@
 % and then expand \verb"#1" into \cs{@tag}, our lemma.
 %
 % This is done within a group that starts here, in order to get the
-% original \cs{edtext} restored; within this group we've also turned
+% original \cs{edtext} restored; within this group we have also turned
 % off the expansion of those control sequences commonly found within text
 % that can cause trouble for us.
 % 
@@ -6076,7 +6078,7 @@
 % \cs{insert@count} will be altered by the note-generating macros:
 % it counts the number of deferred footnotes or other insertions
 % generated by this instance of \cs{edtext}. 
-% If we are in a right column (eledpar), we use \cs{insert@countR} 
+% If we are in a right column (\parpackage), we use \cs{insert@countR} 
 % instead of \cs{insert@count}.
 %    \begin{macrocode}
         \ifledRcol \global\insert@countR \z@% 
@@ -6092,7 +6094,7 @@
 %    \begin{macrocode}
         \ignorespaces #2\relax%
 %    \end{macrocode}
-% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
+% With \Lpack{polyglossia}, you must track whether the language reads left to right (English) or right to left (Arabic).
 %    \begin{macrocode}
         \@ifundefined{xpg@main@language}{%if not polyglossia
            \flag@start}%
@@ -6109,10 +6111,10 @@
          \fi%
        \fi%
 %    \end{macrocode}
-% Finally, we're ready to admit the first argument into the current
+% Finally, we are ready to admit the first argument into the current
 % paragraph.
 %
-% It's important that we generate and output all the notes for this
+% It is important that we generate and output all the notes for this
 % chunk of text \emph{before} putting the text into the paragraph: notes
 % that are referenced by line number should generally be tied to the
 % start of the passage they gloss, not the end. That should all be done
@@ -6143,7 +6145,7 @@
 % We switch to false some flags.
 % \begin{itemize}
 %    \item The one that checks having footnotes inside a \cs{edtext}.
-%    \item The one that says we are inside a \cs{edtext}.
+%    \item The one that says we are inside a \cs{edtext}. In fact, it is not a flag, but a counter which is increased to 1 in each leavel of \cs{edtext}.
 %    \item The one that says we are inside à \cs{@lemma}.
 % \end{itemize}
 %    \begin{macrocode}
@@ -6183,18 +6185,18 @@
 % font specifier for the current block of text into \cs{l@d@nums}.
 %
 % One instance of \cs{edtext} may generate several notes, or it
-% may generate none---it's legitimate for argument \verb"#2" to \cs{edtext} to
+% may generate none --- it is legitimate for argument \verb"#2" to \cs{edtext} to
 % be empty. But \cs{flag@start} and \cs{flag@end} induce the generation of
-% a single entry in \cs{line@list} during the next run, and it's vital
+% a single entry in \cs{line@list} during the next run, and it is vital
 % to also remove one and only one \cs{line@list} entry here.
 %    \begin{macrocode}
 \newcommand*{\set@line}{%
 %    \end{macrocode}
 %
-% If no more lines are listed in \cs{line@list}, something's
-% wrong---probably just some change in the input. We set all the numbers
+% If no more lines are listed in \cs{line@list}, something is
+% wrong --- probably just some change in the input. We set all the numbers
 % to zeros, following an old publishing convention for numerical
-% references that haven't yet been resolved.
+% references that have not yet been resolved.
 %    \begin{macrocode}
   \ifx\line@list\empty
     \global\noteschanged@true
@@ -6223,7 +6225,7 @@
 % \begin{macro}{\lemma}
 % \changes{v1.23.0}{2015/05/18}{Fix spurious space after \cs{lemma} command}
 % The \cs{lemma}\marg{text} macro allows you to change the lemma
-% that's passed on to the notes.
+% that is passed on to the notes.
 % Read about \cs{@tag} in normal \cs{edtext} macro for more details about \cs{sw@list@inedtext} and \cs{no@expands} (\reff{@tag}).
 %    \begin{macrocode}
 \newcommand*{\lemma}[1]{%
@@ -6256,7 +6258,7 @@
 % \subsection{Substitute line numbers}
 %
 % \begin{macro}{\linenum}
-% \phantomsection\label{linenumdef}\relax
+% \label{linenumdef}
 % The \cs{linenum} macro can change any or all of
 % the page and line numbers that are
 % passed on to the notes.
@@ -6266,7 +6268,7 @@
 % \cs{l@d@nums} (see \reff{linenumbers}): the starting page,
 % line, and sub-line numbers, followed by the ending page, line, and
 % sub-line numbers, and then the font specifier for the lemma.
-% However, you can omit any parameters you don't want to change, and
+% However, you can omit any parameters you do not want to change, and
 % you can omit a string of vertical bars at the end of the
 % argument. Hence \verb"\linenum{18|4|0|18|7|1|0}" is an invocation
 % that changes all the parameters, but \verb"\linenum{|3}" only
@@ -6322,8 +6324,8 @@
 %	\begin{enumerate} 
 %       	\item  Get the rank of each \cs{sameword} in a line (relative rank) from the rank of each \cs{sameword} in all the numbered section (absolute rank):
 %		      \begin{itemize}
-%        		\item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \verb+\sameword{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \verb+\sameword{argument}+.    
-%        		\item  For each \cs{sameword} having the same argument,  we substract from its absolute rank the number stored for the paired \cs{sameword} argument and previous absolute line number. Consequently, we obtain the relative rank.
+%        		\item For each paired \cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \cs{sameword}\marg{argument}+  is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \cs{sameword}\marg{argument}.    
+%        		\item  For each \cs{sameword} having the same argument,  we subtract from its absolute rank the number stored for the paired \cs{sameword} argument and previous absolute line number. Consequently, we obtain the relative rank.
 %			       \item See the following example which explain how for same \cs{sameword} absolute ranks are transformed to relative rank.
 %  \begin{verbatim}
 %  At line 1:
@@ -6381,7 +6383,7 @@
 %	        \item At each call of this \cs{sameword@inedtext}, we step to the next element of the list associated to the note. Let it be $r$.
 %	      \item For the word marked by \cs{sameword}, we calculate how many time it is called in its line. To do it:
 %           \begin{itemize}
-%            \item We get the absolute line number of the current \cs{sameword}. This absolute line number was stored with list of relative rank for the current \cs{edtext}. That means, in the previous example, that, if the absolute line number of \cs{edtext} was 1, that critical notes (A) and (B) were not associated with  $\{1,2,2,3\}$ but with $\{(1,1),(2,1),(2,1),(3,1)\}$. Such method to know the absolute line number associated to a \cs{sameword} is required because a \cs{edtext} can be overlap many lines, but \cs{sameword} can get it.
+%            \item We get the absolute line number of the current \cs{sameword}. This absolute line number was stored with list of relative rank for the current \cs{edtext}. That means, in the previous example, that, if the absolute line number of \cs{edtext} was 1, that critical notes (A) and (B) were not associated with  $\{1,2,2,3\}$ but with $\{(1,1),(2,1),(2,1),(3,1)\}$. Such method to know the absolute line number associated to a \cs{sameword} is required because a \cs{edtext} can be overlap many lines, but \cs{sameword} can't get it.
 %            \item We get the value associated, when reading the auxiliary file, to the pair compose by the current marked word and the current absolute line number. Let this value be $n$.
 %           \end{itemize}
 %        \item If $n >1 $, that mean the current word appears more than once time in its line. In this case, we call \cs{showwordrank} with the word as first argument and $r$ as second argument. If the word is called only once, we just print it.
@@ -6511,7 +6513,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\sameword@inedtext}
-% The command called when \cs{sameword} is called in a edtext.
+% The command called when \cs{sameword} is called in a \cs{edtext}.
 %    \begin{macrocode}
 \newcommandx{\sameword@inedtext}[2][1,usedefault]{%
   \get@sw@txt{#2}%
@@ -6524,7 +6526,7 @@
         \def\this@absline{-99}%
       \else%
 %    \end{macrocode}
-% But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for edtext.
+% But in many cases, at this step, we should have some content in the list \cs{sw@list@inedtext}, which contains the reference for \cs{edtext}.
 %    \begin{macrocode}
         \gl@p\sw@list@inedtext\to\@tmp%
         \edef\the@sw{\expandafter\@firstoftwo\@tmp}%
