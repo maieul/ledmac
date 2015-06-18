@@ -1031,6 +1031,14 @@
 % When inserted into a numbered line the macro \cs{hidenumbering} causes
 % the number for that particular line to be hidden; namely, no line number will print.
 % Note that if you use it in \cs{stanza}, you must call it at the beginning of the verse.
+% \subsubsection{Execute code at each line}
+% \Macpackage provides to advanced feature for user.
+% \DescribeMacro{dolinehook}\DescribeMacro{doinsidelinehook}
+% The argument passed to \cs{dolinehook}\marg{arg} will be executed 
+% before slicing a new line in the paragraph.
+% The argument passed to \cs{doinsidelinehook}\marg{arg} will be executed before printing a new line.
+% In many case, the second of two is more useful than the first.
+% The file \href{examples/2-line_numbers_in_header.tex}{examples/2-line_numbers_in_header.tex} provides an example of use in order to print the first and last line number of a page in the header.
 % \section{Apparatus commands}
 % \subsection{Terminology}
 % We call ``critical notes'' notes which refer to both a lemma, that is a part of text and a line number. 
@@ -6592,8 +6600,8 @@
 % line-list, and then at last send the line to the vertical list.
 % This section contains all the code for this processing.
 %
-% \subsection{Boxes, counters, {\tt\protect\bslash pstart}
-% and {\tt\protect\bslash pend}}
+% \subsection{Boxes, counters, \cs{pstart}
+% and \cs{pend}}
 %
 % \begin{macro}{\raw@text}
 % \begin{macro}{\ifnumberedpar@}
@@ -6610,7 +6618,7 @@
 % The \cs{ifnumberedpar@} flag will be \verb"true" while a paragraph is
 % being processed in that way.
 % \cs{num@lines} will store the number of lines in the paragraph
-% when it's complete. When we chop it up into lines, each line
+% when it is complete. When we chop it up into lines, each line
 % in turn goes into the
 % \cs{one@line} register, and \cs{par@line} will be the number
 % of that line within the paragraph.
@@ -6643,7 +6651,7 @@
 % relevant variables, and then arranges for the
 % subsequent text to go into the
 % \cs{raw@text} box. \cs{pstart} needs to appear at the start of
-% every paragraph that's to be numbered; the \cs{autopar} command below
+% every paragraph that is to be numbered; the \cs{autopar} command below
 % may be used to insert these commands automatically.
 %
 % Beware: everything that occurs between \cs{pstart} and \cs{pend}
@@ -6731,19 +6739,20 @@
   \fi%
 %    \end{macrocode}
 % We set all the usual interline penalties to zero and then immediately
-% call \cs{endgraf} to end the paragraph; this ensures that there'll
+% call \cs{endgraf} to end the paragraph; this ensures that there will
 % be no large interline penalties to prevent us from slicing the
 % paragraph into pieces. These penalties revert to the values
 % that you set when the group for the \cs{vbox} ends. Then we call
 % \cs{do@line} to slice a line off the top of the
 % paragraph, add a line number and footnotes, and restore it to the page;
-% we keep doing this until there aren't any more lines left.
+% we keep doing this until there are not any more lines left.
 %    \begin{macrocode}
   \l@dzeropenalties%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
-% We check if lineation is by pstart: in this case, we reset line number, but only in the second line of the pstart, to prevent some trouble. We can't reset line number at the beginning of  \cs{pstart} \cs{setline} is parsed at the end of previous \cs{pend}, and so, we must do it at the end of first line of pstart.
+% We check if lineation is by pstart: in this case, we reset line number, but only in the second line of the pstart.
+% We can't reset line number at the beginning of  \cs{pstart}, as \cs{setline} is parsed at the end of previous \cs{pend}, and so, we must do it at the end of first line of pstart.
 %    \begin{macrocode}
   \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
@@ -6760,20 +6769,32 @@
   \flush@notes%
   \endgroup%
   \ignorespaces%
+%    \end{macrocode}
+% Increase pstart counter.
+%    \begin{macrocode}
   \ifnumberpstart%
-   \pstartnumtrue%
-   \fi%
-  \@oldnobreak%
+     \pstartnumtrue%
+  \fi%
   \addtocounter{pstart}{1}%
+%    \end{macrocode}
+% Restore paragraph, nobreak setting and autopar setting.
+%    \begin{macrocode}
   \normal@pars%
-  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
+  \@oldnobreak%
   \ifautopar%
     \autopar%
   \fi%
+%    \end{macrocode}
+% Print the optional argument of \cs{pend} or the content printed after every \cs{pend}
+%    \begin{macrocode}
+  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 }
 
 %    \end{macrocode}
 % \end{macro}
+% Here, two macros to insert content after every \cs{pend}, between numbered line.
+% \cs{AtEveryPend} is the user macro, \cs{at@every@pend} is macro set by it.
+%
 % \begin{macro}{\AtEveryPend}
 % \begin{macro}{\at@every@pend}
 %    \begin{macrocode}
@@ -6802,11 +6823,11 @@
 % \end{macro}
 %
 % \begin{macro}{\autopar}
-% In most cases it's only an annoyance to have to label the paragraphs
+% In most cases it is only an annoyance to have to label the paragraphs
 % to be numbered with \cs{pstart} and \cs{pend}. \cs{autopar} will
 % do that automatically, allowing you to start a paragraph with its
 % first word and no other preliminaries, and to end it with a blank line
-% or a \verb"\par" command. The command should be issued within a
+% or a \cs{par} command. The command should be issued within a
 % group, after \cs{beginnumbering} has been used to start the
 % numbering; all paragraphs within the group will be affected.
 %
@@ -6816,24 +6837,24 @@
 % character that ends the group will be mistaken for the end of the
 % \cs{vbox} that \cs{pstart} creates, and the rest of the paragraph
 % will not be numbered. Such paragraphs need to be started explicitly
-% using \cs{indent}, \cs{noindent}, or \cs{leavevmode}---or \cs{pstart}, since
+% using \cs{indent}, \cs{noindent}, or \cs{leavevmode} --- or \cs{pstart}, since
 % you can still include your own \cs{pstart} and \cs{pend}
 % commands even with \cs{autopar} on.
 %
 % Prematurely ending the group within which \cs{autopar} is in
 % effect will cause a similar problem. You must either leave a
-% blank line or use \verb"\par" to end the last paragraph before
+% blank line or use \cs{par} to end the last paragraph before
 % you end the group.
 %
 % The functioning of this macro is more tricky than the usual
-% \cs{everypar}: we don't want anything to go onto the vertical
+% \cs{everypar}: we do not want anything to go onto the vertical
 % list at all, so we have to end the paragraph, erase any evidence
 % that it ever existed, and start it again using \cs{pstart}.
 % We remove the paragraph-indentation box using \cs{lastbox} and
 % save the width, and then skip backwards over the \cs{parskip}
-% that's been added for this paragraph. Then we start again with
+% that has been added for this paragraph. Then we start again with
 % \cs{pstart}, restoring the indentation that we saved, and
-% locally change \verb"\par" so that it'll do our \cs{pend} for us.
+% locally change \cs{par} so that it will do our \cs{pend} for us.
 %    \begin{macrocode}
 \newif\ifautopar
 \autoparfalse
@@ -6861,7 +6882,7 @@
 % \begin{macro}{\normal@pars}
 % We also define a macro which we can rely on to turn off the
 % \cs{autopar} definitions at various important places, if they
-% are in force. We'll want to do this within a footnotes, for
+% are in force. We will want to do this within a footnotes, for
 % example.
 %    \begin{macrocode}
 \newcommand*{\normal@pars}{\everypar{}\let\par\endgraf}
@@ -6880,6 +6901,7 @@
 % \end{macro}
 % \subsection{Processing one line}
 %
+% \subsubsection{General process}
 % \begin{macro}{\do@line}\label{doline}
 % \begin{macro}{\l@dunhbox@line}
 % The \cs{do@line} macro is called by \cs{pend} to
@@ -6911,7 +6933,7 @@
   \fi%
 %    \end{macrocode}
 % \changes{v1.12.0}{2014/08/05}{\cs{do@line} is split in more little commands.}
-% Depending wether a sectioning command is called at this pstart or not 
+% Depending weither a sectioning command is called at this pstart or not 
 % we print sectioning command or normal line, 
 %    \begin{macrocode}
   \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
@@ -6923,6 +6945,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsubsection{Process for ``normal'' line}
 % \begin{macro}{\print@line}
 % \changes{v1.13.1}{2014/09/25}{Coming back of add@penalties, mistakenly deleted in version 0.17!}
 % \changes{v1.18.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
@@ -6987,6 +7010,7 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsubsection{Process for line containing \cs{eledsection} command}
 % \begin{macro}{\print@eledsection}
 % \cs{print@eledsection} to print sectioning command with line number.
 % It sets the correct spacing, depending whether a sectioning command was called at previous \cs{pstart}, calls the sectioning command, prints the normal line outside of the paper, to be able to have critical footnotes. 
@@ -7011,6 +7035,20 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsubsection{Hooks}
+% \begin{macro}{\do@linehook}
+% \begin{macro}{\do@insidelinehook}
+% Two hooks into \cs{do@line}. The first is called at the beginning of \cs{do@line}, the second is called in the line box.
+% The second can, for example, have a \cs{markboth} command inside, the first ca not.
+% \changes{v0.7.0}{2005/02/18}{Added \cs{do@linehook} for use in \cs{do@line}}
+% \changes{v1.5.0}{2013/07/11}{Added \cs{do@insidelinehook} for use in \cs{do@line}}
+%    \begin{macrocode}
+\newcommand*{\do@linehook}{}
+\newcommand*{\do@insidelinehook}{}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 % \begin{macro}{\dolinehook}
 % \begin{macro}{\doinsidelinehook}
 % These hight level commands just redefine the low level commands. 
@@ -7023,19 +7061,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \begin{macro}{\do@linehook}
-% \begin{macro}{\do@insidelinehook}
-% Two hooks into \cs{do@line}. The first is called at the beginning of \cs{do@line}, the second is called in the line box.
-% The second can, for example, have a \cs{markboth} command inside, the first can't.
-% \changes{v0.7.0}{2005/02/18}{Added \cs{do@linehook} for use in \cs{do@line}}
-% \changes{v1.5.0}{2013/07/11}{Added \cs{do@insidelinehook} for use in \cs{do@line}}
-%    \begin{macrocode}
-\newcommand*{\do@linehook}{}
-\newcommand*{\do@insidelinehook}{}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
+% \subsubsection{Sidenotes and marginal line number initialization}
 % \begin{macro}{\l@demptyd@ta}
 % \begin{macro}{\l@dld@ta}
 % \begin{macro}{\l@drd@ta}
@@ -7079,9 +7105,9 @@
 %
 % \begin{macro}{\ledllfill}
 % \begin{macro}{\ledrlfill}
-%  These macros are called at the left (\verb?\ledllfill?) and the right
-% (\verb?\ledllfill?) of each numbered line. The initial definitions
-% correspond to the original code for \verb?\do@line?.
+%  These macros are called at the left (\cs{ledllfill}) and the right
+% (\cs{ledllfill}) of each numbered line. The initial definitions
+% correspond to the original code for \cs{do@line}.
 %    \begin{macrocode}
 \newcommand*{\ledllfill}{\hfil}
 \newcommand*{\ledrlfill}{}
@@ -7090,11 +7116,11 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Line and page number computation}
+% \section{Line and page number computation}
 %
 % \begin{macro}{\getline@num}
 % The \cs{getline@num} macro
-% determines the page and line numbers for the line we're about to
+% determines the page and line numbers for the line we are about to
 % send to the vertical list.
 %    \begin{macrocode}
 \newcommand*{\getline@num}{%
@@ -7163,14 +7189,14 @@
 %
 % The \cs{do@actions} macro
 % looks at the list of actions to take at particular absolute line
-% numbers, and does everything that's specified for the current line.
+% numbers, and does everything that is specified for the current line.
 %
 % It may call itself recursively, and to do this efficiently (using
 % \TeX's optimization for tail recursion), we define a control-sequence
 % called \cs{do@actions@next} that is always the last thing that
 % \cs{do@actions} does. If there could be more actions to process for
 % this line, \cs{do@actions@next} is set equal to \cs{do@actions};
-% otherwise it's just \cs{relax}.
+% otherwise it is just \cs{relax}.
 % \changes{v0.7.0}{2005/02/22}{Added number skipping to \cs{do@actions}}
 %    \begin{macrocode}
 \newcommand*{\do@actions}{%
@@ -7179,7 +7205,7 @@
 %    \end{macrocode}
 %
 % First, page number changes, which will generally be the most common
-% actions. If we're restarting lineation on each page, this is where it
+% actions. If we are restarting lineation on each page, this is where it
 % happens.
 %    \begin{macrocode}
     \ifnum\next@action>-1001
@@ -7206,7 +7232,7 @@
           \fi
 %    \end{macrocode}
 %
-% It's one of the fixed codes. We rescale the value in
+%  We rescale the value in
 % \cs{@l@dtempcnta} so that we can use a case statement.
 %    \begin{macrocode}
        \else
@@ -7218,11 +7244,11 @@
 %    \end{macrocode}
 %
 % Now we get information about the next action off the list,
-% and then set \cs{do@actions@next} so that we'll
+% and then set \cs{do@actions@next} so that we will
 % call ourself recursively: the next action might also be for this
 % line.
 %
-% There's no warning if we find \cs{actionlines@list} empty,
+% There is no warning if we find \cs{actionlines@list} empty,
 % since that will always happen near the end of the section.
 %
 %    \begin{macrocode}
