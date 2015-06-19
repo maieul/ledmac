@@ -7586,7 +7586,13 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \section{Footnotes insertion in the page}
+% \section{Restoring footnotes and penalties} 
+% Because of the paragraph decomposition process in order to number line, \macpackage must hack the standard way \TeX\ works in order to manage insertion of footnotes,  both critical and familiar.
+%
+% We need to call the \cs{insert} commands not when the content of \cs{pstart}\ldots\cs{pend} is read by \TeX\, by when each individual line is typeset.
+% 
+% Consequently, when reading the content of \cs{pstart}\ldots\cs{pend}, we store the insertion (footnotes) in an specific \macpackage's list, and we restore them to the vertical list when printing each individual line.
+% 
 % \subsection{Add insertions to the vertical list}
 %
 % \begin{macro}{\inserts@list}
@@ -7609,22 +7615,22 @@
 % called \cs{add@inserts@next} that is always the last thing that
 % \cs{add@inserts} does. If there could be more inserts to process for
 % this line, \cs{add@inserts@next} is set equal to \cs{add@inserts};
-% otherwise it's just \cs{relax}.
+% otherwise it is  just \cs{relax}.
 %
 %    \begin{macrocode}
 \newcommand*{\add@inserts}{%
   \global\let\add@inserts@next=\relax
 %    \end{macrocode}
 %
-% If \cs{inserts@list} is empty, there aren't any more notes or insertions
-% for this paragraph, and we needn't waste our time.
+% If \cs{inserts@list} is empty, there are not any more notes or insertions
+% for this paragraph, and we need not waste our time.
 %    \begin{macrocode}
   \ifx\inserts@list\empty \else
 %    \end{macrocode}
 %
 % The \cs{next@insert} macro records the number of the line that
-% receives the next footnote or other insert; it's empty when we start
-% out, and just after we've affixed a note or insert.
+% receives the next footnote or other insert; it is empty when we start
+% out, and just after we have affixed a note or insert.
 %    \begin{macrocode}
   \ifx\next@insert\empty
     \ifx\insertlines@list\empty
@@ -7638,7 +7644,7 @@
 %
 % If the next insert's for this line, tack it on (and then erase the
 % contents of the insert macro, as it could be quite large).
-% In that case, we also set \cs{add@inserts@next} so that we'll
+% In that case, we also set \cs{add@inserts@next} so that we will
 % call ourself recursively: there might be another insert for this same
 % line.
 %
@@ -7674,14 +7680,14 @@
 % \cs{brokenpenalty} are not restored, since we have no easy way to
 % find out where we should insert them.
 %
-% \phantomsection\label{add@penalties}
+% \label{add@penalties}
 % In this code, \cs{num@lines} is the number of lines in the whole
-% paragraph, and \cs{par@line} is the line we're working on at the
+% paragraph, and \cs{par@line} is the line we are working on at the
 % moment.  The count \cs{@l@dtempcnta} is used to calculate and
 % accumulate the penalty; it is initially set to the value of
 % \cs{ballast@count}, which has been worked out in \cs{do@ballast}
 % above (\reff{do@ballast}).  Finally, the penalty is
-% checked to see that it doesn't go below $-10000$.
+% checked to see that it does not go below $-10000$.
 %    \begin{macrocode}
 \newcommand*{\add@penalties}{\@l@dtempcnta=\ballast@count
   \ifnum\num@lines>\@ne
@@ -7716,15 +7722,15 @@
 % The \cs{flush@notes}
 % macro is called after the entire paragraph has been sliced up
 % and sent on to the vertical list.
-% If the number of notes to this paragraph has increased since the last
-% run of \TeX, then there can be leftover notes that haven't yet been
+% If the number of notes to this paragraph has increased since the previous 
+% run of \TeX, then there can be leftover notes that have not yet been
 % printed. An appropriate error message will be printed elsewhere; but
-% it's best to go ahead and
-% print these notes somewhere, even if it's not in quite the
+% it is best to go ahead and
+% print these notes somewhere, even if it is not in quite the
 % right place. What we do is dump them all out here, so that they should
 % be printed on the same page as the last line
-% of the paragraph. We can hope that's not
-% too far from the proper location, to which they'll move on the next
+% of the paragraph. We can hope that is not
+% too far from the proper location, to which they will move on the next
 % run.
 %    \begin{macrocode}
 \newcommand*{\flush@notes}{%
