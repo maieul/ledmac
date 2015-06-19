@@ -1541,7 +1541,7 @@
 % too much or too little space will be allotted for the notes on
 % the page if these macros use the wrong
 % values.\footnote{\phantomsection\label{nobreaks}There
-% is one tiny proviso about using paragraphed notes: you shouldn't
+% is one tiny proviso about using paragraphed notes: you should not
 % force any explicit line-breaks inside such notes: do not use
 % {\tt \bslash par},
 % {\tt \bslash break}, or {\tt \bslash penalty=-10000}.  If
@@ -1550,8 +1550,14 @@
 % the trick. \reff{nobreak} explains why this restriction
 % is necessary.}
 %
-% The notes arrangement must be called after having defined the document geometry setting.
+% The notes arrangement must be called after having defined the document geometry setting. If you must change geometry setting inside your document, do not forget to call again not arrangement.
 % 
+% \cs{hsize} has been set for the pages that use
+% this series of notes; otherwise \TeX\ will try to put too
+% many or too few of these notes on each page. If you need to
+% change the \cs{hsize} within the document, call
+% \cs{footparagraph} again afterwards to take account of the new
+% value.  
 % \subsection{Control line number printing}
 % \subsubsection{Print line number only at first time}
 % \DescribeMacro{\numberonlyfirstinline}
@@ -7768,12 +7774,12 @@
 % \end{macro}
 %
 % \section{Critical footnotes}
-% \label{footnotes}\relax
+% \label{footnotes}
 %
 % The footnote macros are adapted from those in \PlainTeX, but they
 % differ in these respects: the outer-level commands must add other
 % commands to a list macro rather than doing insertions immediately;
-% there are five separate levels of the footnotes, not just one; and there
+% there are many separate levels of the footnotes, not just one; and there
 % are options to reformat footnotes into paragraphs or into multiple
 % columns.
 %
@@ -7805,10 +7811,10 @@
 % \end{macro}
 %
 %
-% \subsection{Outer-level footnote commands}
+% \subsection{Individual note options}
 % \changes{v1.0.0}{2012/09/15}{Options of \cs{Xfootnote}s.}
 % \begin{macro}{\footnoteoptions@}
-% The \cs{footnoteoption@}\oarg{side}\marg{options}\marg{value} change the value of on options of Xfootnote, to switch between true and false.
+% The \cs{footnoteoption@}\oarg{side}\marg{options}\marg{value} changes the value of on options of Xfootnote, to switch between true and false.
 %    \begin{macrocode}
 \newcommandx*{\footnoteoptions@}[3][1=L,usedefault]{%
    \def\do##1{%
@@ -7826,9 +7832,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%
+% \subsection{Notes language}
 % \begin{macro}{\footnotelang@lua}
-% \cs{footnotelang@lua} is called to remember the information about the language of a lemma when LuaLaTeX is used.
+% \cs{footnotelang@lua} is called to remember the information about the direction of a lemma when \LuaLaTeX\ is used.
 %    \begin{macrocode}
 \newcommandx*{\footnotelang@lua}[1][1=L,usedefault]{%
    \ifstrequal{#1}{L}{%
@@ -7847,7 +7853,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\footnotelang@poly}
-% \cs{footnotelang@poly} is called to remember the information about the language of a lemma when Polyglossia is used.
+% \cs{footnotelang@poly} is called to remember the information about the language of a lemma when \Lpack{polyglossia} is used.
 %    \begin{macrocode}
 \newcommandx*{\footnotelang@poly}[1][1=L,usedefault]{%
    \ifstrequal{#1}{L}{%
@@ -7875,10 +7881,71 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{General survey of the way we manage notes}
+%
+% The processing of each note is done
+% by four principal macros: the \cs{vfootnote} macro takes the text
+% of the footnote and does the \cs{insert}; it calls on the
+% \cs{footfmt} macro to select the right fonts, print the line
+% number and lemma, and do any other formatting needed for that individual
+% note. Within the output routine, the two other macros, \cs{footstart}
+% and \cs{footgroup}, are called; the first prints extra vertical
+% space and a footnote rule, if desired; the second does any reformatting
+% of the whole set of the footnotes in this series for this page---such
+% as paragraphing or division into columns---and then sends them to the
+% page.
+%
+% These four macros, and the other macros and parameters shown
+% here, are distinguished by the `series letter'
+% that indicates which set of the footnotes
+% we are dealing with---\texttt{A}, \texttt{B}, \texttt{C}, \texttt{D}, or \texttt{E}.
+% The series letter always precedes the string \verb"foot" in macro
+% and parameter names. Hence, for the \texttt{A} series, the four macros
+% are called \cs{vAfootnote}, \cs{Afootfmt}, \cs{Afootstart},
+% and \cs{Afootgroup}.
+% 
+% These macros are changed depending of the footnotes arrangement: ``normal'', ``paragraphed'', ``two columns'' or ``three columns''.
+% \subsection{General setup}
+% \begin{macro}{\footsplitskips}
+% Some setup code that is common for a variety of the footnotes.
+% The setup is for:
+% \begin{itemize}
+%    \item \cs{interlinepenalty}.
+%    \item \cs{splittopskip} (skip before last part of notes that flow from one page to another).
+%    \item \cs{splitmaxdepth}.
+%    \item \cs{floatingpenalty}, that is penalty values being added when a long note flows from one page to another.
+% Here, we let it to 0 when we are processing parallel pages in \Lpack{eledpar}, in order to allow notes to flow from left to right pages and \emph{vice-versa}. 
+% Otherwise, we let it to \cs{@MM}, which is the standard \LaTeX\  \cs{floatingpenalty}.
+% \end{itemize}
+% \changes{v0.7.0}{2005/02/18}{Added \cs{footsplitskips} for use in many
+%              footnote styles}
+% \changes{v1.19.0}{2015/03/06}{\cs{footsplitskips} doesn't set \cs{floatingpenalty} to \cs{@MM} when processing parallel pages.}
+%    \begin{macrocode}
+\newcommand*{\footsplitskips}{%
+  \interlinepenalty=\interfootnotelinepenalty
+  \unless\ifl@dprintingpages%
+    \floatingpenalty=\@MM%
+  \fi%
+  \splittopskip=\ht\strutbox \splitmaxdepth=\dp\strutbox
+  \leftskip=\z@skip \rightskip=\z@skip}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalfootnoterule}
+% \cs{normalfootnoterule} is
+% a standard footnote-rule macro, for use by a \verb"footstart"
+% macro: just the same as the \PlainTeX\ footnote rule.
+%    \begin{macrocode}
+\let\normalfootnoterule=\footnoterule
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Footnotes arrangement}
+%
+% \subsubsection{User level macro}
 % \begin{macro}{\Xarrangement}
 % \cs{Xarrangement}\oarg{s}\marg{arrangement}
-% The command call, for each series, a specific command which set many counter and command in order to define specific arrangement.
+% The command calls, for each series, a specific command which set many counters and commands in order to define specific arrangement.
 %
 %    \begin{macrocode}
 \newcommandx{\Xarrangement}[2][1,usedefault]{%
@@ -7898,26 +7965,12 @@
 % \subsubsection{Normal footnote}
 %
 % \begin{macro}{\Xarrangement@normal}
-% We can now define all the parameters for the six series of
-% footnotes; initially they use the `normal' footnote formatting,
-% which is set up by calling \cs{footnormal}.
-% You can switch to another type of formatting by using
-% \cs{footparagraph}, \cs{foottwocol}, or \cs{footthreecol}.
-%
-% Switching to a variation of `normal'
-% formatting requires changing the
-% quantities defined in \cs{footnormal}.  The best way to
-% proceed would be to make a copy of this macro, with a different
-% name, make your desired changes in that copy, and then invoke it,
-% giving it the letter of the footnote series you wish to control.
-%
-% (We have not defined baseline skip values like
-% \cs{abaselineskip}, since this is one of the quantities set in
-% \cs{notefontsetup}.)
+% We can now define all the parameters for the  series of
+% footnotes; initially they use the ``normal'' footnote formatting.
 %
 % What we want to do here is to say something like the following
 % for each footnote series. (This is an example, not part of the
-% actual \Eledmac{} code.)
+% actual \macpackage{} code.)
 % \begin{verbatim}
 % \skip\Afootins=12pt plus5pt minus5pt
 % \count\Afootins=1000
@@ -7926,38 +7979,14 @@
 % \let\Afootstart=\normalfootstart  \let\Afootgroup=\normalfootgroup
 % \let\Afootnoterule=\normalfootnoterule
 % \end{verbatim}
-% Instead of repeating ourselves, we define a \cs{footnormal}
+% (Read the \Texbook\ in order to understand what are the counter, skip and dimen  associated to an insertion.)
+% 
+% Instead of repeating ourselves, we define a \cs{Xarrangement@normal}
 % macro that makes all these assignments for us, for any given
-% series letter.  This also makes it easy to change from any
-% different system of formatting back to the \verb"normal" setting.
+% series letter.  
+% This command is called when people use \cs{Xarrangement}\oarg{series}\verb+{normal}+
+
 %
-%
-% \begin{macro}{\preXnotes@}
-% \begin{macro}{\preXnotes}
-% \changes{v1.1.0}{2012/09/25}{New skip \cs{preXnotes@}}
-% \changes{v1.2.0}{2012/10/08}{Debug in familiar footnotes (but introduced by v1.1).}
-% If user redefines \cs{preXnotes@}, via \cs{preXnotes} to a value greater than 0~pt,
-% this skip will be added before first series notes
-% instead of the notes skip.
-%    \begin{macrocode}
-\newtoggle{preXnotes@}
-\toggletrue{preXnotes@}
-\newcommand{\preXnotes@}{0pt}
-\newcommand*{\preXnotes}[1]{\renewcommand{\preXnotes@}{#1}}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% The same, but for familiar footnotes.
-% \begin{macro}{\preXnotes}
-% \begin{macro}{\preXnotes@}
-%    \begin{macrocode}
-\newtoggle{prenotesX@}
-\toggletrue{prenotesX@}
-\newcommand{\prenotesX@}{0pt}
-\newcommand*{\prenotesX}[1]{\renewcommand{\prenotesX@}{#1}}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % Now we set up the \cs{Xarrangement@normal} macro itself.  It takes
 % one argument: the footnote series letter.
 %    \begin{macrocode}
@@ -7970,10 +7999,16 @@
   \expandafter\let\csname #1footnoterule\endcsname=%
                                              \normalfootnoterule
   \count\csname #1footins\endcsname=1000
-  \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
   \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
   \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+%    \end{macrocode}
+%  The \parpackage provides tools in order to confine notes to one side.
+% The mechanism is explained in the \parpackage's handbook.
+% For now, just retain we need to store default value of the counter associated to the notes \TeX's inserts.
+ 
+%    \begin{macrocode}
+  \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
 %    \end{macrocode}
 % Now do the setup for minipage footnotes. We use as much as possible of the
 % normal setup as we can (so the notes will have a similar layout).
@@ -7991,35 +8026,9 @@
 
 %    \end{macrocode}
 % \end{macro}
-% Some of these values deserve comment: the \cs{dimen}
-% setting allows 80\% of the page to be occupied by notes;  the
-% \cs{skip} setting is deliberately flexible, since pages with
-% lots of notes attached to many of the lines can be a bit hard
-% for \TeX\ to make.
 %
 %
 %
-%
-% The processing of each note is done
-% by four principal macros: the \cs{vfootnote} macro takes the text
-% of the footnote and does the \cs{insert}; it calls on the
-% \cs{footfmt} macro to select the right fonts, print the line
-% number and lemma, and do any other formatting needed for that individual
-% note. Within the output routine, the two other macros, \cs{footstart}
-% and \cs{footgroup}, are called; the first prints extra vertical
-% space and a footnote rule, if desired; the second does any reformatting
-% of the whole set of the footnotes in this series for this page---such
-% as paragraphing or division into columns---and then sends them to the
-% page.
-%
-% These four macros, and the other macros and parameters shown
-% here, are distinguished by the `series letter'
-% that indicates which set of the footnotes
-% we're dealing with---\texttt{A}, \texttt{B}, \texttt{C}, \texttt{D}, or \texttt{E}.
-% The series letter always precedes the string \verb"foot" in macro
-% and parameter names. Hence, for the \texttt{A} series, the four macros
-% are called \cs{vAfootnote}, \cs{Afootfmt}, \cs{Afootstart},
-% and \cs{Afootgroup}.
 %
 % \begin{macro}{\normalvfootnote}
 % We now begin a series of commands that do `normal' footnote
@@ -8046,32 +8055,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\footsplitskips}
-% Some setup code that is common for a variety of the footnotes.
-% The setup is for :
-% \begin{itemize}
-%    \item \cs{interlinepenalty}.
-%    \item \cs{splittopskip} (skip before last part of notes that flow from one page to another).
-%    \item \cs{splitmaxdepth}.
-%    \item \cs{floatingpenalty}, that is penalty values being added when a long note flows from one page to another.
-% Here, we let it to 0 when we are processing parallel pages in \Lpack{eledpar}, in order to allow notes to flow from left to right pages and \emph{vice-versa}. 
-% Otherwise, we let it to \cs{@MM}, which is the standard \LaTeX\  \cs{floatingpenalty}.
-% \end{itemize}
-% \changes{v0.7.0}{2005/02/18}{Added \cs{footsplitskips} for use in many
-%              footnote styles}
-% \changes{v1.19.0}{2015/03/06}{\cs{footsplitskips} doesn't set \cs{floatingpenalty} to \cs{@MM} when processing parallel pages.}
-%    \begin{macrocode}
-\newcommand*{\footsplitskips}{%
-  \interlinepenalty=\interfootnotelinepenalty
-  \unless\ifl@dprintingpages%
-    \floatingpenalty=\@MM%
-  \fi%
-  \splittopskip=\ht\strutbox \splitmaxdepth=\dp\strutbox
-  \leftskip=\z@skip \rightskip=\z@skip}
-
-%    \end{macrocode}
-% \end{macro}
-%
 % \begin{macro}{\mpnormalvfootnote}
 % And a somewhat different version for minipages.
 % \changes{v0.4.0}{2004/02/29}{Added \cs{mpnormalvfootnote}}
@@ -8089,11 +8072,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\ledsetnormalparstuff@common}
-% \begin{macro}{\Xledsetnormalparstuff}
-% \begin{macro}{\ledsetnormalparstuffX}
 % \begin{macro}{\normalfootfmt}
-% \phantomsection\label{normalfootfmt}\relax
+% \label{normalfootfmt}
 % \cs{normalfootfmt} is a `normal' macro
 % to take the footnote line and page
 % number information (see \reff{linenumbers}), and the
@@ -8104,37 +8084,10 @@
 % \verb"#3" is the note's text. This version is very
 % rudimentary---it uses \cs{printlines}
 % to print just the range of line numbers,
-% followed by a square bracket, the lemma, and the note text;
-% it's intended to be copied and modified as necessary.
-%
-% \verb"\par" should always be redefined to \verb"\endgraf" within
-% the format macro (this is what \cs{normal@pars} does),
-% to override tricky material in the main text
-% to get the lines numbered automatically (as set up by
-% \cs{autopar}, for example).
+% followed by a square bracket, the lemma, and the note text.
 % 
-% \changes{v1.4.0}{2012/11/16}{Direction of footnotes with polyglossia.}
-% \changes{v1.21.0}{2015/04/13}{\cs{ledsetnormalparstuff} is deprecated and becomes \cs{ledsetnormalparstuffX} and \cs{Xledsetnormalparstuff}.}
 %    \begin{macrocode}
 
-\newcommand*{\ledsetnormalparstuff@common}{%
-  \ifluatex%
-     \luatextextdir\footnote@luatextextdir%
-   \luatexpardir\footnote@luatexpardir%
-  \fi%
-  \csuse{\csuse{footnote@dir}}%
-  \normal@pars%
-  \parfillskip \z@ \@plus 1fil}%
-
-\newcommand*{\Xledsetnormalparstuff}[1]{%
-  \ledsetnormalparstuff@common%
-  \nottoggle{Xparindent@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when moving from ledmac to eledmac 
-}%
-
-\newcommand*{\ledsetnormalparstuffX}[1]{%
-  \ledsetnormalparstuff@common%
-  \nottoggle{parindentX@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when moving from ledmac to eledmac 
-}%
 
 \notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
   \Xledsetnormalparstuff{#4}%
@@ -8148,357 +8101,7 @@
   #3\strut\par}
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 %
-% \begin{macro}{\endashchar}
-% \begin{macro}{\fullstop}
-% \begin{macro}{\rbracket}
-% The fonts that are used for printing notes might not have the
-% character mapping we expect: for example, the Computer Modern font
-% that contains old-style numerals does not contain an en-dash or
-% square brackets, and its period and comma are in odd locations.
-% To allow use of the standard footnote macros with such fonts, we use
-% the following macros for certain characters.
-%
-% The \cs{endashchar} macro is simply an en-dash from the
-% normal font and is immune to changes in the surrounding
-% font.  The same goes for the full stop.  These two are used in
-% \cs{printlines}.  The right bracket macro is the same again;
-% it crops up in \cs{normalfootfmt} and the other footnote
-% macros for controlling the format of the footnotes.
-% 
-% With polyglossia, each critical note has a \cs{footnote@lang} which shows the language of the lemma, 
-% and which can be used to switch the bracket from right to left.
-% \changes{v1.4.0}{2012/11/16}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia or LuaTeX).}
-%    \begin{macrocode}
-\def\endashchar{\textnormal{--}}
-\newcommand*{\fullstop}{\textnormal{.}}
-\newcommand*{\rbracket}{\textnormal{%
-   \csuse{text\csuse{footnote@lang}}{%
-         \ifluatex%
-         \ifdefstring{\footnote@luatextextdir}{TRT}{\thinspace[}{\thinspace]}%
-            \else%
-         \thinspace]%
-         \fi}%
-   }%
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\printpstart}
-% The \cs{printpstart} macro prints the pstart number for a note.
-% \changes{v1.18.0}{2015/02/23}{Debug \cs{pstartinfootnote} with parallel pages and columns (eledpar)}
-%    \begin{macrocode}
-\newcommand{\printpstart}[0]{%
-    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
-        \ifledRcol%
-            \thepstartR%
-        \else%
-            \thepstartL%
-        \fi%
-    }{%
-        \thepstart%
-    }%
-}
-%    \end{macrocode}
-% 
-% \end{macro}
-% The \cs{printlines} macro prints the line
-% numbers for a note---which, in the
-% general case, is a rather complicated task.
-% The seven parameters of the
-% argument are the line numbers as stored in \cs{l@d@nums}, in the
-% form described on \reff{linenumbers}: the starting
-% page, line, and sub-line numbers, followed by the ending page,
-% line, and sub-line numbers, and then the font specifier for
-% the lemma.
-%
-%    The original \edmac{} code used several counters at this point,
-% saying:
-% \begin{quote}
-% To simplify the logic, we use a lot of counters to tell us which
-% numbers need to get printed (using $1$ for yes, $0$ for no, so
-% that \verb"\ifodd" tests for `yes'). The counter assignments are:
-% \begin{itemize}\addtolength{\itemsep}{-1ex}
-% \item \cs{@pnum} for page numbers;
-% \item \cs{@ssub} for starting sub-line;
-% \item \cs{@elin} for ending line;
-% \item \cs{@esl} for ending sub-line; and
-% \item \cs{@dash} for the dash between the starting and ending groups.
-% \end{itemize}
-% There's no counter for the line number because it's always printed.
-% \end{quote}
-% \LaTeX\ tends to use a lot of counters and packages should try and
-% minimise the number of new ones they create. In line with this
-% Peter Wilson has reverted to traditional booleans.
-%
-% Maïeul Rouquette has added \cs{ifl@d@twolines} and \cs{ifl@d@morethantwolines}
-% to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
-% \begin{macro}{\ifl@d@pnum}
-% \begin{macro}{\ifl@d@ssub}
-% \begin{macro}{\ifl@d@elin}
-% \begin{macro}{\ifl@d@esl}
-% \begin{macro}{\ifl@d@dash}
-% \begin{macro}{\ifl@d@twolines}
-% \begin{macro}{\ifl@d@morethantwolines}
-%    \begin{macrocode}
-\newif\ifl@d@pnum 
-\newif\ifl@d@ssub 
-\newif\ifl@d@elin
-\newif\ifl@d@esl
-\newif\ifl@d@dash
-\newif\ifl@d@twolines%
-\newif\ifl@d@morethantwolines%
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-%
-% \begin{macro}{\l@dparsefootspec}
-% \begin{macro}{\l@dp@rsefootspec}
-% \begin{macro}{\l@dparsedstartpage}
-% \begin{macro}{\l@dparsedstartline}
-% \begin{macro}{\l@dparsedstartsub}
-% \begin{macro}{\l@dparsedendpage}
-% \begin{macro}{\l@dparsedendline}
-% \begin{macro}{\l@dparsedendsub}
-% \cs{l@dparsefootspec}\marg{spec}\marg{lemma}\marg{text} parses a footnote
-% specification. \meta{lemma} and \meta{text} are the lemma and text
-% respectively. \meta{spec} is the line and page number and lemma font
-% specifier in \cs{l@d@nums} style format. The real work is done
-% by \cs{l@dp@rsefootspec} which defines macros holding the numeric values.
-%    \begin{macrocode}
-\newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
-\def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
-  \gdef\l@dparsedstartpage{#1}%
-  \gdef\l@dparsedstartline{#2}%
-  \gdef\l@dparsedstartsub{#3}%
-  \gdef\l@dparsedendpage{#4}%
-  \gdef\l@dparsedendline{#5}%
-  \gdef\l@dparsedendsub{#6}%
-}
-%    \end{macrocode}
-% Initialise the several number value macros.
-%    \begin{macrocode}
-\def\l@dparsedstartpage{0}%
-\def\l@dparsedstartline{0}%
-\def\l@dparsedstartsub{0}%
-\def\l@dparsedendpage{0}%
-\def\l@dparsedendline{0}%
-\def\l@dparsedendsub{0}%
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-%
-% \begin{macro}{\setistwofollowinglines}
-% The \cs{ifistwofollowinglines} boolean, used by the \cs{twolines} and related tools, is set to true by \cs{setistwofollowinglines}.
-% This command takes the following arguments:
-% \begin{itemize}
-%  \item \verb+#1+ First page number.
-%  \item \verb+#2+ First line number.
-%  \item \verb+#3+ Last page number.
-%  \item \verb+#4+ Last line number.
-% \end{itemize}
-% If \verb+#3+-\verb+#2+ = 1, then that means the two lines are subsequent, and consequently \cs{ifistwofollowinglines} is set to true.
-% However, if we use lineation by page, two given lines can be subsequent if:
-% \begin{itemize}
-%   \item The first line number is equal to the last line number of the first page.
-%   \item The last line number is equal to 1.
-%   \item \verb+#3+-\verb+#1+ is equal to 1.
-% \end{itemize}
-%    \begin{macrocode}
-\newif\ifistwofollowinglines@%
-\newcommand{\setistwofollowinglines}[4]{%
-    \ifcsdef{lastlinenumberon@#1}%
-      {\numdef{\tmp}{\csuse{lastlinenumberon@#1}}}%
-      {\numdef{\tmp}{0}}%
-    \istwofollowinglines@false%
-    \ifnumequal{#4-#2}{1}%
-    {\istwofollowinglines@true}%
-    {\ifbypage@%
-      \ifnumequal{#3-#1}{1}%
-      {%
-      \ifnumequal{#2}{\tmp}%
-        {\ifnumequal{#4}{1}{\istwofollowinglines@true}{}}%
-        {}%
-      }%
-      {}%
-     \fi%
-    }%
-}%
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\setprintlines}
-% We print the page numbers only if\/: 1)~we're doing
-% the lineation by page, and 2)~the ending page number is different
-% from the starting page number.\phantomsection\label{printlines}
-% 
-% Just a reminder of the arguments: \\
-% \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7? \\
-% \verb?\printlines start-page | line | subline | end-page | line | subline | font ? 
-% 
-% The macro \cs{setprintlines} does the work of deciding what numbers should
-% be printed. Its arguments are the same as the first 6 of \cs{printlines}.
-% \changes{v0.7.0}{2005/02/18}{Added \cs{setprintlines} for use by \cs{printlines}}
-%    \begin{macrocode}
-\newcommand*{\setprintlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse 
-  \ifbypage@
-     \ifnum#4=#1 \else
-        \l@d@pnumtrue 
-        \l@d@dashtrue
-     \fi
-  \fi
-%    \end{macrocode}
-%
-% We print the ending line number if\/: (1)~we're printing the ending
-% page number, or (2)~it's different from the starting line number.
-%    \begin{macrocode}
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
-      \l@d@elintrue
-      \l@d@dashtrue
-  \fi
-%    \end{macrocode}
-%
-% We print the starting sub-line if it's nonzero.
-%    \begin{macrocode}
-  \l@d@ssubfalse
-  \ifnum#3=0 \else
-      \l@d@ssubtrue
-  \fi
-%    \end{macrocode}
-%
-% We print the ending sub-line if it's nonzero and: (1)~it's different
-% from the starting sub-line number, or (2)~the ending line number is
-% being printed.
-%    \begin{macrocode}
-  \l@d@eslfalse
-  \ifnum#6=0 \else
-      \ifnum#6=#3
-         \ifl@d@elin \l@d@esltrue \else \l@d@eslfalse \fi
-      \else
-         \l@d@esltrue
-         \l@d@dashtrue
-      \fi
-  \fi%
-%    \end{macrocode}
-% However, if the \cs{twolines} is set for the current series, we don't print the last line number.
-%    \begin{macrocode}
-  \ifl@d@dash%
-    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{twolines@\@currentseries}}}%
-      {}%
-      {%
-      \setistwofollowinglines{#1}{#2}{#4}{#5}%
-        \ifboolexpr{%
-          (%
-               togl {twolinesbutnotmore@\@currentseries}%
-               and not% 
-                 (%
-                  bool {istwofollowinglines@}%              
-                 )%
-          )%
-          or% 
-          (%
-             (not test{\ifnumequal{#1}{#4}})%
-               and togl{twolinesonlyinsamepage@\@currentseries}%
-             )%
-          }%
-          {}%
-          {%
-          \l@d@dashfalse%
-          \l@d@twolinestrue%
-          \l@d@elinfalse%
-          \l@d@eslfalse%
-          \ifcsempty{morethantwolines@\@currentseries}%
-            {}%
-            {\ifistwofollowinglines@\else%
-              \l@d@morethantwolinestrue%
-             \fi%
-            }%
-          }%
-      }%
-  \fi%
-%    \end{macrocode}
-% End of \cs{setprintlines}.
-%    \begin{macrocode}
-}%
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\printlines}
-% Now we're ready to print it all. If the lineation is by pstart, we print the pstart.
-% \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
-%    \begin{macrocode}
-\def\printlines#1|#2|#3|#4|#5|#6|#7|{%
-  \begingroup%
-  \ifluatex%
-    \luatextextdir TLT%
-  \fi%
-  \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
-%    \end{macrocode}
-% One subtlety left here is when to print a period between
-% numbers. But the only instance in which this is tricky is for the
-% ending sub-line number: it could come after the starting
-% sub-line number (in which case we want only the dash) or after an
-% ending line number (in which case we need to insert a period).
-% So, first, print ths start line number.
-%    \begin{macrocode}
-  \ifdimequal{\csuse{boxstartlinenum@\@currentseries}}{0pt}%
-    {\bgroup}%
-    {\leavevmode\hbox to \csuse{boxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \ifl@d@pnum #1\fullstop\fi
-  \linenumrep{#2}
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
-  \egroup%
-%    \end{macrocode}
-% Then print the dash + end linuber, or the range symbol.
-% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
-%        to \cs{printlines}}
-% \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
-%    \begin{macrocode}
-  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
-    {\bgroup}%
-    {\hbox to \csuse{boxendlinenum@\@currentseries}\bgroup}%
-  \ifl@d@twolines%
-    \ifl@d@morethantwolines%
-      \csuse{morethantwolines@\@currentseries}%
-    \else%
-      \csuse{twolines@\@currentseries}%
-    \fi%
-  \else%
-    \ifl@d@dash \endashchar\fi%
-    \ifl@d@pnum #4\fullstop\fi%
-    \ifl@d@elin \linenumrep{#5}\fi%
-    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
-  \fi%
-  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
-    {}%
-    {\hfill}%Prevent underfull hbox
-  \egroup%
-  \endgroup%
-}%
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\normalfootstart}\label{normalvalues}
 % \phantomsection\relax
 % \cs{normalfootstart}
@@ -8506,30 +8109,36 @@
 % routine whenever there are footnotes of this series to be
 % printed: it skips a bit and then draws a rule.
 %
-% Any \verb"footstart" macro must put onto the page something that
-% takes up space exactly equal to the \verb"\skip\footins" value for
+% Any \cs{footstart} macro must put onto the page something that
+% takes up space exactly equal to the \cs{skip}\cs{\Xfootins} value for
 % the associated series of notes. \TeX\ makes page computations based
 % on that \cs{skip} value, and the output pages will suffer from
 % spacing problems if what you add takes up a different amount of
 % space.
 %
-% But if the skip \verb|\preXnotes@| is greater than 0~pt,
-% it's used instead of \verb"\skip\footins" for the first printed series.
+% But if the skip \cs{preXnotes@} is greater than 0~pt,
+% it is used instead of \cs{skip}\cs{footins} for the first printed series in one page. 
 %
 % The \cs{leftskip} and \cs{rightskip} values
-% are both zeroed here.\phantomsection\label{footskips}
-% Similarly, these skips are cancelled in the \verb"vfootnote" macros
+% are both zeroed here.
+% \label{footskips}
+% Similarly, these skips are cancelled in the \cs{vfootnote} macros
 % for the various types of notes. Strictly speaking,
 % this is necessary only
 % if you are using paragraphed footnotes, but we have put it here
-% and in the other \verb"vfootnote" macros too so that the behavior of
-% \Eledmac{} in this respect is general across all footnote types
-% (you can change this).  What this means is that any \cs{leftskip}
+% and in the other \cs{vfootnote} macros too so that the behavior of
+% \macpackage{} in this respect is general across all footnote types. 
+% What this means is that any \cs{leftskip}
 % and \cs{rightskip} you specify applies to the main text, but not
 % the footnotes.  The footnotes continue to be of width \cs{hsize}.
 %    \begin{macrocode}
 \newcommand*{\normalfootstart}[1]{%
-    \ifdimequal{0pt}{\preXnotes@}{}%
+%    \end{macrocode}
+% The first series of notes printed in a page can have a specific skip before it.
+% In order to insert this specific skip without overlap the bottom margin of the page, Maïeul Rouquette have defined an algorithm explained in \reff{skipfirstseries}.
+% Here is part of this algorithm, when the block of notes are ready to be printed.
+%    \begin{macrocode}
+  \ifdimequal{0pt}{\preXnotes@}{}%
       {%
       \iftoggle{preXnotes@}{%
             \togglefalse{preXnotes@}%
@@ -8539,25 +8148,25 @@
           {}%
       }%
   \vskip\skip\csname #1footins\endcsname%
+%    \end{macrocode}
+%    And now, the problem of left and right skip for notes.
+% Especially when using one feature of \ledpackage which allows to have the footnotes horizontal size as the size of columns printed by \cs{Columns}.
+% Read \reff{width2columns} for the general description of the problem.
+%   \begin{macrocode} 
   \leftskip0pt \rightskip0pt
   \ifl@dpairing\else%
      \hsize=\old@hsize%
   \fi%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
+%   \end{macrocode}
+% And now, print the footnote's rule to finish the footnote's introduction.
+%   \begin{macrocode}
   \print@Xfootnoterule{#1}%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\normalfootnoterule}
-% \cs{normalfootnoterule} is
-% a standard footnote-rule macro, for use by a \verb"footstart"
-% macro: just the same as the \PlainTeX\ footnote rule.
-%    \begin{macrocode}
-\let\normalfootnoterule=\footnoterule
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\normalfootgroup}
 % \cs{normalfootgroup} is
@@ -8576,8 +8185,10 @@
 %
 % \begin{macro}{\mpnormalfootgroup}
 % A somewhat different version for minipages.
+% Notes that, in this case, we don not make distinction between \cs{Xfootgroup} and \cs{Xfootstarts} macro.
 % \changes{v0.4.0}{2004/02/29}{Added \cs{mpnormalfootgroup}}
 %    \begin{macrocode}
+\unless\if@noledgroup
 \newcommand*{\mpnormalfootgroup}[1]{{
   \vskip\skip\@nameuse{mp#1footins}
   \ifl@dpairing\ifparledgroup%
@@ -8600,7 +8211,7 @@
   \setlength{\parindent}{0pt}
  {\csuse{Xnotefontsize@#1}\csuse{txtbeforeXnotes@#1}}
  \unvbox\csname mp#1footins\endcsname}}
-
+\fi
 %    \end{macrocode}
 % \end{macro}
 %
@@ -8616,30 +8227,24 @@
 % to handle more than about $100$ notes of this kind on a page.
 %
 % \begin{macro}{\Xarrangement@paragraph}
-% The \cs{Xarrangement@normal} macro
+% The \cs{Xarrangement@paragraph} macro
 % sets up everything for one series of the footnotes so that
-% they'll be paragraphed; it takes the series letter as argument.
+% they will be paragraphed; it takes the series letter as argument.
 % We include the setting of \verb"\count\footins" to $1000$ for the
-% footnote series just in case you are switching to paragraphed
+% footnote series just in case user is switching to paragraphed
 % footnotes after having columnar ones, since they change this
 % value (see below).
 %
-% It is important to call \cs{footparagraph} only after
-% \cs{hsize} has been set for the pages that use
-% this series of notes; otherwise \TeX\ will try to put too
-% many or too few of these notes on each page. If you need to
-% change the \cs{hsize} within the document, call
-% \cs{footparagraph} again afterwards to take account of the new
-% value.  The argument of \cs{footparagraph} is the letter
-% (\texttt{A}--\texttt{E}) denoting the series of notes to be paragraphed.
+% The argument of \cs{Xarrangement@footparagraph} is the letter
+%  denoting the series of notes to be paragraphed.
 %    \begin{macrocode}
 \newcommand*{\Xarrangement@paragraph}[1]{%
   \csgdef{series@display#1}{paragraph}
   \expandafter\newcount\csname prevpage#1@num\endcsname
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
-  \expandafter\let\csname v#1footnote\endcsname=\para@vfootnote
+  \expandafter\let\csname v#1footnote\endcsname=\paravfootnote
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
-  \expandafter\let\csname #1footgroup\endcsname=\para@footgroup
+  \expandafter\let\csname #1footgroup\endcsname=\parafootgroup
   \count\csname #1footins\endcsname=1000
   \csxdef{default@#1footins}{1000}%Use this to confine the  notes to one side only
   \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}
@@ -8650,8 +8255,8 @@
 % And the extra setup for minipages.
 %    \begin{macrocode}
   \ifnoledgroup@\else
-    \expandafter\let\csname mpv#1footnote\endcsname=\mppara@vfootnote
-    \expandafter\let\csname mp#1footgroup\endcsname=\mppara@footgroup
+    \expandafter\let\csname mpv#1footnote\endcsname=\mpparavfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mpparafootgroup
     \count\csname mp#1footins\endcsname=1000
     \dimen\csname mp#1footins\endcsname=\csuse{maxhXnotes@#1}
     \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
@@ -8680,7 +8285,7 @@
 % again the note series letter.
 %
 % Peter Wilson thinks that \cs{columnwidth} should be used here for \LaTeX\, not \cs{hsize}.
-% I've also included \cs{footfudgefiddle}.
+% Peter Wilson have also included \cs{footfudgefiddle}.
 % \changes{v0.2.2}{2003/11/04}{Added \cs{footfudgefiddle} to \cs{para@footsetup}}
 %    \begin{macrocode}
 \newcommand*{\para@footsetup}[1]{{\csuse{Xnotefontsize@#1}
@@ -8694,16 +8299,13 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \edmac{} defines \cs{en@number} which does the same as the \LaTeX\ kernel
-% \cs{strip@pt}, namely strip the characters \verb"pt" from a dimen value.
-% Eledmac use \cs{strip@pt}.
+% \cs{strip@pt}  strip the characters \verb"pt" from a dimen value.
 %
 % \begin{macro}{\parafootstart}
 % \cs{parafootstart} is the same as \cs{normalfootstart}, but we give it
 % again to ensure that \cs{rightskip} and \cs{leftskip} are
 % zeroed (this needs to be done before \cs{para@footgroup} in the
-% output routine).  You might have decided to change this for other
-% kinds of note, but here it should stay as it is.  The size of
+% output routine).    The size of
 % paragraphed notes is calculated using a fudge factor which in
 % turn is based on \cs{hsize}.  So the paragraph of notes needs to be
 % that wide.
@@ -8729,9 +8331,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\para@vfootnote}
-% \cs{para@vfootnote}
-% is a version of the \cs{vfootnote} command that's used for
+% \begin{macro}{\paravfootnote}
+% \cs{paravfootnote}
+% is a version of the \cs{vfootnote} command that is used for
 % paragraphed notes.  It gets appended to the \cs{inserts@list} list
 % by an outer-level footnote command like \cs{Afootnote}.  The first
 % argument is the note series letter; the second is the full text
@@ -8773,37 +8375,37 @@
 % suggested by Donald Knuth in a letter to Michael) is to avoid collecting
 % the text in an \cs{hbox} in the first place, but instead to collect
 % it in a \cs{vbox} whose width is (virtually)
-% infinite.\phantomsection\label{hboxproblem} The text is therefore typeset in
+% infinite.\label{hboxproblem} The text is therefore typeset in
 % unrestricted horizontal mode, as a paragraph consisting of a
 % single long line.  Later, there is an extra level of unboxing to
 % be done: we have to unpack the \cs{vbox}, as well as the hboxes
-% inside it, but that's not too hard.  For details, we refer you to
+% inside it, but that is not too hard.  For details, we refer you to
 % Michael's article, where the issues are clearly
 % explained.\footnote{Wayne supplied his own macros to do this, but
-% since they were almost identical to Michael's, we have used the
+% since they were almost identical to Michael's, Peter Wilson have used the
 % latter's \cs{unvxh} macro since it is publicly
 % documented.}  Michael's unboxing macro is called \cs{unvxh}: unvbox,
 % extract the last line, and unhbox it.
 %
 % Doing things this way has an important
-% consequence:\phantomsection\label{nobreaks-detail} as Michael
+% consequence:\label{nobreaks-detail} as Michael
 % pointed out, you really can't put an explicit line-break into a
 % note built in a \cs{vbox} the way we are doing.\footnote{`Line
 % Breaking', p.\,610.}  In other words, be very careful not to say
 % \cs{break}, or \verb"\penalty-10000", or any equivalent inside your
-% para-footnote.\phantomsection\label{nobreak}  If you do, most of the note will
+% para-footnote.\label{nobreak}  If you do, most of the note will
 % probably disappear.  You \emph{are} allowed to make strong
 % suggestions; in fact \verb"\penalty-9999" will be quite okay.  Just
-% don't make the break mandatory.  We haven't applied any of
+% do not make the break mandatory.  We have not applied any of
 % Michael's solutions here, since we feel that the problem is
-% exiguous, and \Eledmac{} is quite baroque enough already.  If
+% exiguous, and \macpackage{} is quite baroque enough already.  If
 % you think you are having this problem, look up Michael's
 % solutions.
 %
 % One more thing; we set \cs{leftskip} and \cs{rightskip} to zero.
 % This has the effect of neutralizing any such skips which may
 % apply to the main text (cf.~\reff{footskips} above).
-% We need to do this, since \verb"footfudgefactor" is calculated on
+% We need to do this, since \cs{footfudgefactor} is calculated on
 % the assumption that the notes are \cs{hsize} wide.
 %
 % So, finally, here is the modified foot-paragraph code, which
@@ -8811,7 +8413,7 @@
 % discretionary nodes are included.
 %
 %    \begin{macrocode}
-\newcommand*{\para@vfootnote}[2]{%
+\newcommand*{\paravfootnote}[2]{%
   \insert\csname #1footins\endcsname
   \bgroup
     \csuse{bhookXnote@#1}
@@ -8840,7 +8442,7 @@
 % nearly always forces the break at the end of the whole footnote
 % paragraph (since individual notes can't be split) even when this
 % leads to an overfull vbox.  The change above results in a penalty
-% of $0$ instead which allows, but doesn't force, such breaks. This
+% of $0$ instead which allows, but does not force, such breaks. This
 % penalty of $0$ is later removed, after page breaks have been
 % decided, by the \cs{unpenalty} macro in \cs{makehboxofhboxes}. So it
 % does not affect how the footnote paragraphs are typeset (the
@@ -8848,10 +8450,10 @@
 % by \cs{parafootfmt}).
 % \end{macro}
 %
-% \begin{macro}{\mppara@vfootnote}
+% \begin{macro}{\mpparavfootnote}
 % This version is for minipages.
 %    \begin{macrocode}
-\newcommand*{\mppara@vfootnote}[2]{%
+\newcommand*{\mpparavfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}%
     \csuse{bhookXnote@#1}
@@ -8897,7 +8499,7 @@
 % \begin{macro}{\parafootfmt}
 % \cs{parafootfmt} is
 % \cs{normalfootfmt} adapted to do the special stuff
-% needed for paragraphed notes---leaving out the \verb"\endgraf" at the
+% needed for paragraphed notes---leaving out the \cs{endgraf} at the
 % end, sticking in special penalties and kern, and leaving out the
 % \cs{footstrut}.  The first argument is the line and page
 % number information, the second is the lemma, the third is the
@@ -8920,7 +8522,7 @@
 % The \cs{insertparafootsep} command is used to insert the \cs{parafootsep@series} between each note in the \emph{same} page.
 % \end{macro}
 %
-% \begin{macro}{\para@footgroup}
+% \begin{macro}{\parafootgroup}
 % This \verb"footgroup" code is modelled on the macros in 
 % \thetexbook, p.\,399.  The only difference is the \cs{unpenalty}
 % in \cs{makehboxofhboxes}, which is there to remove the penalty of
@@ -8931,7 +8533,7 @@
 % \cs{baselineskip} for the footnotes is used. The argument is the
 % note series letter.
 %    \begin{macrocode}
-\newcommand*{\para@footgroup}[1]{%
+\newcommand*{\parafootgroup}[1]{%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -8945,10 +8547,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\mppara@footgroup}
+% \begin{macro}{\mpparafootgroup}
 % The minipage version.
 %    \begin{macrocode}
-\newcommand*{\mppara@footgroup}[1]{{%
+\newcommand*{\mpparafootgroup}[1]{{%
   \setXnoteswidthliketwocolumns@{#1}%
   \vskip\skip\@nameuse{mp#1footins}
   \ifl@dpairing\ifparledgroup%
@@ -8978,6 +8580,8 @@
 
 %    \end{macrocode}
 % \end{macro}
+% 
+% And finally, the two macros which are required to transform the long horizontal box stored  in the insert' box to a printable text.
 %
 % \begin{macro}{\makehboxofhboxes}
 % \begin{macro}{\removehboxes}
@@ -9033,7 +8637,7 @@
 % with a space (\verb"#3") between the top baseline and the top of
 % the \cs{vbox}.  The \cs{rigidbalance} macro is taken from
 % \thetexbook, p.\,397, with a slight change to the syntax of
-% the arguments so that they don't depend on white space.  Note also
+% the arguments so that they do not depend on white space.  Note also
 % the extra unboxing in \cs{splitoff}, which allows the new \cs{vbox} to
 % have its natural height as it goes into the alignment.
 % 
@@ -9060,6 +8664,176 @@
 % \end{macro}
 % \end{macro}
 %
+% \paragraph{Three columns}
+%
+% \begin{macro}{\Xarrangement@threecol}
+%    \begin{macrocode}
+\newcommand*{\Xarrangement@threecol}[1]{%
+  \csgdef{series@display#1}{threecol}
+  \expandafter\let\csname v#1footnote\endcsname=\threecolvfootnote
+  \expandafter\let\csname #1footfmt\endcsname=\threecolfootfmt
+  \expandafter\let\csname #1footgroup\endcsname=\threecolfootgroup
+  \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
+  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
+  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
+  \threecolfootsetup{#1}
+%    \end{macrocode}
+% The additional setup for minipages.
+%    \begin{macrocode}
+  \ifnoledgroup@\else
+    \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
+    \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
+    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
+    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
+    \mpthreecolfootsetup{#1}
+  \fi
+}
+
+%    \end{macrocode}
+% The \cs{footstart} and \cs{footnoterule} macros for these notes assume
+% the normal values (\reff{normalvalues} above).
+% \end{macro}
+%
+% \begin{macro}{\threecolfootsetup}
+% The \cs{threecolfootsetup} macro calculates and sets some numbers
+% for three-column footnotes.
+%
+% We set the \cs{count} of the foot insert to $333$.
+% Each footnote can be thought of as contributing only one third of
+% its height to the page, since the footnote insertion has been
+% made as a long narrow column, which then gets trisected by the
+% \cs{rigidbalance} routine (inside \cs{threecolfootgroup}).
+% These new, shorter columns are saved in a box, and then that box
+% is \emph{put back} into the footnote insert, replacing the
+% original collection of the footnotes.  This new box is, therefore,
+% only about a third of the height of the original one.
+%
+% The \cs{dimen} value for this note series has to change in the
+% inverse way: it needs to be three times
+% the actual limit on the amount of space these notes are allowed to
+% fill on the page, because when \TeX\ is
+% accumulating material for the page
+% and checking that limit, it does not apply the \cs{count} scaling.
+%    \begin{macrocode}
+\newcommand*{\threecolfootsetup}[1]{%
+  \count\csname #1footins\endcsname 333
+  \csxdef{default@#1footins}{333}%Use this to confine the  notes to one side only
+  \multiply\dimen\csname #1footins\endcsname \thr@@}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\mpthreecolfootsetup}
+% The setup for minipages.
+%    \begin{macrocode}
+\newcommand*{\mpthreecolfootsetup}[1]{%
+  \count\csname mp#1footins\endcsname 333
+  \multiply\dimen\csname mp#1footins\endcsname \thr@@}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\threecolvfootnote}
+% \cs{threecolvfootnote}
+% is the \cs{vfootnote} command for three-column notes. The
+% call to \cs{notefontsetup} ensures that the
+% \cs{splittopskip} and \cs{splitmaxdepth} take their values
+% from the right \cs{strutbox}: the one used in a footnotes.
+% Note especially the importance of temporarily reducing the
+% \cs{hsize} to $0.3$ of its normal value.  This determines the
+% widths of the individual columns.  So if the normal \cs{hsize}
+% is, say, 10\,cm, then each column will be $0.3\times10=3$\,cm
+% wide, leaving a gap of 1\,cm spread equally between columns
+% (i.e., .5\,cm between each).
+%
+% The arguments are \verb+#1+~the note series letter and \verb+#1+~the full text
+% of the note (including numbers, lemma and text).
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
+  \insert\csname #1footins\endcsname\bgroup
+  \csuse{Xnotefontsize@#1}
+  \footsplitskips
+  \csname #1footfmt\endcsname #2[#1]\egroup}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\threecolfootfmt}
+% \cs{threecolfootfmt}
+% is the command that formats one note.
+% The arguments are \verb+#1+~the line numbers, \verb+#2+~the lemma and \verb+#4+~the
+% text of the \verb"-footnote" command \verb+#4+ optional  (for backward compatibility): the series.
+%
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\threecolfootfmt}[4][4=Z]{% 
+  \normal@pars
+  \hsize \csuse{hsizethreecol@#4}
+  \nottoggle{Xparindent@#4}{\parindent=\z@}{}
+  \tolerance=5000
+  \hangindent=\csuse{Xhangindent@#4}
+  \leavevmode
+  \csuse{Xcolalign@#4}%
+  \strut{\printlinefootnote{#1}{#4}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
+    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
+    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
+  }}%
+  #3\strut\par\allowbreak}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\threecolfootgroup}
+% And here is the \verb"footgroup" macro that is called within the
+% output routine to regroup the notes into three columns. Once
+% again, the call to \cs{notefontsetup} is there to ensure that
+% it is the right \cs{splittopskip}---the one used in
+% footnotes---which is used to provide the third argument for
+% \cs{rigidbalance}.  This third argument (\cs{@h}) is the
+% \verb"topskip" for the box containing the text of the
+% footnotes, and does the job of making sure the top lines of the
+% columns line up horizontally.  In \thetexbook, p.\,398,
+% Donald Knuth suggests retrieving the ouput of \cs{rigidbalance},
+% putting it back into the insertion box, and then printing the
+% box.  Here, we just print the \cs{line} which comes out of
+% \cs{rigidbalance} directly, without any re-boxing.
+%    \begin{macrocode}
+\newcommand*{\threecolfootgroup}[1]{{\csuse{Xnotefontsize@#1}%
+  \noindent\csuse{txtbeforeXnotes@#1}\par%
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\mpthreecolfootgroup}
+% The setup for minipages.
+%    \begin{macrocode}
+\newcommand*{\mpthreecolfootgroup}[1]{{%
+  \vskip\skip\@nameuse{mp#1footins}
+  \ifl@dpairing\ifparledgroup%
+    \leavevmode\marks\parledgroup@{begin}%
+    \marks\parledgroup@series{#1}%
+    \marks\parledgroup@type{Xfootnote}%
+  \fi\fi\normalcolor
+  \ifparledgroup%
+    \ifl@dpairing%
+    \else%
+      \setXnoteswidthliketwocolumns@{#1}%
+      \setXnotespositionliketwocolumns@{#1}%
+      \print@Xfootnoterule{#1}%
+    \fi%
+  \else%
+    \setXnoteswidthliketwocolumns@{#1}%
+    \setXnotespositionliketwocolumns@{#1}%
+    \print@Xfootnoterule{#1}%
+  \fi%
+  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
+  \splittopskip=\ht\strutbox
+  \expandafter
+  \rigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
+
+%    \end{macrocode}
+% \end{macro}
 % \paragraph{Two columns}
 %
 % \begin{macro}{\Xarrangement@twocol}
@@ -9178,182 +8952,360 @@
 % \end{macro}
 %
 %
-% \paragraph{Three columns}
+% \subsection{Critical notes presentation}
+% Here, we define some commons macro which are used in order to print a critical notes, that is a note with 1) line number 2) lemma 3) lemma separator 4) text associated to the lemma.
+
+% \subsubsection{Font tools}
+% \begin{macro}{\endashchar}
+% \begin{macro}{\fullstop}
+% \begin{macro}{\rbracket}
+% The fonts that are used for printing notes might not have the
+% character mapping we expect: for example, the Computer Modern font
+% that contains old-style numerals does not contain an en-dash or
+% square brackets, and its period and comma are in odd locations.
+% To allow use of the standard footnote macros with such fonts, we use
+% the following macros for certain characters.
 %
-% \begin{macro}{\Xarrangement@threecol}
+% The \cs{endashchar} macro is simply an en-dash from the
+% normal font and is immune to changes in the surrounding
+% font.  The same goes for the full stop.  These two are used in
+% \cs{printlines}.  The right bracket macro is the same again;
+% it crops up in \cs{normalfootfmt} and the other footnote
+% macros for controlling the format of the footnotes.
+% 
+% With \Lpack{polyglossia}, each critical note has a \cs{footnote@lang} which shows the language of the lemma, 
+% and which can be used to switch the bracket from right to left.
+% \changes{v1.4.0}{2012/11/16}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia or LuaTeX).}
 %    \begin{macrocode}
-\newcommand*{\Xarrangement@threecol}[1]{%
-  \csgdef{series@display#1}{threecol}
-  \expandafter\let\csname v#1footnote\endcsname=\threecolvfootnote
-  \expandafter\let\csname #1footfmt\endcsname=\threecolfootfmt
-  \expandafter\let\csname #1footgroup\endcsname=\threecolfootgroup
-  \dimen\csname #1footins\endcsname=\csuse{maxhXnotes@#1}%
-  \skip\csname #1footins\endcsname=\csuse{beforeXnotes@#1}%
-  \advance\skip\csname #1footins\endcsname by\csuse{afterXrule@#1}%
-  \threecolfootsetup{#1}
-%    \end{macrocode}
-% The additional setup for minipages.
-%    \begin{macrocode}
-  \ifnoledgroup@\else
-    \expandafter\let\csname mpv#1footnote\endcsname=\mpnormalvfootnote
-    \expandafter\let\csname mp#1footgroup\endcsname=\mpthreecolfootgroup
-    \skip\csname mp#1footins\endcsname=\csuse{beforeXnotes@#1}%
-    \advance\skip\csname mp#1footins\endcsname by\csuse{afterXrule@#1}%
-    \mpthreecolfootsetup{#1}
-  \fi
+\def\endashchar{\textnormal{--}}
+\newcommand*{\fullstop}{\textnormal{.}}
+\newcommand*{\rbracket}{\textnormal{%
+   \csuse{text\csuse{footnote@lang}}{%
+         \ifluatex%
+         \ifdefstring{\footnote@luatextextdir}{TRT}{\thinspace[}{\thinspace]}%
+            \else%
+         \thinspace]%
+         \fi}%
+   }%
 }
 
 %    \end{macrocode}
-% The \cs{footstart} and \cs{footnoterule} macros for these notes assume
-% the normal values (\reff{normalvalues} above).
+% \end{macro}
+% \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\threecolfootsetup}
-% The \cs{threecolfootsetup} macro calculates and sets some numbers
-% for three-column footnotes.
-%
-% We set the \cs{count} of the foot insert to $333$.
-% Each footnote can be thought of as contributing only one third of
-% its height to the page, since the footnote insertion has been
-% made as a long narrow column, which then gets trisected by the
-% \cs{rigidbalance} routine (inside \cs{threecolfootgroup}).
-% These new, shorter columns are saved in a box, and then that box
-% is \emph{put back} into the footnote insert, replacing the
-% original collection of the footnotes.  This new box is, therefore,
-% only about a third of the height of the original one.
-%
-% The \cs{dimen} value for this note series has to change in the
-% inverse way: it needs to be three times
-% the actual limit on the amount of space these notes are allowed to
-% fill on the page, because when \TeX\ is
-% accumulating material for the page
-% and checking that limit, it doesn't apply the \cs{count} scaling.
+% \subsubsection{Pstart number in footnote}
+% \begin{macro}{\printpstart}
+% The \cs{printpstart} macro prints the pstart number for a note.
+% \changes{v1.18.0}{2015/02/23}{Debug \cs{pstartinfootnote} with parallel pages and columns (eledpar)}
 %    \begin{macrocode}
-\newcommand*{\threecolfootsetup}[1]{%
-  \count\csname #1footins\endcsname 333
-  \csxdef{default@#1footins}{333}%Use this to confine the  notes to one side only
-  \multiply\dimen\csname #1footins\endcsname \thr@@}
+\newcommand{\printpstart}[0]{%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
+        \ifledRcol%
+            \thepstartR%
+        \else%
+            \thepstartL%
+        \fi%
+    }{%
+        \thepstart%
+    }%
+}
+%    \end{macrocode}
+% 
+% \end{macro}
+% \subsubsection{Print line number}
+% The \cs{printlines} macro prints the line
+% numbers for a note---which, in the
+% general case, is a rather complicated task.
+% The seven parameters of the
+% argument are the line numbers as stored in \cs{l@d@nums}, in the
+% form described on \reff{linenumbers}: the starting
+% page, line, and sub-line numbers, followed by the ending page,
+% line, and sub-line numbers, and then the font specifier for
+% the lemma.
+%
+% \edmac' creator have defined six boolean in order to know which component of line number description we have to print:
+% \begin{itemize}
+% \item \cs{ifl@d@pnum} for page numbers;
+% \item \cs{ifl@d@ssub} for starting sub-line;
+% \item \cs{ifl@d@elin} for ending line;
+% \item \cs{ifl@d@esl} for ending sub-line; and
+% \item \cs{ifl@d@dash} for the dash between the starting and ending groups.
+% \end{itemize}
+% There is no boolean for the line number because it is always printed.
+%
+% Maïeul Rouquette has added \cs{ifl@d@twolines} and \cs{ifl@d@morethantwolines}
+% to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
+% \begin{macro}{\ifl@d@pnum}
+% \begin{macro}{\ifl@d@ssub}
+% \begin{macro}{\ifl@d@elin}
+% \begin{macro}{\ifl@d@esl}
+% \begin{macro}{\ifl@d@dash}
+% \begin{macro}{\ifl@d@twolines}
+% \begin{macro}{\ifl@d@morethantwolines}
+%    \begin{macrocode}
+\newif\ifl@d@pnum 
+\newif\ifl@d@ssub 
+\newif\ifl@d@elin
+\newif\ifl@d@esl
+\newif\ifl@d@dash
+\newif\ifl@d@twolines%
+\newif\ifl@d@morethantwolines%
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
-% \begin{macro}{\mpthreecolfootsetup}
-% The setup for minipages.
+%
+% \begin{macro}{\l@dparsefootspec}
+% \begin{macro}{\l@dp@rsefootspec}
+% \begin{macro}{\l@dparsedstartpage}
+% \begin{macro}{\l@dparsedstartline}
+% \begin{macro}{\l@dparsedstartsub}
+% \begin{macro}{\l@dparsedendpage}
+% \begin{macro}{\l@dparsedendline}
+% \begin{macro}{\l@dparsedendsub}
+% \cs{l@dparsefootspec}\marg{spec}\marg{lemma}\marg{text} parses a footnote
+% specification. \meta{lemma} and \meta{text} are the lemma and text
+% respectively. \meta{spec} is the line and page number and lemma font
+% specifier in \cs{l@d@nums} style format. The real work is done
+% by \cs{l@dp@rsefootspec} which defines macros holding the numeric values.
+% Just a reminder of the arguments: \\
+% \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7? \\
+% \verb?\printlines start-page | line | subline | end-page | line | subline | font ? 
 %    \begin{macrocode}
-\newcommand*{\mpthreecolfootsetup}[1]{%
-  \count\csname mp#1footins\endcsname 333
-  \multiply\dimen\csname mp#1footins\endcsname \thr@@}
+\newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
+\def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
+  \gdef\l@dparsedstartpage{#1}%
+  \gdef\l@dparsedstartline{#2}%
+  \gdef\l@dparsedstartsub{#3}%
+  \gdef\l@dparsedendpage{#4}%
+  \gdef\l@dparsedendline{#5}%
+  \gdef\l@dparsedendsub{#6}%
+}
+%    \end{macrocode}
+% Initialise the several number value macros.
+%    \begin{macrocode}
+\def\l@dparsedstartpage{0}%
+\def\l@dparsedstartline{0}%
+\def\l@dparsedstartsub{0}%
+\def\l@dparsedendpage{0}%
+\def\l@dparsedendline{0}%
+\def\l@dparsedendsub{0}%
 
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
-% \begin{macro}{\threecolvfootnote}
-% \cs{threecolvfootnote}
-% is the \cs{vfootnote} command for three-column notes. The
-% call to \cs{notefontsetup} ensures that the
-% \cs{splittopskip} and \cs{splitmaxdepth} take their values
-% from the right \cs{strutbox}: the one used in a footnotes.
-% Note especially the importance of temporarily reducing the
-% \cs{hsize} to $0.3$ of its normal value.  This determines the
-% widths of the individual columns.  So if the normal \cs{hsize}
-% is, say, 10\,cm, then each column will be $0.3\times10=3$\,cm
-% wide, leaving a gap of 1\,cm spread equally between columns
-% (i.e., .5\,cm between each).
+% 
 %
-% The arguments are 1)~the note series letter and 2)~the full text
-% of the note (including numbers, lemma and text).
+% \begin{macro}{\setprintlines}
+% 
+% The macro \cs{setprintlines} does the work of deciding what numbers should
+% be printed. Its arguments are the same as the first 6 of \cs{printlines}.
+% \changes{v0.7.0}{2005/02/18}{Added \cs{setprintlines} for use by \cs{printlines}}
 %    \begin{macrocode}
-\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
-  \insert\csname #1footins\endcsname\bgroup
-  \csuse{Xnotefontsize@#1}
-  \footsplitskips
-  \csname #1footfmt\endcsname #2[#1]\egroup}
+\newcommand*{\setprintlines}[6]{%
+  \l@d@pnumfalse \l@d@dashfalse 
+%    \end{macrocode}
+% We print the page numbers only if\/: 1)~we are doing
+% the lineation by page, and 2)~the ending page number is different
+% from the starting page number.\label{printlines}a
+%    \begin{macrocode}
+  \ifbypage@
+     \ifnum#4=#1 \else
+        \l@d@pnumtrue 
+        \l@d@dashtrue
+     \fi
+  \fi
+%    \end{macrocode}
+%
+% We print the ending line number if\/: (1)~we are printing the ending
+% page number, or (2)~it is different from the starting line number.
+%    \begin{macrocode}
+  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
+  \ifnum#2=#5 \else
+      \l@d@elintrue
+      \l@d@dashtrue
+  \fi
+%    \end{macrocode}
+%
+% We print the starting sub-line if it is nonzero.
+%    \begin{macrocode}
+  \l@d@ssubfalse
+  \ifnum#3=0 \else
+      \l@d@ssubtrue
+  \fi
+%    \end{macrocode}
+%
+% We print the ending sub-line if it is nonzero and: (1)~it is different
+% from the starting sub-line number, or (2)~the ending line number is
+% being printed.
+%    \begin{macrocode}
+  \l@d@eslfalse
+  \ifnum#6=0 \else
+      \ifnum#6=#3
+         \ifl@d@elin \l@d@esltrue \else \l@d@eslfalse \fi
+      \else
+         \l@d@esltrue
+         \l@d@dashtrue
+      \fi
+  \fi%
+%    \end{macrocode}
+% However, if the \cs{twolines} is set for the current series, we do not print the last line number.
+%    \begin{macrocode}
+  \ifl@d@dash%
+    \ifboolexpr{togl{fulllines@} or test{\ifcsempty{twolines@\@currentseries}}}%
+      {}%
+      {%
+      \setistwofollowinglines{#1}{#2}{#4}{#5}%
+        \ifboolexpr{%
+          (%
+               togl {twolinesbutnotmore@\@currentseries}%
+               and not% 
+                 (%
+                  bool {istwofollowinglines@}%              
+                 )%
+          )%
+          or% 
+          (%
+             (not test{\ifnumequal{#1}{#4}})%
+               and togl{twolinesonlyinsamepage@\@currentseries}%
+             )%
+          }%
+          {}%
+          {%
+          \l@d@dashfalse%
+          \l@d@twolinestrue%
+          \l@d@elinfalse%
+          \l@d@eslfalse%
+          \ifcsempty{morethantwolines@\@currentseries}%
+            {}%
+            {\ifistwofollowinglines@\else%
+              \l@d@morethantwolinestrue%
+             \fi%
+            }%
+          }%
+      }%
+  \fi%
+%    \end{macrocode}
+% End of \cs{setprintlines}.
+%    \begin{macrocode}
+}%
 %    \end{macrocode}
 % \end{macro}
 %
-%
-% \begin{macro}{\threecolfootfmt}
-% \cs{threecolfootfmt}
-% is the command that formats one note.
-% It uses \cs{raggedright}, which will usually be
-% preferable with such short lines.  Setting the \cs{parindent}
-% to zero means that, within each individual note, the lines begin
-% flush left.
-%
-% The arguments are 1)~the line numbers, 2)~the lemma and 3)~the
-% text of the \verb"-footnote" command 4) optional  (for backward compatibility): the series.
-%
+% \begin{macro}{\setistwofollowinglines}
+% The \cs{ifistwofollowinglines} boolean, used by the \cs{twolines} and related setting, is set to true by \cs{setistwofollowinglines}. 
+% This command takes the following arguments:
+% \begin{itemize}
+%  \item \verb+#1+ First page number.
+%  \item \verb+#2+ First line number.
+%  \item \verb+#3+ Last page number.
+%  \item \verb+#4+ Last line number.
+% \end{itemize}
+% If \verb+#3+-\verb+#2+ = 1, then that means the two lines are subsequent, and consequently \cs{ifistwofollowinglines} is set to true.
+% However, if we use lineation by page, two given lines can be subsequent if:
+% \begin{itemize}
+%   \item The first line number is equal to the last line number of the first page.
+%   \item The last line number is equal to 1.
+%   \item \verb+#3+-\verb+#1+ is equal to 1.
+% \end{itemize}
 %    \begin{macrocode}
-\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\threecolfootfmt}[4][4=Z]{% 
-  \normal@pars
-  \hsize \csuse{hsizethreecol@#4}
-  \nottoggle{Xparindent@#4}{\parindent=\z@}{}
-  \tolerance=5000
-  \hangindent=\csuse{Xhangindent@#4}
-  \leavevmode
-  \csuse{Xcolalign@#4}%
-  \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
-  \iftoggle{nosep@}{\hskip\csuse{inplaceoflemmaseparator@#4}}{\ifcsempty{lemmaseparator@#4}%
-    {\hskip\csuse{inplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{beforelemmaseparator@#4}\csuse{lemmaseparator@#4}\hskip\csuse{afterlemmaseparator@#4}%
-  }}%
-  #3\strut\par\allowbreak}
+\newif\ifistwofollowinglines@%
+\newcommand{\setistwofollowinglines}[4]{%
+    \ifcsdef{lastlinenumberon@#1}%
+      {\numdef{\tmp}{\csuse{lastlinenumberon@#1}}}%
+      {\numdef{\tmp}{0}}%
+    \istwofollowinglines@false%
+    \ifnumequal{#4-#2}{1}%
+    {\istwofollowinglines@true}%
+    {\ifbypage@%
+      \ifnumequal{#3-#1}{1}%
+      {%
+      \ifnumequal{#2}{\tmp}%
+        {\ifnumequal{#4}{1}{\istwofollowinglines@true}{}}%
+        {}%
+      }%
+      {}%
+     \fi%
+    }%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\threecolfootgroup}
-% And here is the \verb"footgroup" macro that's called within the
-% output routine to regroup the notes into three columns. Once
-% again, the call to \cs{notefontsetup} is there to ensure that
-% it is the right \cs{splittopskip}---the one used in
-% footnotes---which is used to provide the third argument for
-% \cs{rigidbalance}.  This third argument (\cs{@h}) is the
-% \verb"topskip" for the box containing the text of the
-% footnotes, and does the job of making sure the top lines of the
-% columns line up horizontally.  In \thetexbook, p.\,398,
-% Donald Knuth suggests retrieving the ouput of \cs{rigidbalance},
-% putting it back into the insertion box, and then printing the
-% box.  Here, we just print the \cs{line} which comes out of
-% \cs{rigidbalance} directly, without any re-boxing.
+% \begin{macro}{\printlines}
+% So, we have decided which part of line number sets will be printed depending of these value.
+% Now we are ready to print them. 
+% If the lineation is by pstart, we print the pstart.
+% \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
 %    \begin{macrocode}
-\newcommand*{\threecolfootgroup}[1]{{\csuse{Xnotefontsize@#1}%
-  \noindent\csuse{txtbeforeXnotes@#1}\par%
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}}
+\def\printlines#1|#2|#3|#4|#5|#6|#7|{%
+  \begingroup%
 %    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\mpthreecolfootgroup}
-% The setup for minipages.
+% If we use \LuaTeX, ensure we use good text's direction.
 %    \begin{macrocode}
-\newcommand*{\mpthreecolfootgroup}[1]{{%
-  \vskip\skip\@nameuse{mp#1footins}
-  \ifl@dpairing\ifparledgroup%
-    \leavevmode\marks\parledgroup@{begin}%
-    \marks\parledgroup@series{#1}%
-    \marks\parledgroup@type{Xfootnote}%
-  \fi\fi\normalcolor
-  \ifparledgroup%
-    \ifl@dpairing%
+  \ifluatex%
+    \luatextextdir TLT%
+  \fi%
+%    \end{macrocode}
+% Decide which part of line number components we will print.
+%    \begin{macrocode}
+  \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
+%    \end{macrocode}
+% One subtlety left here is when to print a period between
+% numbers. But the only instance in which this is tricky is for the
+% ending sub-line number: it could come after the starting
+% sub-line number (in which case we want only the dash) or after an
+% ending line number (in which case we need to insert a period).
+% So, first, print the start line number.
+%    \begin{macrocode}
+  \ifdimequal{\csuse{boxstartlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\leavevmode\hbox to \csuse{boxstartlinenum@\@currentseries}\bgroup\hfill}%
+  \ifl@d@pnum #1\fullstop\fi
+  \linenumrep{#2}
+  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \egroup%
+%    \end{macrocode}
+% Then print the dash + end line number, or the range symbol.
+% \changes{v0.3.0}{2004/02/14}{Added \cs{linenumr@p} and \cs{sublinenumr@p} 
+%        to \cs{printlines}}
+% \changes{v1.20.0}{2015/03/22}{Added \cs{ifl@d@morethantwolines} and \cs{ifl@d@morethantwolines} to \cs{printlines}}
+%    \begin{macrocode}
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {\bgroup}%
+    {\hbox to \csuse{boxendlinenum@\@currentseries}\bgroup}%
+  \ifl@d@twolines%
+    \ifl@d@morethantwolines%
+      \csuse{morethantwolines@\@currentseries}%
     \else%
-      \setXnoteswidthliketwocolumns@{#1}%
-      \setXnotespositionliketwocolumns@{#1}%
-      \print@Xfootnoterule{#1}%
+      \csuse{twolines@\@currentseries}%
     \fi%
   \else%
-    \setXnoteswidthliketwocolumns@{#1}%
-    \setXnotespositionliketwocolumns@{#1}%
-    \print@Xfootnoterule{#1}%
+    \ifl@d@dash \endashchar\fi%
+    \ifl@d@pnum #4\fullstop\fi%
+    \ifl@d@elin \linenumrep{#5}\fi%
+    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
-  {\csuse{Xnotefontsize@#1}\noindent\csuse{txtbeforeXnotes@#1}}\par
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \rigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
-
+  \ifdimequal{\csuse{boxendlinenum@\@currentseries}}{0pt}%
+    {}%
+    {\hfill}%Prevent underfull hbox
+  \egroup%
+  \endgroup%
+}%
 %    \end{macrocode}
 % \end{macro}
-%
 % \section{Familiar footnotes}
 %
 % \subsection{Generality}
@@ -10174,8 +10126,75 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \section{Code common to both critical and familiar footnote in normal arrangement}
+% \verb"\par" should always be redefined to \verb"\endgraf" within
+% the format macro (this is what \cs{normal@pars} does),
+% to override tricky material in the main text
+% to get the lines numbered automatically (as set up by
+% \cs{autopar}, for example).
 %
-% \section{Footnotes' width for two columns}
+% In the case of footnote arranged in a ``normal'' way,  we also must set some setting for paragraph indent and text direction when using \LuaLaTeX.
+%
+% That why we have defined \cs{ledsetnormalparstuff@common} in order to make this setting for both familiar and critical notes.
+% This command is called by command to make specific setting to critical or familiar footnote.
+%
+% \begin{macro}{\ledsetnormalparstuff@common}
+% \begin{macro}{\Xledsetnormalparstuff}
+% \begin{macro}{\ledsetnormalparstuffX}
+% 
+% \changes{v1.4.0}{2012/11/16}{Direction of footnotes with polyglossia.}
+% \changes{v1.21.0}{2015/04/13}{\cs{ledsetnormalparstuff} is deprecated and becomes \cs{ledsetnormalparstuffX} and \cs{Xledsetnormalparstuff}.}
+%    \begin{macrocode} 
+\newcommand*{\ledsetnormalparstuff@common}{%
+  \ifluatex%
+     \luatextextdir\footnote@luatextextdir%
+   \luatexpardir\footnote@luatexpardir%
+  \fi%
+  \csuse{\csuse{footnote@dir}}%
+  \normal@pars%
+  \parfillskip \z@ \@plus 1fil}%
+
+\newcommand*{\Xledsetnormalparstuff}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{Xparindent@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when moving from ledmac to eledmac 
+}%
+
+\newcommand*{\ledsetnormalparstuffX}[1]{%
+  \ledsetnormalparstuff@common%
+  \nottoggle{parindentX@#1}{\noindent}{}%\noindent and and not \parindent=0pt to avoid to break the (bad) change made when moving from ledmac to eledmac 
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \section{Space before the first series of notes}
+% \begin{macro}{\preXnotes@}
+% \begin{macro}{\preXnotes}
+% \changes{v1.1.0}{2012/09/25}{New skip \cs{preXnotes@}}
+% \changes{v1.2.0}{2012/10/08}{Debug in familiar footnotes (but introduced by v1.1).}
+% If user redefines \cs{preXnotes@}, via \cs{preXnotes} to a value greater than 0~pt,
+% this skip will be added before first series notes
+% instead of the notes skip.
+%    \begin{macrocode}
+\newtoggle{preXnotes@}
+\toggletrue{preXnotes@}
+\newcommand{\preXnotes@}{0pt}
+\newcommand*{\preXnotes}[1]{\renewcommand{\preXnotes@}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% The same, but for familiar footnotes.
+% \begin{macro}{\preXnotes}
+% \begin{macro}{\preXnotes@}
+%    \begin{macrocode}
+\newtoggle{prenotesX@}
+\toggletrue{prenotesX@}
+\newcommand{\prenotesX@}{0pt}
+\newcommand*{\prenotesX}[1]{\renewcommand{\prenotesX@}{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \section{Footnotes' width for two columns}\label{width2columns}
 % We define here some commands which make sense only with \Lpack{eledpar}, but must be called when defining notes paramaters.
 % These commands change the width of block notes to allow them to have the same size than two parallel columns.
 % \begin{macro}{\old@hsize}
@@ -10282,7 +10301,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \section{Specific skip for first series of footnotes}
+% \section{Specific skip for first series of footnotes}\label{skipfirstseries}
 % \cs{beforeXnotes} insert a specific skip for the first series of notes in a page.
 % As we can know in advance which series will be the first, we call \cs{prepare@preXnotes} before inserting any critical notes, in order to prevent page number overlapping. 
 % \begin{enumerate}
