@@ -9308,21 +9308,25 @@
 % \end{macro}
 % \section{Familiar footnotes}
 %
-% \subsection{Generality}
+% \subsection{Adjacent footnotes}
 %    The original \edmac{} provided users with five series of critical footnotes (\cs{Afootnote} \cs{Bfootnote}  \cs{Cfootnote} \cs{Dfootnote} \cs{Efootnote}),
-% and \LaTeX\ provides a single numbered footnote. The \Eledmac{} package
+% and \LaTeX\ provides a single numbered footnote. The \macpackage{} package
 % uses the \edmac{} mechanism to provide six series of numbered footnotes.
 % 
 %    First, though, the \Lpack{footmisc} package has an option whereby
 % two or more consecutive \cs{footnote}s have their marks separated
-% by commas. This seems such a useful ability that it is provided
-% automatically by \Eledmac. 
+% by commas. This seemed to Peter Wilson such a useful ability that it was provided
+% automatically by \eledmac.
+%
+% Maïeul Rouquette has maintened this feature in \macpackage, despite he thought  that is not directly in relationship with the aim of \macpackage.
+%
 %
 % \begin{macro}{\multiplefootnotemarker}
 % \begin{macro}{\multfootsep}
 % These macros may have been defined by the \Lclass{memoir} class,
 % are provided by the \Lpack{footmisc} package and perhaps
-% by other footnote packages.
+% by other footnote packages. 
+% That is why we use \cs{providecommand} and not \cs{newcommand}.
 %    \begin{macrocode}
 \providecommand*{\multiplefootnotemarker}{3sp}
 \providecommand*{\multfootsep}{\textsuperscript{\normalfont,}}
@@ -9356,7 +9360,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% We have to modify \verb?\@footnotetext? and \verb?\@footnotemark?. However,
+% We have to modify \cs{@footnotetext} and \cs{@footnotemark}. However,
 % if \Lclass{memoir} is used the modifications have already been made.
 % \changes{v0.4.1}{2004/03/25}{Only change \cs{@footnotetext} and
 %                           \cs{@footnotemark} if memoir not used}
@@ -9370,20 +9374,23 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \changes{v2.0.0}{2015/06/10}{Patch \cs{@footnotemark} instead of redefine it}
 % \begin{macro}{\@footnotemark}
 % Modify \cs{@footnotemark} to cater for adjacent \cs{footnote}s.
 %    \begin{macrocode}
-\renewcommand*{\@footnotemark}{%
-  \leavevmode
-  \ifhmode
-    \edef\@x@sf{\the\spacefactor}%
-    \m@mmf@check
-    \nobreak
-  \fi
-  \@makefnmark
+
+\patchcmd{\@footnotemark}
+  {\nobreak}
+  {\m@mmf@check
+  \nobreak
+  }
+  {}{}
+\patchcmd{\@footnotemark}
+  {\@makefnmark}
+  {\@makefnmark
   \m@mmf@prepare
-  \ifhmode\spacefactor\@x@sf\fi
-  \relax}
+  }
+  {}{}
 %    \end{macrocode}
 % \end{macro}
 % Finished the modifications for the non-memoir case.
@@ -9392,10 +9399,11 @@
 
 %    \end{macrocode}
 %
+% \subsection{Regular footnotes for numbered texts}
 % \begin{macro}{\l@doldold@footnotetext}
 % \begin{macro}{\@footnotetext}
-% In order to enable the regular \verb?\footnote?s in numbered text
-% we have to play around with its \verb?\@footnotetext?, using
+% In order to enable the regular \cs{footnote}s in numbered text
+% we have to play around with its \cs{@footnotetext}, using
 % different forms for when in numbered or regular text.
 % \changes{v0.5.0}{2004/04/03}{Enabled regular \cs{footnote} in numbered text}
 %    \begin{macrocode}
@@ -9411,11 +9419,11 @@
 %
 % \begin{macro}{\l@dbfnote}
 % \begin{macro}{\vl@dbfnote}
-% \verb?\l@dbfnote? adds the footnote to the insert list, and
-% \verb?\vl@dbfnote? calls the original \verb?\@footnotetext?.
+% \cs{l@dbfnote} adds the footnote to the insert list, and
+% \cs{vl@dbfnote} calls the original \cs{@footnotetext}.
 % \changes{v0.6.0}{2004/11/23}{Changed \cs{l@dbfnote} and \cs{vl@dbfnote} as
 % originals could give incorrect markers in the footnotes}
-% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with eledmac when these footnotes contain any commands.}
+% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
@@ -9431,11 +9439,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
-%
-%
-%
-%
 %
 % \subsection{Footnote formats}
 %
@@ -9465,10 +9468,11 @@
 % \end{macro}
 % 
 % \subsection{Footnote arrangement}
-% 
+%  
+% \subsubsection{User level macro}
 % \begin{macro}{\arrangementX}
 % \cs{arrangementX}\oarg{s}\marg{arrangement}
-% The command call, for each series, a specific command which set many counter and command in order to define specific arrangement.
+%  command calls, for each series, a specific command which set many counters and commands in order to define specific arrangement.
 %
 %    \begin{macrocode}
 \newcommandx{\arrangementX}[2][1,usedefault]{%
