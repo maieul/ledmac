@@ -9018,8 +9018,142 @@
 %    \end{macrocode}
 % 
 % \end{macro}
-% \subsubsection{Print line number}
-% The \cs{printlines} macro prints the line
+% \subsubsection{Line number printing}
+% \begin{macro}{\printlinefootnote}
+% The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
+% It controls whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
+% The printing of the line number is shared in 
+% \cs{printlinefootnotenumbers}.
+% \changes{v1.18.0}{2015/02/23}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotearea}}
+%  \begin{macrocode}
+\newcommand{\printlinefootnote}[2]{%
+   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
+   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
+   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
+   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+   \iftoggle{XnumberonlyfirstinXtwolines@#2}{%
+       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
+       }%
+       {%
+       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
+       }%
+   \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
+   \hspace{\csuse{Xinplaceofnumber@#2}}% 
+   }%
+   {%
+       {%
+           \iftoggle{Xnonumber@#2}%Try if the line number must printed (by default, yes)
+           {%
+           \hspace{\csuse{Xinplaceofnumber@#2}}%
+           }%
+           {%
+              {\iftoggle{Xnumberonlyfirstinline@#2}% If for this series the line number must be printed only in the first time.
+                 {%
+                 \ifcsdef{prevline#2}%
+                    {%Be sure the \prevline exists.
+                    \ifcsequal{prevline#2}{lineinfo@}%Try it
+                       {%
+                       \ifcsempty{Xsymlinenum@#2}%
+                        {%
+                            \hspace{\csuse{Xinplaceofnumber@#2}}%
+                        }%
+                        {\hspace{\csuse{Xbeforesymlinenum@#2}}\csuse{Xnotenumfont@#2}%
+                        \ifdimequal{\csuse{Xboxsymlinenum@#2}}{0pt}%
+                            {\csuse{Xsymlinenum@#2}}%
+                            {\hbox to \csuse{Xboxsymlinenum@#2}{\csuse{Xsymlinenum@#2}\hfill}}%
+                        \hspace{\csuse{Xaftersymlinenum@#2}}}%
+                       }%
+                       {%
+                        \printlinefootnotearea{#1}{#2}%
+                        }%
+                    }%
+                    {%
+                    \printlinefootnotearea{#1}{#2}%
+                    }%
+              }%
+              {%
+              \printlinefootnotearea{#1}{#2}%
+              }%
+              \csxdef{prevline#2}{\lineinfo@}%
+           }%
+        }%
+     }%
+   }%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printlinefootnotearea}
+% This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
+% It is called by \cs{printlinefootnote}
+% depending of the options about repeating line numbers.
+% The first argument is line information, the second is the notes series (A, B, C,  etc.)
+%    \begin{macrocode}
+\newcommand{\printlinefootnotearea}[2]{%
+  \printXbeforenumber{#2}%
+  \csuse{Xnotenumfont@#2}%
+  \boxfootnotenumbers{#1}{#2}%
+  \printXafternumber{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\boxfootnotenumbers}
+% Depending on the user settings, this macro will box line numbers (or not).
+% The first argument is line information, the second is the notes series (A, B, C,  etc.)
+% The previous \cs{printlinefootnotearea} calls it.
+%    \begin{macrocode}
+\newcommand{\boxfootnotenumbers}[2]{%
+  \ifdimequal{\csuse{Xboxlinenum@#2}}{0pt}{%
+       \printlinefootnotenumbers{#1}{#2}%
+     }%
+     {%
+       \hbox to \csuse{Xboxlinenum@#2}%
+         {%
+         \IfSubStr{RC}{\csuse{Xboxlinenumalign@#2}}{\hfill}{}%
+         \printlinefootnotenumbers{#1}{#2}%
+         \IfSubStr{LC}{\csuse{Xboxlinenumalign@#2}}{\hfill}{}%
+         }%
+     }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printlinefootnotenumbers}
+% This macro prints, if needed, the pstart number and the line number.
+% The first argument is line information, the second is the notes series (A, B, C, etc.)
+% The previous \cs{boxlinefootnote} calls it.
+%    \begin{macrocode}
+\newcommand{\printlinefootnotenumbers}[2]{%
+  \xdef\@currentseries{#2}%
+  \ifboolexpr{%
+   (togl{Xpstart@#2} and bool{numberpstart})%
+   or togl{Xpstarteverytime@#2}}%
+  {\printpstart}{}%
+  \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printXbeforenumber}
+% This macro prints a space (before the line number) in footnote. 
+% It is called by \cs{printlinefootnotearea}.
+% Its only argument is the note series (A, B, C, etc.)
+%    \begin{macrocode}
+\newcommand{\printXbeforenumber}[1]{%
+  \hspace{\csuse{Xbeforenumber@#1}}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printXafternumber}
+% This macro prints the space, adding eventually a \cs{nobreak},  after the line number, in footnote. 
+% It is called by \cs{printlinefootnotearea}.
+% Its only argument is the series
+%    \begin{macrocode}
+\newcommand{\printXafternumber}[1]{%
+  \iftoggle{Xnonbreakableafternumber@#1}{\nobreak}{}%
+  \hspace{\csuse{Xafternumber@#1}}%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% If we have decided to print the line number in a specific notes, the \cs{printlines} macro prints the line
 % numbers for a note---which, in the
 % general case, is a rather complicated task.
 % The seven parameters of the
@@ -11409,140 +11543,6 @@
 % \end{macro}
 %
 %
-% \section{Line number printing}
-% \begin{macro}{\printlinefootnote}
-% The \cs{printlinefootnote} macro is called in each \cs{<type>footfmt} command. 
-% It controls whether the line number is printed or not, according to the previous options. Its first argument is the information about lines ; its second is the series of the footnote.
-% The printing of the line number is shared in 
-% \cs{printlinefootnotenumbers}.
-% \changes{v1.18.0}{2015/02/23}{Code refactoring in \cs{printlinefootnote}: the printing of the numbers are factorized in  \cs{printlinefootnotearea}}
-%  \begin{macrocode}
-\newcommand{\printlinefootnote}[2]{%
-   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
-   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
-   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
-   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
-   \iftoggle{XnumberonlyfirstinXtwolines@#2}{%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
-       }%
-       {%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
-       }%
-   \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
-   \hspace{\csuse{Xinplaceofnumber@#2}}% 
-   }%
-   {%
-       {%
-           \iftoggle{Xnonumber@#2}%Try if the line number must printed (by default, yes)
-           {%
-           \hspace{\csuse{Xinplaceofnumber@#2}}%
-           }%
-           {%
-              {\iftoggle{Xnumberonlyfirstinline@#2}% If for this series the line number must be printed only in the first time.
-                 {%
-                 \ifcsdef{prevline#2}%
-                    {%Be sure the \prevline exists.
-                    \ifcsequal{prevline#2}{lineinfo@}%Try it
-                       {%
-                       \ifcsempty{Xsymlinenum@#2}%
-                        {%
-                            \hspace{\csuse{Xinplaceofnumber@#2}}%
-                        }%
-                        {\hspace{\csuse{Xbeforesymlinenum@#2}}\csuse{Xnotenumfont@#2}%
-                        \ifdimequal{\csuse{Xboxsymlinenum@#2}}{0pt}%
-                            {\csuse{Xsymlinenum@#2}}%
-                            {\hbox to \csuse{Xboxsymlinenum@#2}{\csuse{Xsymlinenum@#2}\hfill}}%
-                        \hspace{\csuse{Xaftersymlinenum@#2}}}%
-                       }%
-                       {%
-                        \printlinefootnotearea{#1}{#2}%
-                        }%
-                    }%
-                    {%
-                    \printlinefootnotearea{#1}{#2}%
-                    }%
-              }%
-              {%
-              \printlinefootnotearea{#1}{#2}%
-              }%
-              \csxdef{prevline#2}{\lineinfo@}%
-           }%
-        }%
-     }%
-   }%
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\printlinefootnotearea}
-% This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
-% It is called by \cs{printlinefootnote}
-% depending of the options about repeating line numbers.
-% The first argument is line information, the second is the notes series (A, B, C. etc.)
-%    \begin{macrocode}
-\newcommand{\printlinefootnotearea}[2]{%
-  \printXbeforenumber{#2}%
-  \csuse{Xnotenumfont@#2}%
-  \boxfootnotenumbers{#1}{#2}%
-  \printXafternumber{#2}%
-}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\boxfootnotenumbers}
-% Depending on the user settings, this macro will box line numbers (or not).
-% The first argument is line information, the second is the notes series (A, B, C. etc.)
-% The previous \cs{printlinefootnotearea} calls it.
-%    \begin{macrocode}
-\newcommand{\boxfootnotenumbers}[2]{%
-  \ifdimequal{\csuse{Xboxlinenum@#2}}{0pt}{%
-       \printlinefootnotenumbers{#1}{#2}%
-     }%
-     {%
-       \hbox to \csuse{Xboxlinenum@#2}%
-         {%
-         \IfSubStr{RC}{\csuse{Xboxlinenumalign@#2}}{\hfill}{}%
-         \printlinefootnotenumbers{#1}{#2}%
-         \IfSubStr{LC}{\csuse{Xboxlinenumalign@#2}}{\hfill}{}%
-         }%
-     }%
-}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\printlinefootnotenumbers}
-% This macro prints, if needed, the pstart number and the line number.
-% The first argument is line information, the second is the notes series (A, B, C. etc.)
-% The previous \cs{boxlinefootnote} calls it.
-%    \begin{macrocode}
-\newcommand{\printlinefootnotenumbers}[2]{%
-  \xdef\@currentseries{#2}%
-  \ifboolexpr{%
-   (togl{Xpstart@#2} and bool{numberpstart})%
-   or togl{Xpstarteverytime@#2}}%
-  {\printpstart}{}%
-  \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
-}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\printXbeforenumber}
-% This macro prints a space (before the line number) in footnote. 
-% It is called by \cs{printlinefootnotearea}.
-% Its only argument is the series
-%    \begin{macrocode}
-\newcommand{\printXbeforenumber}[1]{%
-  \hspace{\csuse{Xbeforenumber@#1}}%
-}%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\printXafternumber}
-% This macro prints the space, adding eventually a \cs{nobreak},  after the line number, in footnote. 
-% It is called by \cs{printlinefootnotearea}.
-% Its only argument is the series
-%    \begin{macrocode}
-\newcommand{\printXafternumber}[1]{%
-  \iftoggle{Xnonbreakableafternumber@#1}{\nobreak}{}%
-  \hspace{\csuse{Xafternumber@#1}}%
-}%
-%    \end{macrocode}
-% \end{macro}
 % \section{Output routine}
 % \label{output}\relax
 %
