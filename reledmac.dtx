@@ -11115,7 +11115,26 @@
 %    \end{macrocode}
 % \end{macro}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
-% \subsection{Options}
+% \subsection{Series setting}
+% \subsubsection{General way of working}
+% The setting's command (like \cs{numberonlyfirstinline}), also called ``hooks'' can be divided in two categories: those which require a string values and those which require a boolean value.
+% The first category includes those which require a length value, because we store the length's expression send by user and we evaluate it only in the commands which requires to know the setting.
+% The second category require boolean value only when it is set to FALSE.
+% Otherwise, we understand the insinuated value is TRUE.
+%
+% For each ``hook'' command, we store the value in  commands (first category) or a \lpack{etoolbox}'s toggle (second category) which names are in the form \cs{<hook>@<series>}.
+% For example when calling \cs{twolines}\marg{sq.}, we store \verb+sq.+ in commands \cs{twolines@A}, \cs{twolines@B}, \cs{twolines@C}\ldots for each series defined for use with \macpackage, or, if the \oarg{series} optional argument was send, for each series of this argument.
+%
+% These values are tested in some specific places, scattered in all the code, depending of their effects.
+% The default values are defined by the \cs{@series} command.
+%
+%
+% In order to prevent code duplication, we have created some generic commands.
+% Some of them change the value of any hook send as argument.
+% Some other, getting a hook name, generate the user level commands.
+%
+%
+% 
 % \subsubsection{Tools to set options}
 % \begin{macro}{\settoggle@series} 
 % \changes{v1.1.0}{2012/09/25}{\cs{settoggle@series} switch the global value of the toggle, not only the local value.}
@@ -11126,7 +11145,7 @@
 %   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
 %   \item \verb+#2+ (mandatory): the name of the hook.
 %   \item \verb+#3+ (mandatory): the new value of toggle (true or false).
-%   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \cs{footnormal} or \cs{footparagraph} or \ldots\ depending of the footnote display).
+%   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call again \cs{Xarrangement} or \cs{arrangementX} or \ldots\ depending of the footnote display).
 %   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
 % \end{itemize}
 %    \begin{macrocode}
@@ -11153,7 +11172,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setcommand@series} 
-% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to change hooks into form of commands for some series. 
+% \cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to store hook's value into commands specific to some  series. 
 % The arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
@@ -11226,10 +11245,10 @@
 }
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\newhooktoggle@series}
+% \begin{macro}{\newhooktoggle@series@reload}
 % \changes{v1.13.0}{2014/09/16}{Add \cs{newhookcommand@toggle@reload}}
 % \cs{newhookcommand@toggle@reload} does the same thing as \cs{newhooktoggle@series} 
-% but the commands created by this macro also reload the series which is displayed (normal, paragraph, twocol, threecol).
+% but the commands created by this macro also reload the series arrangement.
 %    \begin{macrocode}
 \newcommand{\newhooktoggle@series@reload}[1]{%
   \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
@@ -11239,11 +11258,12 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\newhookcommand@series@reload}
-% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work.}
-% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which didn't work when called after \cs{footparagraphX}.}
-% \changes{v1.12.0}{2014/08/05}{Debug \cs{Xbeforenotes} and  \cs{Xmaxhnotes} which didn't work when called after \cs{footparagraph}.}
+% \changes{v1.8.0}{2013/11/24}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which did not work.}
+% \changes{v1.12.0}{2014/08/05}{Debug \cs{beforenotesX} and  \cs{maxhnotesX} which did not work when called after \cs{footparagraphX}.}
+% \changes{v1.12.0}{2014/08/05}{Debug \cs{Xbeforenotes} and  \cs{Xmaxhnotes} which did not work when called after \cs{footparagraph}.}
 % \cs{newhookcommand@series@reload} does the same thing as \cs{newhookcommand@series} 
-% but the commands created by this macro also reload the series which is displayed (normal, paragraph, twocol, threecol).
+% but the commands created by this macro also reload the series' arrangement.
+% 
 %    \begin{macrocode}
 \newcommand{\newhookcommand@series@reload}[1]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
@@ -11253,7 +11273,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{Options for critical notes}
-% Before generating the commands that are used to set the critical notes, such as \verb+\Xnumberonlyfirstinline+, \verb+\Xlemmaseparator+ and the like, we check the \verb+nocritical+ option.
+% Before generating the commands that are used to set the critical notes, such as \cs{Xnumberonlyfirstinline}, \cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
   \newhooktoggle@series{Xparindent}
@@ -11306,7 +11326,7 @@
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
-% Before generating the optional commands for familiar notes, we check the \verb+nofamiliar+ option.
+% Before generating the optional commands for familiar notes, we check the \cs{nofamiliar} option.
 %    \begin{macrocode}
 \unless\ifnofamiliar@
   \newhooktoggle@series{parindentX}
