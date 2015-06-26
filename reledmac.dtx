@@ -3676,7 +3676,27 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-
+% \begin{macro}{\led@error@fail@patch@@makecol}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@makecol}{%
+  \reledmac@error{Fail to patch \string\@makecol command.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@@reinserts}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@reinserts}{%
+  \reledmac@error{Fail to patch \string\@reinserts command.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@@reinserts}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@doclearpage}{%
+  \reledmac@error{Fail to patch \string\@doclearpage command.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
 %
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
@@ -11555,12 +11575,12 @@
 %
 %
 % \section{Output routine}
-% \label{output}\relax
+% 
 %
 % Now we begin the output routine and associated things.
 %
 %
-%
+% \subsubsection{Page number management}
 % \begin{macro}{\pageno}
 % \begin{macro}{\advancepageno}
 %  \cs{pageno} is a page number, starting at 1, and \cs{advancepageno}
@@ -11575,174 +11595,20 @@
 % \end{macro}
 %
 %
-%
-% The next portion is probably the trickiest part of moving from
-% TeX to \LaTeX\. The original code is below, but we need 
-% something very different. 
-%
-% This is a new output routine, with changes to handle printing all our
-% footnotes. Those changes have not been added directly, but are in macros
-% that get called here: that should make it easier to see what would need
-% to be taken over to a different output routine. We continue to use the
-% \cs{pagebody}, \cs{makeheadline}, \cs{makefootline}, and \cs{dosupereject}
-% macros of \PlainTeX; for those macros, and the original version of
-% \cs{output}, see \thetexbook, p.\,364.
-%    \begin{verbatim}
-% \output{\edmac@output}
-% \def\edmac@output{\shipout\vbox{\normal@pars
-%    \vbox{\makeheadline\pagebody\makefootline}%
-%  }%
-%  \advancepageno
-%  \ifnum\outputpenalty>-\@MM\else\dosupereject\fi}
-%
-% \def\pagecontents{\page@start
-%  \ifvoid\topins\else\unvbox\topins\fi
-%  \dimen@=\dp\@cclv \unvbox\@cclv % open up \box255
-%  \do@feet
-%  \ifr@ggedbottom \kern-\dimen@ \vfil \fi}
-% \end{verbatim}
-%
-% \cs{do@feet} ships out all the footnotes. Standard \edmac{} has only
-% five feet, but there is nothing in principal to prevent you
-% from creating an arachnoid or centipedal edition; straightforward
-% modifications of \edmac{} are all that's required. However, the
-% myria\-pedal edition is ruled out by  eTeX limitations: the number
-% of insertion classes is limited to $2^16$.
-%
+% \subsubsection{Extra footnotes output}
 %
 %    With luck we might only have to change \cs{@makecol} and
-% \cs{@reinserts}. The kernel
-% definition of these, and perhaps some other things, is:
-% \begin{verbatim}
-% \gdef \@makecol {%
-%   \ifvoid\footins
-%    \setbox\@outputbox \box\@cclv
-%   \else
-%    \setbox\@outputbox \vbox {%
-%     \boxmaxdepth \@maxdepth
-%     \@tempdima\dp\@cclv
-%     \unvbox \@cclv
-%     \vskip \skip\footins
-%     \color@begingroup
-%       \normalcolor
-%       \footnoterule
-%       \unvbox \footins
-%     \color@endgroup
-%     }%
-%   \fi
-%   \xdef\@freelist{\@freelist\@midlist}%
-%   \global \let \@midlist \@empty
-%   \@combinefloats
-%   \ifvbox\@kludgeins
-%    \@makespecialcolbox
-%   \else
-%    \setbox\@outputbox \vbox to\@colht {%
-%     \@texttop
-%     \dimen@ \dp\@outputbox
-%     \unvbox\@outputbox
-%     \vskip -\dimen@
-%     \@textbottom
-%     }%
-%   \fi
-%   \global \maxdepth \@maxdepth
-% }
-%
-% \gdef \@reinserts{%
-%   \ifvoid\footins\else\insert\footins{\unvbox\footins}\fi
-%   \ifvbox\@kludgeins\insert\@kludgeins{\unvbox\@kludgeins}\fi
-% }
-% \end{verbatim}
-%
-% Now we start actually changing things.
-%
-% \begin{macro}{\m@m@makecolfloats}
-% \begin{macro}{\m@m@makecoltext}
-% \begin{macro}{\m@m@makecolintro}
-% These macros are defined in the \Lclass{memoir} class and form part
-% of the definition of \verb?\@makecol?.
-% \changes{v0.2.1}{2003/09/13}{Added \cs{m@m@makecolfloats}, \cs{m@m@makecoltext}
-%               and \cs{m@m@makecolintro}} 
-%    \begin{macrocode}
-\providecommand{\m@m@makecolfloats}{%
-  \xdef\@freelist{\@freelist\@midlist}%
-  \global \let \@midlist \@empty
-  \@combinefloats}
-\providecommand{\m@m@makecoltext}{%
-  \ifvbox\@kludgeins
-    \@makespecialcolbox
-  \else
-    \setbox\@outputbox \vbox to\@colht {%
-      \@texttop
-      \dimen@ \dp\@outputbox
-      \unvbox\@outputbox
-      \vskip -\dimen@
-      \@textbottom}%
-  \fi}
-\providecommand{\m@m@makecolintro}{}
+% \cs{@reinserts} of the \LaTeX's kernel. 
+% Since \reledmac, we use \Lpack{etoolbox}'s patching commands instead of overriding. 
+% It should provides better compatibility with other package which modify these commands
 
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@d@makecol}
-% This is a partitioned version of the `standard' \cs{@makecol},
-% with the initial code put into another macro.
-% \changes{v0.2.1}{2003/09/13}{Rewrote \cs{@makecol}, calling it \cs{l@d@makecol}}
-%    \begin{macrocode}
-\gdef\l@d@makecol{%
-  \l@ddofootinsert
-  \m@m@makecolfloats
-  \m@m@makecoltext
-  \global \maxdepth \@maxdepth}
-
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\ifFN@bottom}
-% \changes{v1.5.0}{2013/07/11}{Use the bottom option of \Lpack{footmisc} package.}
-% The \cs{ifFN@bottom} macro is defined by the \Lpack{footmisc} package. If this package is not loaded, we define it.
-%    \begin{macrocode}
-\AtBeginDocument{\@ifpackageloaded{footmisc}{}{\newif\ifFN@bottom}}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\l@ddofootinsert}
-% This macro essentially holds the initial portion of the kernel 
-% \cs{@makecol} code.
-% \changes{v0.2.1}{2003/09/13}{Renamed \cs{dofootinsert} as \cs{l@ddofootinsert}}
-% \changes{v0.7.0}{2005/02/25}{Deleted \cs{page@start} from \cs{l@ddofootinsert}}
-%    \begin{macrocode}
-\newcommand*{\l@ddofootinsert}{%
-   \ifvoid\footins
-     \setbox\@outputbox \box\@cclv
-   \else
-     \setbox\@outputbox \vbox {%
-       \boxmaxdepth \@maxdepth
-       \@tempdima\dp\@cclv
-       \unvbox \@cclv
-       \ifFN@bottom\vfill\fi\vskip \skip\footins% If the option bottom of loadmisc package is loaded
-       \color@begingroup
-         \normalcolor
-         \footnoterule
-         \unvbox \footins
-       \color@endgroup
-       }%
-   \fi
-%    \end{macrocode}
-% That's the end of the copy of the kernel code. We finally call a macro
-% to handle all the additional \edmac{} feet.
-%    \begin{macrocode}
-   \l@ddoxtrafeet
-}
-
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\doxtrafeet}
 % \cs{doxtrafeet} is the code extending \cs{@makecol} to cater for
-% the extra \Eledmac{} feet. We have two classes of extra footnotes.
-% By default, we order the footnote inserts so that the regular footnotes are first,
-% then class 1\index{class 1 feet} (familiar footnotes) and finally 
-% class 2\index{class 2 feet} (critical footnotes).
+% the extra \macpackage feet. We have two categories of extra footnotes.
+% By default, we order the footnote inserts so that the regular footnotes of \LaTeX\ are first,
+% then familiar familiar footnotes and finally 
+% the critical footnotes.
 % \changes{v0.2.1}{2003/09/13}{Renamed \cs{doxtrafeet} to \cs{l@ddoxtrafeet}}
 % \changes{v1.9.0}{2014/02/05}{Add \cs{fnpos} to choice the order of footnotes.}
 %    \begin{macrocode}
@@ -11754,16 +11620,14 @@
         {\doxtrafeetii\doxtrafeeti}%
         {\doxtrafeeti\doxtrafeetii}%
     }%
-  }%
+}%
 
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\doxtrafeetii}
 % \cs{doxtrafeetii} is the code extending \cs{@makecol} to cater for
-% the extra critical feet (class 2 feet\index{class 2 feet}). 
-% NOTE: the code is likely to be
-% `featurefull'.
+% the extra critical feet. 
 % \changes{v0.4.1}{2004/03/06}{Changed \cs{doxtrafeetii} code for easier extensions}
 %    \begin{macrocode}
 \newcommand*{\doxtrafeetii}{%
@@ -11777,8 +11641,8 @@
 % \begin{macro}{\print@Xnotes}
 % The extra critical feet to be added to the output.
 % \changes{v0.4.1}{2004/03/06}{Added \cs{@opxtrafeetii}}
-% The normal way to add one series.
-% \cs{print@Xnotes} is replaced by \Lpack{eledpar} when using \cs{Pages}.
+% The normal way to add one series,
+% \cs{print@Xnotes}, is replaced by \parpackage when using \cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@Xnotes[1]{%
   \csuse{#1footstart}{#1}%
@@ -11808,21 +11672,27 @@
 %
 % \begin{macro}{\l@ddodoreinxtrafeet}
 % \cs{l@ddodoreinxtrafeet} is the code for catering for the extra footnotes
-% within \cs{@reinserts}. The implementation may well have to change.
-% We use the same classes and ordering as in \cs{l@ddoxtrafeet}.
+% within \cs{@reinserts}.
+% We use the same category and ordering as in \cs{l@ddoxtrafeet}.
 % \changes{v0.2.1}{203/09/13}{Renamed \cs{dodoreinxtrafeet} to \cs{l@ddodoreinxtrafeet}}
 %    \begin{macrocode}
 \newcommand*{\l@ddodoreinxtrafeet}{%
-  \doreinxtrafeeti
-  \doreinxtrafeetii}
+  \IfStrEq{familiar-critical}{\@fnpos}
+    {\doreinxtrafeeti\doreinxtrafeetii}%
+    {%
+    \IfStrEq{critical-familiar}{\@fnpos}%
+        {\doreinxtrafeetii\doreinxtrafeeti}%
+        {\doreinxtrafeeti\doreinxtrafeetii}%
+    }%
+}
 
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\doreinxtrafeetii}
 % \cs{doreinxtrafeetii} is the code for catering for the 
-% class 2\index{class 2 feet} extra critical footnotes
-% within \cs{@reinserts}. The implementation may well have to change.
+%  extra critical footnotes
+% within \cs{@reinserts}. 
 %    \begin{macrocode}
 \newcommand*{\doreinxtrafeetii}{%
   \unless\ifnocritical@%
@@ -11836,145 +11706,6 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\l@d@reinserts}
-%  And here is the modified version of \cs{@reinserts}.
-%    \begin{macrocode}
-\gdef \l@d@reinserts{%
-  \ifvoid\footins\else\insert\footins{\unvbox\footins}\fi
-  \l@ddodoreinxtrafeet
-  \ifvbox\@kludgeins\insert\@kludgeins{\unvbox\@kludgeins}\fi
-}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% The \Lclass{memoir} class does not use the `standard' versions of
-% \cs{@makecol} and \cs{@reinserts}, due to its sidebar insert.
-% We had better add that code if \Lclass{memoir} is used. (It can
-% be awkward dealing with |\if| code within |\if| code, so don't use
-% |\ifl@dmemoir| here.)
-% \changes{v0.2.1}{2003/09/13}{Major changes to insert code when memoir is loaded}
-%    \begin{macrocode}
-\@ifclassloaded{memoir}{%
-%    \end{macrocode}
-% \Lclass{memoir} is loaded so we use \Lclass{memoir}'s built in hooks.
-%    \begin{macrocode}
-  \g@addto@macro{\m@mdoextrafeet}{\l@ddoxtrafeet}%
-  \g@addto@macro{\m@mdodoreinextrafeet}{\l@ddodoreinxtrafeet}%
-  }{%
-%    \end{macrocode}
-% \Lclass{memoir} has not been loaded, so redefine \verb?@makecol? and 
-% \verb?@reinserts?.
-%    \begin{macrocode}
-  \gdef\@makecol{\l@d@makecol}%
-  \gdef\@reinserts{\l@d@reinserts}%
-}
-
-%    \end{macrocode}
-%
-%
-
-%   It turns out that \verb?\@doclearpage? also needs modifying.
-% \changes{v0.4.1}{2004/03/25}{Added code for changing \cs{@doclearpage}}
-% \begin{macro}{\if@led@nofoot}
-% \begin{macro}{\@led@extranofeet}
-% We have to check if there are any leftover feet. \verb?\@led@extranofeet?
-% is a hook for handling further footnotes.
-%    \begin{macrocode}
-\newif\if@led@nofoot
-\newcommand*{\@led@extranofeet}{}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%    \begin{macrocode}
-\@ifclassloaded{memoir}{%
-%    \end{macrocode}
-% If the \Lclass{memoir} class is loaded we hook into its modified 
-% \verb?\@doclearpage?.
-% \begin{macro}{\@mem@extranofeet}
-%    \begin{macrocode}
-\g@addto@macro{\@mem@extranofeet}{%
-  \unless\ifnocritical@%
-    \def\do#1{\ifvoid\csuse{#1footins}\else\@mem@nofootfalse\fi%
-    \ifvoid\csuse{footins#1}\else\@mem@nofootfalse\fi%
-    }
-    \dolistloop{\@series}%
-    \@led@extranofeet
-  \fi%
-  }%
-}{%
-%    \end{macrocode}
-% \end{macro}
-% As \Lclass{memoir} is not loaded we have to do it all here.
-% \begin{macro}{\@led@testifnofoot}
-% \begin{macro}{\@doclearpage}
-%    \begin{macrocode}
-\newcommand*{\@led@testifnofoot}{%
-  \@led@nofoottrue%
-  \ifvoid\footins\else%
-    \@led@nofootfalse%
-  \fi%
-  \def\do##1{%
-    \unless\ifnocritical@%
-      \ifvoid\csuse{##1footins}\else%
-        \@led@nofootfalse%
-      \fi%
-    \fi%
-    \unless\ifnofamiliar@%    
-      \ifvoid\csuse{footins##1}\else%
-        \@led@nofootfalse%
-      \fi%
-    \fi%
-  }%
-  \dolistloop{\@series}%
-  \@led@extranofeet%
-}%
-
-\renewcommand{\@doclearpage}{%
-  \@led@testifnofoot
-  \if@led@nofoot
-    \setbox\@tempboxa\vsplit\@cclv to\z@ \unvbox\@tempboxa
-    \setbox\@tempboxa\box\@cclv
-    \xdef\@deferlist{\@toplist\@botlist\@deferlist}%
-    \global \let \@toplist \@empty
-    \global \let \@botlist \@empty
-    \global \@colroom \@colht
-    \ifx \@currlist\@empty
-    \else
-       \@latexerr{Float(s) lost}\@ehb
-       \global \let \@currlist \@empty
-    \fi
-    \@makefcolumn\@deferlist
-    \@whilesw\if@fcolmade \fi{\@opcol\@makefcolumn\@deferlist}%
-    \if@twocolumn
-      \if@firstcolumn
-        \xdef\@dbldeferlist{\@dbltoplist\@dbldeferlist}%
-        \global \let \@dbltoplist \@empty
-        \global \@colht \textheight
-        \begingroup
-           \@dblfloatplacement
-           \@makefcolumn\@dbldeferlist
-           \@whilesw\if@fcolmade \fi{\@outputpage
-                                     \@makefcolumn\@dbldeferlist}%
-        \endgroup
-      \else
-        \vbox{}\clearpage
-      \fi
-    \fi
-  \else
-    \setbox\@cclv\vbox{\box\@cclv\vfil}%
-    \l@d@makecol\@opcol
-    \clearpage
-  \fi}
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
 %
 % \begin{macro}{\print@notesX}
 % \begin{macro}{\doxtrafeeti}
@@ -12025,6 +11756,124 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+%
+% \subsubsection{Standard output's commands patching}
+% The \Lclass{memoir} class does not use the `standard' versions of
+% \cs{@makecol} and \cs{@reinserts}, due to its sidebar insert.
+% We had better add that code if \Lclass{memoir} is used. (It can
+% be awkward dealing with |\if| code within |\if| code, so don't use
+% |\ifl@dmemoir| here.)
+% \changes{v0.2.1}{2003/09/13}{Major changes to insert code when memoir is loaded}
+% \changes{v2.0.0}{2015/06/12}{\cs{@makecol}, \cs{@reinserts} and \cs{@doclearpage} are patched instead of begin redefined}
+%    \begin{macrocode}
+\@ifclassloaded{memoir}{%
+%    \end{macrocode}
+% \Lclass{memoir} is loaded so we use \Lclass{memoir}'s built in hooks.
+%    \begin{macrocode}
+  \g@addto@macro{\m@mdoextrafeet}{\l@ddoxtrafeet}%
+  \g@addto@macro{\m@mdodoreinextrafeet}{\l@ddodoreinxtrafeet}%
+  }{%
+%    \end{macrocode}
+% \Lclass{memoir} has not been loaded, so patch \cs{@makecol} and 
+% \cs{@reinserts}.
+%    \begin{macrocode}
+  %\gdef\@makecol{\l@d@makecol}%
+  \patchcmd%
+    {\@makecol}%
+    {\xdef\@freelist{\@freelist\@midlist}}%
+    {\xdef\@freelist{\@freelist\@midlist}\l@ddoxtrafeet}%
+    {}%
+    {\led@error@fail@patch@@makecol}%
+    
+  \patchcmd%
+    {\@reinserts}%
+    {\ifvbox}%
+    {\l@ddodoreinxtrafeet\ifvbox}%
+    {}%
+    {\led@error@fail@patch@@reinserts}%
+}
+
+%    \end{macrocode}
+%
+%
+
+%   It turns out that \cs{@doclearpage} also needs modifying.
+% \changes{v0.4.1}{2004/03/25}{Added code for changing \cs{@doclearpage}}
+% \begin{macro}{\if@led@nofoot}
+% We have to check if there are any leftover feet. 
+%    \begin{macrocode}
+\newif\if@led@nofoot
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%    \begin{macrocode}
+\@ifclassloaded{memoir}{%
+%    \end{macrocode}
+% If the \Lclass{memoir} class is loaded we hook into its modified 
+% \verb?\@doclearpage?.
+% \begin{macro}{\@mem@extranofeet}
+%    \begin{macrocode}
+\g@addto@macro{\@mem@extranofeet}{%
+  \unless\ifnocritical@%
+    \def\do#1{%
+      \ifvoid\csuse{#1footins}\else%
+        \@mem@nofootfalse%
+      \fi%
+      \ifvoid\csuse{footins#1}\else%
+        \@mem@nofootfalse%
+      \fi%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+  }%
+}{%
+%    \end{macrocode}
+% \end{macro}
+% As \Lclass{memoir} is not loaded we have patch \cs{@doclearpage}.
+% \begin{macro}{\@led@testifnofoot}
+% \begin{macro}{\@doclearpage}
+%    \begin{macrocode}
+\newcommand*{\@led@testifnofoot}{%
+  \@led@nofoottrue%
+  \ifvoid\footins\else%
+    \@led@nofootfalse%
+  \fi%
+  \def\do##1{%
+    \unless\ifnocritical@%
+      \ifvoid\csuse{##1footins}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+    \unless\ifnofamiliar@%    
+      \ifvoid\csuse{footins##1}\else%
+        \@led@nofootfalse%
+      \fi%
+    \fi%
+  }%
+  \dolistloop{\@series}%
+}%
+
+\pretocmd%
+ {\@doclearpage}%
+ {\@led@testifnofoot}%
+ {}%
+ {\led@error@fail@patch@@doclearpage}%
+ 
+\patchcmd%
+ {\@doclearpage}%
+ {\ifvoid\footins}%
+ {\if@led@nofoot}%
+ {}%
+ {\led@error@fail@patch@@doclearpage}%
+
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 %
 % \section{Cross referencing}
 % \label{xref}\relax
@@ -16488,6 +16337,7 @@
 % \begin{longtable}{ll}
 % \emph{Deprecated command} 	& \emph{Replaced by} \\
 % \endhead
+% \cs{@led@extranofeet} & \cs{newseries}\\
 % \cs{ledfootinsdim}		& \cs{Xmaxhnotes} and \cs{maxhnotesX} 	\\
 % \cs{parafootftmsep}	  & \cs{Xparafootsep} and \cs{parafootsepX} \\
 % \cs{notenumfont}  		& \cs{Xnotenumfont}, \cs{Xendnotenumfont} and \cs{notenumfontX} \\
