@@ -11890,29 +11890,21 @@
 % \section{Cross referencing}
 % \label{xref}\relax
 %
-%    Peter Wilson has rewritten portions of the code in this section so that
-% the LaTeX \file{.aux} file is used. This will also handle \cs{include}d
-% files.
-%
-%    Further, I have renamed some of the original \edmac{} macros so that
-% they do not clash with the LaTeX label/ref commands (\edmac{} and LaTeX
-% use very different mechanisms). In particular,
-% the original \edmac{} \cs{label} and \cs{pageref} have been renamed
-% as \cs{edlabel} and \cs{edpageref} respectively.
 % 
 %
 % You can mark a place in the text using a command of the form
-% \verb"\edlabel{foo}", and later refer to it using the label
-% \verb"foo" by saying \verb"\edpageref{foo}", or \verb"\lineref{foo}" or
-% \verb"\sublineref{foo}". These reference commands will produce,
-% respectively, the page, line and sub-line on which the
-% \verb"\edlabel{foo}" command occurred.
+% \cs{edlabel}\marg{foo}, and later refer to it using the label
+% \meta{foo} by saying \cs{edpageref}\marg{foo}, or \cs{\lineref}\marg{foo} or
+% \cs{sublineref}\marg{foo} or \cs{pstartref}. These reference commands will produce,
+% respectively, the page, line sub-line and pstart on which the
+% \cs{edlabel}\marg{foo} command occurred.
 %
 % The reference macros warn you if a reference is made to an
-% undefined label. If \verb"foo" has been used as a label before,
-% the \verb"\edlabel{foo}" command will issue a complaint; subsequent
+% undefined label. 
+% If \marg{foo} has been used as a label before,
+% the \cs{edlabel}\marg{foo} command will issue a complaint; subsequent
 % \cs{edpageref} and \cs{edlineref} commands will refer to the
-% latest occurrence of \verb"\label{foo}".
+% latest occurrence of \cs{edlabel}\marg{foo}.
 %
 % \begin{macro}{\labelref@list}
 % Set up a new list, \cs{labelref@list}, to hold the page, line and
@@ -11927,7 +11919,6 @@
 % A convenience macro to zero two labeling counters in one go.
 % \changes{v0.2.1}{2003/08/26}{Minor change to \cs{zz@@@}}
 %    \begin{macrocode}
-%% \newcommand*{\zz@@@}{000|000|000} % set three counters to zero in one go
 \newcommand*{\zz@@@}{000|000} % set two counters to zero in one go
 
 %    \end{macrocode}
@@ -11946,7 +11937,7 @@
 % substantially improved their efficiency and flexibility.}
 %
 % This version of the original \edmac{} \cs{label} uses \cs{@bsphack}
-% and \cs{@esphack} to eliminate extra space problems and also the LaTeX
+% and \cs{@esphack} to eliminate extra space problems and also use the \LaTeX\ 
 % write methods for the \file{.aux} file.
 %
 %    Jesse Billett\footnote{(\url{jdb43@cam.ac.uk}) via the \texttt{ctt}
@@ -11956,7 +11947,7 @@
 % 
 % \changes{v0.2.1}{2003/08/26}{Tweaked \cs{edlabel} to get correct page numbers}
 % \changes{v0.14.0}{2012/04/04}{Tweaked \cs{edlabel} to get correct line number if the command is first element of a paragraph.}
-% \changes{v1.18.0}{2015/02/23}{\cs{edlabel} is now defined only one time for both eledmac and eledpar}
+% \changes{v1.18.0}{2015/02/23}{\cs{edlabel} is now defined only one time for both \eledmac and \eledpar}
 
 %    \begin{macrocode}
 \newcommand*{\edlabel}[1]{%
@@ -11976,8 +11967,7 @@
     \fi%
 %    \end{macrocode}
 % Use code from the kernel \cs{label} command to write the correct
-% page number (it seems possible that the original \edmac's \cs{page@num}
-% scheme might also have had problems in this area).
+% page number.
 % Also define an hypertarget if \Lpack{hyperref} package is loaded.
 %    \begin{macrocode}
     \protected@write\@auxout{}%
@@ -12039,6 +12029,9 @@
 %
 % The initial use of \cs{newcommand} is to catch if \cs{l@dmake@labels}
 % has been previously defined (by a class or package).
+%
+% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ pstart number, \verb+#5+ label.
+%
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
 \def\l@dmake@labels#1|#2|#3|#4|#5{%
@@ -12051,7 +12044,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%  LaTeX reads the \texttt{aux} file at both the beginning and end of
+%  \LaTeX\ reads the \verb+aux+ file at both the beginning and end of
 % the document, so we have to switch off duplicate label checking
 % after the first time the file is read.
 %
@@ -12069,7 +12062,7 @@
 % \cs{@page}, \cs{@nl}, and the \cs{sub@on} and \cs{sub@off} commands
 % appearing in the \cs{linenum@out} file.
 %
-% LaTeX uses the \texttt{page} counter for page numbers. However,
+% \LaTeX\ uses the \texttt{page} counter for page numbers. However,
 % it appears that this is not the right place to grab the page number.
 % That task is now done in the \cs{edlabel} macro. This version
 % of \cs{@lab} appends just the current line and sub-line numbers
@@ -12100,13 +12093,15 @@
          \led@warn@DuplicateLabel{#1 (applabel)}%
        }%
 %    \end{macrocode}
-% Parse the edtext line numbers.
+% Parse the \cs{edtext} line numbers.
 %    \begin{macrocode}      
      \expandafter\l@dp@rsefootspec\l@d@nums|%
-%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \end{macrocode}
+% Use the \LaTeX\  standard hack for label. 
 %    \begin{macrocode}
      \@bsphack%
-%    \end{macrocode}% And now, write the data in the auxiliary file.
+%    \end{macrocode}
+% And now, write the data in the auxiliary file.
 %    \begin{macrocode}
       \ifledRcol%
         \protected@write\@auxout{}%
@@ -12121,15 +12116,18 @@
         \protected@write\@auxout{}%
           {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
       \fi%
-%    \end{macrocode}% Use the \LaTeX standard hack for label. 
+%    \end{macrocode}
+% Use the \LaTeX\ standard hack for label. 
 %    \begin{macrocode}
       \@esphack%
-%    \end{macrocode}% Warning if \cs{edlabel} is called outside of edtext.
+%    \end{macrocode}
+% Warning if \cs{applabel} is called outside of \cs{edtext}.
 %    \begin{macrocode}  
   \else%
     \led@warn@AppLabelOutEdtext{#1}%
   \fi%
-%    \end{macrocode}% End of \cs{applabel}
+%    \end{macrocode}
+% End of \cs{applabel}
 %    \begin{macrocode}
 }%
 %    \end{macrocode}
@@ -12137,7 +12135,8 @@
 % \begin{macro}{\wrap@edcrossref}
 % \changes{v1.12.1}{2014/08/06}{Fix spurious spaces.}
 % \changes{v1.12.7}{2014/09/07}{\cs{wrap@edcrossref} is now robust}
-% \cs{wrap@edcrossref} is called around all eledmac crossref commands, except those which start with x. It adds the hyperlink.
+% \cs{wrap@edcrossref} is called around all \macpackage crossref commands, except those which start with x. 
+% It adds the hyperlink.
 %    \begin{macrocode}
 \newrobustcmd{\wrap@edcrossref}[2]{%
   \ifdef{\hyperlink}%
@@ -12149,15 +12148,17 @@
 % \begin{macro}{\edpageref}
 % \begin{macro}{\xpageref}
 % If the specified label exists, \cs{edpageref} gives its page number.
+% 
 % For this reference command, as for the other two, a special
 % version with prefix \verb"x" is provided for use in places where the
 % command is to be scanned as a number, as in \cs{linenum}. These
-% special versions have two limitations: they don't print error
+% special versions have two limitations: they do not print error
 % messages if the reference is unknown, and they can't appear as
 % the first label or reference command in the file; you must ensure
 % that a \cs{edlabel} or a normal reference command appears first, or
 % these x-commands will always return zeros.
-% LaTeX already defines a \cs{pageref}, so changing the name
+% 
+% \LaTeX\ already defines a \cs{pageref}, so changing the name
 %  to \cs{edpageref}.
 %    \begin{macrocode}
 \newcommand*{\edpageref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{1}{#1}}}
@@ -12168,7 +12169,8 @@
 % \end{macro}
 %
 % \begin{macro}{\edlineref}
-% \changes{v1.16.1}{2015/02/05}{\cs{lineref} is not defined if defined by some other package, like lineno. Eledmac provides \cs{edlineref} instead.}
+% \changes{v1.16.1}{2015/02/05}{\cs{lineref} is not defined if defined by some other package, like lineno.  
+% \Eledmac provides \cs{edlineref} instead.}
 % \begin{macro}{\xlineref}
 % If the specified label exists, \cs{lineref} gives its line number.
 %    \begin{macrocode}
@@ -12221,7 +12223,7 @@
 % \begin{macro}{\l@dgetref@num}
 % Next, \cs{l@dgetref@num} fetches the number we want.  It has two
 % arguments: the first is simply a digit, specifying whether to
-% fetch a page (1), line (2) or sub-line (3) number.  (This
+% fetch a page (1), line (2),  sub-line (3) or (4) pstart number.  (This
 % switching is done by calling \cs{l@dlabel@parse}.) The second argument
 % is the label-macro, which because of the \cs{@lab} macro above is
 % defined to be a string of the type \verb"123|456|789".
@@ -12246,7 +12248,7 @@
 % which extracts the appropriate number from its first arguments.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, or 3) which defines which of the earlier three numbers to
+% 2, 3 or 4) which defines which of the earlier three numbers to
 % pick out. (It was earlier given as the first argument of
 % \cs{l@dgetref@num}.)
 %    \begin{macrocode}
