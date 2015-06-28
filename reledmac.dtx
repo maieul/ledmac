@@ -12409,30 +12409,34 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 %
 % \section{Side notes}
 %
-%    Regular \verb?\marginpar?s do not work inside numbered text --- they
-% don't produce any note but do put an extra unnumbered blank line into
+%    Regular \cs{marginpar}s do not work inside numbered text --- they
+% do not produce any note but do put an extra unnumbered blank line into
 % the text.
 %
-% \begin{macro}{\l@dold@xympar}
 % \begin{macro}{\@xympar}
-% Changing \verb?\@xympar? a little at least ensures that \verb?\marginpar?s
+% Changing \cs{@xympar} a little at least ensures that \cs{marginpar}s
 % in numbered text do not disturb the flow.
-% \changes{v0.5.0}{2004/04/0}{Eliminated \cs{marginpar} disturbance}
+% \changes{v0.5.0}{2004/04/01}{Eliminated \cs{marginpar} disturbance}
+% \changes{v2.0.0}{2104/06/28}{Patching \cs{@xympar} instead of redefining it}
+%
 %    \begin{macrocode}
-\let\l@dold@xympar\@xympar
-\renewcommand{\@xympar}{%
-  \ifnumberedpar@
+\pretocmd{\@xympar}%
+  {\ifnumberedpar@
     \led@warn@NoMarginpars
     \@esphack
-  \else
-    \l@dold@xympar
-  \fi}
+  \else}%
+  {}%
+  {}%
+
+\apptocmd{\@xympar}%
+  {\fi}%
+  {}
+  {}
 
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
 %
-%  We provide side notes as replacement for \verb?\marginpar? in numbered text.
+%  We provide side notes as replacement for \cs{marginpar} in numbered text.
 % \changes{v0.5.0}{2004/04/03}{Added left and right side notes}
 % \changes{v0.5.1}{2004/04/10}{Added moveable side note}
 %
@@ -12444,10 +12448,10 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % the default for line numbers).
 % \cs{l@dgetsidenote@margin} returns the number associated to side note margin:
 % \begin{description}
-%   \item[left] : 0
-%    \item[right] : 1
-%    \item[outer] : 2
-%    \item[inner] : 3
+%   \item[left]: 0
+%    \item[right]: 1
+%    \item[outer]: 2
+%    \item[inner]: 3
 % \end{description}
 % \changes{v0.5.1}{2004/04/10}{Added \cs{sidenotemargin} and \cs{sidenote@margin}}
 % \changes{v0.7.0}{2005/02/23}{Added \cs{l@dgetsidenote@margin}}
@@ -12512,8 +12516,8 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % \begin{macro}{\ledlsnotefontsetup}
 % \begin{macro}{\ledrsnotefontsetup}
 % These specify the width of the left/right boxes (initialised to
-% \verb?\marginparwidth?, their distance from
-% the text (initialised to \verb?\linenumsep?, and the fonts used. 
+% \cs{marginparwidth}), their distance from
+% the text (initialised to \cs{linenumsep}), and the fonts used. 
 %    \begin{macrocode}
 \newdimen\ledlsnotewidth \ledlsnotewidth=\marginparwidth
 \newdimen\ledrsnotewidth \ledrsnotewidth=\marginparwidth
@@ -12539,7 +12543,7 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % \cs{ledleftnote}, \cs{ledrightnote}, \cs{ledinnernote}, \cs{ledouternote} are the
 % user commands for left, right, inner and outer sidenotes.
 % The two last one are just alias for the two first one, depending of the page number.
-% \verb?\ledsidenote?\marg{text} is the command for a moveable sidenote.
+% \cs{ledsidenote}\marg{text} is the command for a moveable sidenote.
 %    \begin{macrocode}
 \newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
 \newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
@@ -12572,7 +12576,7 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % \begin{macro}{\l@dlsnote}
 % \begin{macro}{\l@drsnote}
 % \begin{macro}{\l@dcsnote}
-% \changes{v1.12.0}{2014/08/05}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \Lpack{eledmac}, including needs for eledpar case.}.
+% \changes{v1.12.0}{2014/08/05}{\cs{l@dlsnote},\cs{l@drsnote} and \cs{l@dcsnote} defined only one time, in \eledmac, including needs for eledpar case.}.
 % The `footnotes' for left, right, and moveable sidenotes. The whole 
 % scheme is reminiscent of the critical footnotes code.
 %    \begin{macrocode}
@@ -12633,7 +12637,7 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % \begin{macro}{\vl@drsnote}
 % \begin{macro}{\vl@dcsnote}
 % Put the left/right text into boxes, but just save the moveable text.
-% \cs{l@dcsnotetext}, \cs{l@dcsnotetext@l} and \cs{l@dcsnotetext@r} are etoolbox lists which will store the content of side notes.
+% \cs{l@dcsnotetext}, \cs{l@dcsnotetext@l} and \cs{l@dcsnotetext@r} are \Lpack{etoolbox}'s  lists which will store the content of side notes.
 % We store the content in lists, because we need to loop later on them, in case many sidenote co-exist for the same line.
 % That is there some special test to do, in order to:
 % \begin{itemize}
@@ -12696,8 +12700,8 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 %
 % \begin{macro}{\setl@dlp@rbox}
 % \begin{macro}{\setl@drpr@box}
-% \verb?\setl@dlprbox?\marg{lednums}\marg{tag}\marg{text} puts \meta{text}
-% into the \verb?\l@dlp@rbox? box. And similarly for the right side box.
+% \cs{setl@dlprbox}\marg{lednums}\marg{tag}\marg{text} puts \meta{text}
+% into the \cs{l@dlp@rbox} box. And similarly for the right side box.
 % It is these boxes that finally
 % get displayed in the margins.
 %    \begin{macrocode}
@@ -12735,7 +12739,7 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % stripped down version of \cs{affixlin@num}.
 %
 % Before do it, we concatenate all moveable sidenotes of the line, using \cs{sidenotesep} as separator.
-% It's the result that we put on the sidenote.
+% It is the result that we put on the sidenote.
 % \changes{v1.4.1}{2012/11/16}{Remove spurious spaces.}
 %    \begin{macrocode}
 \newcommand*{\affixside@note}{%
