@@ -3699,6 +3699,20 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\led@error@fail@patch@@iiiminipage}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@iiiminipage}{%
+  \reledmac@error{Fail to patch \string\@iiiminipage\space command.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@endminipage}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@endminipage}{%
+  \reledmac@error{Fail to patch \string\endminipage\space command.}{\@ehd}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Move gobbling command}
@@ -12801,13 +12815,14 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 %    We can put footnotes into minipages. The preparatory code has
 % been set up earlier, all that remains is to ensure that it is available 
 % inside a minipage box. This requires some alteration to the kernel code,
-% specifically the \verb?\@iiiminipage? and \verb?\endminipage? macros.
-% We'll arrange this so that additional series can be easily added.
+% specifically the \cs{@iiiminipage} and \cs{endminipage} macros.
+% We will arrange this so that additional series can be easily added.
 %
 % \begin{macro}{\l@dfeetbeginmini}
 % \begin{macro}{\l@dfeetendmini}
 % \changes{v1.9.0}{2014/02/05}{Add \cs{mpfnpos} to choice the order of footnotes in minipage / ledgroup.}
-% These will be the hooks in \verb?\@iiiminpage? and \verb?\endminipage?
+% These will be the hooks in \cs{@iiiminpage} and \cs{endminipage}.
+% 
 % They can be extended to handle other things if necessary.
 % \changes{v0.4.0}{2004/02/29}{Added \cs{l@dfeetbeginmini}, \cs{l@dfeetendmini}
 %                           and all their supporting code}
@@ -12880,7 +12895,10 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 
 \newcommand*{\l@dfamendmini}{%
  \unless\ifnofamiliar@%
-   \def\do##1{\ifvoid\csuse{mpfootins##1}\else\csuse{mpfootgroup##1}{##1}\fi}%
+   \def\do##1{%
+     \ifvoid\csuse{mpfootins##1}\else%
+     \csuse{mpfootgroup##1}{##1}%
+   \fi}%
    \dolistloop{\@series}%
  \fi%
 }%
@@ -12889,78 +12907,73 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 % \end{macro}
 %
 % \begin{macro}{\@iiiminipage}
-% This is our extended form of the kernel \verb?\@iiiminipage? defined in
+% This is our extended form of the kernel \cs{@iiiminipage} defined in
 % \file{ltboxes.dtx}.
 % \changes{v0.4.0}{2004/02/29}{Modified kernel \cs{@iiiminipage} and 
 %                          \cs{endminipage} to cater for critical footnotes}
+% \changes{v2.0.0}{2015/06/28}{Patch \cs{@iiiminipage} instead of redefining it.} 
 %    \begin{macrocode}
-\def\@iiiminipage#1#2[#3]#4{%
-  \leavevmode
-  \@pboxswfalse
-  \setlength\@tempdima{#4}%
-  \def\@mpargs{{#1}{#2}[#3]{#4}}%
-  \setbox\@tempboxa\vbox\bgroup
-    \color@begingroup
-      \hsize\@tempdima
-      \textwidth\hsize \columnwidth\hsize
-      \@parboxrestore
-      \def\@mpfn{mpfootnote}\def\thempfn{\thempfootnote}\c@mpfootnote\z@
-      \let\@footnotetext\@mpfootnotetext
-%    \end{macrocode}
-% The next line is our addition to the original.
-%    \begin{macrocode}
-      \l@dfeetbeginmini%                   added
-      \let\@listdepth\@mplistdepth \@mplistdepth\z@
-      \@minipagerestore
-      \@setminipage}
-
+\patchcmd%
+  {\@iiiminipage}%
+  {\let\@footnotetext\@mpfootnotetext}%
+  {\let\@footnotetext\@mpfootnotetext\l@defeetbeginmini}%
+  {}%
+  {\led@error@fail@patch@@iiiminipage}%
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\endminipage}
-% This is our extended form of the kernel \verb?\endminipage? defined in
+% This is our extended form of the kernel \cs{endminipage} defined in
 % \file{ltboxes.dtx}.
+% \changes{v2.0.0}{2015/06/28}{Patch \cs{endminipage} instead of redefining it.} 
 %    \begin{macrocode}
-\def\endminipage{%
-  \par
-  \unskip
-  \ifvoid\@mpfootins\else
-    \l@dunboxmpfoot
-  \fi
-%    \end{macrocode}
-% The next line is our addition to the original.
-%    \begin{macrocode}
-  \l@dfeetendmini%                 added
-  \@minipagefalse
-  \color@endgroup
-  \egroup
-  \expandafter\@iiiparbox\@mpargs{\unvbox\@tempboxa}}
+\patchcmd%
+  {\endminipage}%
+  {\footnoterule}%
+  {\footnoterule\l@advance@parledgroup@beforenormalnotes}%
+  {}%
+  {\led@error@fail@patch@endminipage}
+  
+\patchcmd%
+  {\endminipage}%
+  {\@minipagefalse}%
+  {\l@defeetendmini\@minipagefalse}%
+  {}%
+  {\led@error@fail@patch@endminipage}
 
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\l@dunboxmpfoot}
+% \begin{macro}{\l@dunboxmpfoot}%
+% \begin{macro}{\l@advance@parledgroup@beforenormalnotes}%
 % \changes{v0.7.0}{2005/02/18}{Added \cs{l@dunboxmpfoot} containing
 %              some common code}
+% \changes{v2.0.0}{2015/06/28}{Some conde of \cs{l@dumboxmpfoot} moved to \cs{l@advance@parledegroup@beforenormalnotes}}
+% \cs{@ldunboxmpfoot} insert normal footnotes for ledgroup} 
 %    \begin{macrocode}
 \newcommand*{\l@dunboxmpfoot}{%
     \vskip\skip\@mpfootins
     \normalcolor
     \footnoterule
-    \ifparledgroup
-      \ifl@dpairing
-        \ifledRcol
+    \l@advance@parledgroup@beforenormalnotes
+    \unvbox\@mpfootins%
+} 
+%    \end{macrocode}
+% When using parallel ledgroup, we need to store the vertical space added before footnote, in order to compensate them between left and right pages.
+%    \begin{macrocode}
+\newcommand{\l@advance@parledgroup@beforenormalnotes}{%
+  \ifparledgroup
+    \ifl@dpairing
+      \ifledRcol
           \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@mpfootins}
-        \else
+      \else
           \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@mpfootins}
-        \fi
       \fi
     \fi
-    \unvbox\@mpfootins}
-
+  \fi
+}
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 %
 % \begin{environment}{ledgroup}
 % This environment puts footnotes at the end, even if that happens to
@@ -13046,7 +13059,10 @@ appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheles
 %    \end{macrocode}
 % \begin{macro}{\ifledgroupnotesL@}
 % \begin{macro}{\ifledgroupnotesR@}
-% These boolean tests check if we are in the notes of a ledgroup.  If we are, we don't number the lines.
+% These boolean tests check if we are in the notes of a ledgroup.  
+% If we are, we do not number the lines.
+% It could be useful for parallel ledgroup of \parpackage.
+% 
 %    \begin{macrocode}
 \newif\ifledgroupnotesL@
 \newif\ifledgroupnotesR@
