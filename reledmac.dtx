@@ -65,7 +65,7 @@
 % \fi
 %
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{11401}
+% \CheckSum{11300}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -13778,7 +13778,7 @@
 % \end{macro}
 %
 % \begin{macro}{\l@dcollect@body}
-% The macro |\l@dcollect@body| starts the scan for the |\end{...}| command
+% The macro \cs{l@dcollect@body} starts the scan for the \cs{end}\marg{env} command
 % of the current environment. It takes a macro name as argument. This macro
 % is supposed to take the whole body of the environment as its argument.
 % For example, given |cenv#1{...}| as a macro that processes |#1|, then
@@ -13799,8 +13799,8 @@
 % \end{macro}
 %
 % \begin{macro}{\l@dpush@begins}
-% When adding a piece of the current environment's contents to |\l@denvbody|,
-% we scan it to check for additional |\begin| tokens, and add a `b' to the
+% When adding a piece of the current environment's contents to \cs{l@denvbody},
+% we scan it to check for additional \cs{begin} tokens, and add a `b' to the
 % stack for any that we find.
 %    \begin{macrocode}
 \def\l@dpush@begins#1\begin#2{%
@@ -13810,12 +13810,12 @@
 % \end{macro}
 %
 % \begin{macro}{\l@dcollect@@body}
-% |\l@dcollect@@body| takes two arguments: the first will consist of all text
-% up to the next |\end| command, and the second will be the |\end| command's
-% argument. If therte are any extra |\begin| commands in the body text, 
-% a marker is pushed onto a stack by the |l@dpush@begins| function. 
-% Empty state for this stack means we have reached the |\end| that matches 
-% our original |\begin|. Otherwise we need to include the |\end| and its 
+% \cs{l@dcollect@@body} takes two arguments: the first will consist of all text
+% up to the next |\end| command, and the second will be the \cs{end} command's
+% argument. If there are any extra \cs{begin} commands in the body text, 
+% a marker is pushed onto a stack by the \cs{l@dpush@begins} function. 
+% Empty state for this stack means we have reached the \cs{end} that matches 
+% our original \cs{begin}. Otherwise we need to include the \cs{end} and its 
 % argument in the material we are adding to the environment body accumulator.
 %    \begin{macrocode}
 \def\l@dcollect@@body#1\end#2{%
@@ -13834,7 +13834,7 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%    There was a question on CTT about how to use |\collect@body| for a macro
+%    There was a question on CTT about how to use \cs{collect@body} for a macro
 % taking an argument. The following is part of that thread.
 % \begin{verbatim}
 % From: Heiko Oberdiek <oberdiek@uni-freiburg.de>
@@ -13930,39 +13930,21 @@
 % \end{verbatim}
 %
 %
-%
+% \subsection{Tabular environments}
 % This is based on the work by Herbert Breger\index{Breger, Herbert}
 %  in developing \file{tabmac.tex}. 
-% \begin{verbatim}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % This is file tabmac.tex 1.0. 
-% % You find here macros for tabular structures compatible with
-% % Edmac (authored by Lavagnino/Wujastyk). The use of the macros is
-% % explained in German language in file tabanlei.dvi. The macros were 
-% % developed for Edmac 2.3, but this file has been adjusted to Edmac 3.16.
-% %
-% % ATTENTION: This file uses some Edmac control sequences (like
-% % \text, \Afootnote etc.) and redefines \morenoexpands. If you yourself 
-% % redefined some Edmac control sequences, be careful: some adjustements 
-% % might be necessary.
-% % October 1996
-% %
-% % My kind thanks to Nora G^?deke for valuable support. Any hints and 
-% % comments are welcome, please contact Herbert Breger,  
-% % Leibniz-Archiv, Waterloostr. 8, D -- 30169 Hannover, Germany
-% % Tel.: 511 - 1267 327
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \end{verbatim}
 %
 % The original \file{tabmac.tex} file was void of comments or any explanatory
-% text other than the above notice. The algorithm is Breger's. I have made
+% text other than the above notice. The algorithm is Breger's. Peter Wilson have made
 % some cosmetic changes to the original code and reimplemented some things
-% so they are more LaTeX-like. All the commentary is mine, as are any mistakes
+% so they are more LaTeX-like. All the commentary are from Peter Wilson, as are any mistake
 % or errors.
 %
+% However, Maïeul Rouquette has modified code in order to add new features of \eledmac and \reledmac.
+% \subsubsection{Disabling and restoring commands}
 % \begin{macro}{\l@dtabnoexpands}
-% An extended and modified version of the original additional no expansions..
+% More no expansion for critical and familiar footnotes in tabular environment.
+%
 %    \begin{macrocode}
 \newcommand*{\l@dtabnoexpands}{%
   \let\rtab=0%
@@ -13973,8 +13955,6 @@
   \let\ctabtext=0%
   \let\edbeforetab=0%
   \let\edaftertab=0%
-  \let\edatab=0%
-  \let\edatabell=0%
   \let\edatleft=0%
   \let\edatright=0%
   \let\edvertline=0%
@@ -14047,11 +14027,136 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\EDTEXT}
+% \begin{macro}{\xedtext}
+% We need to be able to modify the \cs{edtext} macros
+% and also restore their original definitions.
+%    \begin{macrocode}
+\let\EDTEXT=\edtext
+\newcommand{\xedtext}[2]{\EDTEXT{#1}{#2}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\EDLABEL}
+% \begin{macro}{\xedlabel}
+% We need to be able to modify and restore the \cs{edlabel} macro.
+%    \begin{macrocode}
+\let\EDLABEL=\edlabel
+\newcommand*{\xedlabel}[1]{\EDLABEL{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\EDINDEX}
+% \begin{macro}{\xedindex}
+% \begin{macro}{\nulledindex}
+% Macros supporting modification and restoration of \cs{edindex}.
+%    \begin{macrocode}
+\let\EDINDEX=\edindex
+\newcommand{\xedindex}{\@bsphack%
+  \@ifnextchar [{\l@d@index}{\l@d@index[\jobname]}}
+\newcommand{\nulledindex}[2][\jobname]{\@bsphack\@esphack}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\@line@@num}
+% Macro supporting restoration of |\linenum|.
+%    \begin{macrocode}
+\let\@line@@num=\linenum
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@dgobblearg}
+% \cs{l@dgobbleoptarg}\oarg{arg}\marg{arg} replaces these two arguments (first is optional) by \cs{relax}.
+% \changes{v1.12.5}{2014/08/28}{\cs{l@dgobblearg} becomes \cs{l@dgobbeloptarg}}
+%    \begin{macrocode}
+\newcommand*{\l@dgobbleoptarg}[2][]{\relax}%
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\Relax}
+% \begin{macro}{\NEXT}
+%    \begin{macrocode}
+\let\Relax=\relax
+\let\NEXT=\next
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\l@dmodforedtext}
+% \begin{macro}{\l@drestoreforedtext}
+% Modify and restore various macros for when |\edtext| is used.
+% \changes{v1.12.5}{2014/08/28}{Debug optional arguments of \cs{Xfootnote} in tabular context}
+%    \begin{macrocode}
+\newcommand{\l@dmodforedtext}{%
+  \let\edtext\relax
+  \def\do##1{\global\csletcs{##1footnote}{l@dgobbleoptarg}}%
+  \dolistloop{\@series}%
+  \let\edindex\nulledindex
+  \let\linenum\@gobble}
+\newcommand{\l@drestoreforedtext}{%
+  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
+  \dolistloop{\@series}%
+  \let\edindex\xedindex}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\l@dnullfills}
+% \begin{macro}{\l@drestorefills}
+% Nullify and restore some column fillers, etc.
+%    \begin{macrocode}
+\newcommand{\l@dnullfills}{%
+  \def\edlabel##1{}%
+  \def\edrowfill##1##2##3{}%
+}
+\newcommand{\l@drestorefills}{%
+  \def\edrowfill##1##2##3{\@EDROWFILL@{##1}{##2}{##3}}%
+}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\letsforverteilen}
+% Gathers some lets and other code that is common to the |*verteilen*| macros.
+%    \begin{macrocode}
+\newcommand{\letsforverteilen}{%
+  \let\edtext\xedtext
+  \let\edindex\xedindex
+  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
+  \dolistloop{\@series}%
+  \let\linenum\@line@@num
+  \hilfsskip=\l@dcolwidth%
+  \advance\hilfsskip by -\wd\hilfsbox
+  \def\edlabel##1{\xedlabel{##1}}}
+
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\disablel@dtabfeet}
+% \begin{macro}{\enablel@dtabfeet}
+% Declarations for using  or using \cs{edtext} inside
+% tabulars.
+% The default at this point is for \cs{edtext}.
+%    \begin{macrocode}
+\newcommand\disablel@dtabfeet{\l@dmodforedtext}%
+\newcommand\enablel@dtabfeet{\l@drestoreforedtext}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsubsection{Counters, boxes and lengths}
 % \begin{macro}{\l@dampcount}
 % \begin{macro}{\l@dcolcount}
-% |\l@dampcount| is a counter for the \& column dividers and
-% |\l@dcolcount| is a counter for the columns. These were
-% |\Undcount| and |\stellencount| respectively.
+% \cs{l@dampcount} is a counter for the \& column dividers and
+% \cs{l@dcolcount} is a counter for the columns. 
 %    \begin{macrocode}
 \newcount\l@dampcount
   \l@dampcount=1\relax
@@ -14119,7 +14224,7 @@
 %
 % \begin{macro}{\l@dcolwidth}
 %  This is a cunning way of storing the columnwidths indexed by 
-% the column number |\l@dcolcount|, like an array. (was |\Dimenzuordnung|)
+% the column number \cs{l@dcolcount}, like an array. (was |\Dimenzuordnung|)
 %    \begin{macrocode}
 \newcommand{\l@dcolwidth}{\ifcase \the\l@dcolcount \dcoli %???
   \or \dcoli \or \dcolii \or \dcoliii
@@ -14149,7 +14254,7 @@
 % \end{macro}
 %
 % \begin{macro}{\l@dsetmaxcolwidth}
-% Sets the column width to the maximum value seen so far. (was |\dimenzuordnung|)
+% Sets the column width to the maximum value seen so far. 
 %    \begin{macrocode}
 \newcommand{\l@dsetmaxcolwidth}{%
   \ifdim\l@dcolwidth < \wd\hilfsbox
@@ -14159,89 +14264,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\EDTEXT}
-% \begin{macro}{\xedtext}
-% We need to be able to modify the |\edtext| macros
-% and also restore their original definitions.
-%    \begin{macrocode}
-\let\EDTEXT=\edtext
-\newcommand{\xedtext}[2]{\EDTEXT{#1}{#2}}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\EDLABEL}
-% \begin{macro}{\xedlabel}
-% We need to be able to modify and restore the |\edlabel| macro.
-%    \begin{macrocode}
-\let\EDLABEL=\edlabel
-\newcommand*{\xedlabel}[1]{\EDLABEL{#1}}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-% \begin{macro}{\EDINDEX}
-% \begin{macro}{\xedindex}
-% \begin{macro}{\nulledindex}
-% Macros supporting modification and restoration of |\edindex|.
-%    \begin{macrocode}
-\let\EDINDEX=\edindex
-\ifl@dmemoir
-  \newcommand{\xedindex}{\@bsphack%
-      \@ifnextchar [{\l@d@index}{\l@d@index[\jobname]}}
-  \newcommand{\nulledindex}[2][\jobname]{\@bsphack\@esphack}
-\else
-  \newcommand{\xedindex}{\@bsphack%
-    \doedindexlabel
-    \begingroup
-    \@sanitize
-    \@wredindex}
-  \newcommand{\nulledindex}[1]{\@bsphack\@esphack}
-\fi
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-%
-% \begin{macro}{\@line@@num}
-% Macro supporting restoration of |\linenum|.
-%    \begin{macrocode}
-\let\@line@@num=\linenum
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@dgobbledarg}
-% \begin{macro}{\l@dgobblearg}
-% |\l@dgobbledarg| replaces its delineated argument by |\relax|
-% (was |\verschwinden|).
-% |\l@dgobbleoptarg|\oarg{arg}\marg{arg} replaces these two arguments (first is optional) by |\relax|.
-% \changes{v1.12.5}{2014/08/28}{\cs{l@dgobblearg} becomes \cs{l@dgobbeloptarg}}
-%    \begin{macrocode}
-\def\l@dgobbledarg #1/{\relax}
-\newcommand*{\l@dgobbleoptarg}[2][]{\relax}%
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\Relax}
-% \begin{macro}{\NEXT}
-% \begin{macro}{\@hilfs@count}
-%    \begin{macrocode}
-\let\Relax=\relax
-\let\NEXT=\next
-\newcount\@hilfs@count
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\measuremcell}
-% Measure (recursively) the width required for a math cell. (was |\messen|)
+% Measure (recursively) the width required for a math cell. 
 %    \begin{macrocode}
 \def\measuremcell #1&{%
     \ifx #1\\ \ifnum\l@dcolcount=0\let\NEXT\relax%  
@@ -14259,7 +14284,7 @@
 % \end{macro}
 %
 % \begin{macro}{\measuretcell}
-% Measure (recursively) the width required for a text cell. (was |\messentext|)
+% Measure (recursively) the width required for a text cell. 
 %    \begin{macrocode}
 \def\measuretcell #1&{%
     \ifx #1\\ \ifnum\l@dcolcount=0\let\NEXT\relax%  
@@ -14277,7 +14302,7 @@
 % \end{macro}
 %
 % \begin{macro}{\measuremrow}
-% Measure (recursively) the width required for a math row. (was |\Messen|)
+% Measure (recursively) the width required for a math row. 
 %    \begin{macrocode}
 \def\measuremrow #1\\{%
    \ifx #1&\let\NEXT\relax% 
@@ -14288,7 +14313,7 @@
 % \end{macro}
 %
 % \begin{macro}{\measuretrow}
-% Measure (recursively) the width required for a text row. (was |\Messentext|)
+% Measure (recursively) the width required for a text row. 
 %    \begin{macrocode}
 \def\measuretrow #1\\{%
    \ifx #1&\let\NEXT\relax% 
@@ -14300,8 +14325,7 @@
 % \end{macro}
 %
 % \begin{macro}{\edtabcolsep}
-% The length |\edtabcolsep| controls the distance between columns.
-% (was |\abstand|)
+% The length \cs{edtabcolsep} controls the distance between columns.
 %    \begin{macrocode}
 \newskip\edtabcolsep
 \global\edtabcolsep=10pt 
@@ -14309,14 +14333,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\NEXT}
-% \begin{macro}{\Next}
-%    \begin{macrocode}
-\let\NEXT\relax
-\let\Next=\next
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\variab}
 %    \begin{macrocode}
@@ -14326,7 +14342,7 @@
 % \end{macro}
 %
 % \begin{macro}{\l@dcheckcols}
-% Check that the number of columns is consistent. (was |\tabfehlermeldung|)
+% Check that the number of columns is consistent. 
 %    \begin{macrocode}
 \newcommand*{\l@dcheckcols}{%
   \ifnum\l@dcolcount=1\relax
@@ -14345,105 +14361,29 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\l@dmodforedtext}
-% \begin{macro}{\l@drestoreforedtext}
-% Modify and restore various macros for when |\edtext| is used.
-% \changes{v1.12.5}{2014/08/28}{Debug optional arguments of \cs{Xfootnote} in tabular context}
+%
+% \begin{macro}{\edfilldimen}
+% A length. 
 %    \begin{macrocode}
-\newcommand{\l@dmodforedtext}{%
-  \let\edtext\relax
-  \def\do##1{\global\csletcs{##1footnote}{l@dgobbleoptarg}}%
-  \dolistloop{\@series}%
-  \let\edindex\nulledindex
-  \let\linenum\@gobble}
-\newcommand{\l@drestoreforedtext}{%
-  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
-  \dolistloop{\@series}%
-  \let\edindex\xedindex}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@dnullfills}
-% \begin{macro}{\l@drestorefills}
-% Nullify and restore some column fillers, etc.
-%    \begin{macrocode}
-\newcommand{\l@dnullfills}{%
-  \def\edlabel##1{}%
-  \def\edrowfill##1##2##3{}%
-}
-\newcommand{\l@drestorefills}{%
-  \def\edrowfill##1##2##3{\@EDROWFILL@{##1}{##2}{##3}}%
-}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-%
-%
-% The original definition of |\rverteilen| and friends 
-% (`verteilen' is approximately `distribute') was along the lines:
-% \begin{verbatim}
-% \def\rverteilen #1&{\def\label##1{}%
-%      \ifx #1! \ifnum\l@dcolcount=0%\removelastskip
-%                    \let\Next\relax% 
-%               \else\l@dcolcount=0% 
-%                     \let\Next=\rverteilen% 
-%               \fi%
-%      \else% 
-%          \footnoteverschw%
-%          \stepl@dcolcount%
-%          \setbox\hilfsbox=\hbox{$\displaystyle{#1}$}%
-%          \let\critext=\xcritext\let\Dfootnote=\D@@footnote
-%          \let\Afootnote=\A@@footnote\let\Bfootnote=\B@@footnote
-%          \let\Cfootnote=\C@@footnote\let\linenum=\@line@@num%
-%          \hilfsskip=\Dimenzuordnung%
-%          \advance\hilfsskip by -\wd\hilfsbox
-%          \def\label##1{\xlabel{##1}}%
-%          \hskip\hilfsskip$\displaystyle{#1}$%
-%          \hskip\edtabcolsep%
-%          \let\Next=\rverteilen% 
-%      \fi\Next}
-% \end{verbatim}
-% where the lines
-% \begin{verbatim}
-%          \let\critext=\xcritext\let\Dfootnote=\D@@footnote
-%          \let\Afootnote=\A@@footnote\let\Bfootnote=\B@@footnote
-%          \let\Cfootnote=\C@@footnote\let\linenum=\@line@@num%
-%          \hilfsskip=\Dimenzuordnung%
-%          \advance\hilfsskip by -\wd\hilfsbox
-%          \def\label##1{\xlabel{##1}}%
-% \end{verbatim}
-% were common across the several |*verteilen*| macros, and also
-% \begin{verbatim}
-% \def\footnoteverschw{%
-%   \let\critext\relax
-%   \let\Afootnote=\verschwinden
-%   \let\Bfootnote=\verschwinden   
-%   \let\Cfootnote=\verschwinden
-%   \let\Dfootnote=\verschwinden
-%   \let\linenum=\@gobble}
-% \end{verbatim}
-%
-% \begin{macro}{\letsforverteilen}
-% Gathers some lets and other code that is common to the |*verteilen*| macros.
-%    \begin{macrocode}
-\newcommand{\letsforverteilen}{%
-  \let\edtext\xedtext
-  \let\edindex\xedindex
-  \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
-  \dolistloop{\@series}%
-  \let\linenum\@line@@num
-  \hilfsskip=\l@dcolwidth%
-  \advance\hilfsskip by -\wd\hilfsbox
-  \def\edlabel##1{\xedlabel{##1}}}
+\newdimen\edfilldimen
+\edfilldimen=0pt
 
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\c@addcolcount}
+% \begin{macro}{\theaddcolcount}
+% A counter to hold the number of a column. We use a roman number so
+% that we can grab the column dimension from \cs{dcol}.
+%    \begin{macrocode}
+\newcounter{addcolcount}
+  \renewcommand{\theaddcolcount}{\roman{addcolcount}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsubsection{Tabular typesetting}
 % \begin{macro}{\setmcellright}
-% Typeset (recursively) cells of display math right justified. (was |\rverteilen|)
+% Typeset (recursively) cells of display math right justified. 
 %    \begin{macrocode}
 \def\setmcellright #1&{\def\edlabel##1{}%
        \let\edindex\nulledindex
@@ -14468,7 +14408,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settcellright}
-% Typeset (recursively) cells of text right justified. (was |\rverteilentext|)
+% Typeset (recursively) cells of text right justified. 
 %    \begin{macrocode}
 \def\settcellright #1&{\def\edlabel##1{}%
        \let\edindex\nulledindex
@@ -14492,7 +14432,7 @@
 % \end{macro}
 %
 % \begin{macro}{\setmcellleft}
-% Typeset (recursively) cells of display math left justified. (was |\lverteilen|)
+% Typeset (recursively) cells of display math left justified. 
 %    \begin{macrocode}
 \def\setmcellleft #1&{\def\edlabel##1{}%
     \let\edindex\nulledindex
@@ -14514,7 +14454,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settcellleft}
-% Typeset (recursively) cells of text left justified. (was |\lverteilentext|)
+% Typeset (recursively) cells of text left justified. 
 %    \begin{macrocode}
 \def\settcellleft #1&{\def\edlabel##1{}%
     \let\edindex\nulledindex
@@ -14535,7 +14475,7 @@
 % \end{macro}
 %
 % \begin{macro}{\setmcellcenter}
-% Typeset (recursively) cells of display math centered. (was |\zverteilen|)
+% Typeset (recursively) cells of display math centered. 
 %    \begin{macrocode}
 \def\setmcellcenter #1&{\def\edlabel##1{}%
     \let\edindex\nulledindex
@@ -14558,7 +14498,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settcellcenter}
-% Typeset (recursively) cells of text centered. (new)
+% Typeset (recursively) cells of text centered. 
 %    \begin{macrocode}
 \def\settcellcenter #1&{\def\edlabel##1{}%
     \let\edindex\nulledindex
@@ -14588,7 +14528,7 @@
 % \end{macro}
 %
 % \begin{macro}{\setmrowright}
-% Typeset (recursively) rows of right justified math. (was |\rsetzen|)
+% Typeset (recursively) rows of right justified math. 
 %    \begin{macrocode}
 \def\setmrowright #1\\{%
     \ifx #1& \let\NEXT\relax
@@ -14599,7 +14539,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settrowright}
-% Typeset (recursively) rows of right justified text. (was |\rsetzentext|)
+% Typeset (recursively) rows of right justified text. 
 %    \begin{macrocode}
 \def\settrowright #1\\{%
     \ifx #1& \let\NEXT\relax
@@ -14611,7 +14551,7 @@
 % \end{macro}
 %
 % \begin{macro}{\setmrowleft}
-% Typeset (recursively) rows of left justified math. (was |\lsetzen|)
+% Typeset (recursively) rows of left justified math. 
 %    \begin{macrocode}
 \def\setmrowleft #1\\{%
     \ifx #1&\let\NEXT\relax
@@ -14622,7 +14562,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settrowleft}
-% Typeset (recursively) rows of left justified text. (was |\lsetzentext|)
+% Typeset (recursively) rows of left justified text. 
 %    \begin{macrocode}
 \def\settrowleft #1\\{%
     \ifx #1& \let\NEXT\relax
@@ -14634,7 +14574,7 @@
 % \end{macro}
 %
 % \begin{macro}{\setmrowcenter}
-% Typeset (recursively) rows of centered math. (was |\zsetzen|)
+% Typeset (recursively) rows of centered math. 
 %    \begin{macrocode}
 \def\setmrowcenter #1\\{%
     \ifx #1& \let\NEXT\relax%
@@ -14645,7 +14585,7 @@
 % \end{macro}
 %
 % \begin{macro}{\settrowcenter}
-% Typeset (recursively) rows of centered text. (new)
+% Typeset (recursively) rows of centered text. 
 %    \begin{macrocode}
 \def\settrowcenter #1\\{%
     \ifx #1& \let\NEXT\relax
@@ -14657,7 +14597,7 @@
 % \end{macro}
 %
 % \begin{macro}{\nullsetzen}
-% (was |\nullsetzen|)
+% 
 %    \begin{macrocode}
 \newcommand{\nullsetzen}{%
     \stepl@dcolcount%
@@ -14671,8 +14611,7 @@
 % \end{macro}
 %
 % \begin{macro}{\edatleft}
-% |\edatleft|\oarg{math}\marg{symbol}\marg{len} (combination and
-% generalisation of original |\Seklam| and |\Seklamgl|).
+% \cs{edatleft}\oarg{math}\marg{symbol}\marg{len}.
 % Left \meta{symbol}, 2\meta{len} high with prepended \meta{math} vertically centered.
 %    \begin{macrocode}
 \newcommand{\edatleft}[3][\@empty]{%
@@ -14688,8 +14627,7 @@
 %
 %
 % \begin{macro}{\edatright}
-% |\edatright|\oarg{math}\marg{symbol}\marg{len} (combination and
-% generalisation of original |\seklam| and |\seklamgl|).
+% \cs{edatright}\oarg{math}\marg{symbol}\marg{len}.
 % Right \meta{symbol}, 2\meta{len} high with appended \meta{math} vertically centered.
 %    \begin{macrocode}
 \newcommand{\edatright}[3][\@empty]{%
@@ -14706,7 +14644,7 @@
 %
 %
 % \begin{macro}{\edvertline}
-% |\edvertline|\marg{len} vertical line \meta{len} high. (was |\sestrich|)
+% \cs{edvertline}\marg{len} vertical line \meta{len} high. 
 %    \begin{macrocode}
 \newcommand{\edvertline}[1]{\vbox to 8pt{\vss\hbox{\vrule height #1}\vfil}}
 
@@ -14714,7 +14652,7 @@
 % \end{macro}
 %
 % \begin{macro}{\edvertdots}
-% |\edvertdots|\marg{len} vertical dotted line \meta{len} high. (was |\sepunkte|)
+% \cs{edvertdots}\marg{len} vertical dotted line \meta{len} high. 
 %    \begin{macrocode}
 \newcommand{\edvertdots}[1]{\vbox to 1pt{\vss\vbox to #1%
          {\cleaders\hbox{$\m@th\hbox{.}\vbox to 0.5em{ }$}\vfil}}}
@@ -14722,62 +14660,13 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%    I don't know if this is relevant here, and I haven't tried it, 
-% but the following appeared on CTT.
-% \begin{verbatim}
-% From: mdw@nsict.org (Mark Wooding)
-% Newsgroups: comp.text.tex
-% Subject: Re: Dotted line
-% Date: 13 Aug 2003 13:51:14 GMT
-% 
-% Alexis Eisenhofer <alexis@eisenhofer.de> wrote:
-% > Can anyone provide me with the LaTex command for a vertical dotted line?
-% 
-% How dotted? Here's the basic rune.
-%   \newbox\linedotbox
-%   \setbox\linedotbox=\vbox{...}
-%   \leaders\copy\linedotbox\vskip2in
-% 
-% For just dots, this works:
-%   \setbox\linedotbox=\vbox{\hbox{\normalfont.}\kern2pt}
-% 
-% For dashes, something like
-%   \setbox\linedotbox=\vbox{\leaders\vrule\vskip2pt\vskip2pt}
-% is what you want.  (Adjust the `2pt' values to taste.  The first one is
-% the length of the dashes, the second is the length of the gaps.)
-% 
-% For dots in mid-paragraph, you need to say something like
-%   \lower10pt\vbox{\leaders\copy\linedotbox\vskip2in}
-% which is scungy but works.
-% 
-% -- [mdw]
-% \end{verbatim}
 %
-% \begin{macro}{\edfilldimen}
-% A length. (was |\klamdimen|)
-%    \begin{macrocode}
-\newdimen\edfilldimen
-\edfilldimen=0pt
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\c@addcolcount}
-% \begin{macro}{\theaddcolcount}
-% A counter to hold the number of a column. We use a roman number so
-% that we can grab the column dimension from |\dcol...|.
-%    \begin{macrocode}
-\newcounter{addcolcount}
-  \renewcommand{\theaddcolcount}{\roman{addcolcount}}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
 %
 % \begin{macro}{\l@dtabaddcols}
-%  |\l@dtabaddcols|\marg{startcol}\marg{endcol} adds the widths of
-% the columns \meta{startcol} through \meta{endcol} to |\edfilldimen|.
-% It is a LaTeX style 
-% reimplementation of the original |\@add@|.
+%  \cs{l@dtabaddcols}\marg{startcol}\marg{endcol} adds the widths of
+% the columns \meta{startcol} through \meta{endcol} to \cs{edfilldimen}.
+% It is a \LaTeX\ style 
+% reimplementation of the original \cs{@add@}.
 %    \begin{macrocode}
 \newcommand{\l@dtabaddcols}[2]{%
   \l@dcheckstartend{#1}{#2}%
@@ -14796,9 +14685,9 @@
 %
 % \begin{macro}{\ifl@dstartendok}
 % \begin{macro}{\l@dcheckstartend}
-% |\l@dcheckstartend|\marg{startcol}\marg{endcol} checks that the values 
+% \cs{l@dcheckstartend}\marg{startcol}\marg{endcol} checks that the values 
 % of \meta{startcol} and \meta{endcol} are sensible. If they are then
-% |\ifl@dstartendok| is set TRUE, otherwise it is set FALSE.
+% \cs{ifl@dstartendok} is set TRUE, otherwise it is set FALSE.
 %    \begin{macrocode}
 \newif\ifl@dstartendok
 \newcommand{\l@dcheckstartend}[2]{%
@@ -14824,12 +14713,12 @@
 % \begin{macro}{\edrowfill}
 % \begin{macro}{\@edrowfill@}
 % \begin{macro}{\@EDROWFILL@}
-% |\edrowfill|\marg{startcol}\marg{endcol}{fill}
+% \cs{edrowfill}\marg{startcol}\marg{endcol}{fill}
 % fills columns \meta{startcol} to \meta{endcol} inclusive with
-% \meta{fill} (e.g. |\hrulefill|, |\upbracefill|).
-% This is a LaTex style reimplementation and generalization of the
-% original |\waklam|, |\Waklam|, |\waklamec|, |\wastricht|
-% and |\wapunktel| macros.
+% \meta{fill} (e.g. \cs{hrulefill}, \cs{upbracefill}).
+% This is a \LaTeX\ style reimplementation and generalization of the
+% original \cs{waklam}, \cs{Waklam}, \cs{waklamec}, \cs{wastricht}
+% and \cs{wapunktel} macros.
 %    \begin{macrocode}
 \newcommand*{\edrowfill}[3]{% 
   \l@dtabaddcols{#1}{#2}%
@@ -14845,16 +14734,16 @@
 %
 % \DescribeMacro{\edbeforetab}
 % \DescribeMacro{\edaftertab}
-% The macro |\edbeforetab|\marg{text}\marg{math} puts \meta{text} at
+% The macro \cs{edbeforetab}\marg{text}\marg{math} puts \meta{text} at
 % the left margin before array cell entry \meta{math}. Conversely,
-% the macro |\edaftertab|\marg{math}\marg{text} puts \meta{text}
+% the macro \cs{edaftertab}\marg{math}\marg{text} puts \meta{text}
 % at the right margin after array cell entry \meta{math}.
-% |\edbeforetab| should be in the first column and |\edaftertab| in the
+% \cs{edbeforetab} should be in the first column and \cs{edaftertab} in the
 % last column.
 % The following macros support these.
 %
 % \begin{macro}{\leftltab}
-% |\leftltab|\marg{text} for |\edbeforetab| in |\ltab|. (was |\linksltab|)
+% \cs{leftltab}\marg{text} for \cs{edbeforetab} in \cs{ltab}. 
 %    \begin{macrocode}
 \newcommand{\leftltab}[1]{%   
   \hb@xt@\z@{\vbox{\edtabindent%
@@ -14864,7 +14753,7 @@
 % \end{macro}
 %
 % \begin{macro}{\leftrtab}
-% |\leftrtab|\marg{text}\marg{math} for |\edbeforetab| in |\rtab|. (was |\linksrtab|)
+% \cs{leftrtab}\marg{text}\marg{math} for \cs{edbeforetab} in \cs{rtab}. 
 %    \begin{macrocode}
 \newcommand{\leftrtab}[2]{%  
   #2\hb@xt@\z@{\vbox{\edtabindent%
@@ -14875,7 +14764,7 @@
 % \end{macro}
 %
 % \begin{macro}{\leftctab}
-% |\leftctab|\marg{text}\marg{math} for |\edbeforetab| in |\ctab|. (was |\linksztab|)
+% \cs{leftctab}\marg{text}\marg{math} for \cs{edbeforetab} in \cs{ctab}. 
 %    \begin{macrocode}
 \newcommand{\leftctab}[2]{%   
         \hb@xt@\z@{\vbox{\edtabindent\l@dcolcount=\l@dampcount%
@@ -14890,7 +14779,7 @@
 % \end{macro}
 %
 % \begin{macro}{\rightctab}
-% |\rightctab|\marg{math}\marg{text} for |\edaftertab| in |\ctab|. (was |\rechtsztab|)
+% \cs{rightctab}\marg{math}\marg{text} for \cs{edaftertab} in \cs{ctab}. 
 %    \begin{macrocode}
 \newcommand{\rightctab}[2]{% 
         \setbox\hilfsbox=\hbox{\def\edlabel##1{}%
@@ -14909,7 +14798,7 @@
 % \end{macro}
 %
 % \begin{macro}{\rightltab}
-% |\rightltab|\marg{math}\marg{text} for |\edaftertab| in |\ltab|. (was |\rechtsltab|)
+% \cs{rightltab}\marg{math}\marg{text} for \cs{edaftertab} in \cs{ltab}. 
 %    \begin{macrocode}
 \newcommand{\rightltab}[2]{%  
         \setbox\hilfsbox=\hbox{\def\edlabel##1{}%
@@ -14928,7 +14817,7 @@
 % \end{macro}
 %
 % \begin{macro}{\rightrtab}
-% |\rightrtab|\marg{math}\marg{text} for |\edaftertab| in |\rtab|. (was |\rechtsrtab|)
+% \cs{rightrtab}\marg{math}\marg{text} for \cs{edaftertab} in \cs{rtab}. 
 %    \begin{macrocode}
 \newcommand{\rightrtab}[2]{%  
         \setbox\hilfsbox=\hbox{\def\edlabel##1{}%
@@ -14945,12 +14834,9 @@
 % \begin{macro}{\rtab}
 % \begin{macro}{\edbeforetab}
 % \begin{macro}{\edaftertab}
-% |\rtab|\marg{body} typesets \meta{body} as an array with the
-% entries right justified. (was |\rtab|)
-% (Here and elsewhere,
-% |\edbeforetab| and |\edaftertab| were originally |\davor| and |\danach|)
-% The original |\rtab| and friends included a fair bit of common code
-% which I have extracted into macros.
+% \cs{rtab}\marg{body} typesets \meta{body} as an array with the
+% entries right justified. 
+% 
 %
 %    The process is first to measure the \meta{body} to get the column
 % widths, and then in a second pass to typeset the body.
@@ -14971,7 +14857,7 @@
 % \end{macro}
 %
 % \begin{macro}{\measurembody}
-% |\measurembody|\marg{body} measures the array \meta{body}.
+% \cs{measurembody}\marg{body} measures the array \meta{body}.
 %    \begin{macrocode}
 \newcommand{\measurembody}[1]{%
   \disablel@dtabfeet%
@@ -14985,8 +14871,8 @@
 % \end{macro}
 %
 % \begin{macro}{\rtabtext}
-% |\rtabtext|\marg{body} typesets \meta{body} as a tabular with the
-% entries right justified. (was |\rtabtext|)
+% \cs{rtabtext}\marg{body} typesets \meta{body} as a tabular with the
+% entries right justified. 
 %    \begin{macrocode}
 \newcommand{\rtabtext}[1]{%
  \l@dnullfills
@@ -15000,7 +14886,7 @@
 % \end{macro}
 %
 % \begin{macro}{\measuretbody}
-% |\measuretbody|\marg{body} measures the tabular \meta{body}.
+% \cs{measuretbody}\marg{body} measures the tabular \meta{body}.
 %    \begin{macrocode}
 \newcommand{\measuretbody}[1]{%
   \disable@notes%
@@ -15018,7 +14904,7 @@
 % \begin{macro}{\ltab}
 % \begin{macro}{\edbeforetab}
 % \begin{macro}{\edaftertab}
-% Array with entries left justified. (was |\ltab|)
+% Array with entries left justified. 
 %    \begin{macrocode}
 \newcommand{\ltab}[1]{%
  \l@dnullfills
@@ -15036,7 +14922,7 @@
 % \end{macro}
 %
 % \begin{macro}{\ltabtext}
-% Tabular with entries left justified. (was |\ltabtext|)
+% Tabular with entries left justified. 
 %    \begin{macrocode}
 \newcommand{\ltabtext}[1]{%
   \l@dnullfills
@@ -15052,7 +14938,7 @@
 % \begin{macro}{\ctab}
 % \begin{macro}{\edbeforetab}
 % \begin{macro}{\edaftertab}
-% Array with centered entries. (was |\ztab|)
+% Array with centered entries. 
 %    \begin{macrocode}
 \newcommand{\ctab}[1]{%
   \l@dnullfills
@@ -15070,7 +14956,7 @@
 % \end{macro}
 %
 % \begin{macro}{\ctabtext}
-% Tabular with entries centered. (new)
+% Tabular with entries centered. 
 %    \begin{macrocode}
 \newcommand{\ctabtext}[1]{%
   \l@dnullfills
@@ -15084,7 +14970,7 @@
 % \end{macro}
 %
 % \begin{macro}{\spreadtext}
-% (was |\breitertext|)
+% 
 %    \begin{macrocode}
 \newcommand{\spreadtext}[1]{%\l@dcolcount=\l@dampcount%
    \hb@xt@ \the\l@dcolwidth{\hbox{#1}\hss}}
@@ -15092,7 +14978,7 @@
 % \end{macro}
 %
 % \begin{macro}{\spreadmath}
-% (was |\breiter|, `breiter' = `broadly')
+% 
 %    \begin{macrocode}
 \newcommand{\spreadmath}[1]{%
   \hb@xt@ \the\l@dcolwidth{\hbox{$\displaystyle{#1}$}\hss}}
@@ -15100,67 +14986,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% I have left the remaining \tabmac{} alone, apart from changing some names.
-% I'm not yet sure what they do or how they do it. Authors should not use
-% any of these as they are likely to be mutable.
 %
-% \begin{macro}{\tabellzwischen}
-% (was |\tabellzwischen|)
-%    \begin{macrocode}
-\def\tabellzwischen #1&{%
-     \ifx #1\\ \let\NEXT\relax \l@dcolcount=0  
-     \else   \stepl@dcolcount%
-            \l@dcolwidth = #1 mm 
-            \let\NEXT=\tabellzwischen
-     \fi \NEXT }
-   
-%    \end{macrocode}
-% \end{macro}
 %
-% \begin{macro}{\edatabell}
-% For example |\edatabell 4 & 19 & 8 \\| specifies 3 columns with widths
-% of 4, 19, and 8mm. (was |\atabell|)
-%    \begin{macrocode}
-\def\edatabell #1\\{%
-    \tabellzwischen #1&\\&}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\Setzen}
-% (was |\Setzen|, `setzen' = `set')
-%    \begin{macrocode}
-\def\Setzen #1&{%
-    \ifx #1\relax \let\NEXT=\relax   
-    \else \stepl@dcolcount%
-          \let\tabelskip=\l@dcolwidth
-          \EDTAB #1|
-          \let\NEXT=\Setzen
-    \fi\NEXT}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\EDATAB}
-% (was |\ATAB|)
-%    \begin{macrocode}
-\def\EDATAB #1\\{%
-    \ifx #1\Relax \centerline{\Setzen #1\relax&}
-             \let\Next\relax 
-    \else \centerline{\Setzen #1&\relax&}
-          \let\Next=\EDATAB 
-    \fi\Next}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\edatab}
-% (was |\atab|)
-%    \begin{macrocode}
-\newcommand{\edatab}[1]{%
-     \variab%
-     \EDATAB #1\\\Relax\\}
-
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\HILFSskip}
 % \begin{macro}{\Hilfsskip}
@@ -15174,7 +15001,7 @@
 % \end{macro}
 %
 % \begin{macro}{\EDTABINDENT}
-% (was |\TABINDENT|)
+% 
 %    \begin{macrocode}
 \newcommand{\EDTABINDENT}{%  
     \ifnum\l@dcolcount=30\let\NEXT\relax\l@dcolcount=0%
@@ -15241,17 +15068,11 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
-% \begin{verbatim}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % That finishes tabmac
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \end{verbatim}
-%
+% \subsubsection{Environments}
 % \begin{environment}{edarrayl}
 % \begin{environment}{edarrayc}
 % \begin{environment}{edarrayr}
-% The `environment' forms for |\ltab|, |\ctab| and |\rtab|.
+% The `environment' forms for \cs{ltab}, \cs{ctab} and \cs{rtab}.
 %    \begin{macrocode}
 \newenvironment{edarrayl}{\l@dcollect@body\ltab}{}
 \newenvironment{edarrayc}{\l@dcollect@body\ctab}{}
@@ -15265,7 +15086,7 @@
 % \begin{environment}{edtabularl}
 % \begin{environment}{edtabularc}
 % \begin{environment}{edtabularr}
-% The `environment' forms for |\ltabtext|, |\ctabtext| and |\rtabtext|.
+% The `environment' forms for \cs{ltabtext}, \cs{ctabtext} and \cs{rtabtext}.
 %    \begin{macrocode}
 \newenvironment{edtabularl}{\l@dcollect@body\ltabtext}{}
 \newenvironment{edtabularc}{\l@dcollect@body\ctabtext}{}
@@ -15275,20 +15096,6 @@
 % \end{environment}
 % \end{environment}
 % \end{environment}
-%
-%
-% \begin{macro}{\disablel@dtabfeet}
-% \begin{macro}{\enablel@dtabfeet}
-% Declarations for using  or using \cs{edtext} inside
-% tabulars.
-% The default at this point is for |\edtext|.
-%    \begin{macrocode}
-\newcommand\disablel@dtabfeet{\l@dmodforedtext}%
-\newcommand\enablel@dtabfeet{\l@drestoreforedtext}%
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
 %
 %
 % \section{Quotation command's}
