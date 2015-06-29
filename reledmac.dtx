@@ -13450,198 +13450,6 @@
 % \changes{v1.14.0}{2014/10/27}{Delete previous override of \cs{l@d@@wrindexhyp} at the beginning of a document when hyperref is not loaded.}
 %
 %
-% \section{Macro as environment}
-%
-%
-%    The following is borrowed, and renamed, from the \Lpack{amsmath}
-% package. See also the CTT thread `eeq and amstex', 1995/08/31, started
-% by Keith Reckdahl and ended definitively by David M. Jones.
-%
-%
-% Several of the [math] macros scan their body twice. This means we must 
-% collect all text in the body of an environment form before calling
-% the macro.
-%
-% \begin{macro}{\@emptytoks}
-% This is actually defined in the \Lpack{amsgen} package.
-%    \begin{macrocode}
-\newtoks\@emptytoks
-
-%    \end{macrocode}
-% \end{macro}
-%
-% The rest is from \Lpack{amsmath}.
-%
-% \begin{macro}{\l@denvbody}
-% A token register to contain the body.
-%    \begin{macrocode}
-\newtoks\l@denvbody
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\addtol@denvbody}
-% |\addtol@denvdody{arg}| adds |arg| to the token register |\l@denvbody|.
-%    \begin{macrocode}
-\newcommand{\addtol@denvbody}[1]{%
-  \global\l@denvbody\expandafter{\the\l@denvbody#1}}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@dcollect@body}
-% The macro |\l@dcollect@body| starts the scan for the |\end{...}| command
-% of the current environment. It takes a macro name as argument. This macro
-% is supposed to take the whole body of the environment as its argument.
-% For example, given |cenv#1{...}| as a macro that processes |#1|, then
-% the environment form, |\begin{env}| would call |\l@dcollect@body\cenv|.
-% 
-%    \begin{macrocode}
-\newcommand{\l@dcollect@body}[1]{%
-  \l@denvbody{\expandafter#1\expandafter{\the\l@denvbody}}%
-  \edef\processl@denvbody{\the\l@denvbody\noexpand\end{\@currenvir}}%
-  \l@denvbody\@emptytoks \def\l@dbegin@stack{b}%
-  \begingroup
-    \expandafter\let\csname\@currenvir\endcsname\l@dcollect@@body
-    \edef\processl@denvbody{\expandafter\noexpand\csname\@currenvir\endcsname}%
-    \processl@denvbody%
-    }%
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@dpush@begins}
-% When adding a piece of the current environment's contents to |\l@denvbody|,
-% we scan it to check for additional |\begin| tokens, and add a `b' to the
-% stack for any that we find.
-%    \begin{macrocode}
-\def\l@dpush@begins#1\begin#2{%
-  \ifx\end#2\else b\expandafter\l@dpush@begins\fi}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@dcollect@@body}
-% |\l@dcollect@@body| takes two arguments: the first will consist of all text
-% up to the next |\end| command, and the second will be the |\end| command's
-% argument. If therte are any extra |\begin| commands in the body text, 
-% a marker is pushed onto a stack by the |l@dpush@begins| function. 
-% Empty state for this stack means we have reached the |\end| that matches 
-% our original |\begin|. Otherwise we need to include the |\end| and its 
-% argument in the material we are adding to the environment body accumulator.
-%    \begin{macrocode}
-\def\l@dcollect@@body#1\end#2{%
-  \edef\l@dbegin@stack{\l@dpush@begins#1\begin\end 
-                       \expandafter\@gobble\l@dbegin@stack}%
-  \ifx\@empty\l@dbegin@stack
-    \endgroup
-    \@checkend{#2}%
-    \addtol@denvbody{#1}%
-  \else
-    \addtol@denvbody{#1\end{#2}}%
-  \fi
-  \processl@denvbody % A little tricky! Note the grouping
-}
-    
-%    \end{macrocode}
-% \end{macro}
-%
-%    There was a question on CTT about how to use |\collect@body| for a macro
-% taking an argument. The following is part of that thread.
-% \begin{verbatim}
-% From: Heiko Oberdiek <oberdiek@uni-freiburg.de>
-% Newsgroups: comp.text.tex
-% Subject: Re: Using \collect@body with commands that take >1 argument
-% Date: Fri, 08 Aug 2003 09:03:20 +0200
-% 
-% eed132@psu.edu (Evan) wrote:
-% > I'm trying to make a new Latex environment that acts like the>
-%  \colorbox command that is part of the color package. I looked through
-% > the FAQ and ran across this bit about using the \collect@body command
-% > that is part of AMSLaTeX:
-% > http://www.tex.ac.uk/cgi-bin/texfaq2html?label=cmdasenv
-% > 
-% > It almost works. If I do something like the following:
-% >   \newcommand{\redbox}[1]{\colorbox{red}{#1}}
-% > 
-% >   \makeatletter
-% >   \newenvironment{redbox}{\collect@body \redbox}{}
-% 
-% You will get an error message: Command \redbox already defined.
-% Thus you must rename either the command \redbox or the environment
-% name.
-% 
-% >   \begin{coloredbox}{blue}
-% >     Yadda yadda yadda... this is on a blue background...
-% >   \end{coloredbox}
-% > and can't figure out how to make the \collect@body take this. 
-% 
-% >   \collect@body \colorbox{red}
-% >   \collect@body {\colorbox{red}}
-% 
-% The argument of \collect@body has to be one token exactly.
-% 
-% \documentclass{article}
-% \usepackage{color}
-% \usepackage{amsmath}
-% 
-% \newcommand{\redbox}[1]{\colorbox{red}{#1}}
-% \makeatletter
-% \newenvironment{coloredbox}[1]{%
-%   \def\next@{\colorbox{#1}}%
-%   \collect@body\next@
-% }{}
-% 
-% % ignore spaces at begin and end of environment
-% \newenvironment{coloredboxII}[1]{%
-%   \def\next@{\mycoloredbox{#1}}%
-%   \collect@body\next@
-% }{}
-% \newcommand{\mycoloredbox}[2]{%
-%   \colorbox{#1}{\ignorespaces#2\unskip}%
-% }
-% 
-% % support of optional color model argument
-% \newcommand\coloredboxIII\endcsname{}
-% \def\coloredboxIII#1#{%
-%   \@coloredboxIII{#1}%
-% }
-% \def\@coloredboxIII#1#2{%
-%   \def\next@{\mycoloredboxIII{#1}{#2}}%
-%   \collect@body\next@
-% }
-% \newcommand{\mycoloredboxIII}[3]{%
-%   \colorbox#1{#2}{\ignorespaces#3\unskip}%
-% }
-% 
-% \makeatother
-% 
-% \begin{document}
-%   Black text before
-%   \begin{coloredbox}{blue}
-%    Hello World
-%   \end{coloredbox}
-%   Black text after
-% 
-%   Black text before
-%   \begin{coloredboxII}{blue}
-%    Hello World
-%   \end{coloredboxII}
-%   Black text after
-% 
-%   Black text before
-%   \begin{coloredboxIII}[rgb]{0,0,1}
-%    Hello World
-%   \end{coloredboxIII}
-%   Black text after
-% 
-% \end{document}
-% 
-% Yours sincerely
-%   Heiko <oberdiek@uni-freiburg.de>
-% \end{verbatim}
-%
-%
 % \section{Verse}
 %
 % This is principally Wayne Sullivan's\index{Sullivan, Wayne} 
@@ -13934,6 +13742,197 @@
 %
 %
 % \section{Arrays and tables}
+% \subsection{Preamble: macro as environment}
+%
+%
+%    The following is borrowed, and renamed, from the \Lpack{amsmath}
+% package. See also the CTT thread `eeq and amstex', 1995/08/31, started
+% by Keith Reckdahl and ended definitively by David M. Jones.
+%
+%
+% Several of the [math] macros scan their body twice. This means we must 
+% collect all text in the body of an environment form before calling
+% the macro.
+%
+% \begin{macro}{\@emptytoks}
+% This is actually defined in the \Lpack{amsgen} package.
+%    \begin{macrocode}
+\newtoks\@emptytoks
+
+%    \end{macrocode}
+% \end{macro}
+%
+% The rest is from \Lpack{amsmath}.
+%
+% \begin{macro}{\l@denvbody}
+% A token register to contain the body.
+%    \begin{macrocode}
+\newtoks\l@denvbody
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\addtol@denvbody}
+% |\addtol@denvdody{arg}| adds |arg| to the token register |\l@denvbody|.
+%    \begin{macrocode}
+\newcommand{\addtol@denvbody}[1]{%
+  \global\l@denvbody\expandafter{\the\l@denvbody#1}}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@dcollect@body}
+% The macro |\l@dcollect@body| starts the scan for the |\end{...}| command
+% of the current environment. It takes a macro name as argument. This macro
+% is supposed to take the whole body of the environment as its argument.
+% For example, given |cenv#1{...}| as a macro that processes |#1|, then
+% the environment form, |\begin{env}| would call |\l@dcollect@body\cenv|.
+% 
+%    \begin{macrocode}
+\newcommand{\l@dcollect@body}[1]{%
+  \l@denvbody{\expandafter#1\expandafter{\the\l@denvbody}}%
+  \edef\processl@denvbody{\the\l@denvbody\noexpand\end{\@currenvir}}%
+  \l@denvbody\@emptytoks \def\l@dbegin@stack{b}%
+  \begingroup
+    \expandafter\let\csname\@currenvir\endcsname\l@dcollect@@body
+    \edef\processl@denvbody{\expandafter\noexpand\csname\@currenvir\endcsname}%
+    \processl@denvbody%
+    }%
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@dpush@begins}
+% When adding a piece of the current environment's contents to |\l@denvbody|,
+% we scan it to check for additional |\begin| tokens, and add a `b' to the
+% stack for any that we find.
+%    \begin{macrocode}
+\def\l@dpush@begins#1\begin#2{%
+  \ifx\end#2\else b\expandafter\l@dpush@begins\fi}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@dcollect@@body}
+% |\l@dcollect@@body| takes two arguments: the first will consist of all text
+% up to the next |\end| command, and the second will be the |\end| command's
+% argument. If therte are any extra |\begin| commands in the body text, 
+% a marker is pushed onto a stack by the |l@dpush@begins| function. 
+% Empty state for this stack means we have reached the |\end| that matches 
+% our original |\begin|. Otherwise we need to include the |\end| and its 
+% argument in the material we are adding to the environment body accumulator.
+%    \begin{macrocode}
+\def\l@dcollect@@body#1\end#2{%
+  \edef\l@dbegin@stack{\l@dpush@begins#1\begin\end 
+                       \expandafter\@gobble\l@dbegin@stack}%
+  \ifx\@empty\l@dbegin@stack
+    \endgroup
+    \@checkend{#2}%
+    \addtol@denvbody{#1}%
+  \else
+    \addtol@denvbody{#1\end{#2}}%
+  \fi
+  \processl@denvbody % A little tricky! Note the grouping
+}
+    
+%    \end{macrocode}
+% \end{macro}
+%
+%    There was a question on CTT about how to use |\collect@body| for a macro
+% taking an argument. The following is part of that thread.
+% \begin{verbatim}
+% From: Heiko Oberdiek <oberdiek@uni-freiburg.de>
+% Newsgroups: comp.text.tex
+% Subject: Re: Using \collect@body with commands that take >1 argument
+% Date: Fri, 08 Aug 2003 09:03:20 +0200
+% 
+% eed132@psu.edu (Evan) wrote:
+% > I'm trying to make a new Latex environment that acts like the>
+%  \colorbox command that is part of the color package. I looked through
+% > the FAQ and ran across this bit about using the \collect@body command
+% > that is part of AMSLaTeX:
+% > http://www.tex.ac.uk/cgi-bin/texfaq2html?label=cmdasenv
+% > 
+% > It almost works. If I do something like the following:
+% >   \newcommand{\redbox}[1]{\colorbox{red}{#1}}
+% > 
+% >   \makeatletter
+% >   \newenvironment{redbox}{\collect@body \redbox}{}
+% 
+% You will get an error message: Command \redbox already defined.
+% Thus you must rename either the command \redbox or the environment
+% name.
+% 
+% >   \begin{coloredbox}{blue}
+% >     Yadda yadda yadda... this is on a blue background...
+% >   \end{coloredbox}
+% > and can't figure out how to make the \collect@body take this. 
+% 
+% >   \collect@body \colorbox{red}
+% >   \collect@body {\colorbox{red}}
+% 
+% The argument of \collect@body has to be one token exactly.
+% 
+% \documentclass{article}
+% \usepackage{color}
+% \usepackage{amsmath}
+% 
+% \newcommand{\redbox}[1]{\colorbox{red}{#1}}
+% \makeatletter
+% \newenvironment{coloredbox}[1]{%
+%   \def\next@{\colorbox{#1}}%
+%   \collect@body\next@
+% }{}
+% 
+% % ignore spaces at begin and end of environment
+% \newenvironment{coloredboxII}[1]{%
+%   \def\next@{\mycoloredbox{#1}}%
+%   \collect@body\next@
+% }{}
+% \newcommand{\mycoloredbox}[2]{%
+%   \colorbox{#1}{\ignorespaces#2\unskip}%
+% }
+% 
+% % support of optional color model argument
+% \newcommand\coloredboxIII\endcsname{}
+% \def\coloredboxIII#1#{%
+%   \@coloredboxIII{#1}%
+% }
+% \def\@coloredboxIII#1#2{%
+%   \def\next@{\mycoloredboxIII{#1}{#2}}%
+%   \collect@body\next@
+% }
+% \newcommand{\mycoloredboxIII}[3]{%
+%   \colorbox#1{#2}{\ignorespaces#3\unskip}%
+% }
+% 
+% \makeatother
+% 
+% \begin{document}
+%   Black text before
+%   \begin{coloredbox}{blue}
+%    Hello World
+%   \end{coloredbox}
+%   Black text after
+% 
+%   Black text before
+%   \begin{coloredboxII}{blue}
+%    Hello World
+%   \end{coloredboxII}
+%   Black text after
+% 
+%   Black text before
+%   \begin{coloredboxIII}[rgb]{0,0,1}
+%    Hello World
+%   \end{coloredboxIII}
+%   Black text after
+% 
+% \end{document}
+% 
+% Yours sincerely
+%   Heiko <oberdiek@uni-freiburg.de>
+% \end{verbatim}
+%
 %
 %
 % This is based on the work by Herbert Breger\index{Breger, Herbert}
