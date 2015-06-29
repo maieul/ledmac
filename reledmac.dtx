@@ -2091,7 +2091,7 @@
 % 0 but is never used. 
 % 
 % If you want the hanging verse to be flush right, 
-% you can use \cs{hanginsymbol}: see p.~\reff{hfillhanging}.
+% you can use \cs{sethanginsymbol}: see p.~\reff{hfillhanging}.
 %
 % Enumeration is by stanza lines, not by print lines.
 % In the above example the lines are indented one unit, two units, one unit,
@@ -2156,8 +2156,7 @@
 % is given as a negative penalty. The mechanism used for indentations and
 % penalties requires unsigned values less than 32768. No penalty is placed
 % after the last line, so the final \verb+,0+ in then example above could
-% be omitted. The control sequence \verb+\endstanzaextra+ can be defined to
-% include a penalty. A penalty of 10000 will prevent a page break; such a
+% be omitted.  A penalty of 10000 will prevent a page break; such a
 % penalty is included automatically where there is stanza hanging indentation.
 % A penalty of ${-10000}$ (corresponding to the entry value 20000 in this
 % context) forces a page break. Values in between act as suggestions as to the
@@ -2165,13 +2164,14 @@
 % between penalties and \emph{glue}, so it may take some adjustment of skips
 % and penalties to achieve the best results.
 % \subsection{Hanging symbol}
-% It's possible to insert a symbol in each line of hanging verse, as in French typography for `['.  To insert in \macpackage, redefine macro \DescribeMacro{\hangingsymbol}\cmd{\hangingsymbol} with this code:
+% It is possible to insert a symbol in each line of hanging verse, as in French typography for `['.  To insert it in \macpackage, use macro \DescribeMacro{\sethangingsymbol}\cs{hangingsymbol}\meta{h} with this code.
+% In the example of French typography, do
 % \begin{verbatim}
-% \renewcommand{\hangingsymbol}{[\,}
+% \sethangingsymbol{[\,}
 % \end{verbatim}
 % \label{hfillhanging} You can also use it to force hanging verse to be flush right:
 % \begin{verbatim}
-% \renewcommand{\hangingsymbol}{\protect\hfill}
+% \sethangingsymbol{\protect\hfill}
 % \end{verbatim}
 % \subsection{Long verse and page break}
 % If you want to prevent page breaks inside long verses, use the option \verb+nopbinverse+ when loading package, or use \cs{lednopbinversetrue}. 
@@ -2193,17 +2193,6 @@
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
 % macro, not \verb?\&? which will end the stanza.
 %
-% \DescribeMacro{\endstanzaextra}
-% The macro \verb?\endstanzaextra?, if it is defined, is
-% called at the end of a stanza. You could define this, for example,
-% to add extra space between stanzas (by default there is no extra 
-% space between stanzas); if you are using the \Lpack{memoir} class,
-% it provides a length \verb?\stanzaskip? which may come in handy.
-%
-% \DescribeMacro{\startstanzahook}
-%  Similarly, if \verb?\startstanzahook? is defined, it is called by 
-% \verb?\stanza? at the 
-% start. This can be defined to do something.
 %
 % \DescribeMacro{\flagstanza}
 % Putting \cs{flagstanza}\oarg{len}\marg{text} at the start of a  line
@@ -2216,15 +2205,17 @@
 % \begin{verbatim}
 % \newcounter{stanzanum}
 % \setcounter{stanzanum}{0}
-% \newcommand*{\startstanzahook}{\refstepcounter{stanzanum}}
-% \newcommand{\numberit}{\flagstanza{\thestanzanum}}
+ \newcommand{\numberit}{%
+   \refstepcounter{stanzanum}%
+   \flagstanza{\thestanzanum}%
+ }
 % ...
-% \stanza
+% \stanza[\numberit]
 % \numberit First line...&
 %    rest of stanza\&
 %
-% \stanza
-% \numberit First line, second stanza...
+% \stanza[\numberit]
+%  First line, second stanza...
 % \end{verbatim}
 % \section{Grouping}
 %    In a \verb?minipage? environment \LaTeX\ changes \verb?\footnote? numbering from
@@ -13452,22 +13443,30 @@
 %
 % \section{Verse}
 %
-% This is principally Wayne Sullivan's\index{Sullivan, Wayne} 
-% code and commentary from \edstanza~\cite{EDSTANZA}.
+% The original code is principally Wayne Sullivan's\index{Sullivan, Wayne} 
+% code from \edstanza.
+% However, the code has been many time modified by Maïeul Rouquette in order to obtain new features and improved compatibility with \parpackage.
 %
+% \subsection{Hanging symbol management}
 %
-% The macro \cmd{\hangingsymbol} is used to insert a symbol on each hanging of verses.
-%For example,  in french typographie the symbol is `['. We obtain it by the next code:
+% \begin{macro}{\@hangingsymbol}
+% \begin{macro}{\sethangingsymbol}
+% \begin{macro}{\ifinstanza}
+% The macro \cms{@hangingsymbol} is used to insert a symbol on each hanging of verses. It is set by user level macro \cs{sethangingsymbol}.
+%
+% For example,  in french typographie the symbol is `['. We obtain it by the next code:
 %\begin{verbatim}
-%\renewcommand{\hangingsymbol}{[\,}
+%\sethangingsymbol{[\,}
 %\end{verbatim}
 % The \cs{ifinstanza} boolean is used to be sure that we are in a stanza part.
-% \begin{macro}{\hangingsymbol}
-% \begin{macro}{\ifinstanza}
 %    \begin{macrocode}
-\newcommand*{\hangingsymbol}{}
+\def\@hangingsymbol{}
+\newcommand*{\sethangingsymbol}[1]{%
+  \gdef\@hanginsymbol{#1}%
+}%
 \newif\ifinstanza
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\inserthangingymbol}
@@ -13481,15 +13480,17 @@
 \newcommand{\inserthangingsymbol}{%
 \ifinserthangingsymbol%
    \ifinstanza%
-      \hangingsymbol%
+      \@hangingsymbol%
    \fi%
 \fi%
 }
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Using \& character}
 % \begin{macro}{\ampersand}
-% Within a stanza the \verb?\&? macro is going to be usurped. We need an
+% Within a stanza the \verb?\&? macro is going to be usurped.
+% We need an
 % alias in case an \& needs to be typeset in a stanza. Define it rather
 % than letting it in case some other package has already defined it.
 %    \begin{macrocode}
@@ -13498,12 +13499,12 @@
 %    \end{macrocode}
 % \end{macro}
 % 
-%
+% \subsection{Code category setting}
 % \begin{macro}{\stanza@count}
 % \begin{macro}{\stanzaindentbase}
 % Before we can define the main macros we need to save and reset
 % some category codes. To save the current values we use
-% \verb+\next+ and \verb+\body+ from the \verb+\loop+ macro.
+% \cs{next} and \cs{body} from the \cs{loop} macro.
 %    \begin{macrocode}
   \chardef\body=\catcode`\@
   \catcode`\@=11
@@ -13511,11 +13512,11 @@
   \catcode`\&=\active
 
 %    \end{macrocode}
-%
+% \subsection{Stanza count and indent}
 % A count register is allocated for counting lines in a stanza; also allocated
 % is a dimension register which is used to specify the base value for
 % line indentation; all stanza indentations are multiples of this
-% value. The default value of \verb+\stanzaindentbase+ is 20pt.
+% value. The default value of \cs{stanzaindentbase} is 20pt.
 %    \begin{macrocode}
   \newcount\stanza@count
   \newlength{\stanzaindentbase}
@@ -13529,10 +13530,10 @@
 % \begin{macro}{\setstanzavalues}
 % The indentations of stanza lines are non-negative integer multiples of the
 % unit called
-% \verb+\stanzaindentbase+. To make it easier for the user to specify these
+% \cs{stanzaindentbase}. To make it easier for the user to specify these
 % numbers, some list macros are defined. These take numerical values
 % in a list separated by commas and assign the values to special control
-% sequences using \verb+\mathchardef+. Though this does limit the range
+% sequences using \cs{mathchardef}. Though this does limit the range
 % from 0 to 32767, it should suffice for most applications,
 % including \emph{penalties}, which will be discussed below.
 %    \begin{macrocode}
@@ -13552,18 +13553,25 @@
 %
 % \begin{macro}{\setstanzaindents}
 % \begin{macro}{\setstanzapenalties}
-% \begin{macro}{\managestanza@modulo}
-% In the original \verb?\setstanzavalues{sza}{...}? had to be called to
-% set the indents, and similarly \verb?\setstanzavalues{szp}{...}? 
-% to set the penalties. These two macros are a convenience to give
+% In the original \edmac, \cs{setstanzavalues}\verb+{sza}+\marg{...} had to be called to
+% set the indents, and similarly \cs{setstanzavalues}\verb+{szp}+\marg{...}.
+% to set the penalties. 
+% \cs{setstanzaindents} and \cs{setstanzapenalties} macros are a convenience to give
 % the user one less thing to worry about (misspelling the first argument).
-% Since version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses. The \cs{managestanza@modulo} is a command which modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
-%\changes{v0.13.0}{2011/11/08}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
-% % \changes{v1.5.1}{2013/08/16}{Correct stanzaindentsrepetition counter}
+%
 %    \begin{macrocode}
 \newcommand*{\setstanzaindents}[1]{\setstanzavalues{sza}{#1}}
 \newcommand*{\setstanzapenalties}[1]{\setstanzavalues{szp}{#1}}
-
+%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\managestanza@modulo}
+% Since version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses.
+% The \cs{managestanza@modulo} is a command which modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
+%\changes{v0.13.0}{2011/11/08}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
+% % \changes{v1.5.1}{2013/08/16}{Correct stanzaindentsrepetition counter}
+%    \begin{macrocode}
 \newcounter{stanzaindentsrepetition}
 \newcount\stanza@modulo
 
@@ -13574,7 +13582,6 @@
     \fi
 }
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -13598,17 +13605,21 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Main work}
 % \begin{macro}{\stanza@line}
 % \begin{macro}{\stanza@hang}
 % \begin{macro}{\sza@penalty}
-% Now we arrive at the main works. \verb+\stanza@line+ sets the
+% Now we arrive at the main works. \cs{stanza@line} sets the
 % indentation for the line and starts a numbered paragraph---each
-% line is treated as a paragraph. \verb+\stanza@hang+ sets the
+% line is treated as a paragraph. \cs{stanza@hang} sets the
 % hanging indentation to be used if the stanza line requires
-% more than one print line. If it is known that each stanza line
+% more than one print line. 
+
+%If it is known that each stanza line
 % will fit on one print line, it is advisable to set the
-% hanging indentation to zero. \verb+\sza@penalty+ places the
-% specified penalty following each stanza line. By default, this
+% hanging indentation to zero. \cs{sza@penalty} places the
+% specified penalty following each stanza line. 
+% By default, this
 % facility is turned off so that no penalty is included. However,
 % the user may initiate these penalties to indicate good and bad
 % places in the stanza for page breaking.
@@ -13635,8 +13646,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\startstanzahook}
-% \begin{macro}{\endstanzaextra}
 % \begin{macro}{\@startstanza}
 % \begin{macro}{\stanza}
 % \changes{v1.12.0}{2014/08/05}{Add \cs{newverse} macro, \cs{falseverse} deprecated.}
@@ -13646,34 +13655,26 @@
 % \begin{macro}{\@stopstanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \cs{falseverse} macro.}
-% Now we have the components of the \verb+\stanza+ macro,
+% Now we have the components of the \cs{stanza} macro,
 % which appears at the start of a group of lines. This macro
 % initializes the count and checks to see if hanging indentation
 % and penalties are to be included. Hanging indentation suspends
 % the line count, so that the enumeration is by verse line
 % rather than by print line. If the print line count is desired,
-% invoke \verb+\let\startlock=\relax+ and do the same for
-% \verb+\endlock+. Here and above we have used \verb+\xdef+ to
+% invoke \cs{let}\cs{startlock}\cs{relax} and do the same for
+% \cs{endlock}. Here and above we have used \cs{xdef} to
 % make the stored macros take up a bit less space, but it also
 % makes them more obscure to the reader. Lines of the stanza are
 % delimited by ampersands \&. 
 % The last line of the stanza must
 % end with \verb+\&+. 
-% For convenience the macro
-% \verb+\endstanzaextra+ is included. The user may use this to add
-% vertical space or penalties between stanzas.
 %
 %
-% As a further convenience, the macro \verb?\startstanzahook? is
-% called at the beginning of a stanza. This can be defined to
-% do something useful.
 %
 %    \begin{macrocode}
-\let\startstanzahook\relax
-\let\endstanzaextra\relax
 \xdef\@startstanza[#1]{%
    \noexpand\instanzatrue\expandafter
-   \begingroup\startstanzahook%
+   \begingroup%
    \catcode`\noexpand\&\active%
    \global\stanza@count\@ne\stanza@modulo\@ne
    \noexpand\ifnum\expandafter\noexpand
@@ -13695,7 +13696,6 @@
   \pend[#1]%
   \endgroup%
   \instanzafalse%
-  \endstanzaextra%
 }
 
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
@@ -13705,8 +13705,6 @@
   }
 
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -13721,7 +13719,8 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% 
+% \subsection{Restore catcode and penalties}
 % The ampersand \& is used to mark the end of each stanza line, except the
 % last, which is marked with \verb+\&+. This means that \verb+\halign+ may
 % not be used directly within a stanza line. This does not affect macros
@@ -13733,7 +13732,6 @@
 %    \begin{macrocode}
   \catcode`\&=\next
   \catcode`\@=\body
-%%  \let\ampersand=\&
   \setstanzavalues{szp}{0}
 
 %    \end{macrocode}
@@ -16271,10 +16269,13 @@
 % \emph{Deprecated command} 	& \emph{Replaced by} \\
 % \endhead
 % \cs{@led@extranofeet} & \cs{newseries}\\
+% \cs{endstanzaextra} & Optional argument of \expandafter\cs\expandafter{\&}\\
+% \cs{hangingsymbol} & \cs{sethangingsymbol}\\
 % \cs{ledfootinsdim}		& \cs{Xmaxhnotes} and \cs{maxhnotesX} 	\\
 % \cs{parafootftmsep}	  & \cs{Xparafootsep} and \cs{parafootsepX} \\
 % \cs{notenumfont}  		& \cs{Xnotenumfont}, \cs{Xendnotenumfont} and \cs{notenumfontX} \\
 % \cs{notefontsetup}    & \cs{Xnotefontsize}, \cs{Xendnotefontsize} and \cs{notefontsizeX} \\
+% \cs{startstanzahook} & Optional argument of \cs{stanza} \\ 
 % \cs{symplinenum} & \cs{Xsymlinenum}\\ 
 % \end{longtable}
 % \subsubsection{Commands which names have changed}
