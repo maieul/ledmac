@@ -15170,6 +15170,7 @@
 % \end{macro}
 % \end{macro}
 % \section{Section's title commands}
+% \subsection{Commands to disable some feature}
 % \begin{macro}{\ledsectnotoc}
 % The \cs{ledsectnotoc} only disables the \cs{addcontentsline} macro.
 %    \begin{macrocode}
@@ -15186,11 +15187,10 @@
 }
 %    \end{macrocode}
 % \end{macro}
-%
-% \subsection{New commands : \cs{eledxxx}}
-% The new system of \cs{eledxxxx} commands to section text work like this:
+% \subsection{General overview}
+% The system of \cs{eledxxxx} commands to section text work like this:
 % \begin{enumerate}
-%     \item When one of these commands is called, \Lpack{eledmac} writes to an auxiliary files:
+%     \item When one of these commands is called, \macpackage  writes to an auxiliary files:
 %      \begin{itemize}
 %           \item The section level.
 %           \item The section title.
@@ -15198,7 +15198,7 @@
 %           \item The pstart where the command is called.
 %           \item If we have starred version or not.
 %      \end{itemize}
-%   \item \Lpack{eledmac} adds the title of the section to pstart, as  normal content. This is to enable critical notes.
+%   \item \macpackage adds the title of the section to pstart, as  normal content. This is to enable critical notes.
 %   \item When \LaTeX\ is run a other time, this file is read. That:
 %     \begin{itemize}
 %         \item Adds the pstart number to a list of pstarts where a sectioning command is used.
@@ -15206,9 +15206,9 @@
 %     \end{itemize}
 %   \item This last command is called when the pstart is effectively printed.
 % \end{enumerate}
-%
+% \subsection{\cs{beforeeledchapter} command} 
 % We do not define commands for \cs{eledsection} and related if the \verb+noeledsec+ option is loaded.
-% We use etoolbox tests and not the \verb+\ifxxx…\else…\fi+ structure to prevent problem of expansions with command after the \verb+\ifxxx+ which contains \verb+fi+.
+% We use \Lpack{etoolbox} tests and not the \cs{ifxxx}\ldots\cs{else}\ldots\cs{fi} structure to prevent problem of expansions with command after the \cs{ifxxx} which contains \cs{fi}.
 %    \begin{macrocode}
 \notbool{@noeled@sec}{%
 %    \end{macrocode}
@@ -15216,12 +15216,21 @@
 % For technical reasons, not yet solved, page-breaking before chapters can't be made automatically by eledmac. Users have to use \cs{beforeeledchapter}.
 %    \begin{macrocode}
 \ifl@dmemoir
-  \newcommand\beforeeledchapter{\clearforchapter}
+  \newcommand\beforeeledchapter{%
+  \clearforchapter%
+}
 \else
-  \newcommand\beforeeledchapter{\if@openright\cleardoublepage\else\clearpage\fi}
+  \newcommand\beforeeledchapter{%
+  \if@openright%
+   \cleardoublepage%
+  \else%
+   \clearpage%
+  \fi%
+}
 \fi
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Auxiliary commands}
 % \begin{macro}{\if@eled@sectioning}
 % The boolean \cs{if@eled@sectioning} is set to true when a sectioning command is called by a \cs{eledxxx} command, and set to false after. It is used to enable/disable line number printing.
 %    \begin{macrocode}
@@ -15230,7 +15239,7 @@
 % \end{macro}
 % \begin{macro}{\print@leftmargin@eledsection}
 % \begin{macro}{\print@rightmargin@eledsection}
-% \cs{print@leftmargin@eledsection} and \cs{print@rightmargin@eledsection} are added by eledmac inside the code of sectioning command, in order to affix lines numbers.
+% \cs{print@leftmargin@eledsection} and \cs{print@rightmargin@eledsection} are added by \macpackage inside the code of sectioning command, in order to affix lines numbers.
 % They include tests for RTL languages. 
 %    \begin{macrocode}
 \def\print@rightmargin@eledsection{%
@@ -15267,6 +15276,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Patching standard commands}
 % \begin{macro}{\chapter}
 % \begin{macro}{\M@sect}
 % \begin{macro}{\@mem@old@ssect}
@@ -15327,8 +15337,6 @@
   {}
   {}
 
-
-
 \patchcmd{\@mem@old@ssect}
   {#5}
   {#5%
@@ -15344,7 +15352,6 @@
   }
   {}
   {}
-
 
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
   \if@eled@sectioning\else%
@@ -15409,7 +15416,7 @@
   
 %    \end{macrocode}
 % \changes{v1.14.1}{2014/12/15}{Debug sectioning commands when using both \Lpack{handout} and \Lpack{hyperref} package.}
-% \Lpack{hyperref} also redefines  \cs{@sect}. That's why, when manipulating arguments, we patch \cs{@sect} and the same only if \Lpack{hyperref} is not used. If it is, we patch the \cs{NR} commands.
+% \Lpack{hyperref} also redefines  \cs{@sect}. That is why, when manipulating arguments, we patch \cs{@sect} and the same only if \Lpack{hyperref} is not used. If it is, we patch the \cs{NR} commands.
 %    \begin{macrocode}
 \@ifpackageloaded{nameref}{
 
@@ -15489,6 +15496,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Main code of \cs{eledxxx} commands} 
 % \begin{macro}{\eled@sectioning@out}
 % \cs{eled@sectioning@out} is the output file, to dump the pstarts where a sectioning command is used.
 %    \begin{macrocode}
@@ -15503,7 +15511,7 @@
 % \begin{macro}{\eledsection*}
 % \begin{macro}{\eledsubsection*}
 % \begin{macro}{\eledsubsubsection*}
-% And now, the user sectioning commands, which write to the file, and also add content as a "normal" line.
+% And now, the user sectioning commands, which write to the file, and also add content as a ``normal'' line.
 %    \begin{macrocode}
 \newcommand{\eledchapter}[2][]{%
   #2% 
@@ -15617,6 +15625,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Macros written in the auxiliary file}
 % \begin{macro}{\eled@chapter}
 % \begin{macro}{\eled@section}
 % \begin{macro}{\eled@subsection}
