@@ -599,9 +599,68 @@
 % The left text is put within the \verb?Leftside? environment and the 
 % right text likewise in the \verb?Rightside? environment. The number of 
 % \verb?Leftside? and \verb?Rightside? environments must be the same.
+% \subsection{Numbering text lines and paragraphs}
+%
+% \DescribeMacro{\beginnumbering}
+% \DescribeMacro{\endnumbering}
+% Each section of numbered text must be preceded by
+% \cs{beginnumbering} and followed by \cs{endnumbering}, like: \\
+% \cs{beginnumbering} \\
+% \meta{text} \\
+% \cs{endnumbering} \\
+% These have to be separately specified within \verb?Leftside? and
+% \verb?Rightside? environments.
+%
+% The \cs{beginnumbering} macro resets the line number to zero,
+% reads an auxiliary file called \meta{jobname}.\file{nn} (where
+% \meta{jobname} is the name of the main input file for this job,
+% and \file{nn} is 1 for the first numbered section, 2 for
+% the second section, and so on), and then creates a new version of
+% this auxiliary file to collect information during this run. 
+% Separate auxiliary files are maintained for right hand texts and
+% these are named \meta{jobname}.\file{nnR}, using the `R' to distinguish
+% them from the left hand and serial (non-parallel) texts.
+%
+% \DescribeMacro{\memorydump}
+% The command \cs{memorydump} effectively performs an \cs{endumbering}
+% immediately followed by a \cs{beginnumbering} while not restarting the
+% numbering sequence. This has the effect of clearing \TeX's memory of previous
+% texts and any associated notes, allowing
+% longer apparent streams of parallel texts. The command should be applied
+% to both left and right texts, and after making sure that all previous
+% notes have been output. For example, along the lines of:
+% \begin{verbatim}
+% \begin{pages}
+% \begin{Leftside}
+%   \beginnumbering
+%   ...
+% \end{Leftside}
+% \begin{Rightside}
+%   \beginnumbering
+%   ...
+% \end{Rightside}
+% \end{pages}
+% \Pages
+% \begin{pages}
+% \begin{Leftside}
+%   \memorydump
+%   ...
+% \end{Leftside}
+% \begin{Rightside}
+%   \memorydump
+%   ...
+% \end{pages}
+% \end{verbatim}
+%
+%
+%\changes{v0.9.0}{2011/10/01}{Possibility to number \cs{pstart}.}
+% It is possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it.
+You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the commands \DescribeMacro{\thepstartL}\cs{thepstartL} and \DescribeMacro{\thepstartR}\cs{thepstartR} to change style. The numbering restarts on each \cs{beginnumbering}.
+% 
 % \subsection{Line numbering scheme}
 % Within these environments you can designate the line numbering scheme(s)
 % to be used. 
+% \subsection{Lineation system}
 % \DescribeMacro{\firstlinenum}
 % \DescribeMacro{\linenumincrement}
 % \DescribeMacro{\firstsublinenum}
@@ -610,9 +669,7 @@
 % \DescribeMacro{\linenumincrement*}
 % \DescribeMacro{\firstsublinenum*}
 % \DescribeMacro{\sublinenumincrement*}
-% The \Eledmac{} package originally used counters for specifying the 
-% numbering scheme; now both \Eledmac and
-% the \Eledpar{} package use macros instead. Following 
+% Following 
 % \cs{firstlinenum}\marg{num} the first line number will be \meta{num}, and
 % following \cs{linenumincrement}\marg{num} only every \meta{num}th
 % line will have a printed number. Using these macros inside the
@@ -626,11 +683,22 @@
 % apply to sequential and left texts. 
 % To effect right texts only, they have 
 % to be within a \verb?Rightside? environment. 
+
 % \DescribeMacro{\lineationR}
-% \cs{lineationR} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for the right side.
+% \cs{lineationR} macro is the equivalent of \macpackage \cs{lineation} macro for the right side.
 % \DescribeMacro{\lineation*} 
-% \cs{lineation*} macro is the equivalent of \Lpack{eledmac} \cs{lineation} macro for both sides.
-% \subsection{chunk}
+
+% \cs{lineation*} macro is the equivalent of \macpackage \cs{lineation} macro for both sides.
+%
+% \DescribeMacro{\Rlineflag}
+% The value of \cs{Rlineflag} is appended to the line numbers of the
+% right texts. Its default definition is: \\
+% \verb?\newcommand*{\Rlineflag}{R}? \\
+% This may be useful for parallel columns but for parallel pages it might
+% be more appropriate to redefine it as: \\
+% \verb?\renewcommand*{\Rlineflag}{}?.
+% 
+% \subsection{Chunks}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
 % In a serial (non-parallel) mode, each numbered paragraph, or chunk, 
@@ -661,6 +729,10 @@
 % Remember, though,
 % that the left/right sides are effectively independent of each other.
 %
+% \DescribeMacro{\autopar}
+% The \cs{autopar} macro can be used, instead of manually inserting \cs{pstart}\ldots\cs{pends}. Please read \macpackage's  handbook (\reff{eledmac-autopar}).
+ 
+ 
 % \subsection{\cs{AtEveryPstart} and \cs{AtEveryPstartCall}}
 % In general, remember that the moment where a \cs{pstart} is called is different 
 % from the moment when  the \cs{pstart}\ldots\cs{pend} content is printed, which is when \cs{Pages} or \cs{Columns} is processed.
@@ -672,12 +744,12 @@
 % \end{itemize}
 % \subsection{Language setting}
 % If you are using the 
-% \Lpack{babel} package with different languages 
+% \Lpack{babel} package or the \Lpack{polyglossia} package ,with different languages 
 % (via, say, \cs{selectlanguage}) for the left and right texts it is 
 % particularly important to select the appropriate language within the
 % \verb?Leftside? and \verb?Rightside? environments. The initial language
 % selected for the right text is the \Lpack{babel} package's default. Also,
-% it is the \emph{last} \cs{selectlanguage} in a side that controls the
+% it is the \emph{last} language setting  in a side that controls the
 % language used in any notes for that side when they get printed. If
 % you are using multilingual notes then it is probably safest to explicitly
 % specify the language(s) for each note rather than relying on the language
@@ -698,88 +770,7 @@
 % you can decide to shift the pstarts on the left and right side.
 % That means the start of pstarts are not aligned horizontally on the page,
 % the shift is offset at the end of each double pages.
-% To enable this function, load eledpar with the option \verb+shiftedpstarts+.
-% \section{Numbering text lines and paragraphs}
-%
-% \DescribeMacro{\beginnumbering}
-% \DescribeMacro{\endnumbering}
-% Each section of numbered text must be preceded by
-% \cs{beginnumbering} and followed by \cs{endnumbering}, like: \\
-% \cs{beginnumbering} \\
-% \meta{text} \\
-% \cs{endnumbering} \\
-% These have to be separately specified within \verb?Leftside? and
-% \verb?Rightside? environments.
-%
-% The \cs{beginnumbering} macro resets the line number to zero,
-% reads an auxiliary file called \meta{jobname}.\file{nn} (where
-% \meta{jobname} is the name of the main input file for this job,
-% and \file{nn} is 1 for the first numbered section, 2 for
-% the second section, and so on), and then creates a new version of
-% this auxiliary file to collect information during this run. 
-% Separate auxiliary files are maintained for right hand texts and
-% these are named \meta{jobname}.\file{nnR}, using the `R' to distinguish
-% them from the left hand and serial (non-parallel) texts.
-%
-% \DescribeMacro{\memorydump}
-% The command \cs{memorydump} effectively performs an \cs{endumbering}
-% immediately followed by a \cs{beginnumbering} while not restarting the
-% numbering sequence. This has the effect of clearing TeX's memory of previous
-% texts and any associated notes, allowing
-% longer apparent streams of parallel texts. The command should be applied
-% to both left and right texts, and after making sure that all previous
-% notes have been output. For example, along the lines of:
-% \begin{verbatim}
-% \begin{pages}
-% \begin{Leftside}
-%   \beginnumbering
-%   ...
-% \end{Leftside}
-% \begin{Rightside}
-%   \beginnumbering
-%   ...
-% \end{Rightside}
-% \end{pages}
-% \Pages
-% \begin{pages}
-% \begin{Leftside}
-%   \memorydump
-%   ...
-% \end{Leftside}
-% \begin{Rightside}
-%   \memorydump
-%   ...
-% \end{pages}
-% \end{verbatim}
-% \DescribeMacro{\Rlineflag}
-% The value of \cs{Rlineflag} is appended to the line numbers of the
-% right texts. Its default definition is: \\
-% \verb?\newcommand*{\Rlineflag}{R}? \\
-% This may be useful for parallel columns but for parallel pages it might
-% be more appropriate to redefine it as: \\
-% \verb?\renewcommand*{\Rlineflag}{}?.
-% \DescribeMacro{\printlinesR}
-% \DescribeMacro{\ledsavedprintlines}
-% The \cs{printlines} macro is ordinarily used to print the line number 
-% references for critical footnotes. For footnotes from right side texts 
-% a special version is supplied, called \cs{printlinesR}, which incorporates
-% \cs{Rlineflag}. (The macro \cs{ledsavedprintlines} is a copy of the original
-% \cs{printlines}, just in case \ldots). As provided, the package makes no
-% use of \cs{printlinesR} but you may find it useful. For example, if you only
-% use the B footnote series in righthand texts then you may wish to flag
-% any line numbers in those footnotes with the value of \cs{Rlineflag}. You
-% could do this by putting the following code in your preamble:
-% \begin{verbatim}
-% \let\oldBfootfmt\Bfootfmt
-% \renewcommand{\Bfootfmt}[3]{%
-%   \let\printlines\printlinesR
-%   \oldBfootfmt{#1}{#2}{#3}}
-% \end{verbatim}
-% 
-%
-%
-%\changes{v0.9.0}{2011/10/01}{Possibility to number \cs{pstart}.}
-% It's possible to insert a number at every \cs{pstart} command. You must use the \DescribeMacro{\numberpstarttrue}\cs{numberpstarttrue} command to have it. You can stop the numerotation with \DescribeMacro{\numberpstartfalse}\cs{numberpstartfalse}. You can redefine the commands \DescribeMacro{\thepstartL}\cs{thepstartL} and \DescribeMacro{\thepstartR}\cs{thepstartR} to change style. The numbering restarts on each \cs{beginnumbering}
+% To enable this function, load \parpackage with the option \verb+shiftedpstarts+.
 % \section{Verse}
 %
 % If you are typesetting verse with \Eledmac{} you can use the \cs{stanza}
