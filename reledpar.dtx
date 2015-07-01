@@ -507,7 +507,8 @@
 % Each \cs{Pages} command starts a new even numbered page. After parallel
 % typesetting is finished, a new page is started.
 % Note that the \cs{Pages} \textbf{must be} outside of the \verb+pages+ environment.
-% \subsection{Text width}
+% \subsection{Setting}
+% \subsubsection{Text width}
 % \DescribeMacro{\Lcolwidth}
 % \DescribeMacro{\Rcolwidth}
 % Within the \verb?pages? environment the lengths \cs{Lcolwidth} and 
@@ -515,7 +516,7 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
-% \subsection{Page number}
+% \subsubsection{Page number}
 % \changes{v1.15.0}{2015/05/18}{Add sameparallelpagenumber option.}
 % By default, \cs{Pages} use the standard \LaTeX\ page number scheme.
 % This means that pages are numbered continuously following printed-book conventions: from left-hand to right-hand side, left-hand pages having even numbers, right-hand pages having odd numbers.
@@ -525,19 +526,20 @@
 % 
 % You can also switch the two system using \cs{sameparallelpagenumbertrue} and \cs{sameparallelpagenumberfalse}.
 %
-% \subsection{Setting the page breaking} 
-% \DescribeMacro{\goalfraction}
-% When doing parallel pages \Eledpar{} has to guess where TeX is going to 
+% \subsubsection{Page breaking} 
+% \DescribeMacro{\setgoalfraction}
+% When doing parallel pages \parpackage{} has to guess where \TeX\ is going to 
 % put pagebreaks and hopefully get there first in order to put the pair of
 % texts on their proper pages. When it thinks that the fraction 
-% \cs{goalfraction} of a page has been filled, it finishes that page and 
-% starts on the other side's text. The definition is: \\
-% \verb?\newcommand*{\goalfraction}{0.9}? \\
+% \cs{@goalfraction} of a page has been filled, it finishes that page and 
+% starts on the other side's text. The standard value is 0.9.
+%
+% 
 % If you think you can get more on a page, increase this. On the other hand,
 % if some left text overflows onto an odd numbered page or some right text
-% onto an even page, try reducing it, for instance by: \\
-% \verb?\renewcommand*{\goalfraction}{0.8}?
-% \subsection{Critical and familiar footnotes}
+% onto an even page, try reducing it.
+% You can change it using \cs{setgoalfraction}\marg{newvalue}.
+%  \subsection{Critical and familiar footnotes}
 % Of course, in ``Facing pages'',  the \Lpack{eledmac} both critical and familiar footnotes can be used.
 % However, some specific points must  be taken into consideration.
 % \subsubsection{Note size setting}
@@ -5830,24 +5832,28 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\setgoalfraction}
 % \begin{macro}{\ledthegoal}
 % \begin{macro}{\goalfraction}
 % \begin{macro}{\check@goal}
 % \cs{ledthegoal} is the amount of space allowed to taken by text and 
 % footnotes on a page before a forced pagebreak. This can be controlled via
-% \cs{goalfraction}. \cs{ledthegoal} is calculated via \cs{check@goal}.
+% \cs{@goalfraction}. \cs{ledthegoal} is calculated via \cs{check@goal}.
 %    \begin{macrocode}
 \newdimen\ledthegoal
 \ifshiftedpstarts
-       \newcommand*{\goalfraction}{0.95}
+       \newcommand*{\@goalfraction}{0.95}
 \else
-       \newcommand*{\goalfraction}{0.9}
+       \newcommand*{\@goalfraction}{0.9}
 \fi
 
 \newcommand*{\check@goal}{%
-  \ledthegoal=\goalfraction\pagegoal}
-
+  \ledthegoal=\@goalfraction\pagegoal}
+\newcommand{\setgoalfraction}[1]{%
+  \xdef\@goalfraction{#1}%
+}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6297,7 +6303,7 @@
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
 % \section{Some things to do when changing version}
-% \subsection{Migration to eledpar 1.4.3}
+% \subsection{Migration to \eledpar 1.4.3}
 % Version 1.4.3 corrects a bug added in version 0.12, which made hanging verse automatically flush right, despite the given value of the first element of the \cs{setstanzaindents} command.
 % 
 % If, however, you want to return to automatic flush-right margins for verses with hanging indents, you have to redefine the \cs{hangingsymbol} command.
@@ -6321,6 +6327,49 @@
 %     \stanza
 %   A very long verse should sometimes be hanging. And we can see that an hanging verse is flush right.\&
 % \endnumbering
+% \subsection{Migration from \eledpar to \reledpar}
+% As for migration  from \eledmac to \reledmac: 
+% \begin{itemize}
+% \item Some commands and options have been deleted because they are deprecated.
+% \item Some customization by \cs{renewcommand} have been replaced by commands.
+% \item Some commands name have been changed in order  to have a more logical and uniform.
+% \end{itemize}
+% \subsubsection{Deprecated commands and options}
+% Here, you will find a tabular of deprecated commands and their alternative. 
+%Notes that the use of these command can have been changed.
+% Please read the handbook.
+% 
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Deprecated command} 	& \emph{Replaced by} \\
+% \hline
+% \endhead
+% \end{longtable}
+% 
+% The \verb+ledsecnolinenumber+ option has been deleted, because linked to deprecated commands. 
+%
+% The \verb+oldprintnpnumspace+ option has also been deleted, because linked to an historical bug.
+% The \cs{usingedtext} and \cs{usingcritext} commands are also deprecated. 
+% 
+% \subsubsection{\cs{renewcommand} replaced by command}
+% Many use of \cs{renewcommand} has been replaced by use of specific commands. Please read handbook on specific command.
+% 
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Deprecated \cs{renewcommand}} 	& \emph{Replaced by} \\
+% \endhead
+% \cs{goalfraction} & \cs{setgoalfraction}\\
+% \end{longtable}
+% \subsubsection{Commands which names have changed}
+% \label{eledmac-compat}
+% In order to help migration from \eledpar to \reledpar, you could load \reledmac with \verb+eledmac-compat+ option.
+% However, it is better to change the command names.
+% In many case, you use only few of them, except for the command like \cs{footparagraph}.
+% 
+%
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Old command} 	& \emph{New command} 	 \\
+% \hline
+% \endhead
+% \end{longtable}
 % \bibliographystyle{alpha}
 % \begin{thebibliography}{WWW99}
 % \addcontentsline{toc}{section}{References}
