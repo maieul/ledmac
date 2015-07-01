@@ -540,25 +540,27 @@
 % onto an even page, try reducing it.
 % You can change it using \cs{setgoalfraction}\marg{newvalue}.
 %  \subsection{Critical and familiar footnotes}
-% Of course, in ``Facing pages'',  the \Lpack{eledmac} both critical and familiar footnotes can be used.
+% Of course, in ``Facing pages'',  the \macpackage's  both critical and familiar footnotes can be used.
 % However, some specific points must  be taken into consideration.
-% \subsubsection{Note size setting}
-% Since \Lpack{eledpar} v.1.13.0, long notes in facing pages can flow from left to right pages, and \emph{vice-versa}.
-% However, the \Lpack{eledmac} default setting for the maximum alloted size to notes is  greater than \cs{textheight}. That makes impossible for long notes to flow across pages.
+% \subsubsection{Notes height setting}
+% Since \Lpack{eledpar} v1.13.0, long notes in facing pages can flow from left to right pages, and \emph{vice-versa}.
+%
+% However, the \macpackage default setting for the maximum alloted size to notes is  greater than \cs{textheight}. That makes impossible for long notes to flow across pages.
 % \footnote{The same applies to \LaTeX\ normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical informations.}
-% We have not changed this default setting, because we don't want to break compatibility with older version of \Lpack{eledmac}. 
-% So, you MUST change the default setting via \cs{maxhXnotes} (for critical notes)\cs{maxhnotesX} (for familiar notes). 
-% Both commands are explained in \Lpack handbook (\reff{eledmac-maxhXnotes}).
+% We have not changed this default setting, because we do not want to break compatibility with older version of \macpackage and we want to be as close as possible to default \LaTeX's feature. 
+%
+% So, you MUST change the default setting via \cs{Xmaxnotes} (for critical notes) and \cs{maxhnotesX} (for familiar notes). 
+% Both commands are explained in \macpackage handbook (\reff{eledmac-xmaxhnotes}).
 % As an advisable setting:
 % \begin{verbatim}
 % \maxhXnotes{0.6\textheight}
 % \maxhnotesX{0.6\textheight}
 % \end{verbatim}
 % \subsubsection{Notes for one side only}
-% \DescribeMacro{\onlyXside}
+% \DescribeMacro{\Xonlyside}
 % \DescribeMacro{\onlysideX}
 % You may want to typeset notes on one side only (either left or right).
-% Use \cs{onlyXside}\oarg{s}\marg{p} to set critical notes, and \cs{onlysideX}\oarg{s}\marg{p} to set familiar notes.
+% Use \cs{Xonlyside}\oarg{s}\marg{p} to set critical notes, and \cs{onlysideX}\oarg{s}\marg{p} to set familiar notes.
 % \marg{p} must be set to \verb+L+ for notes to be confined only on the left side and to \verb+R+ for  notes to be confined only on the right side.
 % \subsubsection{Familiar notes called in the right side, but to be printed in the left side}
 % \DescribeMacro{\footnoteXnomk}
@@ -2483,7 +2485,7 @@
     \fi%
     \unless\ifnocritical@%
       \global\newbool{keepforXside@#1}%
-      \csgdef{onlyXside@#1}{}%
+      \csgdef{Xonlyside@#1}{}%
     \fi%
 %    \end{macrocode}
 % \subsubsection{Familiar footnotes without marks}
@@ -2559,7 +2561,7 @@
 % Here, we create hooks which are specific to \Lpack{eledpar}.
 %    \begin{macrocode}
 \unless\ifnocritical@%
-  \newhookcommand@series{onlyXside}%
+  \newhookcommand@series{Xonlyside}%
 \fi%
 \unless\ifnofamiliar@%
   \newhookcommand@series{onlysideX}%
@@ -3909,7 +3911,7 @@
 % \begin{macro}{\correct@footinsX@box}
 % \changes{v1.13.1}{2015/03/12}{Correct \cs{correct@footinsX@box} and \cs{correct@Xfootins@box}}
 % \changes{v1.13.1}{2015/03/12}{Call \cs{correct@footinsX@box} and \cs{correct@Xfootins@box} directly in \cs{print@notesX@forpages} and \cs{print@Xnotes@forpages}.}
-% The \cs{onlyXside} and \cs{onlysideX} hooks for \cs{Pages}
+% The \cs{Xonlyside} and \cs{onlysideX} hooks for \cs{Pages}
 % allow notes to be printed  either in left or right pages only.
 % The implementation of such features is delegated to \cs{print@Xnotes@forpages},
 % which replaces \cs{print@Xnotes} inside \cs{Pages}. 
@@ -3942,7 +3944,7 @@
 %    \end{macrocode}
 % First case: notes are for both sides. Just print the note start and the note group
 %    \begin{macrocode}
-   \ifcsempty{onlyXside@#1}{%
+   \ifcsempty{Xonlyside@#1}{%
      \csuse{#1footstart}{#1}%
      \csuse{#1footgroup}{#1}%
    }%
@@ -3952,9 +3954,9 @@
 %    \begin{macrocode}
    {%
      \ifboolexpr{%
-       ((test {\ifcsstring{onlyXside@#1}{L}} and not test{\ifnumodd{\c@page}})%
+       ((test {\ifcsstring{Xonlyside@#1}{L}} and not test{\ifnumodd{\c@page}})%
        or%
-       (test {\ifcsstring{onlyXside@#1}{R}} and test{\ifnumodd{\c@page}}))%
+       (test {\ifcsstring{Xonlyside@#1}{R}} and test{\ifnumodd{\c@page}}))%
        }%
 %    \end{macrocode}
 % If we are in a page where notes must be printed, print the notes, after having made the corrections which are needed for boxes.
@@ -6291,6 +6293,19 @@
 % \end{macro}
 
 
+% \section{Compatibility with \eledmac}
+%
+% Here, we define some command for the \verb+eledmac-compat+ option.
+% 
+%    \begin{macrocode}
+\ifeledmaccompat@%
+
+
+  \unless\ifnocritical@
+  \let\onlyXside\Xonlyside
+  \fi
+\fi 
+%    \end{macrocode}
 % \section{The End}\label{end}
 %
 % 
@@ -6367,6 +6382,7 @@
 %
 % \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
 % \emph{Old command} 	& \emph{New command} 	 \\
+% \cs{onlyXside} 	& \cs{Xonlyside} \\   
 % \hline
 % \endhead
 % \end{longtable}
