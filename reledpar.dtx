@@ -1595,11 +1595,12 @@
 %
 % The macros with \verb"action" in their names contain all the code
 % that modifies the action-code list.
+% \changes{v2.0.0}{2015/06/28}{\cs{@nl} is now defined only in \reledmac.} 
 % \begin{macro}{\@nl@regR}
 % \begin{macro}{\@nl}
-% \cs{@nl} does everything related to the start of a
-% new line of numbered text. Exactly what it does depends
-% on whether right text is being processed.
+% \cs{@nl@regR} is called by \cs{@nl} if we are on a right side.
+% It does everything related to the start of a
+% new line of numbered text on a right side. 
 %
 %    \begin{macrocode}
 \newcommand{\@nl@regR}{%
@@ -1646,47 +1647,19 @@
     \fi
   \fi}
 
-\renewcommand*{\@nl}[2]{%
-  \fix@page{#1}%
-  \ifledRcol
-    \@nl@regR
-  \else
-    \@nl@reg
-  \fi}
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\last@page@numR}
 % \begin{macro}{\fix@page}
-% We have to adjust \cs{fix@page} to handle parallel texts.
+% \cs{last@page@numR} store the page number of the last right page.
+% It is modified by \cs{fix@page}, defined by \reledmac.
+% \changes{v2.0.0}{2105/06/28}{\cs{fix@page} is defined only once in \reledmac} 
 %
 %    \begin{macrocode}
 \newcount\last@page@numR
   \last@page@numR=-10000
-\renewcommand*{\fix@page}[1]{%
-  \ifledRcol
-    \ifnum #1=\last@page@numR
-    \else
-      \ifbypage@R
-        \line@numR \z@ \subline@numR \z@
-      \fi
-      \page@numR=#1\relax
-      \last@page@numR=#1\relax
-      \def\next@page@numR{#1}%
-    \fi
-  \else
-    \ifnum #1=\last@page@num
-    \else
-      \ifbypage@
-        \line@num \z@ \subline@num \z@
-      \fi
-      \page@num=#1\relax
-      \last@page@num=#1\relax
-      \def\next@page@num{#1}%
-      \listxadd{\normal@page@break}{\the\absline@num}
-    \fi
-  \fi}
 
 %    \end{macrocode}
 % \end{macro}

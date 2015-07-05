@@ -5045,15 +5045,25 @@
 % it may come in handy later. The macro \cs{fix@page} checks if a new
 % page has started.
 % 
+% Exactly what \cs{@nl} does depends
+% on whether right text is being processed. That's why many code is defined in \cs{@nl@reg} or \cs{nl@regR}.
+%
+%
 % \changes{v0.3.0}{2004/02/14}{Added a bunch of code to \cs{@nl} for handling
 %                          \cs{setlinenum}}
 % \changes{v0.6.0}{2004/11/16}{Extended \cs{@nl} to include the page number}
 % \changes{v0.6.0}{2004/11/16}{Added \cs{fix@page} to \cs{@nl}}
 % \changes{v0.7.0}{2005/02/22}{Added \cs{@nl@reg}}
 %    \begin{macrocode}
-\newcommand{\@nl}[2]{%
+
+\newcommand*{\@nl}[2]{%
   \fix@page{#1}%
-  \@nl@reg}
+  \ifledRcol%
+    \@nl@regR%
+  \else%
+    \@nl@reg%
+  \fi%
+}
 \newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@num \@ne
@@ -5125,19 +5135,30 @@
 %    \begin{macrocode}
 \newcount\last@page@num
   \last@page@num=-10000
+ 
 \newcommand*{\fix@page}[1]{%
-  \ifnum #1=\last@page@num
-  \else
-    \ifbypage@
-      \csxdef{lastlinenumberon@\the\last@page@num}{\the\line@num}%
-      \line@num=\z@ \subline@num=\z@
+  \ifledRcol
+    \ifnum #1=\last@page@numR
+    \else
+      \ifbypage@R
+        \line@numR \z@ \subline@numR \z@
+      \fi
+      \page@numR=#1\relax
+      \last@page@numR=#1\relax
+      \def\next@page@numR{#1}%
     \fi
-    \page@num=#1\relax
-    \last@page@num=#1\relax
-    \def\next@page@num{#1}%
-    \listxadd{\normal@page@break}{\the\absline@num}
+  \else
+    \ifnum #1=\last@page@num
+    \else
+      \ifbypage@
+        \line@num \z@ \subline@num \z@
+      \fi
+      \page@num=#1\relax
+      \last@page@num=#1\relax
+      \def\next@page@num{#1}%
+      \listxadd{\normal@page@break}{\the\absline@num}
+    \fi
   \fi}
-
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
