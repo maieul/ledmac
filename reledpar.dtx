@@ -696,13 +696,12 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 
 % \cs{lineation*} macro is the equivalent of \macpackage \cs{lineation} macro for both sides.
 %
-% \DescribeMacro{\Rlineflag}
-% The value of \cs{Rlineflag} is appended to the line numbers of the
-% right texts. Its default definition is: \\
-% \verb?\newcommand*{\Rlineflag}{R}? \\
+% \DescribeMacro{\setRlineflag}
+% A ``R''  is appended to the line numbers of the
+% right texts. 
 % This may be useful for parallel columns but for parallel pages it might
-% be more appropriate to redefine it as: \\
-% \verb?\renewcommand*{\Rlineflag}{}?.
+% be more appropriate to redefine it using \cs{setRlineflag}\marg{flag}.
+% Use \verb?\setRlineflag{}? to empty it.
 % 
 % \subsection{Chunks}
 % \DescribeMacro{\pstart}
@@ -1424,10 +1423,13 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Right line flag}
 % \begin{macro}{\Rlineflag}
 % This is appended to the line numbers of right text.
 %    \begin{macrocode}
-\newcommand*{\Rlineflag}{R}
+\newcommand{\setRlineflag}[1]{%
+  \gdef\@Rlineflag{#1}%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -1461,7 +1463,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
   \kern\linenumsep 
   \l@dlinenumR}
 \newcommand*{\l@dlinenumR}{%
-  \numlabfont\linenumrepR{\line@numR}\Rlineflag%
+  \numlabfont\linenumrepR{\line@numR}\@Rlineflag%
   \ifsublines@
     \ifnum\subline@num>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
@@ -3769,7 +3771,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \begin{macro}{\printlinesR}
 % \begin{macro}{\ledsavedprintlines}
 % This is the right text version of \cs{printlines} and takes account
-% of \cs{Rlineflag}. Just in case, \cs{ledsavedprintlines} is a copy
+% of \cs{@Rlineflag}. Just in case, \cs{ledsavedprintlines} is a copy
 % of the original \cs{printlines}.
 % 
 % Just a reminder of the arguments: \\
@@ -3781,11 +3783,11 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 \def\printlinesR#1|#2|#3|#4|#5|#6|#7|{\begingroup
   \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
   \ifl@d@pnum #1\fullstop\fi
-  \ifledplinenum \linenumr@p{#2}\Rlineflag\else \symplinenum\fi
+  \ifledplinenum \linenumr@p{#2}\@Rlineflag\else \symplinenum\fi
   \ifl@d@ssub \fullstop \sublinenumr@p{#3}\fi
   \ifl@d@dash \endashchar\fi
   \ifl@d@pnum #4\fullstop\fi
-  \ifl@d@elin \linenumr@p{#5}\Rlineflag\fi
+  \ifl@d@elin \linenumr@p{#5}\@Rlineflag\fi
   \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumr@p{#6}\fi
 \endgroup}
 
@@ -3995,14 +3997,14 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 %
 % \begin{macro}{\l@dmake@labelsR}
 % This is the right text version of \cs{l@dmake@labels}, taking account
-% of \cs{Rlineflag}.
+% of \cs{@Rlineflag}.
 %
 %    \begin{macrocode}
 \def\l@dmake@labelsR#1|#2|#3|#4|#5{%
   \expandafter\ifx\csname the@label#5\endcsname \relax\else
     \led@warn@DuplicateLabel{#4}%
   \fi
-  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\Rlineflag|#3|#4}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\@Rlineflag|#3|#4}%
   \ignorespaces}
 \AtBeginDocument{%
   \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
@@ -6259,7 +6261,8 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
 % \emph{Deprecated \cs{renewcommand}} 	& \emph{Replaced by} \\
 % \endhead
-% \cs{goalfraction} & \cs{setgoalfraction}\\
+% \cs{goalfraction} & \cs{setgoalfraction} \\
+% \cs{Rlineflag}    & \cs{setRlineflag} \\ 
 % \end{longtable}
 % \subsubsection{Commands which names have changed}
 % \label{eledmac-compat}
