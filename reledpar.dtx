@@ -1541,7 +1541,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \begin{macro}{\linesinpar@listL}
 % \begin{macro}{\linesinpar@listR}
 % \begin{macro}{\maxlinesinpar@list}
-% In order to synchonise left and right chunks in parallel processing
+% In order to synchronise left and right chunks in parallel processing
 % we need to know how many lines are in each left and right text chunk,
 % and the maximum of these for each pair of chunks.
 %    \begin{macrocode}
@@ -1559,77 +1559,29 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \subsection{Reading the line-list file}
 %
 %
-% \begin{macro}{\read@linelist}
-% \cs{read@linelist}\marg{file} is the control sequence
-% that's called by \cs{beginnumbering}
-% (via \cs{line@list@stuff}) to open and process a
-% line-list file; its argument is the name of the file.
-% \phantomsection\label{readlinelist}
+% \begin{macro}{\list@clearing@regR}
+% \cs{Clear the right lines for \cs{read@linelist}}
 %    \begin{macrocode}
-\renewcommand*{\read@linelist}[1]{%
-%    \end{macrocode}
-% We do do different things depending whether or not we are processing 
-% right text
-%    \begin{macrocode}
-  \ifledRcol
+\newcommand{\list@clearing@regR}{%
     \list@clear{\line@listR}%
     \list@clear{\insertlines@listR}%
     \list@clear{\actionlines@listR}%
     \list@clear{\actions@listR}%
     \list@clear{\linesinpar@listR}%
     \list@clear{\linesonpage@listR}
-  \else
-    \list@clearing@reg
-    \list@clear{\linesinpar@listL}%
-    \list@clear{\linesonpage@listL}%
-  \fi
-%    \end{macrocode}
-%
-% Make sure that the \cs{maxlinesinpar@list} is empty (otherwise things
-% will be thrown out of kilter if there is any old stuff still hanging
-% in there).
-%    \begin{macrocode}
-  \list@clear{\maxlinesinpar@list}
-%    \end{macrocode}
-% Now get the file and interpret it.
-%    \begin{macrocode}
-  \get@linelistfile{#1}%
-  \endgroup
-%    \end{macrocode}
-%
-% When the reading is done, we're all through with the
-% line-list file. All the information we needed
-% from it will now be encoded in our list macros.
-% Finally, we
-% initialize the \cs{next@actionline} and \cs{next@action} macros,
-% which specify where and what the next action to be taken is.
-%    \begin{macrocode}
-  \ifledRcol
-    \global\page@numR=\m@ne
-    \ifx\actionlines@listR\empty
-      \gdef\next@actionlineR{1000000}%
-    \else
-      \gl@p\actionlines@listR\to\next@actionlineR
-      \gl@p\actions@listR\to\next@actionR
-    \fi
-  \else
-    \global\page@num=\m@ne
-    \ifx\actionlines@list\empty
-      \gdef\next@actionline{1000000}%
-    \else
-      \gl@p\actionlines@list\to\next@actionline
-      \gl@p\actions@list\to\next@action
-    \fi
-  \fi}
-
+}
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\read@linelist}
+% \cs{read@linelist}\marg{file} is the control sequence
+% that's called by \cs{beginnumbering}
+% (via \cs{line@list@stuff}) to open and process a
+% line-list file; its argument is the name of the file.
+% \label{readlinelist}.
+% It is defined only once time in \reledmac.
+% \changes{v2.0.0}{2015/06/28}{\cs{read@linelist} is defined only once time in \cs{reledmac}.} 
 %
-% This version of \cs{read@linelist} creates list macros
-% containing data for the entire section, so they could get rather
-% large. The \cs{memorydump} macro is available if you run into
-% macro memory limitations.
-%
+% \end{macro}
 % \subsection{Commands within the line-list file}
 %
 % This section defines the commands that can appear within a

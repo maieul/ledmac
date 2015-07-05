@@ -4854,13 +4854,25 @@
 % that  is called by \cs{beginnumbering}
 % (via \cs{line@list@stuff}) to open and process a
 % line-list file; its argument is the name of the file.
-% \phantomsection\label{readlinelist}
+% \label{readlinelist}.
+% First, it clear all previous line's list.
 %    \begin{macrocode}
 \newread\@inputcheck
 \newcommand*{\read@linelist}[1]{%
-  \list@clearing@reg
+  \ifledRcol%
+    \list@clearing@regR%
+  \else%
+    \list@clearing@reg%
+  \fi%
 %    \end{macrocode}
 %
+% When using \parpackage, make sure that the \cs{maxlinesinpar@list} is empty (otherwise things
+% will be thrown out of kilter if there is any old stuff still hanging
+% in there).
+%    \begin{macrocode}
+  \list@clear{\maxlinesinpar@list}
+%    \end{macrocode}
+% Now get the file and interpret it.
 % When the file is there we start a new group and make some special
 % definitions we will need to process it.
 % It is  a sequence of \TeX\
@@ -4901,14 +4913,24 @@
 % initialize the \cs{next@actionline} and \cs{next@action} macros,
 % which specify where and what the next action to be taken is.
 %    \begin{macrocode}
-  \global\page@num=\m@ne
-  \ifx\actionlines@list\empty
-      \gdef\next@actionline{1000000}%
+  \ifledRcol
+    \global\page@numR=\m@ne
+    \ifx\actionlines@listR\empty
+      \gdef\next@actionlineR{1000000}%
+    \else
+      \gl@p\actionlines@listR\to\next@actionlineR
+      \gl@p\actions@listR\to\next@actionR
+    \fi
   \else
+    \global\page@num=\m@ne
+    \ifx\actionlines@list\empty
+      \gdef\next@actionline{1000000}%
+    \else
       \gl@p\actionlines@list\to\next@actionline
       \gl@p\actions@list\to\next@action
-  \fi}
-
+    \fi
+  \fi
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4921,6 +4943,8 @@
   \list@clear{\insertlines@list}%
   \list@clear{\actionlines@list}%
   \list@clear{\actions@list}%
+  \list@clear{\linesinpar@listL}%
+  \list@clear{\linesonpage@listL}%
   }%
 %    \end{macrocode}
 % \end{macro}
