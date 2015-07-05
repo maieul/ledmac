@@ -1239,7 +1239,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 %
 %
 % \section{Line counting}
-% \label{lineation}\relax
+% \label{lineation}
 %
 % \subsection{Choosing the system of lineation}
 % \changes{v0.11.0}{2012/06/11}{Lineation can be by pstart (like in eledmac 0.15).}
@@ -1247,7 +1247,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % Sometimes you want line numbers that start at $1$ at the top of each
 % page; sometimes you want line numbers that start at $1$ at each \cs{pstart}; other times you want line numbers that start at $1$ at the start
 % of each section and increase regardless of page breaks.
-% \Eledpar{} lets you choose different schemes for the left and right texts.
+% \Parpackage lets you choose different schemes for the left and right texts.
 %
 % \begin{macro}{\ifbypstart@R}
 % \begin{macro}{\bypstart@Rtrue}
@@ -1260,7 +1260,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \item line-of-page : \verb|bypstart@R = false| and \verb|bypage@R = true|.
 % \item line-of-pstart : \verb|bypstart@R = true| and \verb|bypage@R = false|.
 % \end{itemize}
-% \Eledpar{} will use the line-of-section system unless instructed otherwise.
+% \Parpackage will use the line-of-section system unless instructed otherwise.
 %    \begin{macrocode}
 \newif\ifbypage@R
 \newif\ifbypstart@R
@@ -1275,7 +1275,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \begin{macro}{\lineationR}
 % \cs{lineationR}\marg{word} is the macro used to select the 
 % lineation system for right texts.
-% Its argument is a string: either \texttt{page}, \texttt{pstart} or \texttt{section}.
+% Its argument is a string: either \verb+page+, \verb+pstart+ or \verb+section+.
 % \changes{v1.15.0}{2015/04/13}{As \cs{lineation}, \cs{lineationR} automatically set the \cs{pstartinfootnote}.}
 %    \begin{macrocode}
 \newcommand*{\lineationR}[1]{{%
@@ -1316,7 +1316,7 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 %
 % \begin{macro}{\lineation*}
 % \changes{v1.8.2}{2014/08/15}{Add \cs{lineation*}}
-% \cs{lineation*} change the lineation system for the side.
+% \cs{lineation*} change the lineation system for both sides.
 %    \begin{macrocode}
 \WithSuffix\newcommand\lineation*[1]{%
   \lineation{#1}%
@@ -1329,45 +1329,35 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % You call \cs{linenummargin}\marg{word} to specify which margin you want your
 % right text's line numbers in; it takes one argument, a string.
 % You can put the line numbers in the same margin on every page using
-% \texttt{left} or \texttt{right}; or you can use \texttt{inner} or
-% \texttt{outer} to get them in the inner or outer margins.
+% \verb+left+ or \verb+right+; or you can use \verb+inner+ or
+% \verb+outer+ to get them in the inner or outer margins.
 % You can change this within a numbered section, but the
-% change may not take effect just when you'd like; if it's done between
+% change may not take effect just when you would like; if it is done between
 % paragraphs nothing surprising should happen.
 %
 % For right texts the selection is recorded in the count \cs{line@marginR},
 % otherwise in the count \cs{line@margin}:
 % $0$ for left, $1$ for right, $2$ for outer, and $3$ for inner.
-% \changes{v0.3.a}{2005/03/30}{Don't just set \cs{line@marginR} in \cs{linenummargin}}
+%
+% It is defined only once time, in \reledmac.
+%
+% \changes{v0.3.a}{2005/03/30}{Do not just set \cs{line@marginR} in \cs{linenummargin}}
+% \changes{v2.0.0}{2015/06/28}{\cs{linenummargin} now defined only once time in \reledmac.}
 %    \begin{macrocode}
 \newcount\line@marginR
-\renewcommand*{\linenummargin}[1]{{%
-  \l@dgetline@margin{#1}%
-  \ifnum\@l@dtempcntb>\m@ne
-    \ifledRcol
-      \global\line@marginR=\@l@dtempcntb
-    \else
-      \global\line@margin=\@l@dtempcntb
-    \fi
-  \fi}}
-%    \end{macrocode}
-% By default put right text numbers at the right.
-%    \begin{macrocode}
-\line@marginR=\@ne
-
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\c@firstlinenumR}
 % \begin{macro}{\c@linenumincrementR}
-% The following counters tell \Eledmac{} which right text lines should be
-% printed with line numbers. \texttt{firstlinenum} is the number of the
+% The following counters tell \macpackage  which right text lines should be
+% printed with line numbers. \verb+firstlinenumR+ is the number of the
 % first line in each section that gets a number;
-% \texttt{linenumincrement}
+% \verb+linenumincrementR+
 % is the difference between successive numbered lines. The initial
 % values of these counters produce labels on lines $5$, $10$, $15$, etc.
-% \texttt{linenumincrement} must be at least $1$.
+% \verb+linenumincrementR+ must be at least $1$.
 % 
 %    \begin{macrocode}
 \newcounter{firstlinenumR}
@@ -1380,9 +1370,9 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 %
 % \begin{macro}{\c@firstsublinenumR}
 % \begin{macro}{\c@sublinenumincrementR}
-% The following parameters are just like \texttt{firstlinenumR} and
-% \texttt{linenumincrementR}, but for sub-line numbers.
-% \texttt{sublinenumincrementR} must be at least $1$.
+% The following parameters are just like \verb+firstlinenumR+ and
+% \verb+linenumincrementR+, but for sub-line numbers.
+% \verb+sublinenumincrementR+ must be at least $1$.
 %
 %    \begin{macrocode}
 \newcounter{firstsublinenumR}
@@ -1404,34 +1394,26 @@ You can stop the numbering with \DescribeMacro{\numberpstartfalse}\cs{numberpsta
 % \begin{macro}{\sublinenumincrement*}
 % \changes{v1.5.0}{2013/11/08}{Add starred version of \cs{firstlinenum}, \cs{linenumincrement}, \cs{firstsublinenum}, \cs{sublinenumincrement} to change both Left and Rightside.}
 % These are the user's macros for changing (sub) line numbers. They are
-% defined in \Lpack{eledmac} v0.7, but just in case 
-% I have started by \cs{provide}ing them.
-% The starred versions are specifi to \Lpack{eledpar}.
+% defined in \macpackage.
+% The starred versions are specific to \Lpack{eledpar}.
+% \changes{v2.0.0}{2015/06/28}{\cs{firstlinenum, \cs{linenumincrement}, \cs{firstsublinenum}, \cs{sublinenumincrement} are now defined only in \macpackage.} 
 %    \begin{macrocode}
-\providecommand*{\firstlinenum}{}
-\providecommand*{\linenumincrement}{}
-\providecommand*{\firstsublinenum}{}
-\providecommand*{\sublinenumincrement}{}
-\renewcommand*{\firstlinenum}[1]{%
-  \ifledRcol \setcounter{firstlinenumR}{#1}%
-  \else      \setcounter{firstlinenum}{#1}%
-  \fi}
-\renewcommand*{\linenumincrement}[1]{%
-  \ifledRcol \setcounter{linenumincrementR}{#1}%
-  \else      \setcounter{linenumincrement}{#1}%
-  \fi}
-\renewcommand*{\firstsublinenum}[1]{%
-  \ifledRcol \setcounter{firstsublinenumR}{#1}%
-  \else      \setcounter{firstsublinenum}{#1}%
-  \fi}
-\renewcommand*{\sublinenumincrement}[1]{%
-  \ifledRcol \setcounter{sublinenumincrementR}{#1}%
-  \else      \setcounter{sublinenumincrement}{#1}%
-  \fi}
-\WithSuffix\newcommand\firstlinenum*[1]{\setcounter{firstlinenumR}{#1}\setcounter{firstlinenum}{#1}}
-\WithSuffix\newcommand\linenumincrement*[1]{\setcounter{linenumincrementR}{#1}\setcounter{linenumincrement}{#1}}
-\WithSuffix\newcommand\firstsublinenum*[1]{\setcounter{subfirstlinenumR}{#1}\setcounter{subfirstlinenum}{#1}}
-\WithSuffix\newcommand\sublinenumincrement*[1]{\setcounter{sublinenumincrementR}{#1}\setcounter{sublinenumincrement}{#1}}
+\WithSuffix\newcommand\firstlinenum*[1]{%
+  \setcounter{firstlinenumR}{#1}%
+  \setcounter{firstlinenum}{#1}%
+}
+\WithSuffix\newcommand\linenumincrement*[1]{%
+  \setcounter{linenumincrementR}{#1}%
+  \setcounter{linenumincrement}{#1}%
+}
+\WithSuffix\newcommand\firstsublinenum*[1]{%
+  \setcounter{subfirstlinenumR}{#1}%
+  \setcounter{subfirstlinenum}{#1}%
+}
+\WithSuffix\newcommand\sublinenumincrement*[1]{%
+  \setcounter{sublinenumincrementR}{#1}%
+  \setcounter{sublinenumincrement}{#1}%
+}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
