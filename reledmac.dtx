@@ -5879,11 +5879,14 @@
 % current visible
 % line-number to a specified positive value.
 %    \begin{macrocode}
+
 \newcommand*{\setline}[1]{%
   \ifnum#1<\z@
     \led@warn@BadSetline
   \else
-    \write\linenum@out{\string\@set[#1]}%
+    \ifledRcol \write\linenum@outR{\string\@set[#1]}%
+    \else      \write\linenum@out{\string\@set[#1]}%
+    \fi
   \fi}
 
 %    \end{macrocode}
@@ -5894,11 +5897,13 @@
 % before a \cs{pstart} to set the visible line-number to a specified 
 % positive value. It writes a \cs{l@d@set} command to the line-list file.
 %    \begin{macrocode}
+
 \newcommand*{\setlinenum}[1]{%
   \ifnum#1<\z@
     \led@warn@BadSetlinenum
   \else
-    \write\linenum@out{\string\l@d@set[#1]}%
+    \ifledRcol \write\linenum@outR{\string\l@d@set[#1]}
+    \else      \write\linenum@out{\string\l@d@set[#1]} \fi
   \fi}
 
 %    \end{macrocode}
@@ -5911,9 +5916,15 @@
 % the current line. They decide whether line numbers or sub-line numbers
 % are affected, depending on the current state of the sub-lineation flags.
 %    \begin{macrocode}
-\newcommand*{\startlock}{\write\linenum@out{\string\lock@on}}
-\def\endlock{\write\linenum@out{\string\lock@off}}
 
+\newcommand*{\startlock}{%
+  \ifledRcol \write\linenum@outR{\string\lock@on}%
+  \else      \write\linenum@out{\string\lock@on}%
+  \fi}
+\newcommand\endlock{%
+  \ifledRcol \write\linenum@outR{\string\lock@off}%
+  \else      \write\linenum@out{\string\lock@off}%
+  \fi}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
