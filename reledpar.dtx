@@ -1796,13 +1796,15 @@
 % \end{macro}
 %
 % \begin{macro}{\@ref}
+% \begin{macro}{\@ref@refR}
+% \changes{v2.0.0}{2015/06/28}{\cs{@ref} defined only in \reledmac, code specific to right side moved in \cs{ref@regR}.}
 % \begin{macro}{\insert@countR}
 % \cs{@ref}
 % marks the start of a passage, for creation of a footnote reference.
 % It takes two arguments:
-% \begin{itemize}\addtolength{\itemsep}{-1ex}
+% \begin{itemize}
 % \item \verb"#1", the number of entries to add to \cs{insertlines@list}
-% for this reference. \SpecialMainIndex{\insert@count}
+% for this reference. 
 % This value for right text, here and within \cs{edtext},
 % which computes it and writes it to the line-list file,
 % will be stored in the count \cs{insert@countR}.
@@ -1811,16 +1813,19 @@
 %    \end{macrocode}
 %
 % \item \verb"#2", a sequence of other line-list-file commands, executed to
-% determine the ending line-number. (This may also include other
+% determine the ending line-number. This may also include other
 % \cs{@ref} commands, corresponding to uses of \cs{edtext}
-% within the first argument of another instance of \cs{edtext}.)
+% within the first argument of another instance of \cs{edtext}.
 % \end{itemize}
 %
-% The first thing \cs{@ref} itself does is to add the specified number
-% of items to the \cs{insertlines@list} list.
+% \cs{@ref} itself is defined in \macpackage.
+% It calls \cs{ref@reg}  or \cs{ref@regR}, depending weither we are in left or right side.
+% Here, we define only \cs{ref@regR}, \cs{ref@reg} is already defined in \macpackage.
+%
+% The first thing \cs{@ref@regR} itself does is to add the specified number
+% of items to the \cs{insertlines@listR} list.
 %    \begin{macrocode}
-\renewcommand*{\@ref}[2]{%
-  \ifledRcol
+\newcommand*{\@ref@regR}[2]{%
     \global\advance\@edtext@level by 1%
     \global\insert@countR=#1\relax
     \loop\ifnum\insert@countR>\z@
@@ -1853,7 +1858,7 @@
 %    \end{macrocode}
 %
 % Now store all the information about the location of the lemma's
-% start and end in \cs{line@list}.
+% start and end in \cs{line@list@R}.
 %    \begin{macrocode}
     \xright@appenditem%
       {\the\page@numR|\the\line@numR|%
@@ -1890,18 +1895,11 @@
 % Decrease edtext level counter.
 %    \begin{macrocode}
     \global\advance\@edtext@level by -1% 
-%    \end{macrocode}
-%    \begin{macrocode}
-  \else
-%    \end{macrocode}
-% And when not in right text
-%    \begin{macrocode}
-    \@ref@reg{#1}{#2}%
-  \fi}
+}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \end{macro}
 % \begin{macro}{\@pend}
 % \begin{macro}{\@pendR}
 % \cs{@pend}\marg{num} adds its argument to the \cs{linesinpar@listL}
