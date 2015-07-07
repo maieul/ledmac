@@ -301,6 +301,7 @@
 % \changes{v1.24.0}{2015/06/02}{We can reinitialize \cs{AtEveryPstart} and \cs{AtEveryPend} providing to it an empty argument.}
 % \changes{v1.24.1}{2015/06/21}{\cs{lemma} is disabled when using `nocritical` option.}
 % \changes{v1.24.2}{2015/06/26}{Fix incompatibility between `nofamiliar` option and `memoir` package.}
+% \changes{v1.24.3}{2015/07/07}{Restore marginal numbers and notes with sectioning command (bug introduced in v1.21.0)}
 % \changes{v2.0.0}{2015/06/28}{Package's name becomes \reledmac.} 
 % \changes{v2.0.0}{2015/06/28}{In order to have a more consistent name's convention, many names has been changed.}
 % \hyphenation{man-u-script man-u-scripts}
@@ -15392,7 +15393,9 @@
 % \subsection{\cs{beforeeledchapter} command} 
 % We do not define commands for \cs{eledsection} and related if the \verb+noeledsec+ option is loaded.
 % We use \Lpack{etoolbox} tests and not the \cs{ifxxx}\ldots\cs{else}\ldots\cs{fi} structure to prevent problem of expansions with command after the \cs{ifxxx} which contains \cs{fi}.
+% As we patch command inside this test, we need to change the category code of \# character \emph{before} \cs{notbool} statement, because the second argument is read with the standard catcode (read \thetexbook to understand when the catcode's change has effect). 
 %    \begin{macrocode}
+\catcode`\#=12
 \notbool{@noeled@sec}{%
 %    \end{macrocode}
 % \begin{macro}{\beforeeledchapter}
@@ -15480,7 +15483,6 @@
 %
 %   
 %    \begin{macrocode}
-\catcode`\#=12 % Space NEEDS by \catcode
 \AtBeginDocument{%
 \patchcmd{\chapter}{\clearforchapter}{%
   \if@eled@sectioning\else%
@@ -15669,7 +15671,12 @@
     {}
   }%
 }
-\catcode`\#=6 %Space NEEDS by \catcode
+%    \end{macrocode}
+% Now, we have finished to patch the commands, using \# with a catcode equals to 12. We close the \verb+\notbool{@noeled@sec}+ statement, restore the normal catcode for \# and reopen a new \verb+\notbool{@noeled@sec}+ statement. 
+%    \begin{macrocode}
+{}}%
+\protect\catcode`\#=6 %Space NEEDS by \catcode
+\notbool{@noeled@sec}{%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
