@@ -15865,7 +15865,9 @@
 %
 % We do not define commands for \cs{eledsection} and related if the \verb+noeledsec+ option is loaded.
 % We use etoolbox tests and not the \verb+\ifxxx…\else…\fi+ structure to prevent problem of expansions with command after the \verb+\ifxxx+ which contains \verb+fi+.
+% As we patch command inside this test, we need to change the category code of \# character \emph{before} \cs{notbool} statement, because the second argument is read with the standard catcode (read \TeXbook to understand when the catcode's change has effect). 
 %    \begin{macrocode}
+\catcode`\#=12
 \notbool{@noeled@sec}{%
 %    \end{macrocode}
 % \begin{macro}{\beforeeledchapter}
@@ -15943,7 +15945,6 @@
 %
 %   
 %    \begin{macrocode}
-\catcode`\#=12 % Space NEEDS by \catcode
 \AtBeginDocument{%
 \patchcmd{\chapter}{\clearforchapter}{%
   \if@eled@sectioning\else%
@@ -16135,7 +16136,12 @@
     {}
   }%
 }
-\catcode`\#=6 %Space NEEDS by \catcode
+%    \end{macrocode}
+% Now, we have finished to patch the commands, using \# with a catcode equals to 12. We close the \verb+\notbool{@noeled@sec}+ statement, restore the normal catcode for \# and reopen a new \verb+\notbool{@noeled@sec}+ statement. 
+%    \begin{macrocode}
+{}}%
+\protect\catcode`\#=6 %Space NEEDS by \catcode
+\notbool{@noeled@sec}{%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
