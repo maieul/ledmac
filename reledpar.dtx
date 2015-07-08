@@ -4021,106 +4021,6 @@
 % \end{macro}
 % \end{macro}
 %
-% \section{Counts and boxes for parallel texts}
-%
-%    In sequential text, each chunk (that enclosed by \cs{pstart} \ldots
-% \cs{pend}) is put into a box called \cs{raw@text} and then immediately
-% printed, resulting in the box being emptied and ready for the next chunk. 
-% For parallel processing multiple boxes are needed as printing is delayed.
-% We also need extra counters for various things.
-%
-% \begin{macro}{\maxchunks}
-% \begin{macro}{\l@dc@maxchunks}
-% The maximum number of chunk pairs before printing has to be called for.
-% The default is 5120 chunk pairs.
-%    \begin{macrocode}
-\newcount\l@dc@maxchunks
-\newcommand{\maxchunks}[1]{\l@dc@maxchunks=#1}
-  \maxchunks{5120}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\l@dnumpstartsL}
-% \begin{macro}{\l@dnumpstartsR}
-% The numbers of left and right chunks. \cs{l@dnumpstartsL} is defined
-% in \Lpack{eledmac}.
-% \changes{v0.3.0}{2005/02/24}{Moved \cs{l@dnumpstartsL} to eledmac}
-%    \begin{macrocode}
-\newcount\l@dnumpstartsR
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% 
-% \begin{macro}{\l@pscL}
-% \begin{macro}{\l@pscR}
-% A couple of scratch counts for use in left and right texts, respectively.
-%    \begin{macrocode}
-\newcount\l@dpscL
-\newcount\l@dpscR
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% 
-% \begin{macro}{\l@dsetuprawboxes}
-% This macro creates \cs{maxchunks} pairs of boxes for left and right
-% chunks. The boxes are called \cs{l@dLcolrawbox1}, \cs{l@dLcolrawbox2}, etc.
-%    \begin{macrocode}
-\newcommand*{\l@dsetuprawboxes}{%
-  \@l@dtempcntb=\l@dc@maxchunks
-  \loop\ifnum\@l@dtempcntb>\z@
-    \newnamebox{l@dLcolrawbox\the\@l@dtempcntb}
-    \newnamebox{l@dRcolrawbox\the\@l@dtempcntb}
-    \advance\@l@dtempcntb \m@ne
-  \repeat}
-
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l@dsetupmaxlinecounts}
-% \begin{macro}{\l@dzeromaxlinecounts}
-% To be able to synchronise left and right texts we need
-% to know the maximum number of text lines there are in each pair of chunks.
-% \cs{l@dsetupmaxlinecounts} creates \cs{maxchunks} new counts
-% called \cs{l@dmaxlinesinpar1}, etc., and
-% \cs{l@dzeromaxlinecounts} zeroes all of them.
-%    \begin{macrocode}
-\newcommand*{\l@dsetupmaxlinecounts}{%
-  \@l@dtempcntb=\l@dc@maxchunks
-  \loop\ifnum\@l@dtempcntb>\z@
-    \newnamecount{l@dmaxlinesinpar\the\@l@dtempcntb}
-    \advance\@l@dtempcntb \m@ne
-  \repeat}
-\newcommand*{\l@dzeromaxlinecounts}{%
-  \begingroup
-  \@l@dtempcntb=\l@dc@maxchunks
-  \loop\ifnum\@l@dtempcntb>\z@
-    \global\usenamecount{l@dmaxlinesinpar\the\@l@dtempcntb}=\z@
-    \advance\@l@dtempcntb \m@ne
-  \repeat
-  \endgroup}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% Make sure that all these are set up. This has to be done after the
-% user has had an opportunity to change \cs{maxchunks}.
-%    \begin{macrocode}
-\AtBeginDocument{%
-  \l@dsetuprawboxes
-  \l@dsetupmaxlinecounts
-  \l@dzeromaxlinecounts
-  \l@dnumpstartsL=\z@
-  \l@dnumpstartsR=\z@
-  \l@dpscL=\z@
-  \l@dpscR=\z@}
-
-%    \end{macrocode}
-%
 % \section{Fixing babel and polyglossia}
 %
 %    With parallel texts there is the possibility that the two sides
@@ -4254,6 +4154,106 @@
 % \end{macro}
 % \end{macro}
 %
+%
+% \section{Counts and boxes for parallel texts}
+%
+%    In sequential text, each chunk (that enclosed by \cs{pstart} \ldots
+% \cs{pend}) is put into a box called \cs{raw@text} and then immediately
+% printed, resulting in the box being emptied and ready for the next chunk. 
+% For parallel processing multiple boxes are needed as printing is delayed.
+% We also need extra counters for various things.
+%
+% \begin{macro}{\maxchunks}
+% \begin{macro}{\l@dc@maxchunks}
+% The maximum number of chunk pairs before printing has to be called for.
+% The default is 5120 chunk pairs.
+%    \begin{macrocode}
+\newcount\l@dc@maxchunks
+\newcommand{\maxchunks}[1]{\l@dc@maxchunks=#1}
+  \maxchunks{5120}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\l@dnumpstartsL}
+% \begin{macro}{\l@dnumpstartsR}
+% The numbers of left and right chunks. \cs{l@dnumpstartsL} is defined
+% in \Lpack{eledmac}.
+% \changes{v0.3.0}{2005/02/24}{Moved \cs{l@dnumpstartsL} to eledmac}
+%    \begin{macrocode}
+\newcount\l@dnumpstartsR
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% 
+% \begin{macro}{\l@pscL}
+% \begin{macro}{\l@pscR}
+% A couple of scratch counts for use in left and right texts, respectively.
+%    \begin{macrocode}
+\newcount\l@dpscL
+\newcount\l@dpscR
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% 
+% \begin{macro}{\l@dsetuprawboxes}
+% This macro creates \cs{maxchunks} pairs of boxes for left and right
+% chunks. The boxes are called \cs{l@dLcolrawbox1}, \cs{l@dLcolrawbox2}, etc.
+%    \begin{macrocode}
+\newcommand*{\l@dsetuprawboxes}{%
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \newnamebox{l@dLcolrawbox\the\@l@dtempcntb}
+    \newnamebox{l@dRcolrawbox\the\@l@dtempcntb}
+    \advance\@l@dtempcntb \m@ne
+  \repeat}
+
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@dsetupmaxlinecounts}
+% \begin{macro}{\l@dzeromaxlinecounts}
+% To be able to synchronise left and right texts we need
+% to know the maximum number of text lines there are in each pair of chunks.
+% \cs{l@dsetupmaxlinecounts} creates \cs{maxchunks} new counts
+% called \cs{l@dmaxlinesinpar1}, etc., and
+% \cs{l@dzeromaxlinecounts} zeroes all of them.
+%    \begin{macrocode}
+\newcommand*{\l@dsetupmaxlinecounts}{%
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \newnamecount{l@dmaxlinesinpar\the\@l@dtempcntb}
+    \advance\@l@dtempcntb \m@ne
+  \repeat}
+\newcommand*{\l@dzeromaxlinecounts}{%
+  \begingroup
+  \@l@dtempcntb=\l@dc@maxchunks
+  \loop\ifnum\@l@dtempcntb>\z@
+    \global\usenamecount{l@dmaxlinesinpar\the\@l@dtempcntb}=\z@
+    \advance\@l@dtempcntb \m@ne
+  \repeat
+  \endgroup}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% Make sure that all these are set up. This has to be done after the
+% user has had an opportunity to change \cs{maxchunks}.
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \l@dsetuprawboxes
+  \l@dsetupmaxlinecounts
+  \l@dzeromaxlinecounts
+  \l@dnumpstartsL=\z@
+  \l@dnumpstartsR=\z@
+  \l@dpscL=\z@
+  \l@dpscR=\z@}
+
+%    \end{macrocode}
 %
 % \begin{macro}{\if@pstarts}
 % \begin{macro}{\@pstartstrue}
