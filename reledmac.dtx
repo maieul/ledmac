@@ -9774,13 +9774,21 @@
 % originals could give incorrect markers in the footnotes}
 % \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
+
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
   \gdef\@tag{#1\relax}%
-    \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
+    \ifledRcol%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+                         \to\inserts@listR
+       \global\advance\insert@countR \@ne%
+    \else%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne%
+    \fi
   \fi\ignorespaces}
+
 \newcommand{\vl@dbfnote}[2]{%
   \def\@thefnmark{#2}%
   \@footnotetext{#1}%
@@ -10008,12 +10016,32 @@
 % \changes{v0.7.0}{2005/02/18}{Removed extraneous space from \cs{normalbfnoteX}}
 % \changes{v1.4.9}{2013/07/10}{Allow to redefine \cs{thefootnoteX} with \c{alph} when some packages are loaded.}
 %    \begin{macrocode}
+
 \newcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
-    \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
-    \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
-                       \to\inserts@list
-    \global\advance\insert@count \@ne
+    \ifledRcol%
+      \ifluatex
+          \footnotelang@lua[R]%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+        {}%
+        {\footnotelang@poly[R]}%      
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+                         \to\inserts@listR
+       \global\advance\insert@countR \@ne%
+    \else%
+      \ifluatex
+          \footnotelang@lua%
+      \fi
+      \@ifundefined{xpg@main@language}%if polyglossia
+        {}%
+        {\footnotelang@poly}%    
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne%
+    \fi
   \fi\ignorespaces}
 
 %    \end{macrocode}
