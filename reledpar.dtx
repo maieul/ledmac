@@ -4121,11 +4121,11 @@
 
 %    \end{macrocode}
 %
-% \section{Fixing babel}
+% \section{Fixing babel and polyglossia}
 %
 %    With parallel texts there is the possibility that the two sides
-% might use different languages via \verb?babel?. On the other hand,
-% \verb?babel? might not be called at all (even though it might be already
+% might use different languages via \Lpack{babel}. On the other hand,
+% nor \Lpack{babel} nor \Lpack{polyglossia} might not be called at all (even though it might be already
 % built into the format).
 % \changes{v0.2.0}{2004/12/20}{Added section of babel related code}
 %
@@ -4149,36 +4149,31 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\ifl@dsamelang}
-% Suppress \cs{ifl@dsamelang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.
-% \end{macro}
+% \changes{v1.8.0}{2014/08/05}{Suppress \cs{ifl@dsamelang} which did not work and was not logical, because both columns could have the same language but not the main language of the document.}
 %
 % \begin{macro}{\l@dchecklang}
-% \changes{v1.8.0}{2014/08/05}{Suppress \cs{l@dchecklang} which didn't work and was not logical, because both columns could have the same language but not the main language of the document.}
+% \changes{v1.8.0}{2014/08/05}{Suppress \cs{l@dchecklang} which did not work and was not logical, because both columns could have the same language but not the main language of the document.}
 % \end{macro}
-% \begin{macro}{\l@dbbl@set@language}
-% In \verb?babel? the macro \cs{bbl@set@language}\marg{lang} does the work when
+% \begin{macro}{\bbl@set@language}
+% In \Lpack{babel} the macro \cs{bbl@set@language}\marg{lang} does the work when
 % the language \meta{lang} is changed via \cs{selectlanguage}. 
-% Unfortunately for me, if it is given
+% Unfortunately for us, if it is given
 % an argument in the form of a control sequence it strips off the \verb?\?
-% character rather than expanding the command. I need a version that accepts
+% character rather than expanding the command. We need a version that accepts
 % an argument in the form \cs{lang} without it stripping the \verb?\?.
+% \changes{v2.0.0}{2015/06/28}{Patch \cs{bbl@set@language} instead of redefining it}
 %    \begin{macrocode}
-\newcommand*{\l@dbbl@set@language}[1]{%
-  \edef\languagename{#1}%
-  \select@language{\languagename}%
-  \if@filesw
-    \protected@write\@auxout{}{\string\select@language{\languagename}}%
-    \addtocontents{toc}{\string\select@language{\languagename}}%
-    \addtocontents{lof}{\string\select@language{\languagename}}%
-    \addtocontents{lot}{\string\select@language{\languagename}}%
-  \fi}
+\patchcmd{\bbl@set@language}%
+  {\select@language{\languagename}}%
+  {\edef\languagename{#1}\select@language{\languagename}}%
+  {}%
+  {}%
 
 %    \end{macrocode}
 % \end{macro}
 %
 % The rest of the setup has to be postponed until the end of the preamble
-% when we know if \verb?babel? has been used or not. However, for now assume
+% when we know if \Lpack{babel} or \Lpack{polyglossia} have been used or not. However, for now assume
 % that it has not been used.
 %
 % \begin{macro}{\selectlanguage}
@@ -4189,24 +4184,23 @@
 % \cs{theledlanguageR} are the names of the languages of the left and right
 % texts. \cs{l@duselanguage} is similar to \cs{selectlanguage}.
 %    \begin{macrocode}
-\providecommand{\selectlanguage}[1]{}
 \newcommand*{\l@duselanguage}[1]{}
 \gdef\theledlanguageL{}
 \gdef\theledlanguageR{}
 
 %    \end{macrocode}
 %
-% Now do the \verb?babel? fix or \verb?polyglossia?, if necessary.
+% Now do the \Lpack{babel} or \Lpack{polyglossia}  fix or, if necessary.
 %    \begin{macrocode}
 \AtBeginDocument{%
   \@ifundefined{xpg@main@language}{% 
     \@ifundefined{bbl@main@language}{% 
 %    \end{macrocode}
-%  Either \verb?babel? has not been used or it has been used with no
+%  Either \Lpack{babel}   has not been used or it has been used with no
 % specified language. 
 %    \begin{macrocode}
     \l@dusedbabelfalse
-    \renewcommand*{\selectlanguage}[1]{}}{%
+    }{%
 %    \end{macrocode}
 % Here we deal with the case where babel has been used. \cs{selectlanguage}
 % has to be redefined to use our version of \cs{bbl@set@language} and to
@@ -4228,7 +4222,7 @@
     \renewcommand*{\l@duselanguage}[1]{%
       \l@doldselectlanguage{#1}}
 %    \end{macrocode}
-% Lastly, initialise the left and right languages to the current \verb?babel?
+% Lastly, initialise the left and right languages to the current \Lpack{babel}
 % one.
 %    \begin{macrocode}
     \gdef\theledlanguageL{\bbl@main@language}%
@@ -4236,9 +4230,10 @@
     }%
    }
 %    \end{macrocode}
-% If on Polyglossia
+% If use \Lpack{polyglossia}
 % \changes{v1.8.0}{2014/08/05}{Correct left/right language setting with polyglossia.}
-% \changes{v1.9.0}{2014/09/16}{Debug left/right language switching with polyglossia. Don't write in .aux file when setting left/right lines.}
+% \changes{v1.9.0}{2014/09/16}{Debug left/right language switching with polyglossia. Do not write in .aux file when setting left/right lines.}
+% \changes{v2.0.0}{2015/06/28}{Patch \cs{otherlanguage} instead of redefining it.}
 % \begin{macrocode}
   {    \let\old@otherlanguage\otherlanguage%
        \renewcommand{\otherlanguage}[2][]{%
@@ -4250,7 +4245,7 @@
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
 %    \end{macrocode}
-% That's it.
+% That is it.
 %    \begin{macrocode}
 }}
 %    \end{macrocode}
