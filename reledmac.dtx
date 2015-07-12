@@ -2418,19 +2418,19 @@
 % The first one will print the lines as they are printed in the critical footnotes, 
 % while the second will print the lines as they are printed in endnotes.
 %
-% \DescribeMacro{\apprefprefixsingle}\DescribeMacro{\apprefprefixmore}
-% If you redefine \cs{apprefprefixsingle}, its content will be printed
+% \DescribeMacro{\setapprefprefixsingle}\DescribeMacro{\setapprefprefixmore}
+% If you use \cs{setapprefprefixsingle}\marg{prefix}, \meta{prefix} will be printed
 % before the line numbers of a \cs{appref}-reference.
-% If you redefine \cs{apprefprefixmore}, its content will be printed
+% If you use \cs{setapprefprefixmore}\marg{prefix}, \meta{prefix} will be printed
 % before the line numbers, if you refer to more than one line.
 % 
 % For example, you may use:
 % \begin{verbatim}
-% \renewcommand{\apprefprefixsingle}{line~}
-% \renewcommand{\apprefprefixmore}{lines~}
+%  \setapprefprefixsingle{line~}
+%  \setapprefprefixmore{lines~}
 % \end{verbatim}
 %
-% Note that if \cs{apprefprefixmore} is empty, \cs{apprefprefixsingle} will used in any case.
+% Note that if you have not used \cs{setapprefprefixmore} is empty, argument of \cs{setapprefprefixsingle} will used in any case.
 % 
 % \DescribeMacro{\Xtwolinesappref}
 % \DescribeMacro{\Xmorethantwolinesappref}
@@ -12529,13 +12529,15 @@
 %
 % \begin{macro}{\appref}
 % \begin{macro}{\apprefwithpage}
-% \begin{macro}{\apprefprefixsingle}
-% \begin{macro}{\apprefprefixmore}
+% \begin{macro}{\@apprefprefixsingle}
+% \begin{macro}{\@apprefprefixmore}
+% \begin{macro}{\setapprefprefixsingle}
+% \begin{macro}{\setapprefprefixmore}
 % \cs{appref} prints a crossref to some lines of the apparatus defined by \cs{applabel}.
 % It prints the lines as they should be printed in the apparatus.
 % 
-% If \cs{apprefprefixsingle} is not empty, it prints it before the line number.
-% If \cs{apprefprefixmore} is not empty, it prints it before the line numbers when the first line is not the same as the last line.
+% If \cs{@apprefprefixsingle} is not empty, it prints it before the line number.
+% If \cs{@apprefprefixmore} is not empty, it prints it before the line numbers when the first line is not the same as the last line.
 % \cs{apprefwithpage} prints a crossref to some lines of the apparatus defined by \cs{applabel}.
 % It always prints the page number, as it should be printed in the end notes.
 % The \cs{Xtwolinesappref} and \cs{Xmorethantwolinesappref} are similar to the footnote
@@ -12565,10 +12567,18 @@
 \xdef\Xendboxendlinenum@apprefwithpage{0pt}
 
 %    \end{macrocode}
-% Now, declare the default value of \cs{apprefprefixsingle} and \cs{apprefprefixmore}.
+% Now, declare the default value of \cs{@apprefprefixsingle} and \cs{@apprefprefixmore}, and the commands which defines them
 %    \begin{macrocode}
-\newcommand\apprefprefixsingle{}%
-\newcommand\apprefprefixmore{}%
+\newcommand\@apprefprefixsingle{}%
+\newcommand\@apprefprefixmore{}%
+
+\newcommand{\apprefprefixsingle}[1]{%
+  \gdef\@apprefprefixsingle{#1}%
+}
+
+\newcommand{\setapprefprefixmore}[1]{%
+  \gdef\@apprefprefixmore{#1}%
+}
 
 %    \end{macrocode}
 % And now, the main commands: \cs{appref} and \cs{apprefwithpage}.
@@ -12579,12 +12589,12 @@
    {\toggletrue{fulllines@}}%
    {}%
  \xdef\@currentseries{appref}%
- \ifdefempty{\apprefprefixmore}%
-   {\apprefprefixsingle}%
+ \ifdefempty{\@apprefprefixmore}%
+   {\@apprefprefixsingle}%
    {%
      \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
-       {\apprefprefixsingle}%
-       {\apprefprefixmore}%
+       {\@apprefprefixsingle}%
+       {\@apprefprefixmore}%
    }%
  \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
  \togglefalse{fulllines@}%
@@ -12600,6 +12610,8 @@
  \togglefalse{fulllines@}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -16308,6 +16320,8 @@
 % \emph{Deprecated \cs{renewcommand}} & \emph{Replaced by} \\
 % \endhead
 % \cs{@led@extranofeet} & \cs{newseries}\\
+% \cs{apprefprefixmore} & \cs{setapprefprefixmore} \\
+% \cs{apprefprefixsingle} & \cs{setapprefprefixsingle} \\
 % \cs{endstanzaextra} & Optional argument of \expandafter\cs\expandafter{\&}\\
 % \cs{hangingsymbol} & \cs{sethangingsymbol}\\
 % \cs{ledfootinsdim}		& \cs{Xmaxhnotes} and \cs{maxhnotesX} 	\\
