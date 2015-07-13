@@ -10902,18 +10902,7 @@
   \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
-  {%
-    \csuse{Xendnotenumfont@#4}%
-    \ifdimequal{\csuse{Xendboxlinenum@#4}}{0pt}%
-      {\printendlines#1|}%
-      {\leavevmode%
-       \hbox to \csuse{Xendboxlinenum@#4}%
-       {%
-       \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#4}}{\hfill}{}%
-       \printendlines#1|%
-       \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#4}}{\hfill}{}%
-      }}%
-  }%
+  \printlineendnotearea{#1}{#4}%
   \enspace{%
     \nottoggle{Xendlemmadisablefontselection@#4}%
       {\select@lemmafont#1|#2}%
@@ -10942,8 +10931,29 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{\printlineendnotearea}
 %
+% This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
+% It is called by \cs{endprint}
+% depending of the options about repeating line numbers.
+% The first argument is line information, the second is the notes series (A, B, C,  etc.)
+%    \begin{macrocode}
+\newcommand{\printlineendnotearea}[2]{%
+  \bgroup%
+    \csuse{Xendnotenumfont@#2}%
+    \ifdimequal{\csuse{Xendboxlinenum@#2}}{0pt}%
+      {\printendlines#1|}%
+      {\leavevmode%
+       \hbox to \csuse{Xendboxlinenum@#2}%
+       {%
+       \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
+       \printendlines#1|%
+       \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
+      }}%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\setprintendlines}
 % The \cs{printendlines} macro is similar to \cs{printlines} but is
 % for printing endnotes rather than footnotes. 
