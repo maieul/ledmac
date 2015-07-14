@@ -16184,11 +16184,128 @@
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
 % \section{Some things to do when changing version}
-% \subsection{Migrating from edmac} \label{sec:lastuser}
+% \subsection{Migrating from \edmac to \ledmac} \label{sec:lastuser}
+%
+% If you have never used \edmac, ignore this section. If you have used
+% \edmac{} and are starting on a completely new document, ignore this section.
+% Only read this section if you are converting an original \edmac{}
+% document to use \ledmac.
+%
+%    The package still provides the original \cs{text} command, but it is
+% (a) deprecated, and 
+% (b) its name has been changed\footnote{A name like \cs{text} is  likely to be defined by
+% other \LaTeX\ packages (it certainly is by the AMS packages) and it
+% seems sensible to try and avoid clashes with other definitions.} 
+% to \cs{critext}; 
+% use the \cs{edtext} macro instead. However, if you do
+% use \cs{critext} (the new name for \cs{text}), the following is a reminder.
 %
 %
-% \subsection{Migration from ledmac to eledmac}\label{migration}
-% In eledmac, some changes were made in the code to allow for easy customization.
+% \DescribeMacro{\critext}
+% Within numbered paragraphs, footnotes and endnotes are generated
+% by forms of the \cs{critext} macro:
+% \begin{verse}
+% \cs{critext}\marg{lemma}\meta{commands}\verb"/"
+% \end{verse}
+%
+%
+% The \meta{lemma} argument is the lemma in the main text: \cs{critext}
+% both prints this as part of the text, and makes it available to the
+% \meta{commands} you specify to generate notes. The \verb"/" at the
+% end terminates the command; it is part of the macro's definition so
+% that spaces after the macro will be treated as significant.
+%
+% For example:
+% \egstart
+% \begin{verbatim}
+% I saw my friend \critext{Smith}
+% \Afootnote{Jones C, D.}/
+% on Tuesday.
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.
+% \egend
+%
+% The lemma \verb"Smith" is printed as part of this sentence in
+% the text, and is also made available to the footnote
+% that specifies a variant, \verb"Jones C, D". The footnote macro
+% is supplied with the line number at which the lemma appears
+% in the main text.
+%
+% The \meta{lemma} may contain further \cs{critext} commands.
+%  Nesting makes
+% it possible to print an explanatory note on a long passage together with
+% notes on variants for individual words within the passage. For
+% example:
+% \egstart
+% \begin{verbatim}
+% \critext{I saw my friend
+%   \critext{Smith}{\Afootnote{Jones
+%   C, D.}/ on Tuesday.}
+%   \Bfootnote{The date was
+%   July 16, 1954.}
+% /
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 1--2} I saw my friend \\
+% Smith on Tuesday.] The\\ date was
+% July 16, 1954.
+% \egend
+%
+% However, \cs{critext} cannot handle overlapping but unnested
+% notes---for example, one note covering lines 10--15, and another
+% covering 12--18; a \cs{critext} that starts in the \meta{lemma}
+% argument of another \cs{critext} must end there, too. (The
+% \cs{lemma} and \cs{linenum} commands may be used to
+% generate overlapping notes if necessary.)
+%
+% The second argument of the \cs{critext} macro, \meta{commands},
+% is the same as the second argument to the \cs{edtext} macro.
+%
+%
+% It is possible to define aliases for \cs{critext}, which
+% can be easier to type. You can make a single character substitute
+% for \cs{critext} by saying this:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \let<=\critext
+% \end{verbatim}
+%
+% Then you might say \verb"<{Smith}\variant{Jones}/". This of course
+% destroys the ability to use \verb"<" in any new macro definitions, so
+% long as it remains in effect; hence it should be used with care.
+%
+% Changing the character at the end of the command requires more work:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \def\xtext#1#2>{\critext{#1}{#2}/}
+% \let<=\xtext
+% \end{verbatim}
+% This allows you to say \verb"<{Smith}\Afootnote{Jones}>".
+%
+% Aliases for \cs{critext}
+% of the first kind shown here also can't be nested---that is,
+% you can't use the alias in the text that forms the first argument
+% to \cs{critext}. (See section~\ref{text} to find out why.) Aliases of
+% the second kind may be nested without any problem.
+%
+%
+% If you really have to use \cs{critext} in any of the tabular or
+% array environments, then \cs{edtext} must not be used in the same
+% environment. If you use \cs{critext} in one of these environments
+% then you have to issue the declaration \cs{usingcritext} beforehand.
+% The declaration \cs{usingedtext} must be issued to revert to the
+% default assumption that \cs{edtext} will be used.
+% \subsection{Migration from \ledmac to \eledmac}\label{migration}
+% In \eledmac, some changes were made in the code to allow for easy customization.
 % This can cause problems for people who have made their own customizations. The next sections explain how to correct this.
 %
 %
