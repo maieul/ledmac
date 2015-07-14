@@ -2,6 +2,7 @@ PACKAGE = *.dtx \
 		  *.ins \
 		  reledmac.pdf \
 		  reledpar.pdf \
+			migration.pdf \
 		  README \
 		  Makefile \
 		  latexmkrc \
