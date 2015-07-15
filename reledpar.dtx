@@ -232,6 +232,7 @@
 % \changes{v1.17.0}{2015/06/02}{Add compatibility of optional argument of \cs{pstart}/\cs{pend} and \cs{AtEveryPstart}/\cs{AtEveryPend} with two columns mode.}
 % \changes{v2.0.0}{2015/06/28}{Many code refactored and moved to \reledmac.}
 % \changes{v2.0.0}{2015/06/28}{Package's name becomes \reledpar.} 
+% \changes{v2.0.0}{2015/06/28}{Fix bug with `sameparallelpagenumber' option when \cs{Pages} finish by an even number.} 
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -5108,7 +5109,8 @@
   \else
     \clearpage
   \fi
-  \ifodd\c@page\hbox{}\clearpage\fi}
+  \ifodd\c@page\hbox{}\clearpage\fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -5540,9 +5542,49 @@
 %
 % \subsection{Same page number in both side}
 % The \verb+sameparallelpagenumber+  allow to have the same page number for the left and the right side
-% We can not do it by changing the value of the \verb|page| counter, since its value is used to determine whether a page is left or right.
+% We can not do it by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
 % Consequently, we have to do it by patching \cs{thepage} inside a \cs{Pages} macro.
 %
+% Furthermore, if when using \verb+sameparallelpagenumber+ a \cs{Pages} ends to an even page number, that means next left page, immediately after the parallel \cs{Pages}, will be with an odd number, and not an even number as  normally. 
+% However, we need to keep the \verb+page+ counter respecting parity setting:  left page must be even, right page must be odd.
+% Consequently, in order to print an odd number in right and an even number in left BUT to respect counter's parity, we also need to patch \cs{thepage} outside of \cs{Pages}, to print not the real value of the counter, but a value shifted by one, and that, only if a previous \cs{Pages} has finished to a even page number. 
+%
+% \begin{macro}{\ifleftodd@}
+% Normally left page are even, and right page are odd. However, after a \cs{Pages}, when using \verb+sameparallelpagenumber+ that can be reverse, for the number printed. In this case, \cs{ifleftodd@} is set to true.
+%    \begin{macrocode}
+\newif\ifleftodd@%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\par@patch@thepage}
+% \begin{macro}{\par@managepnumber@b}
+% \begin{macro}{\par@managepnumber@e}
+% \cs{par@managepnumber@b} must be called at the begin of \cs{thepage} command. Depending of the value of the boolean \cs{ifleftodd@}, it shifts, or not, the counter printed.
+%
+% \cs{par@managepnumber@e} must be called at the end of \cs{thepage}. It just close a local group, in order to preserve the real value of the counter.
+% 
+% \cs{par@patch@thepage} patches \cs{thepage} in order to insert these two commands. It must be called after any redefinition of \cs{thepage}. That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. We also call it at the begin of the document.
+%    \begin{macrocode}
+\newcommand{\par@patch@thepage}{%
+  \pretocmd{\thepage}{\par@managepnumber@b}{}{}%
+  \apptocmd{\thepage}{\par@managepnumber@e}{}{}%
+}%
+\apptocmd{\pagenumbering}{\par@patch@thepage}{}{}%
+
+\AtBeginDocument{\par@patch@thepage}%
+\newcommand{\par@managepnumber@b}{%
+  \begingroup%
+  \ifleftodd@%
+    \c@page=\numexpr \c@page+1\relax%MR do not know why a single \advance \c@page by 1 does not work
+  \fi%
+}%
+\newcommand{\par@managepnumber@e}{%
+  \endgroup%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
 % \begin{macro}{\init@sameparallelpage@number}
 % This macro is called at the beginning of \cs{Pages}.
@@ -5551,10 +5593,15 @@
 % As we are inside a group, the patch is local, and, consequently, the page printed after the \cs{Pages} will use the normal page number scheme.
 %
 % The value of \verb+sameparallelpage@number+ is increase by 1 when we change from right page to left page.
+%
 %    \begin{macrocode}
 \newcounter{sameparallelpage@number}
 \newcommand{\init@sameparallelpage@number}{%
   \setcounter{sameparallelpage@number}{\c@page}%
+  \ifleftodd@%
+     \addtocounter{sameparallelpage@number}{1}%
+     \global\leftodd@false%
+  \fi%
   \ifsameparallelpagenumber%
     \patchcmd{\thepage}{page}{sameparallelpage@number}{}{}%
   \fi%
@@ -5565,10 +5612,19 @@
 % This macro is called at the end of \cs{Pages}.
 % If the \verb+sameparallelpage@number+ is enabled,
 % it set the page number to the last value of \verb+sameparallelpage@number+ counter, in order to have a continuity of page numbering between pages printed with \cs{Pages} and normal pages.
+%
+% It is called after  clearing the last right pages of a \cs{Pages}. Consequently, if \cs{c@sameparallelpage@number} is odd, that means left page s must be now with an odd \emph{printed} number, and right pages with a even \emph{printed} number. 
+% However, we need to have an even \emph{stored} number for left pages and a odd \emph{stored} number for right page. 
+% So we store  a even \verb+page+ counter, and we store we should shift it when printing.
 %   \begin{macrocode}
 \newcommand{\finish@sameparallelpage@number}{%
   \ifsameparallelpagenumber%
-    \setcounter{page}{\c@sameparallelpage@number}%
+    \ifodd\c@sameparallelpage@number%
+      \global\leftodd@true%
+      \setcounter{page}{\numexpr\c@sameparallelpage@number-1\relax}%
+    \else%
+      \setcounter{page}{\c@sameparallelpage@number}%
+    \fi%
   \fi%
 }%
 %   \end{macrocode}
