@@ -66,7 +66,7 @@
 % \fi
 %
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{11629}
+% \CheckSum{11644}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -302,9 +302,12 @@
 % \changes{v1.24.1}{2015/06/21}{\cs{lemma} is disabled when using `nocritical` option.}
 % \changes{v1.24.2}{2015/06/26}{Fix incompatibility between `nofamiliar` option and `memoir` package.}
 % \changes{v1.24.3}{2015/07/07}{Restore marginal numbers and notes with sectioning command (bug introduced in v1.21.0)}
-% \changes{v1.24.4}{2015/07/14}{Fix spurious space with \cs{edindex} when using xindy+hyperref option.}
+% \changes{v1.24.4}{2015/06/28}{Fix spurious space with \cs{edindex} when using xindy+hyperref option.}
 % \changes{v2.0.0}{2015/06/28}{Package's name becomes \reledmac.} 
 % \changes{v2.0.0}{2015/06/28}{In order to have a more consistent name's convention, many names has been changed.}
+% \changes{v2.0.0}{2015/06/28}{Add nonum option for endnotes.}
+% \changes{v2.0.0}{2015/06/28}{Add \cs{Xendinplaceofnumber} hook.}
+% \changes{v2.0.0}{2015/06/28}{Add \cs{Xendnonumber} hook.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1192,6 +1195,7 @@
 % \verb+[<option>]+ can contain a comma separated list of values. Allowed values are: 
 % \begin{itemize}
 % \item \verb|fulllines| to disable \cs{Xendtwolines} and \cs{Xendmorethantwolines} features for this particular note (cf. \reff{Xtwolines}).
+% \item \verb+nonum+ to disable line number for this particular note.
 % \item \verb|nosep| to disable the lemma separator for this particular note. 
 % \end{itemize}
 %
@@ -1624,7 +1628,7 @@
 % \subsubsection{Disable line number}
 % \DescribeMacro{\Xnonumber}
 % You can use \cs{Xnonumber}\oarg{s} if you do not want to have the line number in a footnote. To cancel it, use \cs{Xnonumber}\oarg{s}\verb+[false]+.
-%
+% \DescribeMacro{\Xendnonumber} \cs{Xendnonumber}\oarg{s} is the same for endnote. 
 % \subsubsection{Printing pstart number}
 % \changes{v1.1.0}{2012/09/25}{Add \cs{Xpstart} and \cs{Xonlypstart}}
 % \changes{v1.18.0}{2015/02/23}{Add \cs{Xpstarteverytime}}
@@ -1669,6 +1673,7 @@
 % \DescribeMacro{\Xinplaceofnumber}
 % If no number or symbolic line number is printed, you can add a space, with \cs{Xinplaceofnumber}\oarg{s}\marg{l}. The default value is 1~em. 
 %
+% \DescribeMacro{Xendinplaceofnumber}. \cs{Xendinplaceofnumber}\oarg{s}\marg{l} is the same, for critical endnotes. 
 % \subsubsection{Boxing line number and line symbol}
 % \DescribeMacro{\Xboxlinenum}
 % It could be useful to put the line number inside a fixed box: the content of the note will be printed after this box. 
@@ -3207,7 +3212,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/06/14 v2.0.0 typesset critical edition]%
+\ProvidesPackage{reledmac}[2015/06/28 v2.0.0 typesset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -10897,23 +10902,15 @@
   \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
-  {%
-    \csuse{Xendnotenumfont@#4}%
-    \ifdimequal{\csuse{Xendboxlinenum@#4}}{0pt}%
-      {\printendlines#1|}%
-      {\leavevmode%
-       \hbox to \csuse{Xendboxlinenum@#4}%
-       {%
-       \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#4}}{\hfill}{}%
-       \printendlines#1|%
-       \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#4}}{\hfill}{}%
-      }}%
-  }%
-  \enspace{%
+  \ifboolexpr{%
+    togl {nonum@}%
+    or togl {Xendnonumber@#4}%
+    }%
+    {\hspace{\csuse{Xendinplaceofnumber@#4}}}%
+    {\printlineendnotearea{#1}{#4}}%
     \nottoggle{Xendlemmadisablefontselection@#4}%
       {\select@lemmafont#1|#2}%
       {#2}%
-  }%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -10926,8 +10923,10 @@
     }%
   #3%
   \nottoggle{Xendparagraph@#4}{\par}{}%
-  \togglefalse{fulllines@}%
-  \togglefalse{nosep@}%
+ \def\do##1{%
+   \togglefalse{##1@}%
+  }%
+  \notblank{#5}{\docsvlist{#5}}{}%
 }}%
 
 \let\l@d@section=\@gobble
@@ -10935,8 +10934,30 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{\printlineendnotearea}
 %
+% This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
+% It is called by \cs{endprint}
+% depending of the options about repeating line numbers.
+% The first argument is line information, the second is the notes series (A, B, C,  etc.)
+%    \begin{macrocode}
+\newcommand{\printlineendnotearea}[2]{%
+  \bgroup%
+    \csuse{Xendnotenumfont@#2}%
+    \ifdimequal{\csuse{Xendboxlinenum@#2}}{0pt}%
+      {\printendlines#1|}%
+      {\leavevmode%
+       \hbox to \csuse{Xendboxlinenum@#2}%
+       {%
+       \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
+       \printendlines#1|%
+       \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
+      }}%
+  \egroup%
+  \enspace%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\setprintendlines}
 % The \cs{printendlines} macro is similar to \cs{printlines} but is
 % for printing endnotes rather than footnotes. 
@@ -11440,6 +11461,9 @@
       \newtoggle{Xendparagraph@#1}%
       \csgdef{Xendafternote@#1}{1em plus.4em minus.4em}%
       \csgdef{Xendsep@#1}{}%
+      
+      \csgdef{Xendinplaceofnumber@#1}{0pt}%
+      \newtoggle{Xendnonumber@#1}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -11767,6 +11791,9 @@
   \newhooktoggle@series{Xendparagraph}
   \newhookcommand@series{Xendafternote}
   \newhookcommand@series{Xendsep}
+  
+  \newhookcommand@series{Xendinplaceofnumber}%
+  \newhooktoggle@series{Xendnonumber}%
 \fi
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
