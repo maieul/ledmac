@@ -1052,6 +1052,27 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@error@fail@patch@thepage}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@thepage}{%
+  \reledpar@error{Fail to patch \string\@thepage\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@pagenumbering}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@pagenumbering}{%
+  \reledpar@error{Fail to patch \string\pagenumbering\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@@outputpage}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@outputpage}{%
+  \reledpar@error{Fail to patch \string\@outputpage\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Sectioning commands}
 %
 % \begin{macro}{\section@numR}
@@ -4769,7 +4790,6 @@
 % \changes{v1.12.0}{2015/02/23}{Add \cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
 \newcommand*{\Pages}{%
-  \l@dprintingpagestrue%
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
@@ -4790,6 +4810,7 @@
 % Get onto an empty even (left) page, then initialise counters, etc.
 %    \begin{macrocode}
   \cleartol@devenpage%
+  \l@dprintingpagestrue%
   \begingroup%
     \l@dzeropenalties%
     \endgraf\global\num@lines=\prevgraf%
@@ -4800,10 +4821,6 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
-%    \end{macrocode}
-%    Sometimes, people what to have the same page number on both left and right sides. To do this, use the \cs{init@sameparallelpage@number} command. 
-%    \begin{macrocode}
-    \init@sameparallelpage@number
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \macpackage, as we may want to print the notes on one side only.
 %    \begin{macrocode}
@@ -5038,7 +5055,6 @@
     \global\instanzaLfalse%
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
- \finish@sameparallelpage@number%In order to have continuous page number
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces}
 
@@ -5544,93 +5560,65 @@
 % \subsection{Same page number in both side}
 % The \verb+sameparallelpagenumber+  allow to have the same page number for the left and the right side
 % We can not do it by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
-% Consequently, we have to do it by patching \cs{thepage} inside a \cs{Pages} macro.
-%
-% Furthermore, if when using \verb+sameparallelpagenumber+ a \cs{Pages} ends to an even page number, that means next left page, immediately after the parallel \cs{Pages}, will be with an odd number, and not an even number as  normally. 
-% However, we need to keep the \verb+page+ counter respecting parity setting:  left page must be even, right page must be odd.
-% Consequently, in order to print an odd number in right and an even number in left BUT to respect counter's parity, we also need to patch \cs{thepage} outside of \cs{Pages}, to print not the real value of the counter, but a value shifted by one, and that, only if a previous \cs{Pages} has finished to a even page number. 
-%
-% \begin{macro}{\ifleftodd@}
-% Normally left page are even, and right page are odd. However, after a \cs{Pages}, when using \verb+sameparallelpagenumber+ that can be reverse, for the number printed. In this case, \cs{ifleftodd@} is set to true.
-%    \begin{macrocode}
-\newif\ifleftodd@%
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\par@patch@thepage}
-% \begin{macro}{\par@managepnumber@b}
-% \begin{macro}{\par@managepnumber@e}
-% \cs{par@managepnumber@b} must be called at the begin of \cs{thepage} command. Depending of the value of the boolean \cs{ifleftodd@}, it shifts, or not, the counter printed.
-%
-% \cs{par@managepnumber@e} must be called at the end of \cs{thepage}. It just close a local group, in order to preserve the real value of the counter.
+% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+sameparallelpage@number+ counter instead of value of \verb+page+ counter.
 % 
-% \cs{par@patch@thepage} patches \cs{thepage} in order to insert these two commands. It must be called after any redefinition of \cs{thepage}. That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. We also call it at the begin of the document.
+% This counter will be increased in a patched version of the \LaTeX's \cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, \cs{sameparallelpage@number} will be increased only one page on two when processing  \cs{Pages}.
+%
+
+%
+
+% \begin{macro}{\par@patch@thepage}
+
+% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+sameparallelpage@number+ counter and not the value of \verb+sameparallelpage@number+.  It must be called after any redefinition of \cs{thepage}. That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. We also call it at the begin of the document.
 %    \begin{macrocode}
 \newcommand{\par@patch@thepage}{%
-  \pretocmd{\thepage}{\par@managepnumber@b}{}{}%
-  \apptocmd{\thepage}{\par@managepnumber@e}{}{}%
+  \ifsameparallelpagenumber%
+    \patchcmd{\thepage}%
+      {page}{sameparallelpage@number}%
+      {}%
+      {\led@error@fail@patch@thepage}%
+  \fi%
 }%
-\apptocmd{\pagenumbering}{\par@patch@thepage}{}{}%
+\apptocmd{\pagenumbering}{%
+  \par@patch@thepage%
+  }%
+  {}%
+  {\led@error@fail@patch@pagenumbering}%
 
 \AtBeginDocument{\par@patch@thepage}%
-\newcommand{\par@managepnumber@b}{%
-  \ifleftodd@%
-    \c@page=\numexpr \c@page+1\relax%MR do not know why a single \advance \c@page by 1 does not work
-  \fi%
-}%
-\newcommand{\par@managepnumber@e}{%
-  \ifleftodd@%
-    \c@page=\numexpr \c@page-1\relax%MR do not know why a single \advance \c@page by 1 does not work
-  \fi%
-}%
 
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\init@sameparallelpage@number}
-% This macro is called at the beginning of \cs{Pages}.
-% It patches the \cs{thepage} macro in order to
-% use the value of \verb+sameparallelpage@number+ \LaTeX\  counter instead of those of \verb+page+ \LaTeX\ counter.
-% As we are inside a group, the patch is local, and, consequently, the page printed after the \cs{Pages} will use the normal page number scheme.
-%
-% The value of \verb+sameparallelpage@number+ is increase by 1 when we change from right page to left page.
-%
+% \begin{macro}{\@outputpage}
+% As its names said, \cs{@outputpage} is a \LaTeX's macro called in the output routine. That is this macro which increase the \verb+page+ counter. 
+% We patch it in order to increase, conditionally, the \verb+sameparallelpage@number+ counter.
 %    \begin{macrocode}
-\newcounter{sameparallelpage@number}
-\newcommand{\init@sameparallelpage@number}{%
-  \setcounter{sameparallelpage@number}{\c@page}%
-  \ifleftodd@%
-     \addtocounter{sameparallelpage@number}{1}%
-     \global\leftodd@false%
-  \fi%
-  \ifsameparallelpagenumber%
-    \patchcmd{\thepage}{page}{sameparallelpage@number}{}{}%
-  \fi%
-}%
+\AtBeginDocument{%
+  \apptocmd{\@outputpage}{%
+    \ifsameparallelpagenumber%
+      \ifl@dprintingpages%
+        \ifodd\c@page\else%
+          \stepcounter{sameparallelpage@number}%
+        \fi%
+      \else%
+        \stepcounter{sameparallelpage@number}%
+      \fi%
+    \else%
+      \stepcounter{sameparallelpage@number}%
+    \fi%
+    }%
+    {}%
+    {\led@error@fail@patch@@outputpage}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\thesameparallelpage@number}
+% And now, initialize \verb+sameparallelpage@number+ counter.
+\newcounter{sameparallelpage@number}%
+\setcounter{sameparallelpage@number}{1}%
 %    \end{macrocode}
 % \end{macro} 
-% \begin{macro}{\finish@sameparallelpage@number}
-% This macro is called at the end of \cs{Pages}.
-% If the \verb+sameparallelpage@number+ is enabled,
-% it set the page number to the last value of \verb+sameparallelpage@number+ counter, in order to have a continuity of page numbering between pages printed with \cs{Pages} and normal pages.
-%
-% It is called after  clearing the last right pages of a \cs{Pages}. Consequently, if \cs{c@sameparallelpage@number} is odd, that means left page s must be now with an odd \emph{printed} number, and right pages with a even \emph{printed} number. 
-% However, we need to have an even \emph{stored} number for left pages and a odd \emph{stored} number for right page. 
-% So we store  a even \verb+page+ counter, and we store we should shift it when printing.
-%   \begin{macrocode}
-\newcommand{\finish@sameparallelpage@number}{%
-  \ifsameparallelpagenumber%
-    \ifodd\c@sameparallelpage@number%
-      \global\leftodd@true%
-      \setcounter{page}{\numexpr\c@sameparallelpage@number-1\relax}%
-    \else%
-      \setcounter{page}{\c@sameparallelpage@number}%
-    \fi%
-  \fi%
-}%
-%   \end{macrocode}
-% \end{macro}
 % \section{Sections' titles' commands}
 % As switching from left to right pages does not clear the page since v1.13.0,
 % but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
