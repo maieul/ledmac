@@ -30,7 +30,7 @@
               hyperindex=false
              ]{hyperref}
 \usepackage[mono=false]{libertine}
-\usepackage{reledmac}
+\usepackage[series={A,B},noend,noeledsec,nofamiliar]{reledmac}
 \usepackage[english]{babel}
 \usepackage{xspace}
 \usepackage{graphicx,metalogo}
@@ -66,7 +66,7 @@
 % \fi
 %
 % \newcommand{\reff}[1]{\ref{#1} p.~\pageref{#1}}
-% \CheckSum{11990}
+% \CheckSum{11658}
 %
 % \makeatletter
 % \newcommand*{\DescribeIt}{\leavevmode\@bsphack\begingroup\MakePrivateLetters
@@ -644,9 +644,9 @@
 % \item[nopbinverse] prevents page break inside verses.
 % \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
 % \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
-% \item[series] \Macpackage defines six levels of notes: A, B, C, D, E, Z.
+% \item[series] \Macpackage defines five levels of notes: A, B, C, D, E.
 % Using all these levels consumes memory space and processing speed.
-% This is why, if your work does not require all of the A-E, Z series, you can narrow down the available number of series.
+% This is why, if your work does not require all of the A-E series, you can narrow down the available number of series.
 % For example, if you only need A and B series, call the package with \verb+series={A,B}+ option.
 % \item[xindy] and \verb|xindy+hyperref| are for selecting \verb+xindy+ as the index processor (\reff{xindy}).
 % \item[widthliketwocolumns] set the width of the text disposed on one column to be the same as the width of the text disposed on two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
@@ -1156,12 +1156,11 @@
 % \DescribeMacro{\Cfootnote}
 % \DescribeMacro{\Dfootnote}
 % \DescribeMacro{\Efootnote}
-% \DescribeMacro{\Zfootnote}
-% Six separate series of the footnotes are maintained; each macro
+% Five separate series of the footnotes are maintained; each macro
 % takes one argument like \cs{Afootnote}\marg{text}. 
 % When all of the six
 % are used, the \texttt{A} notes appear in a layer just below the main
-% text, followed by the rest in turn, down to the \texttt{Z} notes at
+% text, followed by the rest in turn, down to the \texttt{E} notes at
 % the bottom.  
 % These are the main macros that you will use to construct
 % the critical apparatus of your text. 
@@ -1186,8 +1185,7 @@
 % \DescribeMacro{\Cendnote}
 % \DescribeMacro{\Dendnote}
 % \DescribeMacro{\Eendnote}
-% \DescribeMacro{\Zendnote}
-% The package also maintains six separate series of endnotes.
+% The package also maintains five separate series of endnotes.
 %
 % If you do not need the endnotes facility, you should use \verb+noend+ option when loading \Lpack{eledmac}.
 %
@@ -1439,11 +1437,10 @@
 % \DescribeMacro{\footnoteC}
 % \DescribeMacro{\footnoteD}
 % \DescribeMacro{\footnoteE}
-% \DescribeMacro{\footnoteZ}
 %    As well as the standard \LaTeX\ footnotes generated via \cs{footnote},
 % the package also provides
-% six series of additional footnotes called \cs{footnoteA} through
-% \cs{footnoteZ}. These have the familiar marker in the text, and 
+% five series of additional footnotes called \cs{footnoteA} through
+% \cs{footnoteE}. These have the familiar marker in the text, and 
 % the marked text at the foot of the page can be formated using
 % any of the styles described for the critical footnotes. Note that
 % the `regular' footnotes have the series letter at the end of the macro
@@ -1490,14 +1487,14 @@
 % 
 % \subsubsection{Delete series}
 % As the number of series which are defined increases, \macpackage gets slower.
-% If you do not need all of the six standard series (A, B, C, D, E, Z),
+% If you do not need all of the six standard series (A, B, C, D, E),
 % you can load the package with the \verb+series+ option. 
 % For example if you need only series~A and~B, use:
 % \begin{verbatim}
 % \usepackage[series={A,B}]{eledmac}
 % \end{verbatim}
 % \subsubsection{Series order}
-% The default series order is the one called with the \verb+series+ option of the package, or, if this option is not used, A, B, C, D, E, Z. 
+% The default series order is the one called with the \verb+series+ option of the package, or, if this option is not used, A, B, C, D, E. 
 % Series order determines footnotes order.
 %
 % \DescribeMacro{seriesatbegin}\DescribeMacro{seriesatend} However in some specific cases, you need to change the series order at some point inside the document.
@@ -3248,7 +3245,7 @@
 %    \end{macrocode}
 % And now, the options of \macpackage.
 %    \begin{macrocode}
-\DeclareOptionX{series}[A,B,C,D,E,Z]{\xdef\default@series{#1}}
+\DeclareOptionX{series}[A,B,C,D,E]{\xdef\default@series{#1}}
 \ExecuteOptionsX{series}%
 
 \newif\if@noeled@sec%
@@ -8283,7 +8280,7 @@
   \fi\fi%
   \setXnotespositionliketwocolumns@{#1}%
   \spaceskip=\z@skip \xspaceskip=\z@skip
-  \csname #1footfmt\endcsname #2[#1]\egroup}
+  \csname #1footfmt\endcsname #2{#1}\egroup}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -8299,7 +8296,7 @@
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
-    \csname #1footfmt\endcsname #2[#1]\color@endgroup}}
+    \csname #1footfmt\endcsname #2{#1}\color@endgroup}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -8321,7 +8318,7 @@
 %    \begin{macrocode}
 
 
-\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\normalfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
   \Xledsetnormalparstuff{#4}%
   \hangindent=\csuse{Xhangindent@#4}
   \strut{\printlinefootnote{#1}{#4}}%
@@ -8652,8 +8649,8 @@
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\csname #1footfmt\endcsname#2[#1]}%
-    \setbox0=\hbox{\Xunvxh0[#1]}%
+      \noindent\csname #1footfmt\endcsname #2{#1}}%
+    \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=0pt
     \ht0=\csname #1footfudgefactor\endcsname\wd0
 %    \end{macrocode}
@@ -8692,8 +8689,8 @@
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\csname #1footfmt\endcsname #2[#1]\color@endgroup}%
-    \setbox0=\hbox{\Xunvxh0[#1]}%
+      \noindent\color@begingroup\csname #1footfmt\endcsname #2{#1}\color@endgroup}%
+    \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=\z@
     \ht0=\csname #1footfudgefactor\endcsname\wd0
     \box0
@@ -8714,7 +8711,7 @@
 % cancels these unwanted paragraph-final items using \cs{unskip} and
 % \cs{unpenalty}.
 %    \begin{macrocode}
-\newcommandx*{\Xunvxh}[2][2=Z]{% 2th is optional for retro-compatibility
+\newcommand*{\Xunvxh}[2]{%
   \setbox0=\vbox{\unvbox#1%
     \global\setbox1=\lastbox}%
   \unhbox1
@@ -8737,7 +8734,7 @@
 % number information, the second is the lemma, the third is the
 % text of the footnote, and the fourth is the series (optional, for backward compatibility).
 %    \begin{macrocode}
-\newcommandx*{\parafootfmt}[4][4=Z]{%
+\newcommand*{\parafootfmt}[4]{%
   \Xinsertparafootsep{#4}%
   \Xledsetnormalparstuff{#4}%
   \printlinefootnote{#1}{#4}%
@@ -8984,7 +8981,7 @@
   \insert\csname #1footins\endcsname\bgroup
   \csuse{Xnotefontsize@#1}
   \footsplitskips
-  \csname #1footfmt\endcsname #2[#1]\egroup}
+  \csname #1footfmt\endcsname #2{#1}\egroup}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -8996,7 +8993,7 @@
 % text of the \verb"-footnote" command \verb+#4+ optional  (for backward compatibility): the series.
 %
 %    \begin{macrocode}
-\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\threecolfootfmt}[4][4=Z]{% 
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolfootfmt}[4]{% 
   \normal@pars
   \hsize \csuse{Xhsizethreecol@#4}
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}
@@ -9114,10 +9111,10 @@
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
   \csuse{Xnotefontsize@#1}
   \footsplitskips
-  \csname #1footfmt\endcsname #2[#1]\egroup}
+  \csname #1footfmt\endcsname #2{#1}\egroup}
 %    \end{macrocode}
 %    \begin{macrocode}
-\notbool{parapparatus@}{\newcommandx*}{\newcommandx}{\twocolfootfmt}[4][4=Z]{% 4th arg is optional, for backward compatibility
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolfootfmt}[4]{% 4th arg is optional, for backward compatibility
   \normal@pars
   \hsize \csuse{Xhsizetwocol@#4}
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}
@@ -10442,7 +10439,7 @@
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\@nameuse{footfmt#1}{#1}{#2}}%
-    \setbox0=\hbox{\unvxhX0[#1]}%
+    \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
     \box0
@@ -10456,7 +10453,7 @@
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
       \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
-    \setbox0=\hbox{\unvxhX0[#1]}%
+    \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
     \box0
@@ -10467,7 +10464,7 @@
 % \end{macro}
 % \begin{macro}{\unvxhX}
 %    \begin{macrocode}
-\newcommandx*{\unvxhX}[2][2=Z]{% 2th is optional for retro-compatibility
+\newcommand*{\unvxhX}[2]{% 2th is optional for retro-compatibility
   \setbox0=\vbox{\unvbox#1%
     \global\setbox1=\lastbox}%
   \unhbox1
@@ -11496,7 +11493,7 @@
 }% End of \newseries
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Init standards series (A,B,C,D,E,Z)}
+% \subsection{Init standards series (A,B,C,D,E)}
 %    \begin{macrocode}
 \expandafter\newseries\expandafter{\default@series}
 %    \end{macrocode}
