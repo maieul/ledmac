@@ -1,7 +1,8 @@
 #Overview
-The eledmac package is for typesetting critical editions.  The eledpar package is an extension of eledmac enabling parallel typesetting in columns or on facing pages.
+The reledmac package is for typesetting critical editions.  The reledpar package is an extension of reledmac enabling parallel typesetting in columns or on facing pages.
 
-Eledmac and eledpar are successors of ledmac and ledpar. Ledmac was a LaTeX port, and extension, of the plain TeX EDMAC, TABMAC and EDSTANZA macros.
+Reledmac and reledpar are successors of eledmac and eledpar, which were successor of ledmac and ledpar.
+Ledmac was a LaTeX port, and extension, of the plain TeX EDMAC, TABMAC and EDSTANZA macros.
 
 The package is available on [CTAN](http://www.ctan.org/pkg/eledmac).
 
@@ -25,28 +26,28 @@ This work has the LPPL maintenance status "maintained".
 This work consists of the files:
 
 - README (this file),
-- eledmac.dtx,
-- eledmac.ins,
-- eledpar.dtx,
-- eledpar.ins,
+- reledmac.dtx,
+- reledmac.ins,
+- reledpar.dtx,
+- reledpar.ins,
 
 and the derived files:
 
-- eledmac.sty,
-- eledpar.sty,
-- eledmac.pdf,  (200+ pages)
-- eledpar.pdf,  (100+ pages)
+- reledmac.sty,
+- reledpar.sty,
+- reledmac.pdf,  (200+ pages)
+- reledpar.pdf,  (100+ pages)
 
 
 The distribution consists of the following files:
 
 - README (this file)
-- eledmac.dtx
-- eledmac.ins
-- eledmac.pdf
-- eledpar.dtx
-- eledpar.ins
-- eledpar.pdf
+- reledmac.dtx
+- reledmac.ins
+- reledmac.pdf
+- reledpar.dtx
+- reledpar.ins
+- reledpar.pdf
 - makefile
 - latexmrc
 - examples/
@@ -56,17 +57,18 @@ The distribution consists of the following files:
 
 #Installation
 
-- run: `latex eledmac.ins` (which will generate eledmac.sty) and `latex eledpar.ins` (which will generate eledmac.sty)
-- move eledmac.sty and eledpar.sty to a location where LaTeX will find it (for more information on this see the FAQ).
+- run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledmac.sty`)
+- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ).
 
 To generate a second copy of the manual (which is already supplied as a PDF file):
 
-- run: `make eledmac.pdf`
+- run: `make reledmac.pdf && make reledpar.pdf`
 
 #Help
 
 - [Users list](http://geekographie.maieul.net/146)
-- [StackExchange](https://tex.stackexchange.com/questions/tagged/eledmac), see also the [older tag](https://tex.stackexchange.com/questions/tagged/ledmac)
+- [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags 
+    (https://tex.stackexchange.com/questions/tagged/rledmac) and (https://tex.stackexchange.com/questions/tagged/ledmac)
 
 #Debug and feature requests
 
