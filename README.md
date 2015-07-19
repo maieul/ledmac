@@ -4,7 +4,7 @@ The reledmac package is for typesetting critical editions.  The reledpar package
 Reledmac and reledpar are successors of eledmac and eledpar, which were successor of ledmac and ledpar.
 Ledmac was a LaTeX port, and extension, of the plain TeX EDMAC, TABMAC and EDSTANZA macros.
 
-The package is available on [CTAN](http://www.ctan.org/pkg/eledmac).
+The package is available on [CTAN](http://www.ctan.org/pkg/reledmac).
 
 #Copyright and Licence
 
