@@ -119,15 +119,15 @@
 % The declaration \cs{usingedtext} must be issued to revert to the
 % default assumption that \cs{edtext} will be used.
 % \subsection{Migration from \ledmac to \eledmac}\label{migration}
-% In \eledmac, some changes were made in the code to allow for easy customization.
-% This can cause problems for people who have made their own customizations. The next sections explain how to correct this.
+% In \eledmac, some changes were made in the code to allow easy customization.
+% This may cause problems for people who have already made their own. The next sections explain how to handle this.
 %
 %
-% If you have created your own series using \cs{addfootins} and \cs{addfootinsX}, you should use instead the \cs{newseries} command (see \reff{newseries}). You must remove your \cs{Xfootnote} command.
+% If you have created your own series using \cs{addfootins} and \cs{addfootinsX}, you must use instead the \cs{newseries} command (see \reff{newseries}), and remove any \cs{Xfootnote} command.
 %
-% If you have customized the \cs{XXXXXXfmt} command, you should check if commands for display options (\reff{displayoptions}) and options in \cs{Xfootnote} (\reff{Xfootnoteopt}) cannot do the same thing. If not, you can add a new ticket in Github to request a new function for doing this.\footnote{\url{https://github.com/maieul/ledmac/issues}}
+% If you have customized the \cs{XXXXXXfmt} command, please check whether you can achieve the same by the commands documented for display options (\reff{displayoptions}) or \cs{Xfootnote} options (\reff{Xfootnoteopt}). Otherwise please add a new ticket on Github to request a new function for doing this.\footnote{\url{https://github.com/maieul/ledmac/issues}}
 %
-% If for some reason you do not want to make the modifications to use \eledmac new functions, you can continue using your own \cs{XXXXXfmt} command, but you must replace:
+% If for some reason you do not want to make the modifications to use the new functions of \eledmac, you can continue using your own \cs{XXXXXfmt} command, but you must replace:
 % \begin{verbatim}
 % \renewcommand*{XXXXfmt}[3]
 % \end{verbatim}
@@ -135,31 +135,31 @@
 % \begin{verbatim}
 % \renewcommandx*{XXXXfmt}[4][4=Z]
 % \end{verbatim}
-% If you do not make that, you will see a spurious \verb+[X]+, where X is series letter.
+% If you do not make that, you will get a spurious \verb+[X]+, where X is series letter.
 %
-% If you used a \cs{protect} command inside a \cs{footnote} command inside a numbered section, you must change the \cs{protect} to \cs{noexpand}. If you do not, the command after the \cs{protect} will not be used.
+% If you used a \cs{protect} command inside a \cs{footnote} command inside a numbered section, you must change the \cs{protect} to \cs{noexpand}. Otherwise the command after the \cs{protect} will be discarded.
 % \subsection{Migration to eledmac 1.5.1}\label{change151}
-% The version 1.5.1 corrects a bug with \verb+stanzaindentsrepetition+ (cf. \reff{stanzaindentsrepetition}). This bug had two consequences:
+% The version 1.5.1 corrects a bug in \verb+stanzaindentsrepetition+ (cf. \reff{stanzaindentsrepetition}). This bug had two consequences:
 % \begin{enumerate}
 % \item \verb+stanzaindentsrepetition+ did not work when its value was greater than 2.
 % \item \verb+stanzaindentsrepetition+ worked wrong when its value was equal to 2.
 % \end{enumerate}
 % 
-% So, if you used \verb+stanzaindentsrepetition+ with value equal to 2, you must change your \cs{setstanzaindents}. Explanation:
+% So, if you used \verb+stanzaindentsrepetition+ with a value equal to 2, you had to change your \cs{setstanzaindents}. Explanation:
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{2}
 % \setstanzaindents{5,1,0}
 % \end{verbatim}
-% This code, in a version older than 1.5.1, made that the first verse had an indent of 0, the secund verse of 1, the third verse of 0, the fourth verse of 1 etc.
+% This code, in versions prior to 1.5.1, made the first line have an indentation of 0, the second line of 1, the third verse of 0, the fourth verse of 1 and so forth.
 %
-% But instead the code should have assigned the reverse: the first verse had an indent of 1, the secund verse of 0, the third verse of 1, the fourth verse of 0 etc.
+% But this code should have instead achieved quite the contrary: the first line would have an indentaton of 1, the second line of 0, the third line of 1, the fourth line of 0 an so forth.
 %
-% So version 1.5.1 corrected this bug. If you want to keep the older presentation, you must change:
+% So version 1.5.1 corrected this bug. If you want to keep the former presentation, you must change:
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{2}
 % \setstanzaindents{5,1,0}
 % \end{verbatim}
-% by:
+% to:
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{2}
 % \setstanzaindents{5,0,1}
@@ -167,72 +167,72 @@
 % \subsection{Migration to eledmac 1.12.0}
 % The migration to eledmac 1.12.0 is easy:
 % \begin{itemize}
-%    \item You must delete all the auxiliary files, and so one, make the normal three runs.
+%    \item You must first delete all the auxiliary files, then compile your document three times as usual.
 %    \item If you have modified \cs{l@reg}, which is not advisable, you must rename it to \cs{@nl@reg}.
 % \end{itemize}
 %
-% Anyway, there is another problem. If you have text in brackets just after \cs{pstart} or \cs{pend}, the text will be considered an optional argument of \cs{pstart} or \cs{pend} (see \reff{pstart:optionalarg}). 
-% In this case, just add a \cs{relax} between \cs{pstart}/\cs{pend} and the brackets.
+% There is an additional problem. If you have put text into brackets just after \cs{pstart} or \cs{pend}, this text will be considered to be an optional argument of \cs{pstart} or \cs{pend} (see \reff{pstart:optionalarg}). 
+% If so, add a \cs{relax} between \cs{pstart}/\cs{pend} and the first bracket.
 
-% The version 1.12.0 adds a new better way to manage section titles inside numbered text. Please read \reff{eledsection}.
+% The version 1.12.0 also introduce a better way to handle sectional divisions inside numbered text. Please read \reff{eledsection}.
 % \subsection{Migration to eledmac 17.1}
-% The version change the default behavior of \cs{Xpstart}. 
-% Henceforth, the pstart will be printed if footnote only for the section of text where you have called \cs{numberpstarttrue}.
+% This version changes the default setting of \cs{Xpstart}. 
+% Henceforth, pstart numbers will be printed in footnotes within the section of text where you have called \cs{numberpstarttrue}.
 
-% We do not see any reason to print it in other section. However, if you want to print the pstart number in all footnote, with or without \cs{numberpstarttrue}, you can use 
+% We do not see any reason to print them in the other sections. However, if you want to print the pstart numbers in all of the footnotes, whatever the section, without having to use \cs{numberpstarttrue}, you can use 
 % \cs{Xpstarteverytime}.
 % \subsection{Migration to eledmac 1.21.0}
 % \subsubsection{\cs{Xledsetnormalparstuff} and \cs{ledsetnormalparstuffX}}
-% The \cs{ledsetnormalparstuff} has been split in two different commands:
+% The \cs{ledsetnormalparstuff} has been split into two different commands:
 % \begin{itemize}
 %  \item \cs{Xledsetnormalparstuff} for critical notes;
 %  \item \cs{ledsetnormalparstuffX} for familiar notes.
 % \end{itemize}
-% The new commands take an optional argument which is the series letter.
-% If you have redefined \cs{ledsetnormalparstuff} or commands which call them, you must make the appropriate change
+% Both commands can take an optional argument which is the series letter.
+% If you have redefined \cs{ledsetnormalparstuff} or any of the commands which call them, you must change them accordingly.
 % \subsubsection{Endnotes}
-% In any case, clean the \verb+.end+ file before the next run.
+% In any case, delete the \verb+.end+ file before the next run.
 %
-% \label{oldprintnpnumspace} The previous version of \Eledmac{} had a bug: there were two spaces between the start page number and the start line number, but only one space between the end page number and the end line number.
+% \label{oldprintnpnumspace} The previous version of \Eledmac{} had a bug: there were two spaces between the starting page number and the starting line number, but only one space between the ending page number and the ending line number.
 %
-% Indeed, a spurious space was added after the first \cs{printnpnum}.
+% As a matter of fact, a spurious space was added after the first \cs{printnpnum}.
 % This spurious space has been deleted. 
-% However, if you want to keep the previous spurious space, just load the package with the \verb+oldprintnpnumspace+ option.
+% However, if you want to keep the previous spurious space, you may load the package with the \verb+oldprintnpnumspace+ option.
 %
 % If you have redefined \cs{endprint}, you must:
 % \begin{itemize}
-%  \item Contact us to ask for the feature that required your hack, in order to avoid such a hack in the future.
+%  \item Contact us and ask for the feature that required your hack, in order to avoid such a hack in the future.
 %  \item Use the new fifth argument.
 %  \item Add \verb+\xdef\@currentseries{#4}+ at the beginning of your own command.
 % \end{itemize}
 % \subsection{Migration to eledmac 1.22.0}
-% The \cs{ledinnote} commands takes now a first optional argument, which is the label for the hyperreference.
-% If you have redefined it, change your redefinition, and check if you can 
-% avoid this redefinition by redefining only \cs{ledinnotemark}.
+% The \cs{ledinnote} command now takes a first optional argument, which is the label for the hyperreference.
+% If you have redefined it, change your redefinition, and check whether you can 
+% avoid this redefinition by only redefining \cs{ledinnotemark}.
 % \subsection{Migration to eledmac 1.23.0}
-% People must delete the numbered auxiliary file before new run after update of \eledmac.
+% You must delete the numbered auxiliary files before compiling with the new version of \eledmac.
 %
 % \subsection{Migration from \eledmac to \reledmac}
-% There are many types of change in \reledmac which implies user intervention.
+% There are many changes in \reledmac which require the user to make modifications.
 %
 % 
 % \subsubsection{Risk of `no room for a new'}
-% The risk to obtain a `no room for a new something' error is greater in \reledmac than in \eledmac. See \reff{noroom} in order to know how to limit it.
-% \subsubsection{Multiple index with memoir}
-% \Eledmac and \ledmac were using the specific indexing tools of the \Lclass{memoir} in order to allow multiple index.
-% However, \eledmac used \Lpack{imakeidx} or \Lpack{indextools}  tools when one these two package was loaded.
-% This system forced to maintained a double code, which was not very useful.
-% Since \reledmac, we use only the \Lpack{imakeidx} or \Lpack{indextools}  tools.
+% The risk to obtain a `no room for a new something' error is greater in \reledmac than it is in \eledmac. See \reff{noroom} in order to know how to limit it.
+% \subsubsection{Multiple indices with memoir}
+% \Eledmac and \ledmac used the specific indexing tools of the \Lclass{memoir} class designed to produce multiple indices.
+% However, \eledmac could also use \Lpack{imakeidx} or \Lpack{indextools} tools independently of the \Lclass{memoir} class.
+% This system forced to maintain redundant code.
+% Since \reledmac, we use only the \Lpack{imakeidx} or \Lpack{indextools} tools.
 %
-% Consequently: \Lpack{memoir}'s users are invited to use \Lpack{indextool} and \Lpack{imakeidx} in order to have multiple index.
+% Consequently: Users of \Lpack{memoir}are invited to use \Lpack{indextool} or \Lpack{imakeidx} to produce multiple indices.
 
 % \subsubsection{Deprecated commands and options}
-% Here, you will find a tabular of deprecated commands and their alternative. 
-% Notes that the use of these command can have been changed.
+%The table of deprecated commands and their alternatives follows. 
+% Note that the way some commands must be used may have changed.
 % Please read the handbook.
 % 
 % \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
-% \emph{Deprecated command} 	& \emph{Replaced by} \\
+% \emph{Deprecated command} 	& \emph{Replaced with} \\
 % \hline
 % \endhead
 % \cs{addfootins}		& \cs{newseries} \\ 
@@ -250,16 +250,16 @@
 % \cs{pageparbreak}		& \cs{ledpb} \\ 
 % \end{longtable}
 % 
-% The \verb+ledsecnolinenumber+ option has been deleted, because linked to deprecated commands. 
+% The \verb+ledsecnolinenumber+ option has been removed, because it was related to deprecated commands. 
 %
-% The \verb+oldprintnpnumspace+ option has also been deleted, because linked to an historical bug.
+% The \verb+oldprintnpnumspace+ option has been removed too, because it was related to a historical bug.
 % The \cs{usingedtext} and \cs{usingcritext} commands are also deprecated. 
 % 
 % \subsubsection{\cs{renewcommand} replaced by command}
-% Many use of \cs{renewcommand} has been replaced by use of specific commands. Please read handbook on specific command.
+% Many uses of \cs{renewcommand} have been replaced with uses of specific commands. Please read handbook about specific commands.
 % 
 % \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
-% \emph{Deprecated \cs{renewcommand}} & \emph{Replaced by} \\
+% \emph{Deprecated \cs{renewcommand}} & \emph{Replaced with} \\
 % \endhead
 % \cs{@led@extranofeet} & \cs{newseries}\\
 % \cs{apprefprefixmore} & \cs{setapprefprefixmore} \\
@@ -274,11 +274,11 @@
 % \cs{startstanzahook} & Optional argument of \cs{stanza} \\ 
 % \cs{symplinenum} & \cs{Xsymlinenum}\\ 
 % \end{longtable}
-% \subsubsection{Commands which names have changed}
+% \subsubsection{Commands the names of which have been changed}
 % \label{eledmac-compat}
-% In order to help migration from \eledmac to \reledmac, you could load \reledmac with \verb+eledmac-compat+ option.
-% However, it is better to change the command names.
-% In many case, you use only few of them, except for the command like \cs{footparagraph}.
+% In order to help the migration from \eledmac to \reledmac, you may load \reledmac with \verb+eledmac-compat+ option.
+% However, it is advised not to, and to change the command names themselves instead.
+% In many cases, you use only a few of them, except the \cs{footparagraph} command.
 % 
 %
 % \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
@@ -348,12 +348,12 @@
 % \cs{lineref}	& \cs{edlineref} \\ 
 % \end{longtable}
 % \subsubsection{Endnotes}
-% With \reledmac, there are now one auxiliary files by endnotes (.Aend, .Bend, .Cend etc.). If you have overriden \cs{doendnotes}, that you should not have, you should adapt it. 
-% \subsubsection{Series Z}
-% The `Z' series of notes has been deleted. Only five series are provided now by default: A, B, C, D, E.
+% With \reledmac, there is now one auxiliary file for every endnotes set (.Aend, .Bend, .Cend etc.). If you have overriden \cs{doendnotes} (which you would not have done) you must adapt your code. 
+% \subsubsection{Z Series}
+% The `Z' series of notes has been removed. Only five series are provided now by default: A, B, C, D, E.
 % \subsubsection{Internal commands}
-% People who have override internal commands, which is bad, should adapt to the following things. Or better, they should forbid overriding and use options of \reledmac instead.
+% Users who have overriden internal commands, which is wrong, must adapt according to the following. Or better, they should not override any of such commands and use \reledmac options instead.
 % \begin{itemize}
-%   \item If you have modified \cs{Xfootfmt}, the fourth argument is now mandatory.
-%   \item \cs{unvxh} has been replaced by \cs{Xunvxh} and \cs{unvxhX} with two mandatories argument.
+%   \item If you have modified \cs{Xfootfmt}, note that the fourth argument is now mandatory.
+%   \item \cs{unvxh} has been replaced with \cs{Xunvxh} and \cs{unvxhX} with two mandatory arguments.
 % \end{itemize}
