@@ -20,7 +20,7 @@ This work may be distributed and/or modified under the conditions of the LaTeX P
 
 The latest version of the license is in [http://www.latex-project.org/lppl.txt](http://www.latex-project.org/lppl.txt) and version 1.3 or later is part of all distributions of LaTeX version 2003/06/01 or later.
 
-This work has the LPPL maintenance status "maintained".
+This work has the LPPL maintenance status "unmaintained".
 
 This work consists of the files:
 
