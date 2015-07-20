@@ -5580,29 +5580,45 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Same page number in both side}
-% The \verb+sameparallelpagenumber+  allow to have the same page number for the left and the right side
-% We can not do it by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
-% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+sameparallelpage@number+ counter instead of value of \verb+page+ counter.
+% \section{Page numbering}
+% The \verb+sameparallelpagenumber+ option  allows to have the same page number for the left and the right side.
+% The \verb+prevpgnotnumbered+ option allows to have right empty page before \cs{Pages} not numbered.
+%
+%
+% We can not implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
+% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of value of \verb+page+ counter.
 % 
-% This counter will be increased in a patched version of the \LaTeX's \cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, \cs{sameparallelpage@number} will be increased only one page on two when processing  \cs{Pages}.
+% This counter will be increased in a patched version of the \LaTeX's \cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
 %
 
 %
 
 % \begin{macro}{\par@patch@thepage}
 
-% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+sameparallelpage@number+ counter and not the value of \verb+sameparallelpage@number+.  It must be called after any redefinition of \cs{thepage}. That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. We also call it at the begin of the document.
+% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
+% It must be called after any redefinition of \cs{thepage}. 
+% That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
+% We also call it at the begin of the document.
 %    \begin{macrocode}
 \newcommand{\par@patch@thepage}{%
-  \ifsameparallelpagenumber%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {%
     \patchcmd{\thepage}%
-      {page}{sameparallelpage@number}%
+      {page}{par@page}%
       {}%
       {\led@error@fail@patch@thepage}%
-  \fi%
+  }{}%
 }%
 \apptocmd{\pagenumbering}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }{%
+    \setcounter{par@page}{0}%
+  }{}%
   \par@patch@thepage%
   }%
   {}%
@@ -5614,20 +5630,20 @@
 % \end{macro}
 % \begin{macro}{\@outputpage}
 % As its names said, \cs{@outputpage} is a \LaTeX's macro called in the output routine. That is this macro which increase the \verb+page+ counter. 
-% We patch it in order to increase, conditionally, the \verb+sameparallelpage@number+ counter.
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
 %    \begin{macrocode}
 \AtBeginDocument{%
   \apptocmd{\@outputpage}{%
     \ifsameparallelpagenumber%
       \ifl@dprintingpages%
         \ifodd\c@page\else%
-          \stepcounter{sameparallelpage@number}%
+          \stepcounter{par@page}%
         \fi%
       \else%
-        \stepcounter{sameparallelpage@number}%
+        \stepcounter{par@page}%
       \fi%
     \else%
-      \stepcounter{sameparallelpage@number}%
+      \stepcounter{par@page}%
     \fi%
     }%
     {}%
@@ -5636,11 +5652,11 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\thesameparallelpage@number}
-% And now, initialize \verb+sameparallelpage@number+ counter.
+% \begin{macro}{\thepar@page}
+% And now, initialize \verb+par@page+ counter.
 %    \begin{macrocode}
-\newcounter{sameparallelpage@number}%
-\setcounter{sameparallelpage@number}{1}%
+\newcounter{par@page}%
+\setcounter{par@page}{1}%
 %    \end{macrocode}
 % \end{macro} 
 % \section{Sections' titles' commands}
