@@ -31,7 +31,10 @@ doc: *.pdf
 
 dist: $(PACKAGE)
 	@$(RM) ../ledmac.zip
-	zip ../ledmac.zip $(PACKAGE)
+	rm -rf ledmac
+	mkdir ledmac
+	ln $(PACKAGE) ledmac
+	zip -r ../ledmac.zip ledmac
 	
 
 clean:
