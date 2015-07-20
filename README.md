@@ -68,7 +68,7 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 
 - [Users list](http://geekographie.maieul.net/146)
 - [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags 
-    (https://tex.stackexchange.com/questions/tagged/rledmac) and (https://tex.stackexchange.com/questions/tagged/ledmac)
+    (https://tex.stackexchange.com/questions/tagged/eledmac) and (https://tex.stackexchange.com/questions/tagged/ledmac)
 
 #Debug and feature requests
 
