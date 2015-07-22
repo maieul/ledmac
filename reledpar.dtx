@@ -5900,23 +5900,27 @@
 % It also adds the space needed by the other side spaces between note rules and notes.  It is called after the print of each pstart/pend.
 %    \begin{macrocode}
 \newcommand{\parledgroup@correction@notespacing@final}[1]{
-    \ifparledgroup
-    \vspace{\parledgroup@notespacing@correction@accumulated}
-    \parledgroup@correction@notespacing@init%
-    \ifstrequal{#1}{L}{
-        \numdef{\@checking}{\the\l@dpscL-1}
-    }{
-      \numdef{\@checking}{\the\l@dpscR-1}
-    }
-    \dimdef{\@beforenotes@current@diff}{\csuse{@parledgroup@beforenotes@\@checking L}-\csuse{@parledgroup@beforenotes@\@checking R}}%
-    \ifstrequal{#1}{L}%
-      {% Left
-      \ifdimgreater{\@beforenotes@current@diff}{0pt}{}{\vspace{-\@beforenotes@current@diff}}%
+    \ifparledgroup%
+      \vspace{\parledgroup@notespacing@correction@accumulated}%
+      \parledgroup@correction@notespacing@init%
+      \ifstrequal{#1}{L}{%
+        \numdef{\@checking}{\the\l@dpscL-1}%
+        }%
+        {%
+        \numdef{\@checking}{\the\l@dpscR-1}%
       }%
-      {% Right
-      \ifdimgreater{\@beforenotes@current@diff}{0pt}{\vspace{\@beforenotes@current@diff}}{}
-      }%
-  \fi
+      \dimdef{\@beforenotes@current@diff}%
+        {\csuse{@parledgroup@beforenotes@\@checking L}-\csuse{@parledgroup@beforenotes@\@checking R}}%
+      \ifstrequal{#1}{L}%
+        {% Left
+        \ifdimgreater{\@beforenotes@current@diff}{0pt}{}%
+          {\vspace{-\@beforenotes@current@diff}}%
+        }%
+        {% Right
+        \ifdimgreater{\@beforenotes@current@diff}{0pt}%
+          {\vspace{\@beforenotes@current@diff}}{}%
+        }%
+  \fi%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -5935,11 +5939,17 @@
 \newcommand{\parledgroup@correction@notespacing}[1]{%
     \csuse{ifledgroupnotes#1@}%
       \vspace{-\parledgroup@notespacing@correction}%
-      \dimdef{\parledgroup@notespacing@correction@accumulated}{\parledgroup@notespacing@correction@accumulated+\parledgroup@notespacing@correction}%
-      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
-      \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}{\advance\numpagelinesL -\@ne%
-      \dimdef{\parledgroup@notespacing@correction@modulo}{\parledgroup@notespacing@correction@modulo-\baselineskip}%    
-     }% mean greater than equal
+      %
+      \dimdef{\parledgroup@notespacing@correction@accumulated}%
+         {\parledgroup@notespacing@correction@accumulated+\parledgroup@notespacing@correction}%
+      %
+      \dimdef{\parledgroup@notespacing@correction@modulo}%
+        {\parledgroup@notespacing@correction@modulo+\parledgroup@notespacing@correction}%
+      \ifdimless{\parledgroup@notespacing@correction@modulo}{\baselineskip}{}%
+        {\advance\numpagelinesL -\@ne%
+        \dimdef{\parledgroup@notespacing@correction@modulo}%
+          {\parledgroup@notespacing@correction@modulo-\baselineskip}%    
+        }% mean greater than equal
     \fi%
 }
 %    \end{macrocode}
