@@ -235,6 +235,7 @@
 % \changes{v2.0.0}{2015/07/19}{Package's name becomes \reledpar.} 
 % \changes{v2.0.0}{2015/07/19}{Fix some bugs with `sameparallelpagenumber' option.} 
 % \changes{v2.0.0}{2015/07/19}{Totally new implementation of `sameparallelpagenumber' option.} 
+% \changes{v2.1.0}{2015/07/26}{Options to custom empty right page before \cs{Pages}.} 
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -517,15 +518,16 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
-% \subsubsection{Page number}
+% \subsubsection{Page number}\label{sameparallelpagenumber}
 % \changes{v1.15.0}{2015/05/18}{Add sameparallelpagenumber option.}
 % By default, \cs{Pages} use the standard \LaTeX\ page number scheme.
 % This means that pages are numbered continuously following printed-book conventions: from left-hand to right-hand side, left-hand pages having even numbers, right-hand pages having odd numbers.
 % 
-% \DescribeMacro{\sameparallelpagenumbertrue}\DescribeMacro{\sameparallelpagenumbertrue}However, you can use the package option \verb+sameparallelpagenumber+ to have the same page number for both left and right side.
+% However, you can use the package option \verb+sameparallelpagenumber+ to have the same page number for both left and right side.
 % In this case, this setting will apply only for pages typeset by \cs{Pages}, not for ``normal'' pages.
-% 
-% You can also switch the two system using \cs{sameparallelpagenumbertrue} and \cs{sameparallelpagenumberfalse}.
+%
+% Please also read advising in \reff{par@page}.
+%
 %
 % \subsubsection{Page breaking} 
 % \DescribeMacro{\setgoalfraction}
@@ -540,6 +542,20 @@
 % if some left text overflows onto an odd numbered page or some right text
 % onto an even page, try reducing it.
 % You can change it using \cs{setgoalfraction}\marg{newvalue}.
+%  \subsubsection{Right page before \cs{Pages}}
+% When \cs{Pages} are called, it starts at a new left page, in order to have parallel pages.
+% Consequently, if it is called on a left page, it clears the current page and the let 
+% a right void page.
+%
+% \Parpackage  provides two options to customize this (eventual) right page.
+% \label{prevpgnotnumbered}
+% \begin{description}
+% \item[prevpgstyle=\meta{style}] in order to set the style of this page. A common value of \meta{style} is \verb+empty+.
+% Use \verb+prevpgstyle=empty+ will suppress header and footer in this page. 
+% Please also read advising in \reff{par@page}.
+% \item[prevpgnotnumbered] will make this page won't be counted in the page counter.
+%
+% \end{description}
 %  \subsection{Critical and familiar footnotes}
 % Of course, in ``Facing pages'',  the \macpackage's  both critical and familiar footnotes can be used.
 % However, some specific points must  be taken into consideration.
@@ -882,6 +898,17 @@
 %
 % \DescribeMacro{\eledsectmark}
 % By default, the \LaTeX\ marks for header are token from left side. You can change it, using \cs{eledsectmark}\marg{arg}, where \meta{arg} could be \verb+L+ (for left side) or \verb+R+ (for right side).
+% \section{Notes about page number}\label{par@page}
+% If you use \verb+sameparallepagenumber+ option (\reff{sameparallelpagenumber} or \verb+prevpgnotnumbered+ option (\reff{prevpgnotnumbered}), please read the following paragraph if you want to manipulate page numbers manually.
+%
+% In order to implements theses two options, \parpackage use it's own page counter, called \verb+par@page+.
+% Consequently, if you use at least one of these options:
+% \begin{enumerate}
+% \item If you modify \cs{thepage} command, use the value of \verb+par@page+ counter inside and not the value of \verb+page+ counter.
+% \item If you want to modify page number, modify the value of \verb+page+ counter AND the value \verb+par@page+ counter. 
+% \end{enumerate}
+% Notes that \parpackage automatically do it when you use \cs{frontmatter} and \cs{mainmatter} commands.
+%
 % \StopEventually{}
 % \clearpage
 % \renewcommand{\thesection}{\Roman{section}}
@@ -931,33 +958,48 @@
 \RequirePackage{xspace}%
 %    \end{macrocode}
 % \subsection{Package's options}
+% We use \package{xkeyval} in order to manage options with argument.
+%
+%    \begin{macrocode}
+\RequirePackage{xkeyval}
+%    \end{macrocode}
 %  With the option `shiftedpstarts' a long pstart one the left side (or in the right side) does not make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages.
 % \begin{macro}{\ifshiftedpstarts}
 %    \begin{macrocode}
 \newif\ifshiftedpstarts
-\DeclareOption{shiftedpstarts}{\shiftedpstartstrue}
+\DeclareOptionX{shiftedpstarts}{\shiftedpstartstrue}
 %    \end{macrocode}
 % \end{macro}
 % The \verb+parledgroup+ can be called either on \macpackage or \parpackage.
 %    \begin{macrocode}
-\DeclareOption{parledgroup}{\parledgrouptrue}
+\DeclareOptionX{parledgroup}{\parledgrouptrue}
 %    \end{macrocode}
 % \begin{macro}{\ifwidthliketwocolumns}
 % The \cs{widthliketwocolumns} option can be called either on \macpackage or \parpackage.
 % \changes{v1.9.0}{2014/09/16}{Added widthliketwocolumns option}
 %    \begin{macrocode}
-\DeclareOption{widthliketwocolumns}{\widthliketwocolumnstrue}%
+\DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
-% The \verb+sameparallelpagenumber+ enable to have the same page number in left and right side.
 % \begin{macro}{\ifsameparallelpagenumber}
+% \begin{macro}{\ifprevpgnotnumbered}
+% Options related to page numbering
 %    \begin{macrocode}
-\newif\ifsameparallelpagenumber%
-\DeclareOption{sameparallelpagenumber}{\sameparallelpagenumbertrue}%
+\newif\ifsameparallelpagenumber
+\newif\ifprevpgnotnumbered
+\DeclareOptionX{sameparallelpagenumber}{\sameparallelpagenumbertrue}
+\DeclareOptionX{prevpgnotnumbered}{\prevpgnotnumberedtrue}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\prevpgstyle}
+% We store on \cs{prevpgstyle} the argument of the option \verb+prevpgstyle+. 
+%    \begin{macrocode}
+\DeclareOptionX{prevpgstyle}{\gdef\prevpgstyle{#1}}%
 %    \end{macrocode}
 % \end{macro}
 %    \begin{macrocode}
-\ProcessOptions%
+\ProcessOptionsX%
 %    \end{macrocode}
 % \subsection{Determining side and category of parallel processing} 
 %  As noted above, much of the code is a duplication of the original
@@ -5122,12 +5164,19 @@
 \providecommand{\cleartoevenpage}[1][\@empty]{%
   \clearpage
   \ifodd\c@page\hbox{}#1\clearpage\fi}
+
 \newcommand*{\cleartol@devenpage}{%
   \ifdim\pagetotal<\topskip%  on an empty page
   \else
     \clearpage
   \fi
-  \ifodd\c@page\hbox{}\clearpage\fi%
+  \ifodd\c@page%
+    \ifprevpgnotnumbered%
+      \addtocounter{par@page}{-1}%
+      \ifdef{\prevpgstyle}{\thispagestyle{\prevpgstyle}}{}%
+    \fi%
+    \hbox{}\clearpage%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -5557,29 +5606,45 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Same page number in both side}
-% The \verb+sameparallelpagenumber+  allow to have the same page number for the left and the right side
-% We can not do it by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
-% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+sameparallelpage@number+ counter instead of value of \verb+page+ counter.
+% \section{Page numbering}
+% The \verb+sameparallelpagenumber+ option  allows to have the same page number for the left and the right side.
+% The \verb+prevpgnotnumbered+ option allows to have right empty page before \cs{Pages} not numbered.
+%
+%
+% We can not implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX's features to determine whether a page is left or right: left page are even, right page are odd.
+% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of value of \verb+page+ counter.
 % 
-% This counter will be increased in a patched version of the \LaTeX's \cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, \cs{sameparallelpage@number} will be increased only one page on two when processing  \cs{Pages}.
+% This counter will be increased in a patched version of the \LaTeX's \cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
 %
 
 %
 
 % \begin{macro}{\par@patch@thepage}
 
-% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+sameparallelpage@number+ counter and not the value of \verb+sameparallelpage@number+.  It must be called after any redefinition of \cs{thepage}. That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. We also call it at the begin of the document.
+% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
+% It must be called after any redefinition of \cs{thepage}. 
+% That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
+% We also call it at the begin of the document.
 %    \begin{macrocode}
 \newcommand{\par@patch@thepage}{%
-  \ifsameparallelpagenumber%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {%
     \patchcmd{\thepage}%
-      {page}{sameparallelpage@number}%
+      {page}{par@page}%
       {}%
       {\led@error@fail@patch@thepage}%
-  \fi%
+  }{}%
 }%
 \apptocmd{\pagenumbering}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }{%
+    \setcounter{par@page}{1}%
+  }{}%
   \par@patch@thepage%
   }%
   {}%
@@ -5591,20 +5656,20 @@
 % \end{macro}
 % \begin{macro}{\@outputpage}
 % As its names said, \cs{@outputpage} is a \LaTeX's macro called in the output routine. That is this macro which increase the \verb+page+ counter. 
-% We patch it in order to increase, conditionally, the \verb+sameparallelpage@number+ counter.
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
 %    \begin{macrocode}
 \AtBeginDocument{%
   \apptocmd{\@outputpage}{%
     \ifsameparallelpagenumber%
       \ifl@dprintingpages%
         \ifodd\c@page\else%
-          \stepcounter{sameparallelpage@number}%
+          \stepcounter{par@page}%
         \fi%
       \else%
-        \stepcounter{sameparallelpage@number}%
+        \stepcounter{par@page}%
       \fi%
     \else%
-      \stepcounter{sameparallelpage@number}%
+      \stepcounter{par@page}%
     \fi%
     }%
     {}%
@@ -5613,11 +5678,11 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\thesameparallelpage@number}
-% And now, initialize \verb+sameparallelpage@number+ counter.
+% \begin{macro}{\thepar@page}
+% And now, initialize \verb+par@page+ counter.
 %    \begin{macrocode}
-\newcounter{sameparallelpage@number}%
-\setcounter{sameparallelpage@number}{1}%
+\newcounter{par@page}%
+\setcounter{par@page}{1}%
 %    \end{macrocode}
 % \end{macro} 
 % \section{Sections' titles' commands}
