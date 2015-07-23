@@ -1111,6 +1111,13 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@error@fail@patch@@mempnum}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@@mempnum}{%
+  \reledpar@error{Fail to patch \string\@mempnum\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@error@fail@patch@@outputpage}
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@@outputpage}{%
@@ -5630,12 +5637,15 @@
 %
 
 % \begin{macro}{\par@patch@thepage}
-
+% \begin{macro}{\par@patch@pagenumbering}
 % \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
 % It must be called after any redefinition of \cs{thepage}. 
 % That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
-% We also call it at the begin of the document.
+% In the case of \Lclass{memoir} class using, we insert it at the end of  \cs{@mempnum}.
+% When using \cs{pagenumbering}, we also need to restart \verb+par@page+ counter. Consequently, we have wrapped \cs{par@patch@thepage} and counter restart in \cs{par@patch@pagenumbering}
+% We also call \cs{par@patch@thepage} it at the begin of the document.
 %    \begin{macrocode}
+
 \newcommand{\par@patch@thepage}{%
   \ifboolexpr{%
     bool{sameparallelpagenumber}%
@@ -5648,21 +5658,35 @@
       {\led@error@fail@patch@thepage}%
   }{}%
 }%
-\apptocmd{\pagenumbering}{%
+
+\newcommand{\par@patch@pagenumbering}{%
   \ifboolexpr{%
     bool{sameparallelpagenumber}%
     or bool{prevpgnotnumbered}%
-  }{%
+    }%
+    {%
     \setcounter{par@page}{1}%
-  }{}%
+    }%
+    {}%
   \par@patch@thepage%
-  }%
-  {}%
-  {\led@error@fail@patch@pagenumbering}%
+}%
+
+\ifl@dmemoir%
+  \apptocmd{\@mempnum}%
+    {\par@patch@pagenumbering}%
+    {}%%
+    {\led@error@fail@patch@@mempnum}%
+
+\else%
+  \apptocmd{\pagenumbering}%
+    {\par@patch@pagenumbering}%
+    {}%
+    {\led@error@fail@patch@pagenumbering}%
+\fi%
 
 \AtBeginDocument{\par@patch@thepage}%
-
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\@outputpage}
 % As its names said, \cs{@outputpage} is a \LaTeX's macro called in the output routine. That is this macro which increase the \verb+page+ counter. 
