@@ -5539,7 +5539,7 @@
           \fi
 % Add the notes of parallel ledgroup and the content of the optional argument of the previous \cs{pend}.
 %    \begin{macrocode}
-         \unvnamebox{ledgroup@notes@L@\the\l@dpscL}%
+         \print@parledgroup@notes{L}%
          \csuse{after@pendL@\the\l@dpscL}%
          \global\csundef{after@pendL@\the\l@dpscL}%
 %    \end{macrocode}
@@ -5579,7 +5579,7 @@
              \global\line@numR=0%
              \resetprevline@%
         \fi
-        \unvnamebox{ledgroup@notes@R@\the\l@dpscR}%
+        \print@parledgroup@notes{R}%
         \csuse{after@pendR@\the\l@dpscR}%
         \global\csundef{after@pendR@\the\l@dpscR}%
         \l@dcalc@maxoftwo{\the\usenamecount{l@dmaxlinesinpar\the\l@dpscR}}%
@@ -5786,6 +5786,43 @@
 % \end{macro}
 % \end{macro}
 % \section{Parallel ledgroup}
+% When using parallel \env{ledgroup}s, the notes of each ledgroup are stored in a box which name contain the \cs{pstart} number, as for the main text. 
+% However, this vbox is not split into lines, but print in \cs{Pages} after the main text of each chunck. 
+%
+% \begin{macro}{\print@parledgroup@notes}
+% But for two corresponding chunks, the left notes and the right notes have not everytime the same height. That is why \cs{print@parledgroup@notes} adds vertical space after the shorter notes of the pair of chunks.
+% 
+% \verb+#1+ here means for L(eft) or R(ight).
+%    \begin{macrocode}
+\newcommand{\print@parledgroup@notes}[1]{%
+  \IfStrEq{#1}{L}{%At left
+    \csdimgdef{difference@ht@notes@\the\l@dpscL}
+      {\expandafter\ht%
+        \csname ledgroup@notes@L@\the\l@dpscL\endcsname%
+        +\expandafter\dp%
+        \csname ledgroup@notes@L@\the\l@dpscL\endcsname%
+        -%
+        \expandafter\ht%
+        \csname ledgroup@notes@R@\the\l@dpscL\endcsname%
+        -%
+        \expandafter\dp%
+        \csname ledgroup@notes@R@\the\l@dpscL\endcsname%
+      }%
+    \unvnamebox{ledgroup@notes@L@\the\l@dpscL}%
+    \ifdimless% Right notes are longer than left notes
+      {\csuse{difference@ht@notes@\the\l@dpscL}}{0pt}%
+      {\vskip-\csuse{difference@ht@notes@\the\l@dpscL}}%
+      {}%
+  }{%At right
+    \unvnamebox{ledgroup@notes@R@\the\l@dpscR}%
+    \ifdimgreater% Left notes are longer than right notes
+      {\csuse{difference@ht@notes@\the\l@dpscR}}{0pt}%
+      {\vskip\parskip\vskip\csuse{difference@ht@notes@\the\l@dpscR}}%
+      {}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Compatibility with \eledmac}
 %
 % Here, we define some command for the \verb+eledmac-compat+ option.
