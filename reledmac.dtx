@@ -13120,9 +13120,14 @@
 % \end{macro}
 %
 % \begin{environment}{ledgroup}
+% \begin{macro}{\ledgroup@notes}
 % This environment puts footnotes at the end, even if that happens to
 % be in the middle of a page, or crossing a page boundary. It is a sort
 % of unboxed, fixed width minipage.
+%
+% If we use \parpackage with parallel ledgroups, the notes are stored in a specific boxes linked to the current \cs{pstart} and will be printed later when calling \cs{Pages}.
+%
+% Consequently, we mutualize notes printing in \cs{ledgroup@notes} command, which is boxed or not, depending of weither we are in parallel or not.
 % \changes{v0.4.0}{2004/02/29}{Added ledgroup environment}
 %    \begin{macrocode}
 \newenvironment{ledgroup}{%
@@ -13131,6 +13136,24 @@
   \let\@footnotetext\@mpfootnotetext
   \l@dfeetbeginmini%
 }{%
+  \ifparledgroup%
+    \ifl@dpaging%
+      \ifledRcol%
+        \newnamebox{ledgroup@notes@R@\the\l@dnumpstartsR}%
+        \global\setnamebox{ledgroup@notes@R@\the\l@dnumpstartsR}=\vbox{\ledgroup@notes}%
+      \else%
+        \newnamebox{ledgroup@notes@L@\the\l@dnumpstartsL}%
+        \global\setnamebox{ledgroup@notes@L@\the\l@dnumpstartsL}=\vbox{\ledgroup@notes}%
+      \fi%
+    \else%
+      \ledgroup@notes%
+    \fi%
+  \else%
+    \ledgroup@notes%
+  \fi%
+}
+
+\newcommand{\ledgroup@notes}{%
   \par
   \unskip
   \ifvoid\@mpfootins\else
@@ -13139,9 +13162,11 @@
   \l@dfeetendmini%
 }
 
+
+
 %    \end{macrocode}
 % \end{environment}
-%
+% \end{macro}
 % \begin{environment}{ledgroupsized}
 % \verb?\begin{ledgroupsized}?\oarg{pos}\marg{width} \\
 % This environment puts footnotes at the end, even if that happens to
