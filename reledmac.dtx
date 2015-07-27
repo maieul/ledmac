@@ -311,6 +311,8 @@
 % \changes{v2.0.0}{2015/07/19}{Fix bug when printing only one series of endnotes, but wanted to keep endnotes for other series.}
 % \changes{v2.0.1}{2015/07/27}{Fix incompatibility between optional argument of \protect\cs{pstart} and \protect\cs{numberpstarttrue}}
 % \changes{v2.0.1}{2015/07/27}{Fix bug in eledmac-compat option}
+%\changes{v2.0.2}{2015/08/02}{Fix bug with \cs{chapter} in optional argument of \cs{pstart} in parallel typesetting with \protect\ltxclass{scrbook}.}
+%\changes{v2.0.2}{2015/08/02}{Fix bug with \cs{eledchapter} in parallel typesetting with \protect\ltxclass{scrbook}.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3204,7 +3206,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/07/27 v2.0.1 typesset critical edition]%
+\ProvidesPackage{reledmac}[2015/08/02 v2.0.2 typesset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -15591,6 +15593,7 @@
   {}
   {}
 
+
 \pretocmd{\M@sect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext@showlemma%
@@ -15638,12 +15641,22 @@
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
   \if@eled@sectioning\else%
     \ifl@dprintingpages\else%
-      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \eledsection: will keep critical notes from printing on the title page.
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for classical  classes
     \fi%
   \fi%
   }%
   {}%
   {}%
+
+\patchcmd{\scr@startchapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \if@eled@sectioning\else%
+    \ifl@dprintingpages\else%
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for scrbook.
+    \fi%
+  \fi%
+  }
+  {}
+  {}
 
 \patchcmd{\@makechapterhead}
   {#1}
