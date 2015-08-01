@@ -1,0 +1,359 @@
+% \subsection{Migrating from \edmac to \ledmac} \label{sec:lastuser}
+%
+% If you have never used \edmac, ignore this section. If you have used
+% \edmac{} and are starting on a completely new document, ignore this section.
+% Only read this section if you are converting an original \edmac{}
+% document to use \ledmac.
+%
+%    The package still provides the original \cs{text} command, but it is
+% (a) deprecated, and 
+% (b) its name has been changed\footnote{A name like \cs{text} is  likely to be defined by
+% other \LaTeX\ packages (it certainly is by the AMS packages) and it
+% seems sensible to try and avoid clashes with other definitions.} 
+% to \cs{critext}; 
+% use the \cs{edtext} macro instead. However, if you do
+% use \cs{critext} (the new name for \cs{text}), the following is a reminder.
+%
+%
+% \DescribeMacro{\critext}
+% Within numbered paragraphs, footnotes and endnotes are generated
+% by forms of the \cs{critext} macro:
+% \begin{verse}
+% \cs{critext}\marg{lemma}\meta{commands}\verb"/"
+% \end{verse}
+%
+%
+% The \meta{lemma} argument is the lemma in the main text: \cs{critext}
+% both prints this as part of the text, and makes it available to the
+% \meta{commands} you specify to generate notes. The \verb"/" at the
+% end terminates the command; it is part of the macro's definition so
+% that spaces after the macro will be treated as significant.
+%
+% For example:
+% \egstart
+% \begin{verbatim}
+% I saw my friend \critext{Smith}
+% \Afootnote{Jones C, D.}/
+% on Tuesday.
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.
+% \egend
+%
+% The lemma \verb"Smith" is printed as part of this sentence in
+% the text, and is also made available to the footnote
+% that specifies a variant, \verb"Jones C, D". The footnote macro
+% is supplied with the line number at which the lemma appears
+% in the main text.
+%
+% The \meta{lemma} may contain further \cs{critext} commands.
+%  Nesting makes
+% it possible to print an explanatory note on a long passage together with
+% notes on variants for individual words within the passage. For
+% example:
+% \egstart
+% \begin{verbatim}
+% \critext{I saw my friend
+%   \critext{Smith}{\Afootnote{Jones
+%   C, D.}/ on Tuesday.}
+%   \Bfootnote{The date was
+%   July 16, 1954.}
+% /
+% \end{verbatim}
+% \egmid
+% 1\enspace I saw my friend\\
+% 2\enspace Smith on Tuesday.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 2} Smith] Jones C, D.\smallskip
+% \hrule width 1.5cm
+% \strut {\bf 1--2} I saw my friend \\
+% Smith on Tuesday.] The\\ date was
+% July 16, 1954.
+% \egend
+%
+% However, \cs{critext} cannot handle overlapping but unnested
+% notes---for example, one note covering lines 10--15, and another
+% covering 12--18; a \cs{critext} that starts in the \meta{lemma}
+% argument of another \cs{critext} must end there, too. (The
+% \cs{lemma} and \cs{linenum} commands may be used to
+% generate overlapping notes if necessary.)
+%
+% The second argument of the \cs{critext} macro, \meta{commands},
+% is the same as the second argument to the \cs{edtext} macro.
+%
+%
+% It is possible to define aliases for \cs{critext}, which
+% can be easier to type. You can make a single character substitute
+% for \cs{critext} by saying this:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \let<=\critext
+% \end{verbatim}
+%
+% Then you might say \verb"<{Smith}\variant{Jones}/". This of course
+% destroys the ability to use \verb"<" in any new macro definitions, so
+% long as it remains in effect; hence it should be used with care.
+%
+% Changing the character at the end of the command requires more work:
+% \begin{verbatim}
+% \catcode`\<=\active
+% \def\xtext#1#2>{\critext{#1}{#2}/}
+% \let<=\xtext
+% \end{verbatim}
+% This allows you to say \verb"<{Smith}\Afootnote{Jones}>".
+%
+% Aliases for \cs{critext}
+% of the first kind shown here also can't be nested---that is,
+% you can't use the alias in the text that forms the first argument
+% to \cs{critext}. (See \reff{text} to find out why.) Aliases of
+% the second kind may be nested without any problem.
+%
+%
+% If you really have to use \cs{critext} in any of the tabular or
+% array environments, then \cs{edtext} must not be used in the same
+% environment. If you use \cs{critext} in one of these environments
+% then you have to issue the declaration \cs{usingcritext} beforehand.
+% The declaration \cs{usingedtext} must be issued to revert to the
+% default assumption that \cs{edtext} will be used.
+% \subsection{Migration from \ledmac to \eledmac}\label{migration}
+% In \eledmac, some changes were made in the code to allow easy customization.
+% This may cause problems for people who have already made their own. The next sections explain how to handle this.
+%
+%
+% If you have created your own series using \cs{addfootins} and \cs{addfootinsX}, you must use instead the \cs{newseries} command (see \reff{newseries}), and remove any \cs{Xfootnote} command.
+%
+% If you have customized the \cs{XXXXXXfmt} command, please check whether you can achieve the same by the commands documented for display options (\reff{displayoptions}) or \cs{Xfootnote} options (\reff{Xfootnoteopt}). Otherwise please add a new ticket on Github to request a new function for doing this.\footnote{\url{https://github.com/maieul/ledmac/issues}}
+%
+% If for some reason you do not want to make the modifications to use the new functions of \eledmac, you can continue using your own \cs{XXXXXfmt} command, but you must replace:
+% \begin{verbatim}
+% \renewcommand*{XXXXfmt}[3]
+% \end{verbatim}
+% with
+% \begin{verbatim}
+% \renewcommandx*{XXXXfmt}[4][4=Z]
+% \end{verbatim}
+% If you do not make that, you will get a spurious \verb+[X]+, where X is series letter.
+%
+% If you used a \cs{protect} command inside a \cs{footnote} command inside a numbered section, you must change the \cs{protect} to \cs{noexpand}. Otherwise the command after the \cs{protect} will be discarded.
+% \subsection{Migration to eledmac 1.5.1}\label{change151}
+% The version 1.5.1 corrects a bug in \verb+stanzaindentsrepetition+ (cf. \reff{stanzaindentsrepetition}). This bug had two consequences:
+% \begin{enumerate}
+% \item \verb+stanzaindentsrepetition+ did not work when its value was greater than 2.
+% \item \verb+stanzaindentsrepetition+ worked wrong when its value was equal to 2.
+% \end{enumerate}
+% 
+% So, if you used \verb+stanzaindentsrepetition+ with a value equal to 2, you had to change your \cs{setstanzaindents}. Explanation:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,1,0}
+% \end{verbatim}
+% This code, in versions prior to 1.5.1, made the first line have an indentation of 0, the second line of 1, the third verse of 0, the fourth verse of 1 and so forth.
+%
+% But this code should have instead achieved quite the contrary: the first line would have an indentation of 1, the second line of 0, the third line of 1, the fourth line of 0 an so forth.
+%
+% So version 1.5.1 corrected this bug. If you want to keep the former presentation, you must change:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,1,0}
+% \end{verbatim}
+% to:
+% \begin{verbatim}
+% \setcounter{stanzaindentsrepetition}{2}
+% \setstanzaindents{5,0,1}
+% \end{verbatim} 
+% \subsection{Migration to eledmac 1.12.0}
+% The migration to eledmac 1.12.0 is easy:
+% \begin{itemize}
+%    \item You must first delete all the auxiliary files, then compile your document three times as usual.
+%    \item If you have modified \cs{l@reg}, which is not advisable, you must rename it to \cs{@nl@reg}.
+% \end{itemize}
+%
+% There is an additional problem. If you have put text into brackets just after \cs{pstart} or \cs{pend}, this text will be considered to be an optional argument of \cs{pstart} or \cs{pend} (see \reff{pstart:optionalarg}). 
+% If so, add a \cs{relax} between \cs{pstart}/\cs{pend} and the first bracket.
+
+% The version 1.12.0 also introduce a better way to handle sectional divisions inside numbered text. Please read \reff{eledsection}.
+% \subsection{Migration to eledmac 17.1}
+% This version changes the default setting of \cs{Xpstart}. 
+% Henceforth, pstart numbers will be printed in footnotes within the section of text where you have called \cs{numberpstarttrue}.
+
+% We do not see any reason to print them in the other sections. However, if you want to print the pstart numbers in all of the footnotes, whatever the section, without having to use \cs{numberpstarttrue}, you can use 
+% \cs{Xpstarteverytime}.
+% \subsection{Migration to eledmac 1.21.0}
+% \subsubsection{\cs{Xledsetnormalparstuff} and \cs{ledsetnormalparstuffX}}
+% The \cs{ledsetnormalparstuff} has been split into two different commands:
+% \begin{itemize}
+%  \item \cs{Xledsetnormalparstuff} for critical notes;
+%  \item \cs{ledsetnormalparstuffX} for familiar notes.
+% \end{itemize}
+% Both commands can take an optional argument which is the series letter.
+% If you have redefined \cs{ledsetnormalparstuff} or any of the commands which call them, you must change them accordingly.
+% \subsubsection{Endnotes}
+% In any case, delete the \verb+.end+ file before the next run.
+%
+% \label{oldprintnpnumspace} The previous version of \Eledmac{} had a bug: there were two spaces between the starting page number and the starting line number, but only one space between the ending page number and the ending line number.
+%
+% As a matter of fact, a spurious space was added after the first \cs{printnpnum}.
+% This spurious space has been deleted. 
+% However, if you want to keep the previous spurious space, you may load the package with the \verb+oldprintnpnumspace+ option.
+%
+% If you have redefined \cs{endprint}, you must:
+% \begin{itemize}
+%  \item Contact us and ask for the feature that required your hack, in order to avoid such a hack in the future.
+%  \item Use the new fifth argument.
+%  \item Add \verb+\xdef\@currentseries{#4}+ at the beginning of your own command.
+% \end{itemize}
+% \subsection{Migration to eledmac 1.22.0}
+% The \cs{ledinnote} command now takes a first optional argument, which is the label for the hyperreference.
+% If you have redefined it, change your redefinition, and check whether you can 
+% avoid this redefinition by only redefining \cs{ledinnotemark}.
+% \subsection{Migration to eledmac 1.23.0}
+% You must delete the numbered auxiliary files before compiling with the new version of \eledmac.
+%
+% \subsection{Migration from \eledmac to \reledmac}
+% There are many changes in \reledmac which require the user to make modifications.
+%
+% 
+% \subsubsection{Risk of `no room for a new'}
+% The risk to obtain a `no room for a new something' error is greater in \reledmac than it is in \eledmac. See \reff{noroom} in order to know how to limit it.
+% \subsubsection{Multiple indices with memoir}
+% \Eledmac and \ledmac used the specific indexing tools of the \ltxclass{memoir} class designed to produce multiple indices.
+% However, \eledmac could also use \package{imakeidx} or \package{indextools} tools independently of the \ltxclass{memoir} class.
+% This system forced to maintain redundant code.
+% Since \reledmac, we use only the \package{imakeidx} or \package{indextools} tools.
+%
+% Consequently: Users of \package{memoir}are invited to use \package{indextool} or \package{imakeidx} to produce multiple indices.
+
+% \subsubsection{Deprecated commands and options}
+%The table of deprecated commands and their alternatives follows. 
+% Note that the way some commands must be used may have changed.
+% Please read the handbook.
+% 
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Deprecated command} 	& \emph{Replaced with} \\
+% \hline
+% \endhead
+% \cs{addfootins}		& \cs{newseries} \\ 
+% \cs{addfootinsX}		& \cs{newseries} \\ 
+% \cs{critext}			& \cs{edtext}			 \\
+% \cs{falseverse}		& \cs{newverse}    \\
+% \cs{interparanoteglue} & \cs{Xafternote} and \cs{afternoteX} \\
+% \cs{ledchapter} 		& \cs{eledchapter} \\
+% \cs{ledsection}		& \cs{eledsection} \\
+% \cs{ledsetnormalparstuff}	& \cs{Xledsetnormalparstuff} and \cs{ledsetnormalparstuffX}      \\  
+% \cs{ledsubsection}		& \cs{eledsubsection} \\
+% \cs{ledsubsubsection}		& \cs{eledsubsubsection} \\
+% \cs{noeledsec}		& Package option \verb+noeledsec+ \\
+% \cs{noendnotes} 		& Package option \verb+noendnotes+ \\
+% \cs{pageparbreak}		& \cs{ledpb} \\ 
+% \end{longtable}
+% 
+% The \verb+ledsecnolinenumber+ option has been removed, because it was related to deprecated commands. 
+%
+% The \verb+oldprintnpnumspace+ option has been removed too, because it was related to a historical bug.
+% The \cs{usingedtext} and \cs{usingcritext} commands are also deprecated. 
+% 
+% \subsubsection{\cs{renewcommand} replaced by command}
+% Many uses of \cs{renewcommand} have been replaced with uses of specific commands. Please read handbook about specific commands.
+% 
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Deprecated \cs{renewcommand}} & \emph{Replaced with} \\
+% \endhead
+% \cs{@led@extranofeet} & \cs{newseries}\\
+% \cs{apprefprefixmore} & \cs{setapprefprefixmore} \\
+% \cs{apprefprefixsingle} & \cs{setapprefprefixsingle} \\
+% \cs{endstanzaextra} & Optional argument of \expandafter\cs\expandafter{\&}\\
+% \cs{hangingsymbol} & \cs{sethangingsymbol}\\
+% \cs{ledfootinsdim}		& \cs{Xmaxhnotes} and \cs{maxhnotesX} 	\\
+% \cs{parafootftmsep}	  & \cs{Xparafootsep} and \cs{parafootsepX} \\
+% \cs{notenumfont}  		& \cs{Xnotenumfont}, \cs{Xendnotenumfont} and \cs{notenumfontX} \\
+% \cs{notefontsetup}    & \cs{Xnotefontsize}, \cs{Xendnotefontsize} and \cs{notefontsizeX} \\
+% \cs{sidenotesep} & \cs{setsidenotsep} \\
+% \cs{startstanzahook} & Optional argument of \cs{stanza} \\ 
+% \cs{symplinenum} & \cs{Xsymlinenum}\\ 
+% \end{longtable}
+% \subsubsection{Commands the names of which have been changed}
+% \label{eledmac-compat}
+% In order to help the migration from \eledmac to \reledmac, you may load \reledmac with \verb+eledmac-compat+ option.
+% However, it is advised not to, and to change the command names themselves instead.
+% In many cases, you use only a few of them, except the \cs{footparagraph} command.
+% 
+%
+% \begin{longtable}{p{0.45\textwidth}p{0.45\textwidth}}
+% \emph{Old command} 	& \emph{New command} 	 \\
+% \hline
+% \endhead
+%\cs{footparagraph}	& \cs{Xarrangement}	 \\ 
+% \cs{footnormal}	& \cs{Xarrangement}	 \\ 
+% \cs{foottwocol}	& \cs{Xarrangement}	 \\ 
+% \cs{footthreecol}	& \cs{Xarrangement}	 \\ 
+% \hline
+% \cs{footparagraphX}	& \cs{arrangementX}	 \\ 
+% \cs{footnormalX}	& \cs{arrangementX}	 \\ 
+% \cs{foottwocolX}	& \cs{arrangementX}	 \\ 
+% \cs{footthreecolX}	& \cs{arrangementX}	 \\ 
+% \hline
+% \cs{afterlemmaseparator} & \cs{Xafterlemmaseparator}\\
+% \cs{afternote} & \cs{Xafternote} and \cs{afternoteX} \\
+% \cs{afternumberinfootnote} & \cs{Xafternumber} \\ 
+% \cs{afterXrule} 	& \cs{Xafterrule} \\
+% \cs{afterXsymlinenum} & \cs{Xaftersymlinenum} \\ 
+% \cs{beforelemmaseparator} & \cs{Xbeforelemmaseparator} \\ 
+% \cs{beforenumberinfootnote} & \cs{Xbeforenumber} \\ 
+% \cs{beforeXnotes} & \cs{Xbeforenotes} \\
+% \cs{beforeXsymlinenum} & \cs{Xbeforesymlinenum} \\ 
+% \cs{bhookXnote} & \cs{Xbhookendnote}\\
+% \cs{bhookXnote} & \cs{Xbooknote} \\
+% \cs{boxendlinenum} & \cs{Xboxendlinenum}\\
+% \cs{boxlinenum} & \cs{Xboxlinenum} \\
+% \cs{boxlinenumalign} & \cs{Xboxlinenumalign} \\
+% \cs{boxstartlinenum} & \cs{Xboxstartlinenum} \\
+% \cs{boxsymlinenum} & \cs{Xboxsymlinenum} \\
+% \cs{boxXendlinenum} & \cs{Xendboxlinenum} \\
+% \cs{boxXendlinenumalign} & \cs{Xendboxlinenumalign} \\%
+%  \cs{boxXendstartlinenum} & \cs{boxXendstartlinenum} \\
+%  \cs{letboxXendendlinenum} & \cs{Xendletboxendlinenum} \\
+% \cs{hsizetwocol} & \cs{Xhsizetwocol} \\
+% \cs{hsizethreecol} & \cs{Xhsizethreecol} \\
+% \cs{inplaceoflemmaseparator} & \cs{Xinplaceoflemmaseparator} \\
+% \cs{inplaceofnumber} & \cs{Xinplaceofnumber} \\
+% \cs{lemmaseparator} & \cs{Xlemmaseparator} \\
+% \cs{maxhXnotes} & \cs{Xmaxhnotes} \\
+% \cs{morethantwolines} & \cs{Xmorethantwolines} \\
+% \cs{nonumberinfootnote} & \cs{Xnonumber} \\
+% \cs{notesXwidthliketwocolumns} & \cs{noteswidthliketwocolumnsX} \\
+% \cs{noXlemmaseparator} & \cs{Xnolemmaseparator} \\
+% \cs{numberonlyfirstinline} & \cs{Xnumberonlyfirstinline} \\
+% \cs{numberonlyfirstintwolines} & \cs{Xnumberonlyfirstintwolines} \\
+% \cs{nonbreakableafternumber} & \cs{Xnonbreakableafternumber} \\
+% \cs{onlyXpstart} & \cs{Xonlypstart} \\
+% \cs{parafootsep} & \cs{Xparafootsep} and \cs{parafootsepX} \\
+% \cs{pstartinfootnote} & \cs{Xpstart} \\
+% \cs{pstartinfootnoteeverytime} & \cs{Xpstarteverytime} \\
+% \cs{symlinenum} & \cs{Xsymlinenum} \\
+% \cs{twolines} & \cs{Xtwolines} \\
+% \cs{twolinesbutnotmore} & \cs{Xtwolinesbutnotmore} \\
+% \cs{twolinesonlyinsamepage} & \cs{Xtwolinesonlyinsamepage} \\
+% \cs{txtbeforeXnotes} & \cs{Xtxtbeforenotes} \\
+% \cs{XendXafterlemmaseparator} & \cs{Xendafterlemmaseparator} \\
+% \cs{XendXbeforelemmaseparator} & \cs{Xendbeforelemmaseparator} \\
+% \cs{XendXinplaceoflemmaseparator} & \cs{Xendinplaceoflemmaseparator} \\
+% \cs{XendXlemmaseparator} & \cs{Xendlemmaseparator} \\
+% \cs{XendXmorethantwolines} & \cs{Xendmorethantwolines} \\
+% \cs{XendXtwolines} & \cs{Xendtwolines} \\
+% \cs{Xnonumberinfootnote} & \cs{Xnonumber} \\
+% \hline 
+% \cs{lineref}	& \cs{edlineref} \\ 
+% \end{longtable}
+% \subsubsection{Endnotes}
+% With \reledmac, there is now one auxiliary file for every endnotes set (.Aend, .Bend, .Cend etc.). If you have overriden \cs{doendnotes} (which you would not have done) you must adapt your code. 
+% \subsubsection{Z Series}
+% The `Z' series of notes has been removed. Only five series are provided now by default: A, B, C, D, E.
+% \subsubsection{Internal commands}
+% Users who have overriden internal commands, which is wrong, must adapt according to the following. Or better, they should not override any of such commands and use \reledmac options instead.
+% \begin{itemize}
+%   \item If you have modified \cs{Xfootfmt}, note that the fourth argument is now mandatory.
+%   \item \cs{unvxh} has been replaced with \cs{Xunvxh} and \cs{unvxhX} with two mandatory arguments.
+% \end{itemize}
