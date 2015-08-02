@@ -1628,7 +1628,7 @@
 % You can use \cs{Xstanza}\oarg{s} if you want to print the stanza number in the footnote, before the line and subline number. 
 % Use \cs{Xstanza}\oarg{s}\verb+[false]+ to disable this (\meta{s} can be empty if you want to disable it for every series).
 % 
-% Of course the stanza number is printed only in the case you are typesetting stanza and you use \cs{numberstanza}
+% Of course the stanza number is printed only in the case you use \cs{numberstanza}
 % \subsubsection{Space around number}
 % \DescribeMacro{\Xbeforenumber}
 % With \protect\cs{Xbeforenumber}\oarg{s}\marg{l}, you can add some space before the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0~pt.
@@ -9366,6 +9366,11 @@
    (togl{Xpstart@#2} and bool{numberpstart})%
    or togl{Xpstarteverytime@#2}}%
   {\printpstart}{}%
+  \iftoggle{Xstanza@#2}{%
+    \ifnumberstanza%
+      \printstanza%
+    \fi%
+  }{}%
   \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
 }%
 %    \end{macrocode}
@@ -13968,6 +13973,21 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Stanza number in note}
+% Here, the command called when printing stanza number in notes.
+%    \begin{macrocode}
+\newcommand{\printstanza}[0]{%
+   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
+        \ifledRcol%
+            \thestanzaR%
+        \else%
+            \thestanzaL%
+        \fi%
+    }{%
+        \thestanza%
+    }%
+}
+%    \end{macrocode}
 % \subsection{Main work}
 % \begin{macro}{\stanza@line}
 % \begin{macro}{\stanza@hang}
