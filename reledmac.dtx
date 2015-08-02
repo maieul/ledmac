@@ -2193,7 +2193,7 @@
 % Default value is:
 % \begin{verbatim}
 % \newcommand{\stanzanumwrapper}[1]{%
-%    \stanzaflag{#1}%
+%    \flagstanza{#1}%
 %}
 % \end{verbatim}
 % \subsection{Various tools}
@@ -13841,7 +13841,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
 % \begin{macro}{\setstanzaindents}
 % \begin{macro}{\setstanzapenalties}
 % In the original \edmac, \protect\cs{setstanzavalues}\verb+{sza}+\marg{...} had to be called to
@@ -13893,6 +13892,43 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \subsection{Numbering stanza}
+% Here, macro for numbering stanza.
+% First, the stanza counter.
+% \begin{macro}{\thestanza}
+%    \begin{macrocode}
+\newcounter{stanza}
+\renewcommand{\thestanza}{%
+  \textbf{\arabic{stanza}}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifnumberstanza}
+% Then, macro to active automatically numbering of stanza.
+%    \begin{macrocode}
+\newif\ifnumberstanza%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@insertstanzanumber}
+% Now, macro called at the first line of of verse of a stanza.
+%    \begin{macrocode}
+\newcommand{\@insertstanzanumber}[0]{%
+  \ifnumberstanza%
+    \addtocounter{stanza}{1}%
+    \stanzanumwrapper{\thestanza}%
+    \setline{1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\stanzanumwrapper}
+% And finally, the wrapper for stanza number
+%    \begin{macrocode}
+\newcommand{\stanzanumwrapper}[1]{%
+  \flagstanza{#1}%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \subsection{Main work}
 % \begin{macro}{\stanza@line}
@@ -13975,7 +14011,7 @@
    \def\noexpand&{%
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
-   \noexpand\stanza@line[#1]}
+   \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber}
 
 \newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
 
