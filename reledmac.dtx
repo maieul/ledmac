@@ -313,10 +313,11 @@
 % \changes{v2.0.1}{2015/07/27}{Fix bug in eledmac-compat option}
 % \changes{v2.1.0}{2015/08/08}{New tools to number stanza}
 %
-%\changes{v2.1.0}{2015/08/08}{Fix bug with \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting with \protect\ltxclass{scrbook}.}
-% \changes{v2.1.0}{2015/08/08}{Fix bug with \protect\cs{eledchapter} in parallel typesetting with \protect\ltxclass{scrbook}.}
-% \changes{v2.1.0}{2015/08/08}{Fix bug with \protect\cs{setline} at the beginning of a \protect\cs{pstart}.}
-% \changes{v2.1.0}{2015/08/08}{Fix bug with \protect\cs{advanceline} at the beginning of a \protect\cs{pstart}.}
+%\changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting with \protect\ltxclass{scrbook}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{eledchapter} in parallel typesetting with \protect\ltxclass{scrbook}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{setline} at the begin of a \protect\cs{pstart}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{advanceline} at the begin of a \protect\cs{pstart}.}
+% \changes{v2.1.0}{2015/08/08}{Fix bug with \protect\cs{Xbhooknote} and \protect\cs{bhooknoteX} when using paragraphed notes.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -8299,8 +8300,8 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
-  \csuse{Xbhooknote@#1}
-  \csuse{Xnotefontsize@#1}
+  \noindent\csuse{Xbhooknote@#1}%
+  \csuse{Xnotefontsize@#1}%
   \footsplitskips
   \ifl@dpairing\ifl@dpaging\else%
     \setXnoteswidthliketwocolumns@{#1}%
@@ -8318,8 +8319,8 @@
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}
-    \csuse{Xbhooknote@#1}
-    \csuse{Xnotefontsize@#1}
+    \noindent\csuse{Xbhooknote@#1}%
+    \csuse{Xnotefontsize@#1}%
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -8672,11 +8673,11 @@
 \newcommand*{\paravfootnote}[2]{%
   \insert\csname #1footins\endcsname
   \bgroup
-    \csuse{Xbhooknote@#1}
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\csname #1footfmt\endcsname #2{#1}}%
+      \noindent\csuse{Xbhooknote@#1}%
+      \csname #1footfmt\endcsname #2{#1}}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=0pt
     \ht0=\csname #1footfudgefactor\endcsname\wd0
@@ -8712,11 +8713,12 @@
 \newcommand*{\mpparavfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}%
-    \csuse{Xbhooknote@#1}
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\csname #1footfmt\endcsname #2{#1}\color@endgroup}%
+      \noindent\color@begingroup%
+      \csuse{Xbhooknote@#1}%
+      \csname #1footfmt\endcsname #2{#1}\color@endgroup}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=\z@
     \ht0=\csname #1footfudgefactor\endcsname\wd0
@@ -9923,8 +9925,8 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
-    \csuse{bhooknoteX@#1}
-    \csuse{notefontsizeX@#1}
+    \noindent\csuse{bhooknoteX@#1}%
+    \csuse{notefontsizeX@#1}%
     \footsplitskips
     \ifl@dpairing\ifl@dpaging\else%
       \setnoteswidthliketwocolumnsX@{#1}%
@@ -9942,8 +9944,8 @@
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \csuse{bhooknoteX@#1}
-    \csuse{notefontsizeX@#1}
+    \noindent\csuse{bhooknoteX@#1}%
+    \csuse{notefontsizeX@#1}%
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -10467,11 +10469,11 @@
 \newcommand*{\para@vfootnoteX}[2]{%
   \insert\csname footins#1\endcsname
   \bgroup
-    \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
+      \noindent\csuse{bhooknoteX@#1}%
+      \@nameuse{footfmt#1}{#1}{#2}}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
@@ -10481,11 +10483,12 @@
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
+      \noindent\color@begingroup%
+      \csuse{bhooknoteX@#1}%
+      \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
