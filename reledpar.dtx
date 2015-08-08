@@ -238,6 +238,8 @@
 % \changes{v2.1.0}{2015/07/27}{Options to custom empty right page before \protect\cs{Pages}.} 
 % \changes{v2.1.0}{2015/07/27}{Fix bug when using \protect\cs{pagenumbering} with memoir (bug added in v2.0.0).} 
 % \changes{v2.1.0}{2015/07/27}{Fix bug when using \protect\cs{eledsection} and related on right pages when page width is short.} 
+% \changes{v2.2.0}{2015/08/08}{\protect\env{astanza} environment can take an optional argument, which will be the optional argument of \protect\cs{pstart} started by this environment.} 
+% \changes{v2.2.0}{2015/08/08}{New tools to number stanza}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -809,18 +811,26 @@
 % for verse lines than the other does.
 %
 % \DescribeEnv{astanza}
-% \Parpackage provides an \verb?astanza? environment which you can use instead
-% of \protect\cs{stanza}.
-% To use it, imply replace \verb?\stanza? by \verb?\begin{astanza}? and
-% add \verb?\end{astanza}? after the ending \verb?\&?. Within the 
-% \verb?astanza? environment each verse line is treated as a paragraph, 
+% \Parpackage provides an \env{astanza} environment which you can use instead
+% of \cs{stanza}. A \env{astanza} environment is a chunk. Consequently left and right \emph{verse} are matched, and not, as with standard \cs{stanza}, left and right \emph{verse lines}.
+% 
+% Within the 
+% \env{astanza} environment each verse line is treated as an individual paragraph, 
 % so there must be no blank lines in the environment otherwise there will
 % be some extraneous vertical spacing.
+% To use \env{astanza}, imply replace \cs{astanza} by \cs{begin}\arg{astanza} and
+% add \cs{end}\arg{astanza} after the ending \expandafter\cs\expandafter{\&}.
 %
 %    If you get an error message along the lines of `Missing number, 
 % treated as zero \protect\cs{sza@0@}' it is because you have forgotten to use
 % \protect\cs{setstanzaindents} to set the stanza indents.
 %
+% As \env{astanza} is a specify type \cs{pstart}\ldots\cs{pend} structure, you can:
+% \begin{itemize}
+% \item Add optional argument (in brackets) after \cs{begin}\arg{astanza}, as the optional argument of \cs{pstart}.
+% \item Use optional argument after the last \expandafter\cs\expandafter{\&} as optional argument of \cs{pend}.
+%
+% \end{itemize}
 %
 %
 % \DescribeMacro{\sethangingsymbol}Like in \macpackage, you could use the \protect\cs{sethangingsymbol} command  to insert a character in each hanging line. If you use it, you must run \LaTeX\ two time. Example for the French typography
@@ -835,6 +845,11 @@
 %
 % When you use \protect\cs{lednopb} make sure to use it on both sides in the corresponding
 % verses to keep the pages in sync.
+%
+% \DescribeMacro{\thestanzaL}
+% \DescribeMacro{\thestanzaR}
+% When using \cs{stanzanumtrue} (\reff{reledmac-numbering-stanza}) in parallel typesetting, \verb+stanza+ counter is replaced by \verb+stanzaL+ counter in left side and by \verb+stanzaR+ counter in right side. Consequently, you can redefine \cs{thestanzaL} and \cs{thestanzaR} to change their aspect.
+%
 % \section{Side notes}
 % As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouterote}, \protect\cs{ledinnerrote}.
 % 
@@ -952,7 +967,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/07/27 v2.1.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/08/08 v2.2.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3973,11 +3988,11 @@
 % \begin{environment}{astanza}
 % \changes{v1.4.1}{2013/08/16}{Enable the  use of stanzaindentsrepetition within astanza environment.}
 % \changes{v1.13.0}{2015/03/06}{Enable the  use of optional argument of \& in astanza environment.}
-% This is roughly an environmental form of \protect\cs{stanza}, which treats
+% This is roughly an environmental form of \cs{stanza}, which treats
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}{%
+\newenvironment{astanza}[1][]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
@@ -3995,7 +4010,7 @@
     \global\advance\stanza@count\@ne
     \@astanza@line}%
   \def\&{\@stopastanza}%
-  \pstart
+  \pstart[#1]%
   \@astanza@line
 }{}
 
@@ -4003,7 +4018,7 @@
 % \end{environment}
 %
 % \begin{macro}{\@stopastanza}
-% This command is called by \verb+\&+ in astanza environment. 
+% This command is called by \verb+\&+ in \env{astanza} environment. 
 % It allows optional arguments. 
 %    \begin{macrocode}
 \newcommandx{\@stopastanza}[1][1,usedefault]{%
@@ -4037,7 +4052,23 @@
   \catcode`\&=\next
 
 %    \end{macrocode}
+% 
+% \begin{macro}{\thestanzaL}
+% \begin{macro}{\thestanzaR}
+% And now, the left and right stanza counter.
+%    \begin{macrocode}
+\newcounter{stanzaL}
+\newcounter{stanzaR}
+\renewcommand{\thestanzaL}{%
+  \textbf{\arabic{stanzaL}}%
+}
+\renewcommand{\thestanzaR}{%
+  \textbf{\arabic{stanzaR}}%
+}
 %
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Naming macros}
 %
 %    The \LaTeX\ kernel provides \protect\cs{@namedef} and \protect\cs{@namuse} for defining

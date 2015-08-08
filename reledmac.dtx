@@ -311,6 +311,13 @@
 % \changes{v2.0.0}{2015/07/19}{Fix bug when printing only one series of endnotes, but wanted to keep endnotes for other series.}
 % \changes{v2.0.1}{2015/07/27}{Fix incompatibility between optional argument of \protect\cs{pstart} and \protect\cs{numberpstarttrue}}
 % \changes{v2.0.1}{2015/07/27}{Fix bug in eledmac-compat option}
+% \changes{v2.1.0}{2015/08/08}{New tools to number stanza}
+%
+%\changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting with \protect\ltxclass{scrbook}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{eledchapter} in parallel typesetting with \protect\ltxclass{scrbook}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{setline} at the begin of a \protect\cs{pstart}.}
+% \changes{v2.1.0}{2015/08/02}{Fix bug with \protect\cs{advanceline} at the begin of a \protect\cs{pstart}.}
+% \changes{v2.1.0}{2015/08/08}{Fix space bug with \protect\cs{Xbhooknote} and \protect\cs{bhooknoteX} when using to insert text and not to execute code.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1620,6 +1627,19 @@
 % \DescribeMacro{\Xonlypstart}
 % In combination with \protect\cs{Xpstart}, you can use \protect\cs{Xonlypstart}\oarg{s} if you want to print only the pstart number in the footnote, and not the line and subline number.
 % Use \protect\cs{Xonlypstart}\oarg{s}\verb+[false]+ disable this it (\meta{s} can be empty if you want to disable it for every series).
+% \subsubsection{Printing stanza number}
+% 
+% \DescribeMacro{\Xstanza}\label{Xstanza}
+% You can use \cs{Xstanza}\oarg{s} if you want to print the stanza number in the footnote, before the line and subline number. 
+% Use \cs{Xstanza}\oarg{s}\verb+[false]+ to disable this (\meta{s} can be empty if you want to disable it for every series).
+% 
+% Of course the stanza number is printed only when you use \cs{numberstanza}
+%
+% \DescribeMacro{\Xstanzaseparator}
+%
+% When using \cs{Xstanza}, you can use \cs{Xstanzaseparator}\oarg{s}\marg{text} to print \meta{text} after the stanza number.
+% Default value is empty.
+%
 % \subsubsection{Space around number}
 % \DescribeMacro{\Xbeforenumber}
 % With \protect\cs{Xbeforenumber}\oarg{s}\marg{l}, you can add some space before the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0~pt.
@@ -2167,6 +2187,37 @@
 %   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
 %   \item \verb+\&+ can take a optional argument (in brackets). Its content will be printed after the stanza.
 % \end{itemize}
+% \subsection{Numbering stanza}\label{numbering-stanza}
+% \DescribeMacro{\numberstanzatrue}
+% \DescribeMacro{\numberstanzafalse}
+% If you want to automatically number stanzas, use \cs{numberstanzatrue}.
+% In this case, the line number will restart at each \cs{stanza}.
+% 
+%
+% If you want to disable this feature again, use \cs{numberstanzafalse}.
+%
+% You can use this feature in combination with \cs{Xstanza} (\reff{Xstanza}).
+% 
+% \DescribeMacro{thestanza}.
+% You can redefine \cs{thestanza} to change the aspect of stanza number.
+% Default value is:
+% \begin{verbatim}
+% \renewcommand{\thestanza}{%
+%   \textbf{\arabic{stanza}}%
+% }
+% 
+% \end{verbatim}
+% 
+% You can change the value of the \verb+stanza+ counter with the usual commands of \LaTeX.
+%
+% \DescribeMacro{\stanzanumwrapper}
+% You can redefine \cs{stanzanumwrapper} in order to modify the way the stanza number is inserted in the flow of text.
+% Default value is:
+% \begin{verbatim}
+% \newcommand{\stanzanumwrapper}[1]{%
+%    \flagstanza{#1}%
+%}
+% \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
@@ -2179,23 +2230,6 @@
 % distance \meta{len} before
 % the line. The default \meta{len} is \verb?\stanzaindentbase?.
 %
-% For example, to put a verse number before the first line of a stanza
-% you could proceed along the lines:
-% \begin{verbatim}
-% \newcounter{stanzanum}
-% \setcounter{stanzanum}{0}
-% \newcommand{\numberit}{%
-%   \refstepcounter{stanzanum}%
-%   \flagstanza{\thestanzanum}%
-% }
-% ...
-% \stanza[\numberit]
-% \numberit First line...&
-%    rest of stanza\&
-%
-% \stanza[\numberit]
-%  First line, second stanza...
-% \end{verbatim}
 % \section{Grouping}
 %    In a \verb?minipage? environment \LaTeX\ changes \verb?\footnote? numbering from
 % arabic to alphabetic and puts the footnotes at the end of the minipage.
@@ -2530,9 +2564,9 @@
 %
 % Be careful with the order of package loading and index declaration. You must use this order:
 % \begin{enumerate}
-%     \item Load \protect\package{imakeidx} or \protect\package{indextools} .
-%     \item Load \protect\package{eledmac}.
-%   \item Declare the index with the macro \protect\cs{makeindex} of \protect\package{imakeidx}/\protect\package{indextools}.
+%     \item Load \package{imakeidx} or \package{indextools} .
+%     \item Load \macpackage.
+%   \item Declare the index with the macro \cs{makeindex} of \package{imakeidx}/\package{indextools}.
 % \end{enumerate}
 % \subsection{Separator between page and line numbers}
 % \DescribeMacro{\pagelinesep}
@@ -3203,7 +3237,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/07/27 v2.0.1 typesset critical edition]%
+\ProvidesPackage{reledmac}[2015/08/08 v2.1.0 typesset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3656,14 +3690,14 @@
 % \begin{macro}{\led@error@ImakeidxAfterEledmac}
 %    \begin{macrocode}
 \newcommand{\led@error@ImakeidxAfterEledmac}{%
-  \reledmac@error{Imakeidx must be loaded before eledmac.}{\@ehc}%
+  \reledmac@error{Imakeidx must be loaded before reledmac.}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@error@IndextoolsAfterEledmac}
 %    \begin{macrocode}
 \newcommand{\led@error@IndextoolsAfterEledmac}{%
-  \reledmac@error{Indextools must be loaded before eledmac.}{\@ehc}%
+  \reledmac@error{Indextools must be loaded before reledmac.}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -5872,7 +5906,7 @@
 % in running text to advance the current visible
 % line-number by a specified value, positive or negative.
 %    \begin{macrocode}
-\newcommand*{\advanceline}[1]{%
+\newcommand*{\advanceline}[1]{\leavevmode%
   \ifledRcol \write\linenum@outR{\string\@adv[#1]}%
   \else      \write\linenum@out{\string\@adv[#1]}%
   \fi%
@@ -5888,6 +5922,7 @@
 %    \begin{macrocode}
 
 \newcommand*{\setline}[1]{%
+ \leavevmode%
   \ifnum#1<\z@
     \led@warn@BadSetline
   \else
@@ -8265,8 +8300,8 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
-  \csuse{Xbhooknote@#1}
-  \csuse{Xnotefontsize@#1}
+  \noindent\csuse{Xbhooknote@#1}%
+  \csuse{Xnotefontsize@#1}%
   \footsplitskips
   \ifl@dpairing\ifl@dpaging\else%
     \setXnoteswidthliketwocolumns@{#1}%
@@ -8284,8 +8319,8 @@
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}
-    \csuse{Xbhooknote@#1}
-    \csuse{Xnotefontsize@#1}
+    \noindent\csuse{Xbhooknote@#1}%
+    \csuse{Xnotefontsize@#1}%
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -8638,11 +8673,11 @@
 \newcommand*{\paravfootnote}[2]{%
   \insert\csname #1footins\endcsname
   \bgroup
-    \csuse{Xbhooknote@#1}
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\csname #1footfmt\endcsname #2{#1}}%
+      \noindent\csuse{Xbhooknote@#1}%
+      \csname #1footfmt\endcsname #2{#1}}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=0pt
     \ht0=\csname #1footfudgefactor\endcsname\wd0
@@ -8678,11 +8713,12 @@
 \newcommand*{\mpparavfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
     \unvbox\@nameuse{mp#1footins}%
-    \csuse{Xbhooknote@#1}
     \csuse{Xnotefontsize@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\csname #1footfmt\endcsname #2{#1}\color@endgroup}%
+      \noindent\color@begingroup%
+      \csuse{Xbhooknote@#1}%
+      \csname #1footfmt\endcsname #2{#1}\color@endgroup}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
     \dp0=\z@
     \ht0=\csname #1footfudgefactor\endcsname\wd0
@@ -9344,6 +9380,12 @@
    (togl{Xpstart@#2} and bool{numberpstart})%
    or togl{Xpstarteverytime@#2}}%
   {\printpstart}{}%
+  \iftoggle{Xstanza@#2}{%
+    \ifnumberstanza%
+      \printstanza%
+      \csuse{Xstanzaseparator@#2}%
+    \fi%
+  }{}%
   \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
 }%
 %    \end{macrocode}
@@ -9883,8 +9925,8 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
-    \csuse{bhooknoteX@#1}
-    \csuse{notefontsizeX@#1}
+    \noindent\csuse{bhooknoteX@#1}%
+    \csuse{notefontsizeX@#1}%
     \footsplitskips
     \ifl@dpairing\ifl@dpaging\else%
       \setnoteswidthliketwocolumnsX@{#1}%
@@ -9902,8 +9944,8 @@
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \csuse{bhooknoteX@#1}
-    \csuse{notefontsizeX@#1}
+    \noindent\csuse{bhooknoteX@#1}%
+    \csuse{notefontsizeX@#1}%
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -10427,11 +10469,11 @@
 \newcommand*{\para@vfootnoteX}[2]{%
   \insert\csname footins#1\endcsname
   \bgroup
-    \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\@nameuse{footfmt#1}{#1}{#2}}%
+      \noindent\csuse{bhooknoteX@#1}%
+      \@nameuse{footfmt#1}{#1}{#2}}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
@@ -10441,11 +10483,12 @@
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
-    \csuse{bhooknoteX@#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen
-      \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
+      \noindent\color@begingroup%
+      \csuse{bhooknoteX@#1}%
+      \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
     \dp0=\z@
     \ht0=\csname footfudgefactor#1\endcsname\wd0
@@ -11220,6 +11263,8 @@
       \newtoggle{Xonlypstart@#1}%
       \newtoggle{Xpstarteverytime@#1}%
       \newtoggle{Xpstart@#1}%
+      \newtoggle{Xstanza@#1}%
+      \csgdef{Xstanzaseparator@#1}{}%
       \csgdef{Xsymlinenum@#1}{}%
       \newtoggle{Xnonumber@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
@@ -11270,6 +11315,7 @@
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
+                      \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                     }\to\inserts@listR
@@ -11287,6 +11333,9 @@
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
+                      \ifl@dpairing%
+                        \noexpand\setcounter{stanzaL}{\the\c@stanzaL}%Save stanzaR counter for footnote
+                      \fi%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                      }\to\inserts@list
@@ -11734,6 +11783,10 @@
   \newhooktoggle@series{Xnonumber}
   \newhooktoggle@series{Xpstart}
   \newhooktoggle@series{Xpstarteverytime}%
+  
+  \newhooktoggle@series{Xstanza}%
+  \newhookcommand@series{Xstanzaseparator}%
+
   \newhooktoggle@series{Xonlypstart}
   \newhooktoggle@series{Xnonbreakableafternumber}
   \newhooktoggle@series{Xlemmadisablefontselection}
@@ -13830,7 +13883,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
 % \begin{macro}{\setstanzaindents}
 % \begin{macro}{\setstanzapenalties}
 % In the original \edmac, \protect\cs{setstanzavalues}\verb+{sza}+\marg{...} had to be called to
@@ -13883,6 +13935,83 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \subsection{Numbering stanza}
+% Here, macro for numbering stanza.
+% First, the stanza counter.
+% \begin{macro}{\thestanza}
+%    \begin{macrocode}
+\newcounter{stanza}
+\renewcommand{\thestanza}{%
+  \textbf{\arabic{stanza}}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifnumberstanza}
+% Then, macro to activate automatically numbering of stanza.
+%    \begin{macrocode}
+\newif\ifnumberstanza%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@insertstanzanumber}
+% Now, macro called at the first line of of verse of a stanza.
+%    \begin{macrocode}
+\newcommand{\@insertstanzanumber}[0]{%
+  \ifnumberstanza%
+    \ifl@dpairing%
+      \ifledRcol% 
+      \stanzanumwrapper{\thestanzaR}%
+      \else%
+      \stanzanumwrapper{\thestanzaL}%
+      \fi%
+    \else%
+      \stanzanumwrapper{\thestanza}%
+    \fi%
+    \setline{1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@advancestanzanumber}
+% Also a command to advance the counter of stanza.
+%    \begin{macrocode}
+\newcommand{\@advancestanzanumber}[0]{%
+  \ifnumberstanza%
+    \ifl@dpairing%
+      \ifledRcol% 
+        \addtocounter{stanzaR}{1}%
+      \else%
+        \addtocounter{stanzaL}{1}%
+      \fi%
+    \else%
+      \addtocounter{stanza}{1}%
+    \fi%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\stanzanumwrapper}
+% And finally, the wrapper for stanza number
+%    \begin{macrocode}
+\newcommand{\stanzanumwrapper}[1]{%
+  \flagstanza{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Stanza number in note}
+% Here, the command called when printing stanza number in notes.
+%    \begin{macrocode}
+\newcommand{\printstanza}[0]{%
+   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
+        \ifledRcol@%
+            \thestanzaR%
+        \else%
+            \thestanzaL%
+        \fi%
+    }{%
+        \thestanza%
+    }%
+}
+%    \end{macrocode}
 % \subsection{Main work}
 % \begin{macro}{\stanza@line}
 % \begin{macro}{\stanza@hang}
@@ -13964,7 +14093,8 @@
    \def\noexpand&{%
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
-   \noexpand\stanza@line[#1]}
+   \noexpand\@advancestanzanumber%
+   \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber}
 
 \newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
 
@@ -15590,6 +15720,7 @@
   {}
   {}
 
+
 \pretocmd{\M@sect}
   {\let\old@edtext=\edtext%
   \let\edtext=\dummy@edtext@showlemma%
@@ -15637,12 +15768,22 @@
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
   \if@eled@sectioning\else%
     \ifl@dprintingpages\else%
-      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \eledsection: will keep critical notes from printing on the title page.
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for classical  classes
     \fi%
   \fi%
   }%
   {}%
   {}%
+
+\patchcmd{\scr@startchapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \if@eled@sectioning\else%
+    \ifl@dprintingpages\else%
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for scrbook.
+    \fi%
+  \fi%
+  }
+  {}
+  {}
 
 \patchcmd{\@makechapterhead}
   {#1}
