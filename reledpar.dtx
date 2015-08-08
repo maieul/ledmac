@@ -4395,7 +4395,20 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% 
+%
+% \begin{macro}{\@get@difference@ht@chunck}
+% A command call before any new left box in parallel ledgroup.
+% It calculates the differents of height between two corresponding chunck.
+%    \begin{macrocode}
+\newcommand{\@get@difference@ht@chunck}{%
+  \csdimgdef{difference@ht@chunck\the\l@dpscL}{%
+    \expandafter\ht\csname l@dLcolrawbox\the\l@dpscL\endcsname%
+    -%
+    \expandafter\ht\csname l@dRcolrawbox\the\l@dpscL\endcsname%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % 
 % \begin{macro}{\@writelinesinparL}
 % \begin{macro}{\@writelinesinparR}
@@ -4933,6 +4946,13 @@
       \getlinesfromparlistR%
       \l@dcalc@maxoftwo{\@cs@linesinparL}{\@cs@linesinparR}%
           {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
+%     \end{macrocode}
+% Calculate the height difference between the two chuncks.
+%     \begin{macrocode}
+      \@get@difference@ht@chunck%
+%     \end{macrocode}
+% End of the loop.
+%     \begin{macrocode}
       \check@pstarts%
     \repeat%
 %    \end{macrocode}
@@ -4957,6 +4977,7 @@
 %    \end{macrocode}
 % Increment the chunk counts to get the first pair.
 % Restore also the value of public pstart counters.
+% Calculate the height's different between the two chunks of the first pair.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne%
       \global\advance\l@dpscR \@ne%
@@ -5598,7 +5619,7 @@
                          {\usenamecount{l@dmaxlinesinpar\the\l@dpscL}}%
         \global\@donetotallinesL \z@
 %    \end{macrocode}
-% Go to the next pstart
+% Go to the next chunck
 %    \begin{macrocode}
         \global\advance\l@dpscL \@ne
         \global\pstartnumtrue%
@@ -5858,6 +5879,7 @@
         -%
         \expandafter\dp%
         \csname ledgroup@notes@R@\the\l@dpscL\endcsname%
+        +\csname difference@ht@chunck\the\l@dpscL\endcsname%
       }%
     \unvnamebox{ledgroup@notes@L@\the\l@dpscL}%
     \ifdimless% Right notes are longer than left notes
@@ -5868,7 +5890,7 @@
     \unvnamebox{ledgroup@notes@R@\the\l@dpscR}%
     \ifdimgreater% Left notes are longer than right notes
       {\csuse{difference@ht@notes@\the\l@dpscR}}{0pt}%
-      {\vskip\parskip\vskip\csuse{difference@ht@notes@\the\l@dpscR}}%
+      {\vskip\csuse{difference@ht@notes@\the\l@dpscR}}%
       {}%
   }%
   \fi%
