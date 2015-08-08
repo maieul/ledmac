@@ -2766,12 +2766,12 @@
 \gdef\at@every@pstart@call{}%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\ifprint@last@after@pendL}
-% \begin{macro}{\ifprint@last@after@pendR}
-% Two booleans set to true, when the time is to print the last optional argument of a \protect\cs{pend}.
+% \begin{macro}{\ifwas@last@chunckL}
+% \begin{macro}{\ifwas@last@chunckR}
+% Two booleans set to true, when we have printed the last chunck of a side.
 %    \begin{macrocode}
-\newif\ifprint@last@after@pendL%
-\newif\ifprint@last@after@pendR%
+\newif\ifwas@last@chunckL%
+\newif\ifwas@last@chunckR%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -5030,10 +5030,11 @@
 %    \begin{macrocode}        
               \get@nextboxL%
               \global\l@dskipversenumberfalse%
-                  \ifprint@last@after@pendL%
-                     \csuse{after@pendL@\the\l@dpscL}%
-                     \global\csundef{after@pendL@\the\l@dpscL}%
-                   \fi%
+              \ifwas@last@chunckL%
+                 \print@parledgroup@notes{L}%
+                 \csuse{after@pendL@\the\l@dpscL}%
+                 \global\csundef{after@pendL@\the\l@dpscL}%
+              \fi%
               \checkpageL%
               \checkverseL%
               \checkpbL%
@@ -5084,11 +5085,12 @@
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi%
               \get@nextboxR%
-     \global\l@dskipversenumberRfalse%
-                  \ifprint@last@after@pendR%
-                     \csuse{after@pendR@\the\l@dpscR}%
-                     \global\csundef{after@pendR@\the\l@dpscR}%
-                   \fi%
+              \global\l@dskipversenumberRfalse%
+              \ifwas@last@chunckR%
+                 \print@parledgroup@notes{R}%
+                 \csuse{after@pendR@\the\l@dpscR}%
+                 \global\csundef{after@pendR@\the\l@dpscR}%
+               \fi%
               \checkpageR%
               \checkverseR%
               \checkpbR%
@@ -5392,10 +5394,10 @@
     \l@dsamepagefalse
     \l@dpagefulltrue
   \fi%
-  \ifprint@last@after@pendL%
+  \ifwas@last@chunckL%
      \l@dpagefullfalse%
      \l@dsamepagefalse%
-     \print@last@after@pendLfalse%
+     \was@last@chunckLfalse%
   \fi%
   }%
 
@@ -5413,10 +5415,10 @@
     \l@dsamepagefalse
     \l@dpagefulltrue
   \fi%
-  \ifprint@last@after@pendR%
+  \ifwas@last@chunckR%
      \l@dpagefullfalse%
      \l@dsamepagefalse%
-     \print@last@after@pendRfalse%
+     \was@last@chunckRfalse%
   \fi%    
   }%
 
@@ -5591,10 +5593,9 @@
         \restore@pstartL@pc%
       \else
 %    \end{macrocode}
-% It we are at the last chunck, print the last ledgroup's notes and let know we will print the optional argument.
+% It we are at the last chunck, let we know it.
 %    \begin{macrocode}
-        \print@parledgroup@notes{L}%
-        \print@last@after@pendLtrue%
+        \was@last@chunckLtrue%
       \fi
     \fi
   \fi}
@@ -5627,8 +5628,7 @@
         \global\pstartnumRtrue%
         \restore@pstartR@pc%
       \else%
-        \print@parledgroup@notes{R}%
-        \print@last@after@pendRtrue%
+        \was@last@chunckRtrue%
       \fi
     \fi
   \fi}
