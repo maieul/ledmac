@@ -4988,9 +4988,13 @@
 %    \begin{macrocode}
 \newcommand*{\get@linelistfile}[1]{%
   \ifledRcol%
-    \csnumgdef{run@\the\section@numR @R}{0}%
+    \ifcsundef{run@\the\section@numR @R}%
+      {\csdef{run@\the\section@numR @R}{0}}%
+      {}%
   \else%
-    \csnumgdef{run@\the\section@num @L}{0}%
+    \ifcsundef{run@\the\section@num @L}%
+      {\csdef{run@\the\section@num @L}{0}}%
+      {}%
   \fi%
   \InputIfFileExists{#1}%
     {%
@@ -5062,29 +5066,26 @@
 % \begin{macro}{\l@list@run}
 % \cs{l@list@run} stores the number of time the numbered auxiliary file has been written.
 %     \begin{macrocode}
-\newcommand{\l@list@run}[1]{%
-  \ifledRcol%
-    \csnumgdef{run@\the\section@numR @R}{#1}%
-  \else%
-    \csnumgdef{run@\the\section@num @L}{#1}%
-  \fi%
+\newcommand{\l@list@run}[2]{%
+    \csnumgdef{run@#1}{#2}%
 }
 %     \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@store@list@run}
-% \cs{@store@list@run} is command which writes the number of run in the auxiliary numbered file.
+% \cs{@store@list@run} is command which writes the number of run in the \ext{aux} file.
+% We write it in this file and not in numbered file in order to allow easy setting of latexmk.
 %    \begin{macrocode}
 \newcommand{\@store@list@run}{%
   \ifledRcol%
-    \write\linenum@outR{%
-      \string\l@list@run{%
-	\csuse{run@\the\section@numR @R}+1%
+    \write\@mainaux{%
+      \string\l@list@run{\the\section@numR @R}{%
+\csuse{run@\the\section@numR @R}+1%
       }%
     }%
   \else%
-    \write\linenum@out{%
-      \string\l@list@run{%
-	\csuse{run@\the\section@num @L}+1%
+    \write\@mainaux{%
+      \string\l@list@run{\the\section@num @L}{%
+\csuse{run@\the\section@num @L}+1%
       }%
     }%
   \fi%
