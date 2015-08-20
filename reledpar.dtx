@@ -243,6 +243,7 @@
 % \changes{v2.2.0}{2015/08/08}{New tools to number stanza}
 % \changes{v2.2.1}{2015/08/13}{Fix bug with optional argument of last left \protect\cs{pend}}
 % \changes{v2.3.0}{2015/08/20}{Store the number of run in numbered file}
+% \changes{v2.3.0}{2015/08/20}{Fix bug with \verb+nopbinverse+ in certain condition}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -5492,7 +5493,12 @@
     \ifinserthangingsymbol
       \numgdef{\prev@abslineverse}{\the\absline@num-1}
       \IfStrEq{\led@pb@setting}{after}{\lednopbnum{\prev@abslineverse}}{}
-      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesL<3\ledpbnum{\prev@abslineverse}\fi}{}
+      \IfStrEq{\led@pb@setting}{before}{%
+        \ifnumgreater{\csuse{run@\the\section@numL @L}}{1}%
+          {\ifnum\numpagelinesL<3%
+            \ledpbnum{\prev@abslineverse}%
+          \fi}{}%
+        }{}%
     \fi
   \fi
 \fi
@@ -5503,7 +5509,12 @@
     \ifinserthangingsymbolR
       \numgdef{\prev@abslineverse}{\the\absline@numR-1}
       \IfStrEq{\led@pb@setting}{after}{\lednopbnumR{\prev@abslineverse}}{}
-      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesR<3\ledpbnumR{\prev@abslineverse}\fi}{}
+      \IfStrEq{\led@pb@setting}{before}{%
+        \ifnumgreater{\csuse{run@\the\section@numR @R}}{1}%
+          {\ifnum\numpagelinesR<3%
+          \ledpbnumR{\prev@abslineverse}%
+          \fi}{}%
+        }{}%
     \fi
   \fi
 \fi
