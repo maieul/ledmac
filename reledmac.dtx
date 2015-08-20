@@ -321,6 +321,7 @@
 % \changes{v2.1.0}{2015/08/08}{Fix space bug with \protect\cs{Xbhooknote} and \protect\cs{bhooknoteX} when using to insert text and not to execute code.}
 % \changes{v2.1.0}{2015/08/08}{Fix space bug with \protect\cs{Xbhooknote} and \protect\cs{bhooknoteX} when using to insert text and not to execute code.}
 % \changes{v2.1.1}{2015/08/13}{Fix bug with \protect\cs{ledpbsetting}\protect\arg{before}.}
+% \changes{v2.2.0}{2015/08/20}{Store the number of run in numbered file}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3226,7 +3227,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/08/13 v2.1.1 typesset critical edition]%
+\ProvidesPackage{reledmac}[2015/08/20 v2.2.0 typesset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4986,7 +4987,13 @@
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{get@linelistfile}}
 %    \begin{macrocode}
 \newcommand*{\get@linelistfile}[1]{%
-  \InputIfFileExists{#1}{%
+  \ifledRcol%
+    \csnumgdef{run@\the\section@numR @R}{0}%
+  \else%
+    \csnumgdef{run@\the\section@num @L}{0}%
+  \fi%
+  \InputIfFileExists{#1}%
+    {%
     \global\noteschanged@false
     \begingroup
       \catcode`\[=1 \catcode`\]=2
@@ -5050,6 +5057,39 @@
      \endinput%
     }%
 }%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\l@list@run}
+% \cs{l@list@run} stores the number of time the numbered auxiliary file has been written.
+%     \begin{macrocode}
+\newcommand{\l@list@run}[1]{%
+  \ifledRcol%
+    \csnumgdef{run@\the\section@numR @R}{#1}%
+  \else%
+    \csnumgdef{run@\the\section@num @L}{#1}%
+  \fi%
+}
+%     \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@store@list@run}
+% \cs{@store@list@run} is command which writes the number of run in the auxiliary numbered file.
+%    \begin{macrocode}
+\newcommand{\@store@list@run}{%
+  \ifledRcol%
+    \write\linenum@outR{%
+      \string\l@list@run{%
+	\csuse{run@\the\section@numR @R}+1%
+      }%
+    }%
+  \else%
+    \write\linenum@out{%
+      \string\l@list@run{%
+	\csuse{run@\the\section@num @L}+1%
+      }%
+    }%
+  \fi%
+}
+
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@nl}
@@ -5727,7 +5767,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{2}%
+\newcommand{\this@line@list@version}{3}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -5758,6 +5798,7 @@
      \global\first@linenum@out@false%
      \immediate\openout\linenum@out=#1\relax%
      \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+      \@store@list@run%
   \else
 %    \end{macrocode}
 % If we get here, then this is
