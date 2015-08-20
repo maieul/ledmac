@@ -46,6 +46,7 @@ dist: $(PACKAGE) examples
 	ln examples/*pdf reledmac/examples
 	ln examples/*tex reledmac/examples
 	ln examples/*xdy reledmac/examples
+	ln examples/latexmkrc reledmac/examples
 	ln examples/makefile reledmac/examples
 	mkdir reledmac/doc-include
 	ln doc-include/*dtx reledmac/doc-include
