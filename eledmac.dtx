@@ -276,6 +276,7 @@
 % \changes{v1.24.4}{2015/07/14}{Fix spurious space with \cs{edindex} when using xindy+hyperref option.}
 % \changes{v1.24.5}{2015/07/16}{Fix bug of indent, when a  added in 1.1.0, when a \cs{beginnumbering} immediately follow a sectioning command.}
 % \changes{v1.24.6}{2015/07/19}{Eledmac support ends. Migrate to reledmac.}
+% \changes{v1.24.7}{2015/09/01}{Change some internal code in order to provide compatibility with \LaTeX\ release of october 2015}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -3237,7 +3238,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{eledmac}[2015/07/19 v1.24.6 LaTeX port of EDMAC]%
+\ProvidesPackage{eledmac}[2015/09/01 v1.24.7 LaTeX port of EDMAC]%
 %    \end{macrocode}
 %
 %    Generally, these are the modifications to the original.
@@ -3374,6 +3375,13 @@
 \RequirePackage{ifxetex}%
 %    \end{macrocode}
 %
+% \subsection{Compatibility with \LuaTeX}
+%Here, we enable some primitives for \LuaTeX.
+%    \begin{macrocode}
+\ifx\directlua\undefined\else%
+  \directlua{tex.enableprimitives("",{"textdir","pardir"})}
+\fi
+%    \end{macrocode}
 % \subsection{Boolean flags}
 % \begin{macro}{\ifl@dmemoir}
 % Define a flag for if the \Lpack{memoir} class has been used.
@@ -4429,7 +4437,7 @@
 \newcommand*{\ledlinenum}{%
   \bgroup%
   \ifluatex%
-    \luatextextdir TLT%
+    \textdir TLT%
   \fi%
   \numlabfont\linenumrep{\line@num}%
   \ifsublines@
@@ -6769,7 +6777,7 @@
     \autopar%
   \fi%
   \ifluatex%
-    \edef\l@luatextextdir@L{\the\luatextextdir}%
+    \edef\l@luatextextdir@L{\the\textdir}%
   \fi%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
@@ -7058,7 +7066,7 @@
 % If we use \LuaLaTeX\, then restore the direction.
 %    \begin{macrocode}
         \ifluatex%
-          \luatextextdir\l@luatextextdir@L%
+          \textdir\l@luatextextdir@L%
         \fi%
 %    \end{macrocode}
 % Insert, if needed, the hanging symbol.
@@ -7942,15 +7950,15 @@
 %    \begin{macrocode}
 \newcommandx*{\footnotelang@lua}[1][1=L,usedefault]{%
    \ifstrequal{#1}{L}{%
-   \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@list%Know the dir of lemma
+   \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\textdir}}}\to\inserts@list%Know the dir of lemma
     \global\advance\insert@count \@ne%
-    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@list%Know the dir of lemma
+    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\pardir}}}\to\inserts@list%Know the dir of lemma
     \global\advance\insert@count \@ne%
    }%
    {%
-   \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\luatextextdir}}}\to\inserts@listR%Know the dir of lemma
+   \xright@appenditem{{\csxdef{footnote@luatextextdir}{\the\textdir}}}\to\inserts@listR%Know the dir of lemma
     \global\advance\insert@countR \@ne%
-    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\luatexpardir}}}\to\inserts@listR%Know the dir of lemma
+    \xright@appenditem{{\csxdef{footnote@luatexpardir}{\the\pardir}}}\to\inserts@listR%Know the dir of lemma
     \global\advance\insert@countR \@ne%
    }%
 }
@@ -8107,8 +8115,8 @@
 \newcommand*{\ledsetnormalparstuff}{%
   \led@war@ledsetnormalparstuffDeprecated%
   \ifluatex%
-     \luatextextdir\footnote@luatextextdir%
-   \luatexpardir\footnote@luatexpardir%
+     \textdir\footnote@luatextextdir%
+   \pardir\footnote@luatexpardir%
   \fi%
   \csuse{\csuse{footnote@dir}}%
   \normal@pars%
@@ -8116,8 +8124,8 @@
 
 \newcommand*{\ledsetnormalparstuff@common}{%
   \ifluatex%
-     \luatextextdir\footnote@luatextextdir%
-   \luatexpardir\footnote@luatexpardir%
+     \textdir\footnote@luatextextdir%
+   \pardir\footnote@luatexpardir%
   \fi%
   \csuse{\csuse{footnote@dir}}%
   \normal@pars%
@@ -8450,7 +8458,7 @@
 \def\printlines#1|#2|#3|#4|#5|#6|#7|{%
   \begingroup%
   \ifluatex%
-    \luatextextdir TLT%
+    \textdir TLT%
   \fi%
   \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
@@ -9692,8 +9700,8 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmtX}[2]{%
  \ifluatex%
-    \luatextextdir\footnote@luatextextdir%
-    \luatexpardir\footnote@luatexpardir%
+    \textdir\footnote@luatextextdir%
+    \pardir\footnote@luatexpardir%
     \par%
  \fi%
    \protected@edef\@currentlabel{%
@@ -11084,8 +11092,8 @@
                  {\csuse{@footnotemark#1}}%
                  {}%
               \ifluatex%
-                \xdef\footnote@luatextextdir{\the\luatextextdir}%
-                \xdef\footnote@luatexpardir{\the\luatexpardir}%
+                \xdef\footnote@luatextextdir{\the\textdir}%
+                \xdef\footnote@luatexpardir{\the\pardir}%
               \fi%
               \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
           \endgroup%
