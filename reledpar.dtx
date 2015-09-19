@@ -5667,21 +5667,19 @@
   \else%                                      box is empty
 %    \end{macrocode}
 % The box is empty.
-% If we use \option{nosyncpstarts} option, we can get the next box in any case. 
+% By default, we can get the next box
 %    \begin{macrocode}
-    \@getnextboxfalse%Should be local, but be cautious
-    \ifnosyncpstarts%
-      \@getnextboxtrue%
-    \else%
-      \@getnextboxfalse%
-    \fi%
+    \@getnextboxtrue%Should be local, but be cautious
 %    \end{macrocode}
-% In other case, check if enough lines (real and blank) have been
+% But not when sufficient line for this page have been output,
+% except when we do no any synchronization at all.
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
-      \parledgroup@notes@endL
-      \@getnextboxtrue%
+      \parledgroup@notes@endL%
+      \unless\ifnosyncpstarts%
+        \@getnextboxfalse%
+      \fi%
     \fi%
 %    \end{macrocode}
 % Sufficient lines have been output.
@@ -5744,15 +5742,12 @@
 \newcommand*{\get@nextboxR}{%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
-    \@getnextboxfalse%Should be local, but be cautious
-    \ifnosyncpstarts%
-      \@getnextboxtrue%
-    \else%
-      \@getnextboxfalse%
-    \fi%
+    \@getnextboxtrue%
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
       \parledgroup@notes@endR
-      \@getnextboxtrue%
+      \unless\ifnosyncpstarts%
+        \@getnextboxfalse%
+      \fi%
     \fi%
     \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
