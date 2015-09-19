@@ -21,6 +21,7 @@
 %
 %<*driver>
 \documentclass[twoside]{ltxdoc}
+\usepackage[T1]{fontenc}
 \usepackage{url}
 \usepackage{xr-hyper}
   \usepackage[draft=false,
@@ -32,7 +33,7 @@
              ]{hyperref}
 \addtolength\marginparwidth{30pt}
 \usepackage{doctools}
-\usepackage{libertineotf}
+\usepackage[mono=false]{libertine}
 \usepackage[series={A,B},noend,noeledsec,nofamiliar]{reledmac}
 \usepackage{reledpar}
 \usepackage[english]{babel}
@@ -238,6 +239,12 @@
 % \changes{v2.1.0}{2015/07/27}{Options to custom empty right page before \protect\cs{Pages}.} 
 % \changes{v2.1.0}{2015/07/27}{Fix bug when using \protect\cs{pagenumbering} with memoir (bug added in v2.0.0).} 
 % \changes{v2.1.0}{2015/07/27}{Fix bug when using \protect\cs{eledsection} and related on right pages when page width is short.} 
+% \changes{v2.2.0}{2015/08/08}{\protect\env{astanza} environment can take an optional argument, which will be the optional argument of \protect\cs{pstart} started by this environment.} 
+% \changes{v2.2.0}{2015/08/08}{New tools to number stanza}
+% \changes{v2.2.1}{2015/08/13}{Fix bug with optional argument of last left \protect\cs{pend}}
+% \changes{v2.3.0}{2015/09/05}{Fix bug with title number in parallel columns}
+% \changes{v2.3.0}{2015/09/05}{Change some internal codes in order to provide compatibility with \LaTeX\ release of october~2015}
+% \changes{v2.3.0}{2015/09/05}{New line setting command suffixed by R to set only the right side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -568,11 +575,11 @@
 % \footnote{The same applies to \LaTeX\ normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical informations.}
 % We have not changed this default setting, because we do not want to break compatibility with older version of \macpackage and we want to be as close as possible to default \LaTeX's feature. 
 %
-% So, you MUST change the default setting via \protect\cs{Xmaxnotes} (for critical notes) and \protect\cs{maxhnotesX} (for familiar notes). 
-% Both commands are explained in \macpackage handbook (\reff{reledmac-xmaxhnotes}).
+% So, you MUST change the default setting via \protect\cs{Xmaxhnotes} (for critical notes) and \protect\cs{maxhnotesX} (for familiar notes). 
+% Both commands are explained in \macpackage handbook (\reff{reledmac-Xmaxhnotes}).
 % As an advisable setting:
 % \begin{verbatim}
-% \maxhXnotes{0.6\textheight}
+% \Xmaxhnotes{0.6\textheight}
 % \maxhnotesX{0.6\textheight}
 % \end{verbatim}
 % \subsubsection{Notes for one side only}
@@ -580,14 +587,14 @@
 % \DescribeMacro{\onlysideX}
 % You may want to typeset notes on one side only (either left or right).
 % Use \protect\cs{Xonlyside}\oarg{s}\marg{p} to set critical notes, and \protect\cs{onlysideX}\oarg{s}\marg{p} to set familiar notes.
-% \marg{p} must be set to \verb+L+ for notes to be confined only on the left side and to \verb+R+ for  notes to be confined only on the right side.
+% \meta{p} must be set to \verb+L+ for notes to be confined only on the left side and to \verb+R+ for  notes to be confined only on the right side.
 % \subsubsection{Familiar notes called in the right side, but to be printed in the left side}
 % \DescribeMacro{\footnoteXnomk}
 % \DescribeMacro{\footnoteXmk}
 % As often happens, the left side has less room for text.
 % We may want to call familiar notes in the right side while using at the same time the available space in the left side to print them.
 %
-% To achieve this, we call \protect\cs{footnoteXnomk}\marg{notecontent} in the left side. X is to be replaced by the series letter. We do this call in the left side after the word which matches up to the one in the right side after which we want to insert the actual footnote mark.
+% To achieve this, we call \protect\cs{footnoteXnomk}\marg{notecontent} in the left side. \verb+X+ is to be replaced by the series letter. We do this call in the left side after the word which matches up to the one in the right side after which we want to insert the actual footnote mark.
 %
 % In the right side, we call \protect\cs{footnoteXmk} at the place we want to have the footnote mark. X is to be replaced by the series letter.
 % For example:
@@ -685,6 +692,11 @@
 % useful if you are putting some kind of marker (even if it is only a 
 % blank line) between stanzas. Remember, parallel texts must be numbered
 % and this provides a way to slip in an ``unnumbered''  line.
+% \DescribeMacro{\hidenumbering}
+% \changes{v1.21.0}{2015/04/13}{Add \protect\cs{hidenumbering}}
+% When inserted into a numbered line the macro \protect\cs{hidenumbering} causes
+% the number for that particular line to be hidden; namely, no line number will print.
+% Note that if you use it in \protect\cs{stanza}, you must call it at the beginning of the verse.
 % \subsection{Line numbering scheme}
 % Within these environments you can designate the line numbering scheme(s)
 % to be used. 
@@ -693,10 +705,6 @@
 % \DescribeMacro{\linenumincrement}
 % \DescribeMacro{\firstsublinenum}
 % \DescribeMacro{\sublinenumincrement}
-% \DescribeMacro{\firstlinenum*}
-% \DescribeMacro{\linenumincrement*}
-% \DescribeMacro{\firstsublinenum*}
-% \DescribeMacro{\sublinenumincrement*}
 % Following 
 % \protect\cs{firstlinenum}\marg{num} the first line number will be \meta{num}, and
 % following \protect\cs{linenumincrement}\marg{num} only every \meta{num}th
@@ -705,19 +713,36 @@
 % control over the left and right numbering schemes. The \protect\cs{firstsublinenum}
 % and \protect\cs{sublinenumincrement} macros correspondingly set the numbering
 % scheme for sublines.
-% The starred versions change both left and right numbering schemes.
-%
 % Generally speaking, controls like \protect\cs{firstlinenum} or \protect\cs{linenummargin}
 % apply to sequential and left texts. 
 % To effect right texts only, they have 
 % to be within a \verb?Rightside? environment. 
-
+%
+% \DescribeMacro{\firstlinenum*}
+% \DescribeMacro{\linenumincrement*}
+% \DescribeMacro{\firstsublinenum*}
+% \DescribeMacro{\sublinenumincrement*}
+% The starred versions change both left and right numbering schemes.
+%
+% \DescribeMacro{\firstlinenumR}
+% \DescribeMacro{\linenumincrementR}
+% \DescribeMacro{\firstsublinenumR}
+% \DescribeMacro{\sublinenumincrementR}
+% The suffixed version change the right side, without regard to the position they are called.
+%
 % \DescribeMacro{\lineationR}
 % \protect\cs{lineationR} macro is the equivalent of \macpackage \protect\cs{lineation} macro for the right side.
 % \DescribeMacro{\lineation*} 
 
 % \protect\cs{lineation*} macro is the equivalent of \macpackage \protect\cs{lineation} macro for both sides.
 %
+% \DescribeMacro{\linenumberstyleR}
+% \DescribeMacro{\sublinenumberstyleR}
+% \DescribeMacro{\linenumberstyle*}
+% \DescribeMacro{\sublinenumberstyle*}
+% \cs{linenumberstyleR} is the equivalent of \macpackage \cs{linenumberstyle} for right text. 
+% \cs{sublinenumberstyleR} is the equivalent of \macpackage \cs{sublinenumberstyle} right text.
+% The starred version are for both side.
 % \DescribeMacro{\setRlineflag}
 % A ``R''  is appended to the line numbers of the
 % right texts. 
@@ -800,7 +825,7 @@
 % To enable this function, load \parpackage with the option \verb+shiftedpstarts+.
 % \section{Verse}
 %
-% If you are typesetting verse with \macpackage you can use the \protect\cs{stanza}
+% If you are typesetting verses with \macpackage you can use the \protect\cs{stanza}
 % construct, and you can also use this in right or left parallel texts.
 % In this case each verse line is a chunk which has two implications.
 % (1) you can unexpectedly exceed the \protect\cs{maxchunks} limit or the overall
@@ -809,18 +834,29 @@
 % for verse lines than the other does.
 %
 % \DescribeEnv{astanza}
-% \Parpackage provides an \verb?astanza? environment which you can use instead
-% of \protect\cs{stanza}.
-% To use it, imply replace \verb?\stanza? by \verb?\begin{astanza}? and
-% add \verb?\end{astanza}? after the ending \verb?\&?. Within the 
-% \verb?astanza? environment each verse line is treated as a paragraph, 
+% \Parpackage provides an \env{astanza} environment which you can use instead
+% of \cs{stanza}. A \env{astanza} environment is a chunk. Consequently left and right \emph{verse} are matched, and not, as with standard \cs{stanza}, left and right \emph{verse lines}.
+% 
+% Within the 
+% \env{astanza} environment each verse line is treated as an individual paragraph, 
 % so there must be no blank lines in the environment otherwise there will
 % be some extraneous vertical spacing.
+% To use \env{astanza}, simply replace \cs{stanza} by \cs{begin}\arg{astanza} and
+% add \cs{end}\arg{astanza} after the ending \expandafter\cs\expandafter{\&}.
+%
+% The difference between \env{astanza} and \cs{stanza} is, that the letter syncs
+% verse by verse, while the enviornment syncs stanza by stanza.
 %
 %    If you get an error message along the lines of `Missing number, 
 % treated as zero \protect\cs{sza@0@}' it is because you have forgotten to use
 % \protect\cs{setstanzaindents} to set the stanza indents.
 %
+% As \env{astanza} is a specify type \cs{pstart}\ldots\cs{pend} structure, you can:
+% \begin{itemize}
+% \item Add optional argument (in brackets) after \cs{begin}\arg{astanza}, as the optional argument of \cs{pstart}.
+% \item Use optional argument after the last \expandafter\cs\expandafter{\&} as optional argument of \cs{pend}.
+%
+% \end{itemize}
 %
 %
 % \DescribeMacro{\sethangingsymbol}Like in \macpackage, you could use the \protect\cs{sethangingsymbol} command  to insert a character in each hanging line. If you use it, you must run \LaTeX\ two time. Example for the French typography
@@ -835,6 +871,11 @@
 %
 % When you use \protect\cs{lednopb} make sure to use it on both sides in the corresponding
 % verses to keep the pages in sync.
+%
+% \DescribeMacro{\thestanzaL}
+% \DescribeMacro{\thestanzaR}
+% When using \cs{stanzanumtrue} (\reff{reledmac-numbering-stanza}) in parallel typesetting, \verb+stanza+ counter is replaced by \verb+stanzaL+ counter in left side and by \verb+stanzaR+ counter in right side. Consequently, you can redefine \cs{thestanzaL} and \cs{thestanzaR} to change their aspect.
+%
 % \section{Side notes}
 % As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouterote}, \protect\cs{ledinnerrote}.
 % 
@@ -914,6 +955,7 @@
 % \StopEventually{}
 % \clearpage
 % \renewcommand{\thesection}{\Roman{section}}
+% \renewcommand\theHsection{\Roman{section}}
 % \setcounter{section}{0}
 % \section{Implementation overview}\label{overview}
 %
@@ -951,7 +993,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/07/27 v2.1.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/09/05 v2.3.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1486,6 +1528,29 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\firstlinenumR}
+% \begin{macro}{\linenumincrementR}
+% \begin{macro}{\firstsublinenumR}
+% \begin{macro}{\sublinenumincrementR}
+% And the `R` suffixed version.
+%    \begin{macrocode}
+\newcommand\firstlinenumR[1]{%
+  \setcounter{firstlinenumR}{#1}%
+}
+\newcommand\linenumincrementR[1]{%
+  \setcounter{linenumincrementR}{#1}%
+}
+\newcommand\firstsublinenumR[1]{%
+  \setcounter{subfirstlinenumR}{#1}%
+}
+\newcommand\sublinenumincrementR[1]{%
+  \setcounter{sublinenumincrementR}{#1}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Setting line flag}
 % \begin{macro}{\Rlineflag}
 % This is appended to the line numbers of right text.
@@ -1506,6 +1571,34 @@
 \newcommand*{\linenumrepR}[1]{\@arabic{#1}}
 \newcommand*{\sublinenumrepR}[1]{\@arabic{#1}}
 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenumberstyleR}
+% \begin{macro}{\sublinenumberstyleR}
+% The style can be changed by some user level command
+%    \begin{macrocode}
+\newcommand*{\linenumberstyleR}[1]{%
+  \def\linenumrepR##1{\@nameuse{@#1}{##1}}}
+\newcommand*{\sublinenumberstyleR}[1]{%
+  \def\sublinenumrepR##1{\@nameuse{@#1}{##1}}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenumberstyle*}
+% \begin{macro}{\sublinenumberstyle*}
+% And for both side. 
+%    \begin{macrocode}
+\WithSuffix\newcommand\linenumberstyle*[1]{%
+  \linenumberstyle{#1}%
+  \linenumberstyleR{#1}%
+}%
+
+\WithSuffix\newcommand\sublinenumberstyle*[1]{%
+  \sublinenumberstyle{#1}%
+  \sublinenumberstyleR{#1}%
+}%
+%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2542,9 +2635,9 @@
   \fi%
     \@nobreaktrue%
   \ifluatex%
-    \xdef\l@luatextextdir@L{\the\luatextextdir}%
-    \xdef\l@luatexpardir@L{\the\luatexpardir}%
-    \xdef\l@luatexbodydir@L{\the\luatexbodydir}%
+    \xdef\l@luatextextdir@L{\the\textdir}%
+    \xdef\l@luatexpardir@L{\the\pardir}%
+    \xdef\l@luatexbodydir@L{\the\bodydir}%
   \fi%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2620,9 +2713,9 @@
   \fi%
     \@nobreaktrue%
   \ifluatex%
-    \xdef\l@luatextextdir@R{\the\luatextextdir}%
-    \xdef\l@luatexpardir@R{\the\luatexpardir}%
-    \xdef\l@luatexbodydir@R{\the\luatexbodydir}%
+    \xdef\l@luatextextdir@R{\the\textdir}%
+    \xdef\l@luatexpardir@R{\the\pardir}%
+    \xdef\l@luatexbodydir@R{\the\bodydir}%
   \fi%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2874,7 +2967,7 @@
     {\ledllfill\hb@xt@ \Lcolwidth{%
             \do@insidelineLhook%
             \ifluatex%
-              \luatextextdir\l@luatextextdir@L%
+              \textdir\l@luatextextdir@L%
             \fi%
             \new@lineL%
             \inserthangingsymbolL%
@@ -2897,9 +2990,9 @@
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
-        \luatextextdir\l@luatextextdir@L%
-        \luatexpardir\l@luatexpardir@L%
-        \luatexbodydir\l@luatexbodydir@L%
+        \textdir\l@luatextextdir@L%
+        \pardir\l@luatexpardir@L%
+        \bodydir\l@luatexbodydir@L%
         \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
       \csuse{eled@sectioning@\the\l@dpscL}%
@@ -2961,6 +3054,8 @@
 % \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, added by v1.8.0 (?).}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \let\linenumrep\linenumrepR%
+  \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
@@ -3018,7 +3113,7 @@
        \new@lineR%
        \inserthangingsymbolR%
        \ifluatex%
-              \luatextextdir\l@luatextextdir@R%
+              \textdir\l@luatextextdir@R%
        \fi%
        \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te%
@@ -3034,9 +3129,9 @@
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
-            \luatextextdir\l@luatextextdir@R%
-            \luatexpardir\l@luatexpardir@R%
-            \luatexbodydir\l@luatexbodydir@R%
+            \textdir\l@luatextextdir@R%
+            \pardir\l@luatexpardir@R%
+            \bodydir\l@luatexbodydir@R%
             \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
       \csuse{eled@sectioning@\the\l@dpscR R}%
@@ -3972,11 +4067,11 @@
 % \begin{environment}{astanza}
 % \changes{v1.4.1}{2013/08/16}{Enable the  use of stanzaindentsrepetition within astanza environment.}
 % \changes{v1.13.0}{2015/03/06}{Enable the  use of optional argument of \& in astanza environment.}
-% This is roughly an environmental form of \protect\cs{stanza}, which treats
+% This is roughly an environmental form of \cs{stanza}, which treats
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}{%
+\newenvironment{astanza}[1][]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
@@ -3994,7 +4089,7 @@
     \global\advance\stanza@count\@ne
     \@astanza@line}%
   \def\&{\@stopastanza}%
-  \pstart
+  \pstart[#1]%
   \@astanza@line
 }{}
 
@@ -4002,7 +4097,7 @@
 % \end{environment}
 %
 % \begin{macro}{\@stopastanza}
-% This command is called by \verb+\&+ in astanza environment. 
+% This command is called by \verb+\&+ in \env{astanza} environment. 
 % It allows optional arguments. 
 %    \begin{macrocode}
 \newcommandx{\@stopastanza}[1][1,usedefault]{%
@@ -4036,7 +4131,23 @@
   \catcode`\&=\next
 
 %    \end{macrocode}
+% 
+% \begin{macro}{\thestanzaL}
+% \begin{macro}{\thestanzaR}
+% And now, the left and right stanza counter.
+%    \begin{macrocode}
+\newcounter{stanzaL}
+\newcounter{stanzaR}
+\renewcommand{\thestanzaL}{%
+  \textbf{\arabic{stanzaL}}%
+}
+\renewcommand{\thestanzaR}{%
+  \textbf{\arabic{stanzaR}}%
+}
 %
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Naming macros}
 %
 %    The \LaTeX\ kernel provides \protect\cs{@namedef} and \protect\cs{@namuse} for defining
@@ -4782,6 +4893,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
+             \initnumbering@sectcountR%
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -4804,6 +4916,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
+             \initnumbering@sectcountR%
              \csuse{after@pendR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -4860,17 +4973,20 @@
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
   \fi%
 %    \end{macrocode}
-% \changes{v1.13.0}{2015/03/06xx}{Prevent false overfull hboxes when using \protect\cs{Pages} outside of pages environment.}
-% As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
-%    \begin{macrocode}
-  \setlength{\Lcolwidth}{\textwidth}%
-  \setlength{\Rcolwidth}{\textwidth}%
-%    \end{macrocode}
 % Get onto an empty even (left) page, then initialise counters, etc.
 %    \begin{macrocode}
   \cleartol@devenpage%
   \l@dprintingpagestrue%
   \begingroup%
+%    \end{macrocode}
+% As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
+% \changes{v1.13.0}{2015/03/06}{Prevent false overfull hboxes when using \protect\cs{Pages} outside of pages environment.}
+% \changes{v2.3.0}{2015/09/05}{Fix bug when calling \protect\cs{Columns} after a \protect\cs{Pages} (bug added in v1.13.0).}
+%    \begin{macrocode}
+    \setlength{\Lcolwidth}{\textwidth}%
+    \setlength{\Rcolwidth}{\textwidth}%
+%    \end{macrocode}
+%    \begin{macrocode}
     \l@dzeropenalties%
     \endgraf\global\num@lines=\prevgraf%
             \global\num@linesR=\prevgraf%
@@ -5210,7 +5326,7 @@
 % Because \protect\cs{clearpage} prints all footnotes before the next page, even if it has to add new empty pages, while \protect\cs{newpage} does not. 
 % And as we want notes started in the left page continue in the right page and \emph{vice-versa}, we must use \protect\cs{newpage} and not \protect\cs{clearpage}
 % 
-% \changes{v1.13.0}{2015/03/06x}{Use \protect\cs{newpage} instead of \protect\cs{clearpage}.}
+% \changes{v1.13.0}{2015/03/06}{Use \protect\cs{newpage} instead of \protect\cs{clearpage}.}
 %    \begin{macrocode}
 \newcommand*{\clearl@dleftpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
@@ -5580,6 +5696,7 @@
       \else
 %    \end{macrocode}
 %    \begin{macrocode}
+        \print@last@after@pendLtrue%
       \fi
     \fi
   \fi}
