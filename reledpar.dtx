@@ -242,6 +242,9 @@
 % \changes{v2.2.0}{2015/08/08}{\protect\env{astanza} environment can take an optional argument, which will be the optional argument of \protect\cs{pstart} started by this environment.} 
 % \changes{v2.2.0}{2015/08/08}{New tools to number stanza}
 % \changes{v2.2.1}{2015/08/13}{Fix bug with optional argument of last left \protect\cs{pend}}
+% \changes{v2.3.0}{2015/09/05}{Fix bug with title number in parallel columns}
+% \changes{v2.3.0}{2015/09/05}{Change some internal codes in order to provide compatibility with \LaTeX\ release of october~2015}
+% \changes{v2.3.0}{2015/09/05}{New line setting command suffixed by R to set only the right side.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -572,11 +575,11 @@
 % \footnote{The same applies to \LaTeX\ normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical informations.}
 % We have not changed this default setting, because we do not want to break compatibility with older version of \macpackage and we want to be as close as possible to default \LaTeX's feature. 
 %
-% So, you MUST change the default setting via \protect\cs{Xmaxnotes} (for critical notes) and \protect\cs{maxhnotesX} (for familiar notes). 
+% So, you MUST change the default setting via \protect\cs{Xmaxhnotes} (for critical notes) and \protect\cs{maxhnotesX} (for familiar notes). 
 % Both commands are explained in \macpackage handbook (\reff{reledmac-Xmaxhnotes}).
 % As an advisable setting:
 % \begin{verbatim}
-% \maxhXnotes{0.6\textheight}
+% \Xmaxhnotes{0.6\textheight}
 % \maxhnotesX{0.6\textheight}
 % \end{verbatim}
 % \subsubsection{Notes for one side only}
@@ -702,10 +705,6 @@
 % \DescribeMacro{\linenumincrement}
 % \DescribeMacro{\firstsublinenum}
 % \DescribeMacro{\sublinenumincrement}
-% \DescribeMacro{\firstlinenum*}
-% \DescribeMacro{\linenumincrement*}
-% \DescribeMacro{\firstsublinenum*}
-% \DescribeMacro{\sublinenumincrement*}
 % Following 
 % \protect\cs{firstlinenum}\marg{num} the first line number will be \meta{num}, and
 % following \protect\cs{linenumincrement}\marg{num} only every \meta{num}th
@@ -714,19 +713,36 @@
 % control over the left and right numbering schemes. The \protect\cs{firstsublinenum}
 % and \protect\cs{sublinenumincrement} macros correspondingly set the numbering
 % scheme for sublines.
-% The starred versions change both left and right numbering schemes.
-%
 % Generally speaking, controls like \protect\cs{firstlinenum} or \protect\cs{linenummargin}
 % apply to sequential and left texts. 
 % To effect right texts only, they have 
 % to be within a \verb?Rightside? environment. 
-
+%
+% \DescribeMacro{\firstlinenum*}
+% \DescribeMacro{\linenumincrement*}
+% \DescribeMacro{\firstsublinenum*}
+% \DescribeMacro{\sublinenumincrement*}
+% The starred versions change both left and right numbering schemes.
+%
+% \DescribeMacro{\firstlinenumR}
+% \DescribeMacro{\linenumincrementR}
+% \DescribeMacro{\firstsublinenumR}
+% \DescribeMacro{\sublinenumincrementR}
+% The suffixed version change the right side, without regard to the position they are called.
+%
 % \DescribeMacro{\lineationR}
 % \protect\cs{lineationR} macro is the equivalent of \macpackage \protect\cs{lineation} macro for the right side.
 % \DescribeMacro{\lineation*} 
 
 % \protect\cs{lineation*} macro is the equivalent of \macpackage \protect\cs{lineation} macro for both sides.
 %
+% \DescribeMacro{\linenumberstyleR}
+% \DescribeMacro{\sublinenumberstyleR}
+% \DescribeMacro{\linenumberstyle*}
+% \DescribeMacro{\sublinenumberstyle*}
+% \cs{linenumberstyleR} is the equivalent of \macpackage \cs{linenumberstyle} for right text. 
+% \cs{sublinenumberstyleR} is the equivalent of \macpackage \cs{sublinenumberstyle} right text.
+% The starred version are for both side.
 % \DescribeMacro{\setRlineflag}
 % A ``R''  is appended to the line numbers of the
 % right texts. 
@@ -977,7 +993,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/08/13 v2.2.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/09/05 v2.3.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1512,6 +1528,29 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\firstlinenumR}
+% \begin{macro}{\linenumincrementR}
+% \begin{macro}{\firstsublinenumR}
+% \begin{macro}{\sublinenumincrementR}
+% And the `R` suffixed version.
+%    \begin{macrocode}
+\newcommand\firstlinenumR[1]{%
+  \setcounter{firstlinenumR}{#1}%
+}
+\newcommand\linenumincrementR[1]{%
+  \setcounter{linenumincrementR}{#1}%
+}
+\newcommand\firstsublinenumR[1]{%
+  \setcounter{subfirstlinenumR}{#1}%
+}
+\newcommand\sublinenumincrementR[1]{%
+  \setcounter{sublinenumincrementR}{#1}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Setting line flag}
 % \begin{macro}{\Rlineflag}
 % This is appended to the line numbers of right text.
@@ -1532,6 +1571,34 @@
 \newcommand*{\linenumrepR}[1]{\@arabic{#1}}
 \newcommand*{\sublinenumrepR}[1]{\@arabic{#1}}
 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenumberstyleR}
+% \begin{macro}{\sublinenumberstyleR}
+% The style can be changed by some user level command
+%    \begin{macrocode}
+\newcommand*{\linenumberstyleR}[1]{%
+  \def\linenumrepR##1{\@nameuse{@#1}{##1}}}
+\newcommand*{\sublinenumberstyleR}[1]{%
+  \def\sublinenumrepR##1{\@nameuse{@#1}{##1}}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenumberstyle*}
+% \begin{macro}{\sublinenumberstyle*}
+% And for both side. 
+%    \begin{macrocode}
+\WithSuffix\newcommand\linenumberstyle*[1]{%
+  \linenumberstyle{#1}%
+  \linenumberstyleR{#1}%
+}%
+
+\WithSuffix\newcommand\sublinenumberstyle*[1]{%
+  \sublinenumberstyle{#1}%
+  \sublinenumberstyleR{#1}%
+}%
+%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2568,9 +2635,9 @@
   \fi%
     \@nobreaktrue%
   \ifluatex%
-    \xdef\l@luatextextdir@L{\the\luatextextdir}%
-    \xdef\l@luatexpardir@L{\the\luatexpardir}%
-    \xdef\l@luatexbodydir@L{\the\luatexbodydir}%
+    \xdef\l@luatextextdir@L{\the\textdir}%
+    \xdef\l@luatexpardir@L{\the\pardir}%
+    \xdef\l@luatexbodydir@L{\the\bodydir}%
   \fi%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
@@ -2646,9 +2713,9 @@
   \fi%
     \@nobreaktrue%
   \ifluatex%
-    \xdef\l@luatextextdir@R{\the\luatextextdir}%
-    \xdef\l@luatexpardir@R{\the\luatexpardir}%
-    \xdef\l@luatexbodydir@R{\the\luatexbodydir}%
+    \xdef\l@luatextextdir@R{\the\textdir}%
+    \xdef\l@luatexpardir@R{\the\pardir}%
+    \xdef\l@luatexbodydir@R{\the\bodydir}%
   \fi%
   \ifnumberingR \else%
     \led@err@PstartNotNumbered%
@@ -2900,7 +2967,7 @@
     {\ledllfill\hb@xt@ \Lcolwidth{%
             \do@insidelineLhook%
             \ifluatex%
-              \luatextextdir\l@luatextextdir@L%
+              \textdir\l@luatextextdir@L%
             \fi%
             \new@lineL%
             \inserthangingsymbolL%
@@ -2923,9 +2990,9 @@
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
-        \luatextextdir\l@luatextextdir@L%
-        \luatexpardir\l@luatexpardir@L%
-        \luatexbodydir\l@luatexbodydir@L%
+        \textdir\l@luatextextdir@L%
+        \pardir\l@luatexpardir@L%
+        \bodydir\l@luatexbodydir@L%
         \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
       \csuse{eled@sectioning@\the\l@dpscL}%
@@ -2987,6 +3054,8 @@
 % \changes{v1.8.1}{2014/08/07}{Fix a bug with critical notes a the begining of a page, added by v1.8.0 (?).}
 %    \begin{macrocode}
 \newcommand*{\do@lineR}{%
+  \let\linenumrep\linenumrepR%
+  \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
@@ -3044,7 +3113,7 @@
        \new@lineR%
        \inserthangingsymbolR%
        \ifluatex%
-              \luatextextdir\l@luatextextdir@R%
+              \textdir\l@luatextextdir@R%
        \fi%
        \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te%
@@ -3060,9 +3129,9 @@
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
-            \luatextextdir\l@luatextextdir@R%
-            \luatexpardir\l@luatexpardir@R%
-            \luatexbodydir\l@luatexbodydir@R%
+            \textdir\l@luatextextdir@R%
+            \pardir\l@luatexpardir@R%
+            \bodydir\l@luatexbodydir@R%
             \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
       \csuse{eled@sectioning@\the\l@dpscR R}%
@@ -4824,6 +4893,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
+             \initnumbering@sectcountR%
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -4846,6 +4916,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
+             \initnumbering@sectcountR%
              \csuse{after@pendR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -4902,17 +4973,20 @@
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
   \fi%
 %    \end{macrocode}
-% \changes{v1.13.0}{2015/03/06xx}{Prevent false overfull hboxes when using \protect\cs{Pages} outside of pages environment.}
-% As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
-%    \begin{macrocode}
-  \setlength{\Lcolwidth}{\textwidth}%
-  \setlength{\Rcolwidth}{\textwidth}%
-%    \end{macrocode}
 % Get onto an empty even (left) page, then initialise counters, etc.
 %    \begin{macrocode}
   \cleartol@devenpage%
   \l@dprintingpagestrue%
   \begingroup%
+%    \end{macrocode}
+% As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
+% \changes{v1.13.0}{2015/03/06}{Prevent false overfull hboxes when using \protect\cs{Pages} outside of pages environment.}
+% \changes{v2.3.0}{2015/09/05}{Fix bug when calling \protect\cs{Columns} after a \protect\cs{Pages} (bug added in v1.13.0).}
+%    \begin{macrocode}
+    \setlength{\Lcolwidth}{\textwidth}%
+    \setlength{\Rcolwidth}{\textwidth}%
+%    \end{macrocode}
+%    \begin{macrocode}
     \l@dzeropenalties%
     \endgraf\global\num@lines=\prevgraf%
             \global\num@linesR=\prevgraf%
@@ -5250,7 +5324,7 @@
 % Because \protect\cs{clearpage} prints all footnotes before the next page, even if it has to add new empty pages, while \protect\cs{newpage} does not. 
 % And as we want notes started in the left page continue in the right page and \emph{vice-versa}, we must use \protect\cs{newpage} and not \protect\cs{clearpage}
 % 
-% \changes{v1.13.0}{2015/03/06x}{Use \protect\cs{newpage} instead of \protect\cs{clearpage}.}
+% \changes{v1.13.0}{2015/03/06}{Use \protect\cs{newpage} instead of \protect\cs{clearpage}.}
 %    \begin{macrocode}
 \newcommand*{\clearl@dleftpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
