@@ -5490,8 +5490,11 @@
   \ifdim\pagetotal<\ledthegoal
     \ifnum\numpagelinesL<\l@dminpagelines
     \else
-      \l@dsamepagefalse
-      \l@dpagefullfalse
+      \ifnosyncpstarts%
+      \else%
+        \l@dsamepagefalse%
+        \l@dpagefullfalse%
+      \fi%
     \fi
   \else
     \l@dsamepagefalse
@@ -5511,8 +5514,11 @@
   \ifdim\pagetotal<\ledthegoal
     \ifnum\numpagelinesR<\l@dminpagelines
     \else
-      \l@dsamepagefalse
-      \l@dpagefullfalse
+      \ifnosyncpstarts%
+      \else%
+        \l@dsamepagefalse%
+        \l@dpagefullfalse%
+      \fi%
     \fi
   \else
     \l@dsamepagefalse
@@ -5633,6 +5639,17 @@
 % \end{macro}
 %
 % \subsection{Getting boxes content}
+% \begin{macro}{\if@getnextbox}
+% The \cs{if@getnextbox} boolean is switched to true if we can get the next chunk in a page after finished previous chunk. 
+% That is:
+% \begin{itemize}
+%   \item If we use the \option{nosyncpstarts} option, in any case
+%   \item If we do not use it, only when the number or real or blank line of the current chunk is equal or greater to the maximum number of line in the current pair of chunks.
+% \end{itemize}
+%     \begin{macrocode}
+\newif\if@getnextbox%
+%     \end{macrocode}
+% \end{macro}
 % \begin{macro}{\get@nextboxL}
 % \begin{macro}{\get@nextboxR}
 % \changes{v0.11.0}{2012/06/11}{Change \protect\cs{get@nextboxL} and \protect\cs{get@nextboxR} to allow to disable line numbering (like in eledmac 0.15).}
@@ -5649,15 +5666,26 @@
   \else%                                      box is empty
 %    \end{macrocode}
 % The box is empty.
-% Check if enough lines (real and blank) have been
+% If we use \option{nosyncpstarts} option, we can get the next box in any case. 
+%    \begin{macrocode}
+    \@getnextboxfalse%Should be local, but be cautious
+    \ifnosyncpstarts%
+      \@getnextboxtrue%
+    \else%
+      \@getnextboxfalse%
+    \fi%
+%    \end{macrocode}
+% In other case, check if enough lines (real and blank) have been
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
       \parledgroup@notes@endL
-    \else
+      \@getnextboxtrue%
+    \fi%
 %    \end{macrocode}
 % Sufficient lines have been output.
 %    \begin{macrocode}
+    \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}=\@donetotallinesL
         \parledgroup@notes@endL
       \fi
@@ -5715,9 +5743,17 @@
 \newcommand*{\get@nextboxR}{%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
+    \@getnextboxfalse%Should be local, but be cautious
+    \ifnosyncpstarts%
+      \@getnextboxtrue%
+    \else%
+      \@getnextboxfalse%
+    \fi%
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
       \parledgroup@notes@endR
-    \else
+      \@getnextboxtrue%
+    \fi%
+    \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
         \parledgroup@notes@endR
       \fi
