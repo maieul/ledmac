@@ -11027,12 +11027,29 @@
 % This macro controls, in endnote, whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
 %    \begin{macrocode}
 \newcommand{\printlineendnote}[2]{%
+  \l@dp@rsefootspec#1|%
+  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
+       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+       }%
+       {%
+       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+       }%
   \ifboolexpr{%
     togl {nonum@}%
     or togl {Xendnonumber@#2}%
     }%
     {\hspace{\csuse{Xendinplaceofnumber@#2}}}%
-    {\printlineendnotearea{#1}{#2}}%
+    {%
+      \iftoggle{Xendnumberonlyfirstinline@#2}%
+        {\ifcsdef{prevendline#2}%
+          {\ifcsequal{prevendline#2}{lineinfo@}%
+            {\hspace{\csuse{Xendinplaceofnumber@#2}}}%
+            {\printlineendnotearea{#1}{#2}}}%
+          {\printlineendnotearea{#1}{#2}}%
+        }%
+        {\printlineendnotearea{#1}{#2}}%We keep every time line
+    \csxdef{prevendline#2}{\lineinfo@}%
+    }%
 }%
 %    \end{macrocode}
 % \end{macro}
