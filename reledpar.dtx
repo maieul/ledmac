@@ -2085,7 +2085,7 @@
 % \begin{macro}{\@pend}
 % \begin{macro}{\@pendR}
 % \protect\cs{@pend}\marg{num} adds its argument to the \protect\cs{linesinpar@listL}
-% list, and analagously for \protect\cs{@pendR}. If needed, it resets line number.
+% list, and analogously for \protect\cs{@pendR}. If needed, it resets line number.
 % Both  are defined  in \macpackage, but they are empty.
 % They are really defined only in \parpackage.
 %
@@ -2102,6 +2102,31 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\@pstart}
+% \begin{macro}{\@pstartR}
+% \cs{@pstart} add its arguments to the \cs{pageofpstart@listL} and analogously for cs{@pstartR}
+%    \begin{macrocode}
+\newcommand{\@pstart}[2]{%
+  \ifcsdef{minpage@pstart@#1}%
+    {\ifnumgreater{#2}{\csuse{minpage@pstart@#1}}%
+      {\csnumgdef{minpage@pstart@#1}{#2}}%
+      {}%
+    }%
+    {\csnumgdef{minpage@pstart@#1}{#2}}
+  }%
+
+\newcommand{\@pstartR}[2]{%
+  \numdef{\@tmp}{#2-1}%Because we have not to know in which page the pstart starts, but in which pair of facing page 
+  \ifcsdef{minpage@pstart@#1}%
+    {\ifnumgreater{\@tmp}{\csuse{minpage@pstart@#1}}%
+      {\csnumgdef{minpage@pstart@#1}{\@tmp}}%
+      {}%
+    }%
+    {\csnumgdef{minpage@pstart@#1}{\@tmp}}
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\@lopL}
 % \begin{macro}{\@lopR}
 % \protect\cs{@lopL}\marg{num} adds its argument to the \protect\cs{linesonpage@listL}
@@ -2959,6 +2984,7 @@
                            to\baselineskip}% 
   \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}%
   \unvbox\one@line \global\setbox\one@line=\lastbox% 
+  \@writepageofparL%
   \getline@numL%
   \ifnum\@lock>\@ne%
     \inserthangingsymboltrue%
@@ -3101,6 +3127,7 @@
                            to\baselineskip}% 
   \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}%
   \unvbox\one@lineR \global\setbox\one@lineR=\lastbox%
+  \@writepageofparR%
   \getline@numR%
   \ifnum\@lockR>\@ne%
     \inserthangingsymbolRtrue%
@@ -4532,6 +4559,29 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\@writepageofparL}
+% \begin{macro}{\@writepageofparR}
+% These write the pages where start the first line of a chunck.
+%    \begin{macrocode}
+\newcommand*{\@writepageofparL}[0]{%
+  \ifnum\@donereallinesL=\z@%
+    \edef\next{%
+      \write\linenum@out{\string\@pstart{\the\l@dpscL}{\the\c@page}}%
+    }%
+    \next%
+  \fi%
+}%
+\newcommand*{\@writepageofparR}[0]{%
+  \ifnum\@donereallinesR=\z@%
+    \edef\next{%
+      \write\linenum@outR{\string\@pstartR{\the\l@dpscR}{\the\c@page}}%
+    }%
+  \next%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \section{Parallel columns}
 %
@@ -5710,11 +5760,23 @@
         \ifnomaxlines%
           \ifdim\pagetotal<\ledthegoal%
             \ifnum\numpagelinesL<\l@dminpagelines\else%
-               \@getnextboxtrue%
+                 \@getnextboxtrue%
              \fi%
           \fi%
         \fi%
       \fi%
+    \else%
+       \ifnomaxlines%
+         \numdef{\@tmp}{\the\l@dpscL+1}%
+         \ifcsdef{minpage@pstart@\@tmp}{%
+           \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+             {\ifdim\pagetotal>\ledthegoal%
+               \@getnextboxtrue%
+              \else\@getnextboxfalse%
+             \fi}%%
+             {\@getnextboxtrue}%  
+         }{}%
+       \fi%
     \fi%
 %    \end{macrocode}
 % Sufficient lines have been output.
@@ -5790,6 +5852,18 @@
           \fi%
         \fi%
       \fi%
+    \else%
+       \ifnomaxlines%
+         \numdef{\@tmp}{\the\l@dpscR+1}%
+         \ifcsdef{minpage@pstart@\@tmp}{%
+           \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+             {\ifdim\pagetotal>\ledthegoal%
+               \@getnextboxtrue%
+              \else\@getnextboxfalse%
+             \fi}%
+             {\@getnextboxtrue}%  
+         }{}
+       \fi%
     \fi%
     \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
