@@ -246,6 +246,7 @@
 % \changes{v2.3.0}{2015/09/05}{Change some internal codes in order to provide compatibility with \LaTeX\ release of october~2015}
 % \changes{v2.3.0}{2015/09/05}{New line setting command suffixed by R to set only the right side.}
 % \changes{v2.4.0}{2015/09/15}{New way of (not) synchronizing the parallel pages.}
+% \changes{v2.4.0}{2015/09/15}{Option to switch to \protect\cs{mainmatter} when calling \protect\cs{Pages}}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -586,6 +587,12 @@
 % \item[prevpgnotnumbered] will make this page won't be counted in the page counter.
 %
 % \end{description}
+% \subsubsection{Notes about \protect\cs{mainmatter}}
+% If you use \cs{frontmatter}, do not use \cs{mainmatter} directly before \cs{Pages} because it could create spurious empty pages.
+%
+% Use instead \cs{pages} with the optional argument \verb+[mainmatter]+.
+% In this case, the content of \cs{Pages} will start on a left side, without any spurious empty page, and the left pages will be odd (and not event like in normal way), the first one being \verb+1+.
+% 
 %  \subsection{Critical and familiar footnotes}
 % Of course, in ``Facing pages'',  the \macpackage's  both critical and familiar footnotes can be used.
 % However, some specific points must  be taken into consideration.
@@ -4987,10 +4994,11 @@
 %
 % \changes{v1.12.0}{2015/02/23}{Add \protect\cs{l@dprintingpagestrue}}
 %    \begin{macrocode}
-\newcommand*{\Pages}{%
+\newcommandx*{\Pages}[1][1,usedefault]{%
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
+  \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
   \typeout{}%
@@ -5303,9 +5311,11 @@
 % \begin{macro}{\ledstrutR}
 % Struts inserted into leftand right text lines.
 % \changes{v0.3.0}{2005/02/10}{Added \protect\cs{ledtrutL} and \protect\cs{ledstrutR}}
+% \changes{v2.3.1}{2015/09/15}{Deleted \protect\cs{ledtrutL} and \protect\cs{ledstrutR}}
+% \changes{v2.3.1}{2015/09/15}{Fix bug with dotted letter}
 %    \begin{macrocode}
-\newcommand*{\ledstrutL}{\strut}
-\newcommand*{\ledstrutR}{\strut}
+\newcommand*{\ledstrutL}{}
+\newcommand*{\ledstrutR}{}
 
 %    \end{macrocode}
 % \end{macro}
@@ -5329,6 +5339,7 @@
   \ifdim\pagetotal<\topskip%  on an empty page
   \else
     \clearpage
+    \Pages@mainmatter%
   \fi
   \ifodd\c@page%
     \ifprevpgnotnumbered%
@@ -5816,6 +5827,7 @@
 % \end{macro}
 %
 % \section{Page numbering}
+% \subsection{Global options}
 % The \verb+sameparallelpagenumber+ option  allows the same page number on both left and right side
 % The \verb+prevpgnotnumbered+ option allows an empty (not numbered) right-side page before \cs{Pages}.
 %
@@ -5911,6 +5923,24 @@
 \setcounter{par@page}{1}%
 %    \end{macrocode}
 % \end{macro} 
+% \subsection{mainmatter option of \cs{Pages}}
+% The optional argument of \cs{Pages} could be equal to \verb+mainmatter+.
+% In this case the boolean \cs{ifPages@mainmatter} is set to true, and some special things are done in \cs{Pages@mainmatter}, called by \cs{cleartol@devenpage}.
+% \begin{macro}{\ifPages@mainmatter}
+% \begin{macro}{\Pages@mainmatter}
+%    \begin{macrocode}
+\newif\ifPages@mainmatter
+\newcommand{\Pages@mainmatter}{%
+    \ifPages@mainmatter%
+      \pagenumbering{arabic}%
+      \addtocounter{page}{1}%
+      \addtocounter{par@page}{-1}%
+      \patchcmd{\thepage}{page}{par@page}{}{}%
+    \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Sections' titles' commands}
 % As switching from left to right pages does not clear the page since v1.13.0,
 % but only creates new pages, no \verb+\vbox{}+ is inserted, and consequently parallel chapters are mis-aligned.
