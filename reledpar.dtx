@@ -1035,9 +1035,6 @@
 %    \begin{macrocode}
 \newif\ifadvancedshiftedpstarts
 \DeclareOptionX{advancedshiftedpstarts}{%
-  \ifnomaxlines%
-    \led@err@advanceandmax
-  \fi%
   \advancedshiftedpstartstrue
   \shiftedpstartstrue}
 %    \end{macrocode}
@@ -1047,9 +1044,6 @@
 %    \begin{macrocode}
 \newif\ifnomaxlines%
 \DeclareOptionX{nomaxlines}{%
-  \ifadvancedshiftedpstarts%
-    \led@err@advanceandmax
-  \fi%
   \nomaxlinestrue%
 }%
 %    \end{macrocode}
@@ -1140,11 +1134,6 @@
 % \changes{v1.8.2}{2014/08/15}{Errors specific to eledpar send to eledpar handbook}
 %    \begin{macrocode}
 \newcommand{\reledpar@error}[2]{\PackageError{reledpar}{#1}{#2}}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{led@err@advanceandmax}
-%    \begin{macrocode}
-\newcommand{\led@err@advanceandmax}{\reledpar@error{Options `nomaxlines' and `advancedshiftedpstarts` are not compatible.}}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@err@TooManyPstarts}
@@ -5216,6 +5205,18 @@
                           \dimen0=\pagetotal%
                           \advance\dimen0 by \baselineskip%
                           \global\pagetotal=\dimen0%  
+                        \else%
+                          \ifnomaxlines%
+                            \numdef{\@tmp}{\the\l@dpscL+1}%
+                            \ifcsdef{minpage@pstart@\@tmp}{%
+                              \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                              {\dimen0=\pagetotal%
+                               \advance\dimen0 by \baselineskip%
+                               \global\pagetotal=\dimen0%
+                               }%
+                              {}%
+                            }{}%
+                          \fi%  
                         \fi%                     
                       \fi%
               \else%
@@ -5285,6 +5286,18 @@
                           \dimen0=\pagetotal%
                           \advance\dimen0 by \baselineskip%
                           \global\pagetotal=\dimen0%
+                        \else%
+                          \ifnomaxlines%
+                            \numdef{\@tmp}{\the\l@dpscR+1}%
+                            \ifcsdef{minpage@pstart@\@tmp}{%
+                              \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                              {\dimen0=\pagetotal%
+                               \advance\dimen0 by \baselineskip%
+                               \global\pagetotal=\dimen0%
+                               }%
+                              {}%
+                            }{}%
+                          \fi%                        
                         \fi%
                       \fi%
               \else%
@@ -5813,11 +5826,9 @@
          \numdef{\@tmp}{\the\l@dpscL+1}%
          \ifcsdef{minpage@pstart@\@tmp}{%
            \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
-             {\ifdim\pagetotal>\ledthegoal%
-                \@getnextboxtrue%
-              \else%
-                \@getnextboxfalse%
-              \fi%
+             {\ifdimgreater{\pagetotal}{\ledthegoal}%
+                {\@getnextboxtrue}%
+                {\@getnextboxfalse}%
              }%
              {\@getnextboxtrue}%
          }{}%
@@ -5914,11 +5925,9 @@
          \numdef{\@tmp}{\the\l@dpscR+1}%
          \ifcsdef{minpage@pstart@\@tmp}{%
            \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
-             {\ifdim\pagetotal>\ledthegoal%
-                \@getnextboxtrue%
-              \else%
-                \@getnextboxfalse%
-              \fi%
+             {\ifdimgreater{\pagetotal}{\ledthegoal}%
+                {\@getnextboxtrue}%
+                {\@getnextboxfalse}%
              }%
              {\@getnextboxtrue}%  
          }{}
