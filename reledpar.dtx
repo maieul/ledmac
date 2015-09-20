@@ -2104,25 +2104,27 @@
 %
 % \begin{macro}{\@pstart}
 % \begin{macro}{\@pstartR}
-% \cs{@pstart} add its arguments to the \cs{pageofpstart@listL} and analogously for cs{@pstartR}
+% \cs{@pstart} and cs{@pstartR} allows us to know, when using \cs{nomaxlines} option in which page we should start a pstart, and also how many empty lines we should let before starting this pstart at the begining of the page
 %    \begin{macrocode}
-\newcommand{\@pstart}[2]{%
+\newcommand{\@pstart}[3]{%
   \ifcsdef{minpage@pstart@#1}%
     {\ifnumgreater{#2}{\csuse{minpage@pstart@#1}}%
       {\csnumgdef{minpage@pstart@#1}{#2}}%
       {}%
     }%
     {\csnumgdef{minpage@pstart@#1}{#2}}
+  \csnumgdef{afterlines@pstart@#1L}{#3}%
   }%
 
-\newcommand{\@pstartR}[2]{%
-  \numdef{\@tmp}{#2-1}%Because we have not to know in which page the pstart starts, but in which pair of facing page 
+\newcommand{\@pstartR}[3]{%
+  \numdef{\@tmp}{#2-1}%Because we have not to know in which page the pstart starts, but in which pair of facing page
   \ifcsdef{minpage@pstart@#1}%
     {\ifnumgreater{\@tmp}{\csuse{minpage@pstart@#1}}%
       {\csnumgdef{minpage@pstart@#1}{\@tmp}}%
       {}%
     }%
     {\csnumgdef{minpage@pstart@#1}{\@tmp}}
+   \csnumgdef{afterlines@pstart@#1R}{#3}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -4568,7 +4570,7 @@
 \newcommand*{\@writepageofparL}[0]{%
   \ifnum\@donereallinesL=\z@%
     \edef\next{%
-      \write\linenum@out{\string\@pstart{\the\l@dpscL}{\the\c@page}}%
+      \write\linenum@out{\string\@pstart{\the\l@dpscL}{\the\c@page}{\the\numpagelinesL}}%
     }%
     \next%
   \fi%
@@ -4576,7 +4578,7 @@
 \newcommand*{\@writepageofparR}[0]{%
   \ifnum\@donereallinesR=\z@%
     \edef\next{%
-      \write\linenum@outR{\string\@pstartR{\the\l@dpscR}{\the\c@page}}%
+      \write\linenum@outR{\string\@pstartR{\the\l@dpscR}{\the\c@page}{\the\numpagelinesR}}%
     }%
   \next%
   \fi%
@@ -5757,30 +5759,32 @@
       \unless\ifnosyncpstarts%
         \@getnextboxfalse%
 %     \end{macrocode}
-%  If we use the nomaxlines option and we will start a new page.
+%  If we use the nomaxlines option, we will start at new page, but we take count of the lines to be typesset for the actual right chunk on the right page, before starting new chunk on the left page.
 %     \begin{macrocode}
         \ifnomaxlines%
           \ifdim\pagetotal<\ledthegoal%
-            \ifnum\numpagelinesL<\l@dminpagelines\else%
-                 \@getnextboxtrue%
-             \fi%
+            \numdef{\@tmp}{\l@dpscL+1}%
+            \ifcsdef{afterlines@pstart@\@tmp R}{%
+              \ifnumequal{\numpagelinesL}{\csuse{afterlines@pstart@\@tmp R}}%
+                 {\@getnextboxtrue}%
+                 {}%
+              }%
+              {}%
           \fi%
         \fi%
       \fi%
     \else%
-       \ifnomaxlines%
-         \numdef{\@tmp}{\the\l@dpscL+1}%
-         \ifcsdef{minpage@pstart@\@tmp}{%
-           \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
-             {\ifdim\pagetotal>\ledthegoal%
-                \@getnextboxtrue%
-              \else%
-                \@getnextboxfalse%
-              \fi%
-             }%%
-             {\@getnextboxtrue}%  
-         }{}%
-       \fi%
+        \ifnomaxlines%
+          \ifdim\pagetotal<\ledthegoal%
+            \numdef{\@tmp}{\l@dpscR+1}%
+            \ifcsdef{afterlines@pstart@\@tmp L}{%
+              \ifnumequal{\numpagelinesL}{\csuse{afterlines@pstart@\@tmp L}}%
+                 {\@getnextboxtrue}%
+                 {}%
+              }%
+              {}%
+          \fi%
+        \fi%
     \fi%
 %    \end{macrocode}
 % Sufficient lines have been output.
