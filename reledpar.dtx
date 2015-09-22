@@ -1023,11 +1023,21 @@
 %    \end{macrocode}
 % \subsection{Package's options}
 % \subsubsection{Synchronization's options}
+% \begin{macro}{\@par@this@sync@option}
+% The \cs{par@sync@option} stores the options of synchronization.
+% It use to ensure these options do not change between two run. 
+%    \begin{macrocode}
+\def\@par@this@sync@option{}%
+%    \end{macrocode}
+% \end{macro}
 %  With the option `shiftedpstarts' a long pstart on the left side (or on the right side) does not make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages.
 % \begin{macro}{\ifshiftedpstarts}
 %    \begin{macrocode}
 \newif\ifshiftedpstarts
-\DeclareOptionX{shiftedpstarts}{\shiftedpstartstrue}
+\DeclareOptionX{shiftedpstarts}{%
+ \shiftedpstartstrue%
+ \apptocmd{\@par@this@sync@option}{shifted}{}{}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %  With the option `advancedshiftedpstarts' a long pstart on the left side (or on the right side) does not make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages. 
@@ -1037,8 +1047,10 @@
 %    \begin{macrocode}
 \newif\ifadvancedshiftedpstarts
 \DeclareOptionX{advancedshiftedpstarts}{%
-  \advancedshiftedpstartstrue
-  \shiftedpstartstrue}
+  \advancedshiftedpstartstrue%
+  \shiftedpstartstrue%
+  \apptocmd{\@par@this@sync@option}{advancedshifted}{}{}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % With the option \option{nomaxlines}, \parpackage allows facing pages to have not the same number of lines.
@@ -1047,6 +1059,7 @@
 \newif\ifnomaxlines%
 \DeclareOptionX{nomaxlines}{%
   \nomaxlinestrue%
+  \apptocmd{\@par@this@sync@option}{nomax}{}{}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1058,6 +1071,7 @@
   \shiftedpstartstrue%
   \nomaxlinestrue%
   \nosyncpstartstrue%
+  \apptocmd{\@par@this@sync@option}{nosync}{}{}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1133,10 +1147,15 @@
 %
 % All the error and warning messages are collected here as macros.
 %
-% \begin{macro}{\eledpar@error}
+% \begin{macro}{\reledpar@error}
 % \changes{v1.8.2}{2014/08/15}{Errors specific to eledpar send to eledpar handbook}
 %    \begin{macrocode}
 \newcommand{\reledpar@error}[2]{\PackageError{reledpar}{#1}{#2}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\reledpar@warning}
+%    \begin{macrocode}
+\newcommand{\reledpar@warning}[1]{\PackageWarning{reledpar}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@err@TooManyPstarts}
@@ -1212,6 +1231,14 @@
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@@outputpage}{%
   \reledpar@error{Fail to patch \string\@outputpage\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@warn@ChangeSyncOption}
+%    \begin{macrocode}
+\newcommand*{\led@warn@ChangeSyncOption}[1]{%
+  \reledpar@warning{You have changed synchronization's options since last run. We have not read line-list file #1. Please run LaTeX again.}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1773,6 +1800,23 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\@par@sync@option}
+% When typesetting parallel pages, \cs{@par@sync@option} check if we have changed the synchronization's option since the last run.
+% If true, we just not read the numbered file.
+%    \begin{macrocode}
+\newcommand{\@par@sync@option}[1]{%
+  \IfStrEq{#1}{\@par@this@sync@option}%
+    {}%
+    {\ifledRcol%
+       \led@warn@ChangeSyncOption{\jobname.\extensionchars\the\section@num}%
+     \else%
+       \led@warn@ChangeSyncOption{\jobname.\extensionchars\the\section@num}%
+     \fi%
+     \endinput%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\read@linelist}
 % \protect\cs{read@linelist}\marg{file} is the control sequence
 % that is called by \protect\cs{beginnumbering}
@@ -2201,6 +2245,9 @@
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=#1
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
+     \ifl@dpaging%
+       \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
+     \fi%
   \else
      \if@minipage%
        \leavevmode%
