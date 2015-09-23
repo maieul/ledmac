@@ -529,27 +529,95 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
-% \subsubsection{Way of synchronizing}
-% Corresponding left and right sides must have the same number of
-% paragraph chunks --- if there are four on the left there must be four
-% on the right, even if some are empty.
+% \subsubsection{Way of synchronizing\footnote{There is a French version of this article on \url{http://geekographie.maieul.net/95}.} 
+%Synchronization of left and right texts in parallel processing
+%requires some `numbered' auxiliary files to be written (namely \verb+.1+,
+%\verb+.1R+, \verb+.2+, \verb+.2R+, and so forth), the content of which may change as long
+%as synchronization is not complete. This usually requires LaTeX to be
+%run several times. Therefore, it is advised to use in conjunction
+%utilities such as latexmk to ensure that synchronization is complete.
 %
-% \Parpackage\ has three different ways of synchronizing pages:
-% \begin{enumerate}
-% \item The default (and historical) way : the start of each pair of left and
-% right chunks are aligned horizontally on the facing page. The ends may
-% come at different positions --- if one chunk is shorter than the other
-% then blank lines are output on the shorter side until the end of the longer
-% chunk is reached. There is the same number of lines, including blank lines, in both left and right page. 
-% \item The shifted way, enabled when loading package with the  option \option{shiftedpstarts}.
-% The number of line, including blank lines, in two corresponding pages are the same, but  the chunks are not aligned, the shift is offset at the end of each double pages but the start of corresponding chunck are always in facing pages. This option can be combined with \option{nomaxlines}.
-% \item The no maximum lines way, when loading package with the  option \option{nomaxlines}. The number of line in two corresponding pages are not the same, but the start of corresponding chunks are always in facing pages.
-% This option can be combined with \option{shiftedpstarts}.
-% \item The advanced shifted, enabled with \option{advancedshiftedpstarts}. Same as shifted mode, but the blank lines linked to the shift are not counted to determine when to cut a page, and, consequently, that prevent situation when a page has an long blank space at its end and the next page of the same side have only a short text for the end of the paragraph cut in the previous page.
-% \item The not synchronizing way, enabled when loading package the option \option{nosyncpstarts}.
-% In this case, the number of line in corresponding page can be different and the chunck are not aligned. Furthermore, \reledpar does not check if two corresponding chuncks start in facing page. 
-% \Parpackage only alternate left and right content.
-% \end{enumerate}
+%Numbered paragraphs which are contained between the \cs{pstart} and \cs{pend}
+%macros are thereafter called `chunks'.
+%
+%In short, the default setting is designed in such a way that
+%corresponding chunks of text are always kept in synchronization, even
+%at the cost of page padding, as it may result in leaving blank lines
+%between chunks of text. Conversely, using in conjunction
+%\option{advancedshiftedpstarts} and \option{nomaxlines} settings ensures that pages
+%are filled with text to full advantage—at the cost of the chunks not
+%being kept in synchronization—and every chunk starts on the facing
+%page of its corresponding chunk.
+%
+%To understand better how each of the synchronization settings of
+%\parpackage works, one must first understand how the default setting of
+%\parpackage synchronizes the left and right chunks.
+%
+%The aim of the default setting is twofold:
+%\begin{itemize}
+%\item To ensure that left pages contain what is to be on left sides and
+%that right pages contain what is to be on right sides.
+%\item To ensure that every chunk starts on the page that is facing its
+%corresponding chunk.
+%\end{itemize}
+%
+%As regards the latter, \parpackage checks that both of the following
+%rules are respected:
+%\begin{itemize}
+%\item The numbers of lines of every pair of chunks must be identical. To
+%keep this rule, \parpackage may insert some blank lines at the bottom of
+%the chunk that is shorter so that it may eventually have the same
+%number of lines as the one that is longer.
+%\item The main content of two facing pages, apart from critical and
+%familiar footnotes, must have the same numbers of lines, including
+%those that may be blank. Consequently, if one left page contains more
+%notes than the corresponding right page, the bottom of the right page
+%must be left blank.
+%\end{itemize}
+%
+%Each of these rules can be modified by a number of optional
+%synchronization settings in \parpackage:
+%\begin{enumerate}
+%\item Regarding the number of lines a pair of chunks may have:
+%	\begin{enumerate}
+%		\item 'shiftedpstarts' setting merely moves any added blank lines from
+%the bottom of the chunks to the bottom of the page. It does not allow
+%to have more lines on a given page as it just removes the blank lines
+%between the chunks and does nothing more. To understand better how
+%this work, you may compare the total amounts of lines of text on a
+%given page whether you have activated this setting or not: you will
+%see that both amounts are the same.
+%    \item 'advancedshiftedpstarts' prevents any blank lines from being
+%inserted at the bottom of the chunks, also taking them away from the
+%total amount of lines the page may have. This allows to get more lines
+%on the pages. However, please note that:
+%				\begin{itemize}
+%					\item Blank lines are taken into account as \parpackage moves from one to
+%the following chunk of text, so that every pair of chunks may always
+%start on the same facing pages.
+%					\item Consequently, blank lines continue to be taken into account in
+%the calculation of the amount of lines a given pair of pages may have.
+%This is why when a longer chunk runs from one page to another the
+%shorter corresponding one also runs across pages, even if this may
+%result in some blank vertical space being left on the first page.
+%				\end{itemize}
+%		\end{itemize}
+%		\item As regards the number of lines per page, including blank ones, the
+%\option{nomaxlines} setting disregards the rule that forces two facing pages
+%to have the same numbers of lines. So it allows to have more text on
+%the pages. Then, by a complex mechanism it is ensured that two
+%corresponding chunks may always start on the same facing pages,
+%provided that \option{shiftedpstarts} or \option{advancedshiftedpstarts} settings
+%shall be not activated.
+%\end{itemize}
+%
+%Lastly, on may disregard all of the synchronization rules and content
+%himself with parallel texts typesetting. To achieve this, please use
+%the \option{nosync} setting.
+%
+%Please note that every change of synchronization setting resets the
+%content of the `numbered' auxiliary files to make sure that \parpackage
+%does not try to make the synchronization with wrong calculations.
 % \subsubsection{Page number}\label{sameparallelpagenumber}
 % \changes{v1.15.0}{2015/05/18}{Add sameparallelpagenumber option.}
 % By default, \protect\cs{Pages} use the standard \LaTeX\ page number scheme.
