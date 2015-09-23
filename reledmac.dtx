@@ -329,6 +329,7 @@
 % \changes{v2.2.0}{2015/09/15}{Fix bug with combination of \protect\cs{onehalfspacing} and two columns and three columns notes typeset.}
 % \changes{v2.2.0}{2015/09/15}{Fix bug with some setting command and optimization option.}
 % \changes{v2.2.0}{2015/09/15}{New setting tools for endnotes: \protect\cs{Xendnumberonlyfirstinline}, \protect\cs{Xendnumberonlyfirstintwolines}, \protect\cs{Xendsymlinenum}, \protect\cs{Xendbeforenumber}, \protect\cs{Xendafterenumber}, \protect\cs{Xendbeforesymlinenum}, \protect\cs{Xendaftersymlinenum}, \protect\cs{Xendboxsymlinenum}, \protect\cs{Xendhangindent}}
+% \changes{v2.2.0}{2015/09/15}{Fix spurious space with paragraphed critical notes when using \LuaLaTeX.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -9732,7 +9733,8 @@
 % If we use \LuaTeX, ensure we use good text's direction.
 %    \begin{macrocode}
   \ifluatex%
-    \textdir TLT%
+    \edef\@tmp{\the\textdir}%
+    \ifdefstring{\@tmp}{TLT}{}{\textdir TLT}%Test in order to prevent spurious space (bug #397)
   \fi%
 %    \end{macrocode}
 % Decide which part of line number components we will print.
