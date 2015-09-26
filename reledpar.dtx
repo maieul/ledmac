@@ -245,6 +245,7 @@
 % \changes{v2.3.0}{2015/09/05}{Fix bug with title number in parallel columns}
 % \changes{v2.3.0}{2015/09/05}{Change some internal codes in order to provide compatibility with \LaTeX\ release of october~2015}
 % \changes{v2.3.0}{2015/09/05}{New line setting command suffixed by R to set only the right side.}
+% \changes{v2.4.0}{2015/09/15}{New way of (not) synchronizing the parallel pages.}
 % \changes{v2.4.0}{2015/09/15}{Option to switch to \protect\cs{mainmatter} when calling \protect\cs{Pages}}
 % \hyphenation{man-u-script man-u-scripts}
 %
@@ -528,6 +529,95 @@
 % and right pages, respectively. By default, these are set to the normal
 % textwidth for the document, but can be changed within the environment if
 % necessary.
+% \subsubsection{Way of synchronizing\footnote{There is a French version of this article on \url{http://geekographie.maieul.net/185}.} 
+%Synchronization of left and right texts in parallel processing
+%requires some `numbered' auxiliary files to be written (namely \verb+.1+,
+%\verb+.1R+, \verb+.2+, \verb+.2R+, and so forth), the content of which may change as long
+%as synchronization is not complete. This usually requires LaTeX to be
+%run several times. Therefore, it is advised to use in conjunction
+%utilities such as latexmk to ensure that synchronization is complete.
+%
+%Numbered paragraphs which are contained between the \cs{pstart} and \cs{pend}
+%macros are thereafter called `chunks'.
+%
+%In short, the default setting is designed in such a way that
+%corresponding chunks of text are always kept in synchronization, even
+%at the cost of page padding, as it may result in leaving blank lines
+%between chunks of text. Conversely, using in conjunction
+%\option{advancedshiftedpstarts} and \option{nomaxlines} settings ensures that pages
+%are filled with text to full advantage—at the cost of the chunks not
+%being kept in synchronization—and every chunk starts on the facing
+%page of its corresponding chunk.
+%
+%To understand better how each of the synchronization settings of
+%\parpackage works, one must first understand how the default setting of
+%\parpackage synchronizes the left and right chunks.
+%
+%The aim of the default setting is twofold:
+%\begin{itemize}
+%\item To ensure that left pages contain what is to be on left sides and
+%that right pages contain what is to be on right sides.
+%\item To ensure that every chunk starts on the page that is facing its
+%corresponding chunk.
+%\end{itemize}
+%
+%As regards the latter, \parpackage checks that both of the following
+%rules are respected:
+%\begin{itemize}
+%\item The numbers of lines of every pair of chunks must be identical. To
+%keep this rule, \parpackage may insert some blank lines at the bottom of
+%the chunk that is shorter so that it may eventually have the same
+%number of lines as the one that is longer.
+%\item The main content of two facing pages, apart from critical and
+%familiar footnotes, must have the same numbers of lines, including
+%those that may be blank. Consequently, if one left page contains more
+%notes than the corresponding right page, the bottom of the right page
+%must be left blank.
+%\end{itemize}
+%
+%Each of these rules can be modified by a number of optional
+%synchronization settings in \parpackage:
+%\begin{enumerate}
+%\item Regarding the number of lines a pair of chunks may have:
+%	\begin{enumerate}
+%		\item 'shiftedpstarts' setting merely moves any added blank lines from
+%the bottom of the chunks to the bottom of the page. It does not allow
+%to have more lines on a given page as it just removes the blank lines
+%between the chunks and does nothing more. To understand better how
+%this work, you may compare the total amounts of lines of text on a
+%given page whether you have activated this setting or not: you will
+%see that both amounts are the same.
+%    \item 'advancedshiftedpstarts' prevents any blank lines from being
+%inserted at the bottom of the chunks, also taking them away from the
+%total amount of lines the page may have. This allows to get more lines
+%on the pages. However, please note that:
+%				\begin{itemize}
+%					\item Blank lines are taken into account as \parpackage moves from one to
+%the following chunk of text, so that every pair of chunks may always
+%start on the same facing pages.
+%					\item Consequently, blank lines continue to be taken into account in
+%the calculation of the amount of lines a given pair of pages may have.
+%This is why when a longer chunk runs from one page to another the
+%shorter corresponding one also runs across pages, even if this may
+%result in some blank vertical space being left on the first page.
+%				\end{itemize}
+%		\end{itemize}
+%		\item As regards the number of lines per page, including blank ones, the
+%\option{nomaxlines} setting disregards the rule that forces two facing pages
+%to have the same numbers of lines. So it allows to have more text on
+%the pages. Then, by a complex mechanism it is ensured that two
+%corresponding chunks may always start on the same facing pages,
+%provided that \option{shiftedpstarts} or \option{advancedshiftedpstarts} settings
+%shall be not activated.
+%\end{itemize}
+%
+%Lastly, one may disregard all of the synchronization rules and content
+%himself with parallel texts typesetting. To achieve this, please use
+%the \option{nosyncpstarts} setting.
+%
+%Please note that every change of synchronization setting resets the
+%content of the `numbered' auxiliary files to make sure that \parpackage
+%does not try to make the synchronization with wrong calculations.
 % \subsubsection{Page number}\label{sameparallelpagenumber}
 % \changes{v1.15.0}{2015/05/18}{Add sameparallelpagenumber option.}
 % By default, \protect\cs{Pages} use the standard \LaTeX\ page number scheme.
@@ -815,21 +905,6 @@
 % selection for the side. The right side language is also
 % applied to the right side line numbers.
 %
-% \subsection{Shifting}
-% Corresponding left and right sides must have the same number of
-% paragraph chunks --- if there are four on the left there must be four
-% on the right, even if some are empty. The start of each pair of left and
-% right chunks are aligned horizontally on the page. The ends may
-% come at different positions --- if one chunk is shorter than the other
-% then blank lines are output on the shorter side until the end of the longer
-% chunk is reached. 
-%
-% However, sometime if the left pstarts are much greater than right pstarts,
-% or \emph{vice-versa},
-% you can decide to shift the pstarts on the left and right side.
-% That means the start of pstarts are not aligned horizontally on the page,
-% the shift is offset at the end of each double pages.
-% To enable this function, load \parpackage with the option \verb+shiftedpstarts+.
 % \section{Verse}
 %
 % If you are typesetting verses with \macpackage you can use the \protect\cs{stanza}
@@ -1014,13 +1089,61 @@
 %    \begin{macrocode}
 \RequirePackage{xkeyval}
 %    \end{macrocode}
+% \subsection{Package's options}
+% \subsubsection{Synchronization's options}
+% \begin{macro}{\@par@this@sync@option}
+% The \cs{par@sync@option} stores the options of synchronization.
+% It use to ensure these options do not change between two run. 
+%    \begin{macrocode}
+\def\@par@this@sync@option{}%
+%    \end{macrocode}
+% \end{macro}
 %  With the option `shiftedpstarts' a long pstart on the left side (or on the right side) does not make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages.
 % \begin{macro}{\ifshiftedpstarts}
 %    \begin{macrocode}
 \newif\ifshiftedpstarts
-\DeclareOptionX{shiftedpstarts}{\shiftedpstartstrue}
+\DeclareOptionX{shiftedpstarts}{%
+ \shiftedpstartstrue%
+ \apptocmd{\@par@this@sync@option}{shifted}{}{}%
+}%
 %    \end{macrocode}
 % \end{macro}
+%  With the option `advancedshiftedpstarts' a long pstart on the left side (or on the right side) does not make a blank on the corresponding pstart, but the blank is put on the bottom of the page. Consequently, the pstarts on the parallel pages are shifted, but the shift stops at every end of pages. 
+% Differing to \option{shiftedpstarts}, the pstart shift are not counted to determine when cutting the page. That could help to avoid page with blank lines at the bottom.
+% Not comptatible with \option{nomaxlines}
+% \begin{macro}{\ifshiftedpstarts}
+%    \begin{macrocode}
+\newif\ifadvancedshiftedpstarts
+\DeclareOptionX{advancedshiftedpstarts}{%
+  \advancedshiftedpstartstrue%
+  \shiftedpstartstrue%
+  \apptocmd{\@par@this@sync@option}{advancedshifted}{}{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% With the option \option{nomaxlines}, \parpackage allows facing pages to have not the same number of lines.
+% \begin{macro}{\ifnomaxlines}
+%    \begin{macrocode}
+\newif\ifnomaxlines%
+\DeclareOptionX{nomaxlines}{%
+  \nomaxlinestrue%
+  \apptocmd{\@par@this@sync@option}{nomax}{}{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% With the option \option{nosyncpstarts}, \parpackage only alternate between left and right side, and does not try to obtain the same number of line in corresponding page.
+% \begin{macro}{\ifnosyncpstarts}
+%    \begin{macrocode}
+\newif\ifnosyncpstarts%
+\DeclareOptionX{nosyncpstarts}{%
+  \shiftedpstartstrue%
+  \nomaxlinestrue%
+  \nosyncpstartstrue%
+  \apptocmd{\@par@this@sync@option}{nosync}{}{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Other options}
 % The \verb+parledgroup+ can be called either on \macpackage or \parpackage.
 %    \begin{macrocode}
 \DeclareOptionX{parledgroup}{\parledgrouptrue}
@@ -1092,10 +1215,15 @@
 %
 % All the error and warning messages are collected here as macros.
 %
-% \begin{macro}{\eledpar@error}
+% \begin{macro}{\reledpar@error}
 % \changes{v1.8.2}{2014/08/15}{Errors specific to eledpar send to eledpar handbook}
 %    \begin{macrocode}
 \newcommand{\reledpar@error}[2]{\PackageError{reledpar}{#1}{#2}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\reledpar@warning}
+%    \begin{macrocode}
+\newcommand{\reledpar@warning}[1]{\PackageWarning{reledpar}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@err@TooManyPstarts}
@@ -1171,6 +1299,14 @@
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@@outputpage}{%
   \reledpar@error{Fail to patch \string\@outputpage\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\led@warn@ChangeSyncOption}
+%    \begin{macrocode}
+\newcommand*{\led@warn@ChangeSyncOption}[1]{%
+  \reledpar@warning{You have changed synchronization's options since last run. We have not read line-list file #1. Please run LaTeX again.}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1732,6 +1868,23 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\@par@sync@option}
+% When typesetting parallel pages, \cs{@par@sync@option} check if we have changed the synchronization's option since the last run.
+% If true, we just not read the numbered file.
+%    \begin{macrocode}
+\newcommand{\@par@sync@option}[1]{%
+  \IfStrEq{#1}{\@par@this@sync@option}%
+    {}%
+    {\ifledRcol%
+       \led@warn@ChangeSyncOption{\jobname.\extensionchars\the\section@num}%
+     \else%
+       \led@warn@ChangeSyncOption{\jobname.\extensionchars\the\section@num}%
+     \fi%
+     \endinput%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\read@linelist}
 % \protect\cs{read@linelist}\marg{file} is the control sequence
 % that is called by \protect\cs{beginnumbering}
@@ -2059,7 +2212,7 @@
 % \begin{macro}{\@pend}
 % \begin{macro}{\@pendR}
 % \protect\cs{@pend}\marg{num} adds its argument to the \protect\cs{linesinpar@listL}
-% list, and analagously for \protect\cs{@pendR}. If needed, it resets line number.
+% list, and analogously for \protect\cs{@pendR}. If needed, it resets line number.
 % Both  are defined  in \macpackage, but they are empty.
 % They are really defined only in \parpackage.
 %
@@ -2076,6 +2229,33 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\@pstart}
+% \begin{macro}{\@pstartR}
+% \cs{@pstart} and cs{@pstartR} allows us to know, when using \cs{nomaxlines} option in which page we should start a pstart, and also how many empty lines we should let before starting this pstart at the begining of the page
+%    \begin{macrocode}
+\newcommand{\@pstart}[3]{%
+  \ifcsdef{minpage@pstart@#1}%
+    {\ifnumgreater{#2}{\csuse{minpage@pstart@#1}}%
+      {\csnumgdef{minpage@pstart@#1}{#2}}%
+      {}%
+    }%
+    {\csnumgdef{minpage@pstart@#1}{#2}}
+  \csnumgdef{afterlines@pstart@#1L}{#3}%
+  }%
+
+\newcommand{\@pstartR}[3]{%
+  \numdef{\@tmp}{#2-1}%Because we have not to know in which page the pstart starts, but in which pair of facing page
+  \ifcsdef{minpage@pstart@#1}%
+    {\ifnumgreater{\@tmp}{\csuse{minpage@pstart@#1}}%
+      {\csnumgdef{minpage@pstart@#1}{\@tmp}}%
+      {}%
+    }%
+    {\csnumgdef{minpage@pstart@#1}{\@tmp}}
+   \csnumgdef{afterlines@pstart@#1R}{#3}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\@lopL}
 % \begin{macro}{\@lopR}
 % \protect\cs{@lopL}\marg{num} adds its argument to the \protect\cs{linesonpage@listL}
@@ -2133,6 +2313,9 @@
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=#1
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
+     \ifl@dpaging%
+       \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
+     \fi%
   \else
      \if@minipage%
        \leavevmode%
@@ -2925,38 +3108,41 @@
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
   \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
-  {\vbadness=10000%
-   \splittopskip=\z@%
-   \do@lineLhook%
-   \l@demptyd@ta%
-   \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}%
+    {\vbadness=10000%
+     \splittopskip=\z@%
+     \do@lineLhook%
+     \l@demptyd@ta%
+     \global\setbox\one@line=\vsplit\namebox{l@dLcolrawbox\the\l@dpscL}%
                            to\baselineskip}% 
-  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}%
-  \unvbox\one@line \global\setbox\one@line=\lastbox% 
-  \getline@numL%
-  \ifnum\@lock>\@ne%
-    \inserthangingsymboltrue%
-  \else%
-    \inserthangingsymbolfalse%
-  \fi%
-  \setbox\l@dleftbox%
-  \hb@xt@ \Lcolwidth{%
-    \ifl@dhidenumber%
-      \global\l@dhidenumberfalse%
-      \f@x@l@cks%
+    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startL}{}%
+    \unvbox\one@line \global\setbox\one@line=\lastbox% 
+    \@writepageofparL%
+    \getline@numL%
+    \ifnum\@lock>\@ne%
+      \inserthangingsymboltrue%
     \else%
-      \affixline@num%
+      \inserthangingsymbolfalse%
     \fi%
-    \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-      {\add@inserts\affixside@note}%
-      {\print@lineL}}%
-  \add@penaltiesL%
-  \global\advance\@donereallinesL\@ne%
-  \global\advance\@donetotallinesL\@ne%
-\else%
-  \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
-  \global\advance\@donetotallinesL\@ne%
-\fi}
+    \setbox\l@dleftbox%
+    \hb@xt@ \Lcolwidth{%
+      \ifl@dhidenumber%
+        \global\l@dhidenumberfalse%
+        \f@x@l@cks%
+      \else%
+        \affixline@num%
+      \fi%
+      \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+        {\add@inserts\affixside@note}%
+        {\print@lineL}%
+      }%
+    \add@penaltiesL%
+    \global\advance\@donereallinesL\@ne%
+    \global\advance\@donetotallinesL\@ne%
+  \else%
+    \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+    \global\advance\@donetotallinesL\@ne%
+  \fi%
+}%
 
 
 %    \end{macrocode}
@@ -3067,40 +3253,41 @@
   \ledRcol@true%
   \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
-  {\vbadness=10000%
-   \splittopskip=\z@%
-   \do@lineRhook%
-   \l@demptyd@ta%
-   \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}%
+    {\vbadness=10000%
+     \splittopskip=\z@%
+     \do@lineRhook%
+     \l@demptyd@ta%
+     \global\setbox\one@lineR=\vsplit\namebox{l@dRcolrawbox\the\l@dpscR}%
                            to\baselineskip}% 
-  \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}%
-  \unvbox\one@lineR \global\setbox\one@lineR=\lastbox%
-  \getline@numR%
-  \ifnum\@lockR>\@ne%
-    \inserthangingsymbolRtrue%
-  \else%
-    \inserthangingsymbolRfalse%
-  \fi%
-  \setbox\l@drightbox%
-  \hb@xt@ \Rcolwidth{%
-    \ifl@dhidenumber%
-      \global\l@dhidenumberfalse%
-      \f@x@l@cksR%
+    \IfStrEq{\splitfirstmarks\parledgroup@}{begin}{\parledgroup@notes@startR}{}%
+    \unvbox\one@lineR \global\setbox\one@lineR=\lastbox%
+    \@writepageofparR%
+    \getline@numR%
+    \ifnum\@lockR>\@ne%
+      \inserthangingsymbolRtrue%
     \else%
-      \affixline@numR%
+      \inserthangingsymbolRfalse%
     \fi%
-    \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-     {\add@insertsR\affixside@noteR}%
-     {\print@lineR}%
-  }%
-  \add@penaltiesR%
-  \global\advance\@donereallinesR\@ne%
-  \global\advance\@donetotallinesR\@ne%
-\else%
-  \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
-  \global\advance\@donetotallinesR\@ne%
-\fi%
-\ledRcol@false%
+    \setbox\l@drightbox%
+    \hb@xt@ \Rcolwidth{%
+      \ifl@dhidenumber%
+        \global\l@dhidenumberfalse%
+        \f@x@l@cksR%
+      \else%
+        \affixline@numR%
+      \fi%
+     \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
+       {\add@insertsR\affixside@noteR}%
+       {\print@lineR}%
+    }%
+    \add@penaltiesR%
+    \global\advance\@donereallinesR\@ne%
+    \global\advance\@donetotallinesR\@ne%
+  \else%
+    \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
+    \global\advance\@donetotallinesR\@ne%
+  \fi%
+  \ledRcol@false%
 }
 
 
@@ -4506,6 +4693,29 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\@writepageofparL}
+% \begin{macro}{\@writepageofparR}
+% These write the pages where start the first line of a chunck.
+%    \begin{macrocode}
+\newcommand*{\@writepageofparL}[0]{%
+  \ifnum\@donereallinesL=\z@%
+    \edef\next{%
+      \write\linenum@out{\string\@pstart{\the\l@dpscL}{\the\c@page}{\the\numpagelinesL}}%
+    }%
+    \next%
+  \fi%
+}%
+\newcommand*{\@writepageofparR}[0]{%
+  \ifnum\@donereallinesR=\z@%
+    \edef\next{%
+      \write\linenum@outR{\string\@pstartR{\the\l@dpscR}{\the\c@page}{\the\numpagelinesR}}%
+    }%
+  \next%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \section{Parallel columns}
 %
@@ -5109,9 +5319,23 @@
                         \parledgroup@correction@notespacing{L}%
                         \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
                       \else%
-                        \dimen0=\pagetotal%
-                        \advance\dimen0 by \baselineskip%
-                        \global\pagetotal=\dimen0%                       
+                        \unless\ifadvancedshiftedpstarts%
+                          \dimen0=\pagetotal%
+                          \advance\dimen0 by \baselineskip%
+                          \global\pagetotal=\dimen0%  
+                        \else%
+                          \ifnomaxlines%
+                            \numdef{\@tmp}{\the\l@dpscL+1}%
+                            \ifcsdef{minpage@pstart@\@tmp}{%
+                              \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                              {\dimen0=\pagetotal%
+                               \advance\dimen0 by \baselineskip%
+                               \global\pagetotal=\dimen0%
+                               }%
+                              {}%
+                            }{}%
+                          \fi%  
+                        \fi%                     
                       \fi%
               \else%
                       \parledgroup@correction@notespacing{L}%
@@ -5127,7 +5351,7 @@
 % Reset the verse skipnumber boolean
 %    \begin{macrocode}        
               \get@nextboxL%
-    \global\l@dskipversenumberfalse%
+              \global\l@dskipversenumberfalse%
                   \ifprint@last@after@pendL%
                      \csuse{after@pendL@\the\l@dpscL}%
                      \global\csundef{after@pendL@\the\l@dpscL}%
@@ -5176,16 +5400,30 @@
                         \parledgroup@correction@notespacing{R}%
                         \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
                       \else%
-                        \dimen0=\pagetotal%
-                        \advance\dimen0 by \baselineskip%
-                        \global\pagetotal=\dimen0%
+                        \unless\ifadvancedshiftedpstarts%
+                          \dimen0=\pagetotal%
+                          \advance\dimen0 by \baselineskip%
+                          \global\pagetotal=\dimen0%
+                        \else%
+                          \ifnomaxlines%
+                            \numdef{\@tmp}{\the\l@dpscR+1}%
+                            \ifcsdef{minpage@pstart@\@tmp}{%
+                              \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                              {\dimen0=\pagetotal%
+                               \advance\dimen0 by \baselineskip%
+                               \global\pagetotal=\dimen0%
+                               }%
+                              {}%
+                            }{}%
+                          \fi%                        
+                        \fi%
                       \fi%
               \else%
                       \parledgroup@correction@notespacing{R}%
                       \hb@xt@ \hsize{\ledstrutR\unhbox\l@drightbox}%
               \fi%
               \get@nextboxR%
-     \global\l@dskipversenumberRfalse%
+              \global\l@dskipversenumberRfalse%
                   \ifprint@last@after@pendR%
                      \csuse{after@pendR@\the\l@dpscR}%
                      \global\csundef{after@pendR@\the\l@dpscR}%
@@ -5490,8 +5728,11 @@
   \ifdim\pagetotal<\ledthegoal
     \ifnum\numpagelinesL<\l@dminpagelines
     \else
-      \l@dsamepagefalse
-      \l@dpagefullfalse
+      \ifnomaxlines%
+      \else%
+        \l@dsamepagefalse%
+        \l@dpagefullfalse%
+      \fi%
     \fi
   \else
     \l@dsamepagefalse
@@ -5511,8 +5752,11 @@
   \ifdim\pagetotal<\ledthegoal
     \ifnum\numpagelinesR<\l@dminpagelines
     \else
-      \l@dsamepagefalse
-      \l@dpagefullfalse
+      \ifnomaxlines%
+      \else%
+        \l@dsamepagefalse%
+        \l@dpagefullfalse%
+      \fi%
     \fi
   \else
     \l@dsamepagefalse
@@ -5633,6 +5877,17 @@
 % \end{macro}
 %
 % \subsection{Getting boxes content}
+% \begin{macro}{\if@getnextbox}
+% The \cs{if@getnextbox} boolean is switched to true if we can get the next chunk in a page after finished previous chunk. 
+% That is:
+% \begin{itemize}
+%   \item If we use the \option{nosyncpstarts} option, in any case
+%   \item If we do not use it, only when the number or real or blank line of the current chunk is equal or greater to the maximum number of line in the current pair of chunks.
+% \end{itemize}
+%     \begin{macrocode}
+\newif\if@getnextbox%
+%     \end{macrocode}
+% \end{macro}
 % \begin{macro}{\get@nextboxL}
 % \begin{macro}{\get@nextboxR}
 % \changes{v0.11.0}{2012/06/11}{Change \protect\cs{get@nextboxL} and \protect\cs{get@nextboxR} to allow to disable line numbering (like in eledmac 0.15).}
@@ -5649,15 +5904,58 @@
   \else%                                      box is empty
 %    \end{macrocode}
 % The box is empty.
-% Check if enough lines (real and blank) have been
+% By default, we can get the next box
+%    \begin{macrocode}
+    \@getnextboxtrue%Should be local, but be cautious
+%    \end{macrocode}
+% But not when sufficient line for this page have been output,
+% except when we do no any synchronization at all.
 % output.
 %    \begin{macrocode}
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}>\@donetotallinesL
-      \parledgroup@notes@endL
-    \else
+      \parledgroup@notes@endL%
+      \unless\ifnosyncpstarts%
+        \@getnextboxfalse%
+%     \end{macrocode}
+%  If we use the nomaxlines option, we will start at new page, but we take count of the lines to be typesset for the actual right chunk on the right page, before starting new chunk on the left page.
+%     \begin{macrocode}
+        \ifnomaxlines%
+          \ifdim\pagetotal<\ledthegoal%
+            \numdef{\@tmp}{\l@dpscL+1}%
+            \ifcsdef{afterlines@pstart@\@tmp R}{%
+              \ifnumless{\numpagelinesL}{\csuse{afterlines@pstart@\@tmp R}}%
+                 {}%
+                 {\ifcsdef{minpage@pstart@\@tmp}%
+                   {\ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                     {\ifnum\numpagelinesL=\l@dminpagelines%
+                          \@getnextboxtrue%
+                      \fi%
+                     }%
+                     {\@getnextboxtrue}}%
+                   {\@getnextboxtrue}%
+                 }%
+              }%
+              {}%
+          \fi%
+        \fi%
+      \fi%
+    \else%
+       \ifnomaxlines%
+         \numdef{\@tmp}{\the\l@dpscL+1}%
+         \ifcsdef{minpage@pstart@\@tmp}{%
+           \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+             {\ifdimgreater{\pagetotal}{\ledthegoal}%
+                {\@getnextboxtrue}%
+                {\@getnextboxfalse}%
+             }%
+             {\@getnextboxtrue}%
+         }{}%
+       \fi%
+    \fi%
 %    \end{macrocode}
 % Sufficient lines have been output.
 %    \begin{macrocode}
+    \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscL}=\@donetotallinesL
         \parledgroup@notes@endL
       \fi
@@ -5715,9 +6013,45 @@
 \newcommand*{\get@nextboxR}{%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}% box is not empty
   \else%                                      box is empty
+    \@getnextboxtrue%
     \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}>\@donetotallinesR
       \parledgroup@notes@endR
-    \else
+      \unless\ifnosyncpstarts%
+        \@getnextboxfalse%
+        \ifnomaxlines%
+          \ifdim\pagetotal<\ledthegoal%
+            \numdef{\@tmp}{\l@dpscR+1}%
+            \ifcsdef{afterlines@pstart@\@tmp L}{%
+              \ifnumless{\numpagelinesL}{\csuse{afterlines@pstart@\@tmp L}}%
+                 {}%
+                 {\ifcsdef{minpage@pstart@\@tmp}%
+                   {\ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+                     {\ifnum\numpagelinesR=\l@dminpagelines%
+                          \@getnextboxtrue%
+                      \fi%
+                     }%
+                     {\@getnextboxtrue}}%
+                   {\@getnextboxtrue}%
+                 }%%
+              }%
+              {}%
+          \fi%
+        \fi%
+      \fi%
+    \else%
+       \ifnomaxlines%
+         \numdef{\@tmp}{\the\l@dpscR+1}%
+         \ifcsdef{minpage@pstart@\@tmp}{%
+           \ifnumless{\the\c@page}{\csuse{minpage@pstart@\@tmp}}%
+             {\ifdimgreater{\pagetotal}{\ledthegoal}%
+                {\@getnextboxtrue}%
+                {\@getnextboxfalse}%
+             }%
+             {\@getnextboxtrue}%  
+         }{}
+       \fi%
+    \fi%
+    \if@getnextbox%
       \ifnum\usenamecount{l@dmaxlinesinpar\the\l@dpscR}=\@donetotallinesR
         \parledgroup@notes@endR
       \fi
