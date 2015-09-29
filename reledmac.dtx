@@ -326,6 +326,11 @@
 % \changes{v2.1.3}{2015/09/05}{\protect\cs{Xnoindent} and \protect\cs{noindentX} work now again (broken in 2.0.0).}
 % \changes{v2.1.3}{2015/09/05}{Change some internal code in order to provide compatibility with \LaTeX\ release of october~2015}
 % \changes{v2.1.3}{2015/09/05}{Fix bug which inserted double space before paragraphed familiar notes.}
+% \changes{v2.2.0}{2015/09/29}{Fix bug with combination of \protect\cs{onehalfspacing} and two columns and three columns notes typeset.}
+% \changes{v2.2.0}{2015/09/29}{Fix bug with some setting command and optimization option.}
+% \changes{v2.2.0}{2015/09/29}{New setting tools for endnotes: \protect\cs{Xendnumberonlyfirstinline}, \protect\cs{Xendnumberonlyfirstintwolines}, \protect\cs{Xendsymlinenum}, \protect\cs{Xendbeforenumber}, \protect\cs{Xendafterenumber}, \protect\cs{Xendbeforesymlinenum}, \protect\cs{Xendaftersymlinenum}, \protect\cs{Xendboxsymlinenum}, \protect\cs{Xendhangindent}, \protect\cs{Xendbhooklinenumber}, \protect\cs{Xendahooklinenumber}, \protect\cs{Xendbhookinplaceofnumber}, \protect\cs{Xendahookinplaceofnumber}.}
+% \changes{v2.2.0}{2015/09/29}{Fix spurious space with paragraphed critical notes when using \LuaLaTeX.}
+% \changes{v2.2.0}{2015/09/29}{Increase line list version number to ensure compatibility with new options of \reledpar package.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1564,16 +1569,23 @@
 %
 % Use \protect\cs{Xnumberonlyfirstinline}\oarg{s}\verb+[false]+ to disable this. \meta{s} can be empty if you want to disable it for every series.
 %
-% \DescribeMacro{\Xnumberonlyfirstintwolines}
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{Xnumberonlyfirstintwolines}}
+% \DescribeMacro{\Xnumberonlyfirstintwolines}
 % Suppose you have a lemma on line~2 and a lemma between line~2 and line~3. 
 % With \protect\cs{Xnumberonlyfirstinline}, the second lemma is considered to be on the same line as the first lemma.
 % But if  you use both \protect\cs{Xnumberonlyfirstinline}\oarg{s} and \protect\cs{Xnumberonlyfirstintwolines}\oarg{s}, a distinction is made.
-% Use the command \linebreak\protect\cs{Xnumberonlyfirstintwolines}\oarg{s}\verb+[false]+\\
+% Use the command \linebreak\protect\cs{Xnumberonlyfirstintwolines}\oarg{s}\verb+[false]+
 % to disable this. \meta{s} can be empty if you want to disable it for every series.
+% 
+% 
 % \DescribeMacro{\Xsymlinenum}
 % For setting a particular symbol in place of the line number, you can use \protect\cs{Xsymlinenum}\oarg{s}\marg{symbol} in combination with \protect\cs{Xnumberonlyfirstinline}\oarg{s}. From the second lemma of the same line, the symbol will be used instead of the line number. Note that any command called in \meta{symbol} must be robust. Use \protect\cs{robustify} to robustify a non-robust command.
 %
+% \DescribeMacro{\Xendnumberonlyfirstinline}
+% \DescribeMacro{\Xendnumberonlyfirstintwolines}
+% \DescribeMacro{\Xendsymlinenum}
+% For endnotes, \cs{Xendnumberonlyfirstinline}; \cs{Xendnumberonlyfirstintwolines} and \cs{Xendsymlinenum} are the equivalents of
+% \\ \cs{Xnumberonlyfirstinline}; \cs{Xnumberonlyfirstintwolines} and \cs{Xsymlinenum}.
 % \subsubsection{Abbreviate line range} 
 % \changes{v1.20.0}{2015/03/22}{Add \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines} hooks}
 % \label{Xtwolines}
@@ -1663,6 +1675,9 @@
 % \DescribeMacro{\Xafternumber}
 % With \protect\cs{Xafternumber}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0.5~em.
 %
+% \DescribeMacro{\Xendbeforenumber}\DescribeMacro{Xendafterenumber}
+% \cs{Xendbeforenumber} and \cs{Xendafterenumber} are the equivalents of \cs{Xbeforenumber} and \cs{afterenumber} for endnotes.
+%
 %\changes{v1.4.3}{2012/12/18}{Add \protect\cs{Xnonbreakableafternumber}.}
 %\DescribeMacro{\Xnonbreakableafternumber}
 % By default, the space defined by \protect\cs{Xafternumber} is breakable.
@@ -1675,6 +1690,10 @@
 % 
 % \DescribeMacro{\Xaftersymlinenum} 
 % With \protect\cs{Xaftersymlinenum}\oarg{s}\marg{l} you can add some space after the line symbol in a footnote. The default value is value set by \protect\cs{Xafternumber}.
+%
+% \DescribeMacro{\Xendbeforesymlinenum}
+% \DescribeMacro{\Xendaftersymlinenum}
+% \cs{Xendbeforesymlinenum} and \cs{Xendaftersymlinenum} are the equivalents of \cs{Xbeforesymlinenum} and \cs{Xaftersymlinenum} for the endnotes.
 %
 % \subsubsection{Space in place of number}
 % \DescribeMacro{\Xinplaceofnumber}
@@ -1695,6 +1714,9 @@
 %
 % \DescribeMacro{\Xboxsymlinenum}
 % \protect\cs{Xboxsymlinenum}\oarg{s}\marg{l} is the same as \protect\cs{Xboxlinenum} but for the line number symbol.
+%
+% \DescribeMacro{\Xendboxsymlinenum}
+% \protect\cs{Xendboxsymlinenum}\oarg{s}\marg{l} is the same as \protect\cs{Xboxsymlinenum} but for endnotes.
 % 
 % \changes{v1.23.0}{2015/05/18}{Add \protect\cs{Xboxlinenumalign} and \protect\cs{Xendboxlinenumalign}.}
 % \DescribeMacro{\Xboxlinenumalign}
@@ -1728,6 +1750,22 @@
 % \protect\cs{Xendboxlinenum}\oarg{s}\marg{l}, \protect\cs{Xendboxlinenumalign}\oarg{s}\marg{text},  \protect\cs{Xendboxstartlinenum}\oarg{s}\marg{l},  \protect\cs{Xendboxendlinenum}\oarg{s}\marg{l} are the same as, respectively, \protect\cs{Xboxlinenum} and \protect\cs{Xboxlinenumalign}, \protect\cs{Xboxstartlinenum}, \protect\cs{Xboxendlinenum} except in endnotes.
 %
 %
+% \subsection{Arbitrary code around line number}
+% \DescribeMacro{\Xendbhooklinenumber}
+% \cs{Xendbhooklinenumber}\oarg{s}\marg{code} is used to execute code before line number in endnotes. The code is executed before the \cs{Xendbeforelinenumber} space  and before the \cs{Xendnotenumfont} font setting.
+%
+% \DescribeMacro{\Xendahooklinenumber}
+% \cs{Xendahooklinenumber}\oarg{s}\marg{code} is used to execute code after line number in endnotes. 
+% The code is executed after the \cs{Xendafternumber} space.
+% 
+% 
+%
+% \DescribeMacro{\Xendbhookinplaceofnumber}
+% \cs{Xendbhookinplaceofnumber}\oarg{s}\marg{code} is used to execute code before space or symbol which replace line number in endnotes. The code is executed before the \cs{Xendbeforesymlinenum} space  and before the \cs{Xendnotenumfont} font setting.
+%
+% \DescribeMacro{\Xendahookinplaceofnumber}
+% \cs{Xendahookinplaceofnumber}\oarg{s}\marg{code} is used to execute code after space or symbol which replace line number in endnotes.
+% The code is executed after the \cs{Xendaftersymlinenum} space.
 %\subsection{Separator between the lemma and the note}
 % \subsubsection{For footnotes}
 % \DescribeMacro{\Xlemmaseparator}
@@ -1816,6 +1854,10 @@
 %
 % \DescribeMacro{\hangindentX}
 % For  familiar notes NOT paragraphed you can define an indentation with \protect\cs{hangindentX}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make a distinction between a new note and a break in a note.
+
+% \DescribeMacro{\Xendhangindent}
+% For  critical endnotes NOT paragraphed you can define an indentation with \protect\cs{Xendhangindent}\oarg{s}\marg{l}, which will be applied in the second line of notes. It can help to make a distinction between a new note and a break in a note.
+%
 %
 % \subsection{Arbitrary code at the beginning of notes}
 % \changes{v1.1.0}{2012/09/25}{New hook to add arbitrary code at the beginning of the notes}
@@ -3260,7 +3302,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/09/05 v2.1.3 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/09/29 v2.2.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5768,7 +5810,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{2}%
+\newcommand{\this@line@list@version}{3}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -5799,6 +5841,9 @@
      \global\first@linenum@out@false%
      \immediate\openout\linenum@out=#1\relax%
      \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \ifl@dpaging%
+       \immediate\write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
+     \fi%
   \else
 %    \end{macrocode}
 % If we get here, then this is
@@ -9096,10 +9141,10 @@
 % \protect\cs{rigidbalance} directly, without any re-boxing.
 %    \begin{macrocode}
 \newcommand*{\threecolfootgroup}[1]{{\csuse{Xnotefontsize@#1}%
-  \noindent\csuse{Xtxtbeforenotes@#1}\par%
+  \noindent\csuse{Xtxtbeforenotes@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}}
+  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9204,10 +9249,10 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
-  \noindent\csuse{Xtxtbeforenotes@#1}\par%
+  \noindent\csuse{Xtxtbeforenotes@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}}
+  \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9353,11 +9398,7 @@
                         {%
                             \hspace{\csuse{Xinplaceofnumber@#2}}%
                         }%
-                        {\hspace{\csuse{Xbeforesymlinenum@#2}}\csuse{Xnotenumfont@#2}%
-                        \ifdimequal{\csuse{Xboxsymlinenum@#2}}{0pt}%
-                            {\csuse{Xsymlinenum@#2}}%
-                            {\hbox to \csuse{Xboxsymlinenum@#2}{\csuse{Xsymlinenum@#2}\hfill}}%
-                        \hspace{\csuse{Xaftersymlinenum@#2}}}%
+                        {\printsymlinefootnotearea{#2}}%
                        }%
                        {%
                         \printlinefootnotearea{#1}{#2}%
@@ -9376,6 +9417,21 @@
      }%
    }%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printsymlinefootnotearea}
+% This macro prints the space before the line symbol, changes the font, when prints the line symbol and the space after it.
+%    \begin{macrocode}
+\newcommand{\printsymlinefootnotearea}[1]{%
+  \hspace{\csuse{Xbeforesymlinenum@#1}}%
+  \csuse{Xnotenumfont@#1}%
+  \ifdimequal{\csuse{Xboxsymlinenum@#1}}{\z@}%
+     {\csuse{Xsymlinenum@#1}}%
+     {\hbox to \csuse{Xboxsymlinenum@#1}%
+       {\csuse{Xsymlinenum@#1}\hfill}%
+     }%
+  \hspace{\csuse{Xaftersymlinenum@#1}}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\printlinefootnotearea}
@@ -9697,7 +9753,8 @@
 % If we use \LuaTeX, ensure we use good text's direction.
 %    \begin{macrocode}
   \ifluatex%
-    \textdir TLT%
+    \edef\@tmp{\the\textdir}%
+    \ifdefstring{\@tmp}{TLT}{}{\textdir TLT}%Test in order to prevent spurious space (bug #397)
   \fi%
 %    \end{macrocode}
 % Decide which part of line number components we will print.
@@ -10969,6 +11026,7 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+  \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
     \csuse{Xendsep@#4}%
@@ -10984,15 +11042,10 @@
   \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
-  \ifboolexpr{%
-    togl {nonum@}%
-    or togl {Xendnonumber@#4}%
-    }%
-    {\hspace{\csuse{Xendinplaceofnumber@#4}}}%
-    {\printlineendnotearea{#1}{#4}}%
-    \nottoggle{Xendlemmadisablefontselection@#4}%
-      {\select@lemmafont#1|#2}%
-      {#2}%
+  \printlineendnote{#1}{#4}%
+  \nottoggle{Xendlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|#2}%
+    {#2}%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -11016,6 +11069,56 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\printlineendnote}
+% This macro controls, in endnote, whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
+%    \begin{macrocode}
+\newcommand{\printlineendnote}[2]{%
+  \l@dp@rsefootspec#1|%
+  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
+       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+       }%
+       {%
+       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+       }%
+  \ifboolexpr{%
+    togl {nonum@}%
+    or togl {Xendnonumber@#2}%
+    }%
+    {\hspace{\csuse{Xendinplaceofnumber@#2}}}%
+    {%
+      \iftoggle{Xendnumberonlyfirstinline@#2}%
+        {\ifcsdef{prevendline#2}%
+          {\ifcsequal{prevendline#2}{lineinfo@}%
+            {%
+            \csuse{Xendbhookinplaceofnumber@#2}%
+            \ifcsempty{Xendsymlinenum@#2}%
+              {\hspace{\csuse{Xendinplaceofnumber@#2}}}%
+              {\printsymlineendnotearea{#2}}%
+            \csuse{Xendahookinplaceofnumber@2}%
+            }%
+            {\printlineendnotearea{#1}{#2}}}%
+          {\printlineendnotearea{#1}{#2}}%
+        }%
+        {\printlineendnotearea{#1}{#2}}%We keep every time line
+    \csxdef{prevendline#2}{\lineinfo@}%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\printsymlineendnotearea}
+%    \begin{macrocode}
+\newcommand{\printsymlineendnotearea}[1]{%
+  \hspace{\csuse{Xendbeforesymlinenum@#1}}%
+  \csuse{Xendnotenumfont@#1}%
+  \ifdimequal{\csuse{Xendboxsymlinenum@#1}}{\z@}%
+     {\csuse{Xendsymlinenum@#1}}%
+     {\hbox to \csuse{Xendboxsymlinenum@#1}%
+       {\csuse{Xendsymlinenum@#1}\hfill}%
+     }%
+  \hspace{\csuse{Xendaftersymlinenum@#1}}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlineendnotearea}
 %
 % This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
@@ -11024,6 +11127,8 @@
 % The first argument is line information, the second is the notes series (A, B, C,  etc.)
 %    \begin{macrocode}
 \newcommand{\printlineendnotearea}[2]{%
+  \csuse{Xendbhooklinenumber@#2}%
+  \hspace{\csuse{Xendbeforenumber@#2}}%
   \bgroup%
     \csuse{Xendnotenumfont@#2}%
     \ifdimequal{\csuse{Xendboxlinenum@#2}}{0pt}%
@@ -11036,7 +11141,8 @@
        \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
       }}%
   \egroup%
-  \enspace%
+  \hspace{\csuse{Xendafternumber@#2}}%
+  \csuse{Xendahooklinenumber@#2}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11556,6 +11662,9 @@
       \csgdef{Xendnotefontsize@#1}{\footnotesize}%
       \csgdef{Xendbhooknote@#1}{}%
       
+      \csgdef{Xendbeforenumber@#1}{0pt}
+      \csgdef{Xendafternumber@#1}{0.5em}
+      
       \csgdef{Xendboxlinenum@#1}{0pt}%
       \csgdef{Xendboxlinenumalign@#1}{L}%
       
@@ -11573,6 +11682,20 @@
       
       \csgdef{Xendinplaceofnumber@#1}{0pt}%
       \newtoggle{Xendnonumber@#1}%
+      
+      \csgdef{Xendhangindent@#1}{0pt}%
+      \newtoggle{Xendnumberonlyfirstinline@#1}%
+      \newtoggle{Xendnumberonlyfirstintwolines@#1}%
+ 
+      \csgdef{Xendbeforesymlinenum@#1}{\csuse{Xendbeforenumber@#1}}%
+      \csgdef{Xendaftersymlinenum@#1}{\csuse{Xendafternumber@#1}}%
+      \csgdef{Xendsymlinenum@#1}{}%
+      \csgdef{Xendboxsymlinenum@#1}{0pt}%
+
+      \csgdef{Xendbhooklinenumber@#1}{}%
+      \csgdef{Xendehooklinenumber@#1}{}%
+      \csgdef{Xendbhookinplaceofnumber@#1}{}%
+      \csgdef{Xendehookinplaceofnumber@#1}{}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -11679,13 +11802,13 @@
 \newcommandx{\settoggle@series}[5][4,5,usedefault]{%
     \def\do##1{%
       \global\settoggle{#2@##1}{#3}%
-      \ifstrequal{#4}{reload}%
-        {%
-        \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
-        \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
-        }%
-        {}%
-      }%
+      \ifstrequal{#4}{critical}{
+          \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
+      }{}
+      \ifstrequal{#4}{familiar}{
+          \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
+      }{}
+    }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
               \ifstrempty{#5}{}{%
@@ -11712,10 +11835,13 @@
 \newcommandx{\setcommand@series}[5][4,5,usedefault]{%
     \def\do##1{
         \csgdef{#2@##1}{#3}
-    \ifstrequal{#4}{reload}{
-        \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
-        \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
-    }{}}
+      \ifstrequal{#4}{critical}{%
+            \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
+      }{}
+      \ifstrequal{#4}{familiar}{%
+          \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
+      }{}%
+    }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
               \ifstrempty{#5}{}{%
@@ -11775,11 +11901,11 @@
 % \begin{macro}{\newhooktoggle@series@reload}
 % \changes{v1.13.0}{2014/09/16}{Add \protect\cs{newhookcommand@toggle@reload}}
 % \protect\cs{newhookcommand@toggle@reload} does the same thing as \protect\cs{newhooktoggle@series} 
-% but the commands created by this macro also reload the series arrangement.
+% but the commands created by this macro also reload the series arrangement, depending of type os notes
 %    \begin{macrocode}
-\newcommand{\newhooktoggle@series@reload}[1]{%
+\newcommand{\newhooktoggle@series@reload}[2]{%
   \global\expandafter\newcommandx\expandafter*\csname #1\endcsname[2][1,2={true},usedefault]{%
-    \settoggle@series{##1}{#1}{##2}[reload]%
+    \settoggle@series{##1}{#1}{##2}[#2]%
     }%
 }%
 %    \end{macrocode}
@@ -11792,9 +11918,9 @@
 % but the commands created by this macro also reload the series' arrangement.
 % 
 %    \begin{macrocode}
-\newcommand{\newhookcommand@series@reload}[1]{%
+\newcommand{\newhookcommand@series@reload}[2]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}[reload]%
+    \setcommand@series{##1}{#1}{##2}[#2]%
   }%
 }
 %    \end{macrocode}
@@ -11827,7 +11953,7 @@
   \newhookcommand@series{Xafterlemmaseparator}
   \newhookcommand@series{Xinplaceoflemmaseparator}
   \newhookcommand@series{Xtxtbeforenotes}
-  \newhookcommand@series@reload{Xafterrule}
+  \newhookcommand@series@reload{Xafterrule}{critical}
   \newhooktoggle@series{Xnumberonlyfirstinline}
   \newhooktoggle@series{Xnumberonlyfirstintwolines}
   \newhooktoggle@series{Xnonumber}
@@ -11840,9 +11966,9 @@
   \newhooktoggle@series{Xonlypstart}
   \newhooktoggle@series{Xnonbreakableafternumber}
   \newhooktoggle@series{Xlemmadisablefontselection}
-  \newhookcommand@series@reload{Xmaxhnotes}
-  \newhookcommand@series@reload{Xbeforenotes}
-  \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}%
+  \newhookcommand@series@reload{Xmaxhnotes}{critical}
+  \newhookcommand@series@reload{Xbeforenotes}{critical}
+  \newhooktoggle@series@reload{Xnoteswidthliketwocolumns}{critical}%
   \newhookcommand@series{Xnotefontsize}
 
   \newhookcommand@series{Xboxlinenum}%
@@ -11868,10 +11994,10 @@
   \newhookcommand@series{colalignX}%
   \newhookcommand@series{notenumfontX}
   \newhookcommand@series{bhooknoteX}
-  \newhookcommand@series@reload{beforenotesX}
-  \newhookcommand@series@reload{maxhnotesX}
-  \newhooktoggle@series@reload{noteswidthliketwocolumnsX}%
-  \newhookcommand@series@reload{afterruleX}
+  \newhookcommand@series@reload{beforenotesX}{familiar}
+  \newhookcommand@series@reload{maxhnotesX}{familiar}
+  \newhooktoggle@series@reload{noteswidthliketwocolumnsX}{familiar}%
+  \newhookcommand@series@reload{afterruleX}{familiar}
   \newhookcommand@series{notefontsizeX}
   \newhookcommand@series{afternoteX}
   \newhookcommand@series{parafootsepX}
@@ -11901,12 +12027,30 @@
   \newhookcommand@series{Xendafterlemmaseparator}
   \newhookcommand@series{Xendinplaceoflemmaseparator}
   
+  \newhookcommand@series{Xendbeforenumber}%
+  \newhookcommand@series{Xendafternumber}%
+  
   \newhooktoggle@series{Xendparagraph}
   \newhookcommand@series{Xendafternote}
   \newhookcommand@series{Xendsep}
   
   \newhookcommand@series{Xendinplaceofnumber}%
   \newhooktoggle@series{Xendnonumber}%
+  
+  \newhooktoggle@series{Xendnumberonlyfirstinline}%
+  \newhooktoggle@series{Xendnumberonlyfirstintwolines}%
+  
+  \newhookcommand@series{Xendsymlinenum}%
+  \newhookcommand@series{Xendbeforesymlinenum}%
+  \newhookcommand@series{Xendaftersymlinenum}%
+  \newhookcommand@series{Xendboxsymlinenum}%
+  
+  \newhookcommand@series{Xendbhooklinenumber}%
+  \newhookcommand@series{Xendahooklinenumber}%
+  \newhookcommand@series{Xendbhookinplaceofnumber}%
+  \newhookcommand@series{Xendahookinplaceofnumber}%
+
+  \newhookcommand@series{Xendhangindent}%
 \fi
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
