@@ -247,6 +247,8 @@
 % \changes{v2.3.0}{2015/09/05}{New line setting command suffixed by R to set only the right side.}
 % \changes{v2.4.0}{2015/09/29}{New way of (not) synchronizing the parallel pages.}
 % \changes{v2.4.0}{2015/09/29}{Option to switch to \protect\cs{mainmatter} when calling \protect\cs{Pages}}
+% \changes{v2.5.0}{2015/10/11}{New commands \protect\cs{linenummarginR} and \protect\cs{linenummargin*}}
+% \changes{v2.5.0}{2015/10/11}{Fix bug introduced in v1.15.0 which made hanging indentation in verse was not working anymore.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -836,15 +838,16 @@
 % Following 
 % \protect\cs{firstlinenum}\marg{num} the first line number will be \meta{num}, and
 % following \protect\cs{linenumincrement}\marg{num} only every \meta{num}th
-% line will have a printed number. Using these macros inside the
-% \verb?Leftside? and \verb?Rightside? environments gives you independent 
-% control over the left and right numbering schemes. The \protect\cs{firstsublinenum}
-% and \protect\cs{sublinenumincrement} macros correspondingly set the numbering
-% scheme for sublines.
-% Generally speaking, controls like \protect\cs{firstlinenum} or \protect\cs{linenummargin}
-% apply to sequential and left texts. 
-% To effect right texts only, they have 
-% to be within a \verb?Rightside? environment. 
+% line will have a printed number. 
+%
+% 
+% The lineation commands those finish by a \verb+R+ apply for right text.
+% The lineation commands those are starred apply for both left and right texts.
+% The lineation command those does not finish by a \verb+R+ and who are not starred apply for the left side.
+% \textbf{%
+% However, these commands applies for right side when there are called inside a \environment{left} environment.
+% However, such feature should not be used any more, as it a more recommend practice to add all commands about setting on the preamble.
+%}
 %
 % \DescribeMacro{\firstlinenum*}
 % \DescribeMacro{\linenumincrement*}
@@ -871,6 +874,12 @@
 % \cs{linenumberstyleR} is the equivalent of \macpackage \cs{linenumberstyle} for right text. 
 % \cs{sublinenumberstyleR} is the equivalent of \macpackage \cs{sublinenumberstyle} right text.
 % The starred version are for both side.
+
+% \DescribeMacro{\linenummarginR}
+% \DescribeMacro{\linenummargin*}
+% \cs{linenummarginR}\marg{margin} sets the line margin for right side.
+% \cs{linenummargin*}\marg{margin} sets for both side.
+% \meta{margin} can be, as for \macpackage's \cs{linenummargin} one of these values: \verb+left+, \verb+right+, \verb+inner+, \verb+outer+.
 % \DescribeMacro{\setRlineflag}
 % A ``R''  is appended to the line numbers of the
 % right texts. 
@@ -1106,7 +1115,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/09/29 v2.4.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/10/11 v2.5.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1338,6 +1347,13 @@
   \reledpar@warning{You have changed synchronization's options since last run. We have not read line-list file #1. Please run LaTeX again.}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@warn@setting@in@rightside}
+\newcommand{\led@warn@setting@in@rightside}[1]{%
+  \reledpar@warning{You use #1 inside rightside environment.\MessageBreak
+  Such behavior is deprecated.\MessageBreak
+  Use instead #1R or #1* in your preamble}.
+}
 % \end{macro}
 % \section{Sectioning commands}
 %
@@ -1621,6 +1637,26 @@
 %    \begin{macrocode}
 \line@marginR=\@ne
 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenummarginR}
+% \begin{macro}{\linenummargin*}
+% \cs{linenummarginR} applies directly for right side, while \cs{linenummargin*} applies for both side.
+%    \begin{macrocode}
+\newcommand{\linenummarginR}[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@marginR=\@l@dtempcntb%
+  \fi%
+}
+\WithSuffix\newcommand\linenummargin*[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@marginR=\@l@dtempcntb%
+    \global\line@margin=\@l@dtempcntb%
+  \fi%
+}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -3186,7 +3222,7 @@
     \l@dld@ta %space kept for backward compatibility
     \add@inserts\affixside@note%
     \l@dlsn@te %space kept for backward compatibility
-    {\ledllfill\hb@xt@ \Lcolwidth{%
+    \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
             \do@insidelineLhook%
             \ifluatex%
               \textdir\l@luatextextdir@L%
@@ -3331,7 +3367,7 @@
     \l@dld@ta  %space kept for backward compatibility
     \add@insertsR\affixside@noteR%
     \l@dlsn@te  %space kept for backward compatibility
-    \ledllfill\hb@xt@ \Rcolwidth{%
+    \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
        \do@insidelineRhook%
        \new@lineR%
        \inserthangingsymbolR%
@@ -3340,7 +3376,7 @@
        \fi%
        \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te%
-  }
+  }}
 
 \def\print@eledsectionR{%
     \addtocounter{pstartR}{-1}%
