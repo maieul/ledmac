@@ -8174,17 +8174,11 @@
 \newcommandx*{\footnoteoptions@}[3][1=L,usedefault]{%
    \def\do##1{%
       \ifstrequal{#1}{L}{% In Leftside
-         \ifcsdef{etb@tgl@##1@}{%It is a toggle option
-           \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@list% Switch toogle, in all case
-         }{%It is not a toggle option
-         }
+          \xright@appenditem{\noexpand\setkeys[mac]{#3footnoteoption}{\unexpanded{##1}}}\to\inserts@list%
          \global\advance\insert@count \@ne% Increment the left insert counter.
       }%
       {%
-          \ifcsdef{etb@tgl@##1@}{%
-            \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@listR% Switch toogle, in all case
-          }{%
-          }
+          \xright@appenditem{\noexpand\setkeys[mac]{#3footnoteoption}{\unexpanded{##1}}}\to\inserts@listR%
           \global\advance\insert@countR \@ne% Increment the right insert counter insert.
       }%
    }%
@@ -9818,7 +9812,13 @@
       \csuse{Xtwolines@\@currentseries}%
     \fi%
   \else%
-    \ifl@d@dash \csuse{Xlinerangeseparator@\@currentseries}\fi%
+    \ifl@d@dash% 
+      \ifdefined\linerangesep@%
+        \linerangesep@%
+      \else%
+        \csuse{Xlinerangeseparator@\@currentseries}%
+      \fi%
+    \fi%
     \ifl@d@pnum #4\fullstop\fi%
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
@@ -11310,7 +11310,13 @@
       \csuse{Xendtwolines@\@currentseries}%
     \fi%
   \else%
-    \ifl@d@dash \csuse{Xendlinerangeseparator@\@currentseries}\fi%
+    \ifl@d@dash%
+      \ifdefined\linerangesep@%
+        \linerangesep@%
+      \else%
+        \csuse{Xendlinerangeseparator@\@currentseries}%
+      \fi%
+    \fi%
     \ifl@d@pnum \printnpnum{#4}\fi%
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
@@ -12090,23 +12096,41 @@
 \fi
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
-% \begin{macro}{\fulllines@}
-%\protect\cs{fulllines@} toggle is used to print the full lines references, and not the abbreviated form defined by \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines}.
+% \begin{macro}{\newhooktoggle@specific}
+% \cs{newhooktoggle@specific} is a generic command to create boolean hook specific to a note.
 %    \begin{macrocode}
-\newtoggle{fulllines@}%
+\newcommand{\newhooktoggle@specific}[1]{%
+  \newtoggle{#1@}%
+  \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
+  \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
+}
 %    \end{macrocode}
 % \end{macro}
-%  \begin{macro}{\nonum@}
-%\protect\cs{nonum@} toggle is used to disable line number printing in a particular footnote.
+% \begin{macro}{\newhookarg@specific}
+% \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
-\newtoggle{nonum@}
+\newcommand{\newhookarg@specific}[1]{%
+  \define@key[mac]{truefootnoteoption}{#1}{\global\def\linerangesep@{##1}}%When enabling footnote option
+  \define@key[mac]{falsefootnoteoption}{#1}{\global\undef\linerangesep@}%When 
+}
 %    \end{macrocode}
 % \end{macro}
-%  \begin{macro}{\nosep@}
-%\protect\cs{nonum@} toggle is used to disable the lemma separator in a particular footnote.
+% And now, we define some hooks specific to a note.
 %    \begin{macrocode}
-\newtoggle{nosep@}
+\newhooktoggle@specific{fulllines}%
+\newhooktoggle@specific{nonum}
+\newhooktoggle@specific{nosep}
+\newhookarg@specific{linerangesep}
 %    \end{macrocode}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{linerangesep@}
+% \cs{linerangesep@} is defined by the option \option{linerangesep} of critical notes to change temporary the line range separator for a specific line.
+% As we have to define it before typesetting the line and undefine it after, we use to family of \package{xkeyval} package's key.
+%    \begin{macrocode}
+%    \end{macrocode}
+%     
+%  
 % \end{macro}
 % \begin{macro}{\nomk@}
 %\protect\cs{nomk@} toggle is used by \parpackage{} to remove the footnote mark in the text when using \protect\cs{footnoteXmk}. Read \parpackage handbook.
