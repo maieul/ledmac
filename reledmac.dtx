@@ -337,6 +337,7 @@
 % \hyphenation{man-u-script man-u-scripts}
 % \changes{v2.3.0}{2015/10/11}{Warning message when using some setting commands inside rightside environment (deprecated behavior)}
 % \changes{v2.3.0}{2015/10/11}{Disable empty lines as paragraph in stanza.}
+% \changes{v2.3.0}{2015/10/11}{Fix compatibility of paragraphed footnotes with \protect\package{bidi} v17.9 and following.}
 %
 %
 %
@@ -8680,7 +8681,8 @@
   \vskip\skip\csname #1footins\endcsname%
   \setXnoteswidthliketwocolumns@{#1}%
   \setXnotespositionliketwocolumns@{#1}%
-  \print@Xfootnoterule{#1}%%
+  \print@Xfootnoterule{#1}%
+  \let\bidi@RTL@everypar\@empty%
   \noindent\leavevmode}
 %    \end{macrocode}
 % \end{macro}
@@ -8772,7 +8774,8 @@
   \bgroup
     \csuse{Xnotefontsize@#1}
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\csuse{Xbhooknote@#1}%
       \csname #1footfmt\endcsname #2{#1}}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
@@ -8812,7 +8815,8 @@
     \unvbox\@nameuse{mp#1footins}%
     \csuse{Xnotefontsize@#1}
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\color@begingroup%
       \csuse{Xbhooknote@#1}%
       \csname #1footfmt\endcsname #2{#1}\color@endgroup}%
@@ -10592,7 +10596,8 @@
   \bgroup
     \csuse{notefontsizeX@#1}
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\csuse{bhooknoteX@#1}%
       \@nameuse{footfmt#1}{#1}{#2}}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
@@ -10606,7 +10611,8 @@
     \unvbox\@nameuse{mpfootins#1}
     \csuse{notefontsizeX@#1}
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\color@begingroup%
       \csuse{bhooknoteX@#1}%
       \@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
