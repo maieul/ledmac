@@ -151,6 +151,7 @@
 % \changes{v0.13.1}{2011/11/18}{\cs{thepstartL} and \cs{thepstartR}  use now \cs{bfseries} and not \cs{bf}, which is deprecated and makes conflicts with memoir class.}
 % \changes{v0.14}{2012/04/04}{Tweaked \cs{edlabel} to get correct line number if the command is first element of a paragraph.}
 % \changes{v0.19.2a}{2015/07/19}{Reledmac is released.}
+% \changes{v0.19.3}{2015/10/14}{Fix bug with bidi v17.9 and following.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 % \newcommand{\Lpack}[1]{\textsf{#1}}
@@ -2960,7 +2961,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ledmac}[2015/07/19 v0.19.2a LaTeX port of EDMAC]
+\ProvidesPackage{ledmac}[2015/10/14 v0.19.3 LaTeX port of EDMAC]
 
 %    \end{macrocode}
 %
@@ -7543,7 +7544,8 @@
   \bgroup
     \notefontsetup
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\csname #1footfmt\endcsname#2}%
     \setbox0=\hbox{\unvxh0}%
     \dp0=0pt
@@ -7583,7 +7585,8 @@
     \unvbox\@nameuse{mp#1footins}%
     \notefontsetup
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\color@begingroup\csname #1footfmt\endcsname #2\color@endgroup}%
     \setbox0=\hbox{\unvxh0}%
     \dp0=\z@
@@ -10032,7 +10035,8 @@
   \bgroup
     \notefontsetup
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\@nameuse{footfmt#1}{#1}{#2}}%
     \setbox0=\hbox{\unvxh0}%
     \dp0=\z@
@@ -10045,7 +10049,8 @@
     \unvbox\@nameuse{mpfootins#1}
     \notefontsetup
     \footsplitskips
-    \setbox0=\vbox{\hsize=\maxdimen
+    \setbox0=\vbox{\hsize=\maxdimen%
+      \let\bidi@RTL@everypar\@empty%
       \noindent\color@begingroup\@nameuse{footfmt#1}{#1}{#2}\color@endgroup}%
     \setbox0=\hbox{\unvxh0}%
     \dp0=\z@
@@ -13461,7 +13466,8 @@ in section~\ref{subsec}.
      \else \ledplinenumtrue \fi
      \expandafter\xdef\csname previous@#1@number\endcsname{\l@dparsedstartline}
      \xdef\previous@page{\l@dparsedstartpage} % to here
-     \setbox0=\vbox{\hsize=\maxdimen
+     \setbox0=\vbox{\hsize=\maxdimen%
+       \let\bidi@RTL@everypar\@empty%
        \noindent\csname #1footfmt\endcsname#2}%
       \setbox0=\hbox{\unvxh0}%
       \dp0=0pt
