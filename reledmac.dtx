@@ -338,6 +338,8 @@
 % \changes{v2.3.0}{2015/10/14}{Warning message when using some setting commands inside rightside environment (deprecated behavior)}
 % \changes{v2.3.0}{2015/10/14}{Disable empty lines as paragraph in stanza.}
 % \changes{v2.3.0}{2015/10/14}{Fix compatibility of paragraphed footnotes with \protect\package{bidi} v17.9 and following.}
+% \changes{v2.3.1}{2015/10/18}{Fix spurious space when using optional argument of \protect\cs{stanza} (introduced in v2.3.0).}
+% \changes{v2.4.0}{2015/10/18}{\protect\cs{Xbhooknote} and \protect\cs{bhooknoteX} work with notes in columns.}
 %
 %
 %
@@ -1158,6 +1160,7 @@
 % \item \verb|fulllines| to disable \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines} features for this note (cf. \reff{Xtwolines}).
 % \item \verb|nonum| to disable line numbering for this note.
 % \item \verb|nosep| to disable the lemma separator for this note. 
+% \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
 %
 % Example: \protect\cs{Afootnote}\verb|[nonum]|\marg{text}.
@@ -1180,6 +1183,7 @@
 % \item \verb|fulllines| to disable \protect\cs{Xendtwolines} and \protect\cs{Xendmorethantwolines} features for this particular note (cf. \reff{Xtwolines}).
 % \item \verb+nonum+ to disable line number for this particular note.
 % \item \verb|nosep| to disable the lemma separator for this particular note. 
+% \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
 %
 % \DescribeMacro{\doendnotes}\label{doendnotes} Normally, endnotes are not printed: you must use the
@@ -1592,6 +1596,14 @@
 % \DescribeMacro{\Xendsymlinenum}
 % For endnotes, \cs{Xendnumberonlyfirstinline}; \cs{Xendnumberonlyfirstintwolines} and \cs{Xendsymlinenum} are the equivalents of
 % \\ \cs{Xnumberonlyfirstinline}; \cs{Xnumberonlyfirstintwolines} and \cs{Xsymlinenum}.
+% \subsubsection{Separator for line range}\label{linerangeseparator}
+% \changes{v2.4.0}{2015/10/18}{New hooks:  \protect\cs{Xlinerangeseparator} and \cs{Xendlinerangeseparator}
+% \changes{v2.4.0}{2015/10/18}{Option linerangesep for critical footnotes and endnotes.}
+% \DescribeMacro{\Xlinerangeseparator}
+% \DescribeMacro{\Xendlinerangeseparator}
+% By default, the separator between the begin line and the end line in a lines' range is an endash in a normal font (\verb+\textnormal{--}+).
+% You can change it for critical footnotes with \cs{Xlinerangeseparator}\oarg{s}\marg{text}, and with \cs{Xendlinerangeseparator}\oarg{s}\marg{text} for critical endnotes.
+%
 % \subsubsection{Abbreviate line range} 
 % \changes{v1.20.0}{2015/03/22}{Add \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines} hooks}
 % \label{Xtwolines}
@@ -1775,7 +1787,7 @@
 %\subsection{Separator between the lemma and the note}
 % \subsubsection{For footnotes}
 % \DescribeMacro{\Xlemmaseparator}
-% By default, in a footnote, the separator between the  lemma and the note is a right bracket (\protect\cs{rbracket}). You can use \protect\cs{Xlemmaseparator}\oarg{s}\marg{Xlemmaseparator} to change it. The optional argument can be used to specify the series in which it is used. Note that there is a non-breakable space between the lemma and the separator, but a \textbf{breakable} space between the separator and the following text.
+% By default, in a footnote, the separator between the  lemma and the note is a right bracket (\protect\cs{rbracket})\footnote{For \protect\package{polyglossia}, when the lemma is RTL, the bracket automatically switches to a left bracket.}. You can use \protect\cs{Xlemmaseparator}\oarg{s}\marg{Xlemmaseparator} to change it. The optional argument can be used to specify the series in which it is used. Note that there is a non-breakable space between the lemma and the separator, but a \textbf{breakable} space between the separator and the following text.
 %
 % \DescribeMacro{\Xbeforelemmaseparator}
 % Using \protect\cs{Xbeforelemmaseparator}\oarg{s}\marg{l} you can add some space between lemma and separator. If your lemma separator is empty, this space won't be printed. The default value is 0~em.
@@ -2058,31 +2070,26 @@
 %
 %
 %
-% \DescribeMacro{\endashchar}
 % \DescribeMacro{\fullstop}
-% \DescribeMacro{\rbracket}
 % \font\teni=cmmi10
 % A relatively trivial matter relates to punctuation.  In your
-% footnotes, there will sometimes be spans of line numbers like
-% this: 12--34, or lines with sub-line numbers like this: 55.6. The
+% footnotes, there will sometimes lines with sub-line numbers like this: 55.6. The
 % en-dash and the full stop are taken from the same font as the
 % numbers, and it all works nicely.  But what if you wanted to use
 % old-style numbers, like {\teni12} and {\teni34}?  These look nice
 % in an edition, but when you use the fonts provided by \PlainTeX\
 % they are taken from a math font which does not
-% have the en-dash or full stop in the same places as a text font.
-% If you (or your macros) just typed \verb"$\oldstyle 12--34$" or
-% \verb"$\oldstyle 55.6$" you would get `{\teni12--34}'and
-% `{\teni55.6}'.  So we define \protect\cs{endashchar} and
-% \protect\cs{fullstop}, which produce an en-dash and a full stop
-% respectively from the normal document font, whatever font you are using
-% for the numbers. These two macros are used in the
+% have full stop in the same places as a text font.
+% If you (or your macros) just typed
+% \verb"$\oldstyle 55.6$" you will get 
+% `{\teni55.6}'.  So we define
+% \protect\cs{fullstop}, which produces  a full stop
+% from the normal document font, whatever font you are using
+% for the numbers. This macro is used in the
 % macros which format the line numbers in the margins and
 % footnotes, instead of explicit punctuation.
-%  We also define an \protect\cs{rbracket} macro for the
-% right square bracket printed at the end of the lemma in many
-% styles of textual notes (including \macpackage's standard style). 
-% For \protect\package{polyglossia}, when the lemma is RTL, the bracket automatically switches to a left bracket.
+%
+% 
 %
 %
 %
@@ -3311,7 +3318,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/10/14 v2.3.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/10/18 v2.4.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8168,15 +8175,16 @@
 % \changes{v1.0.0}{2012/09/15}{Options of \protect\cs{Xfootnote}s.}
 % \begin{macro}{\footnoteoptions@}
 % The \protect\cs{footnoteoption@}\oarg{side}\marg{options}\marg{value} changes the value of on options of Xfootnote, to switch between true and false.
+% \changes{v2.4.0}{2015/10/18}{First argument of \cs{footnoteoption@} is now mandatory, not optional.}
 %    \begin{macrocode}
-\newcommandx*{\footnoteoptions@}[3][1=L,usedefault]{%
+\newcommand*{\footnoteoptions@}[3]{%
    \def\do##1{%
       \ifstrequal{#1}{L}{% In Leftside
-         \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@list% Switch toogle, in all case
+          \xright@appenditem{\noexpand\setkeys[mac]{#3footnoteoption}{\unexpanded{##1}}}\to\inserts@list%
          \global\advance\insert@count \@ne% Increment the left insert counter.
       }%
       {%
-          \xright@appenditem{\global\noexpand\settoggle{##1@}{#3}}\to\inserts@listR% Switch toogle, in all case
+          \xright@appenditem{\noexpand\setkeys[mac]{#3footnoteoption}{\unexpanded{##1}}}\to\inserts@listR%
           \global\advance\insert@countR \@ne% Increment the right insert counter insert.
       }%
    }%
@@ -9109,6 +9117,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
+  \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}
   \footsplitskips
   \csname #1footfmt\endcsname #2{#1}\egroup}
@@ -9242,6 +9251,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{\insert\csname #1footins\endcsname\bgroup
+  \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}
   \footsplitskips
   \csname #1footfmt\endcsname #2{#1}\egroup}
@@ -9810,7 +9820,13 @@
       \csuse{Xtwolines@\@currentseries}%
     \fi%
   \else%
-    \ifl@d@dash \endashchar\fi%
+    \ifl@d@dash% 
+      \ifdefined\linerangesep@%
+        \linerangesep@%
+      \else%
+        \csuse{Xlinerangeseparator@\@currentseries}%
+      \fi%
+    \fi%
     \ifl@d@pnum #4\fullstop\fi%
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
@@ -10329,6 +10345,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
+    \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \spaceskip=\z@skip \xspaceskip=\z@skip
@@ -10445,6 +10462,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup
+    \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}
     \footsplitskips
     \@nameuse{footfmt#1}{#1}{#2}\egroup}
@@ -11058,7 +11076,7 @@
   \fi%
   \xdef\@currentseries{#4}%
   \def\do##1{%
-   \toggletrue{##1@}%
+    \setkeys[mac]{truefootnoteoption}{##1}%
   }%
   \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{Xendbhooknote@#4}%
@@ -11079,8 +11097,8 @@
     }%
   #3%
   \nottoggle{Xendparagraph@#4}{\par}{}%
- \def\do##1{%
-   \togglefalse{##1@}%
+  \def\do##1{%
+    \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
   \notblank{#5}{\docsvlist{#5}}{}%
 }}%
@@ -11302,7 +11320,13 @@
       \csuse{Xendtwolines@\@currentseries}%
     \fi%
   \else%
-    \ifl@d@dash \endashchar\fi%
+    \ifl@d@dash%
+      \ifdefined\linerangesep@%
+        \linerangesep@%
+      \else%
+        \csuse{Xendlinerangeseparator@\@currentseries}%
+      \fi%
+    \fi%
     \ifl@d@pnum \printnpnum{#4}\fi%
     \ifl@d@elin \linenumrep{#5}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
@@ -11461,6 +11485,7 @@
       \newtoggle{Xnoteswidthliketwocolumns@#1}%
       \csgdef{Xparafootsep@#1}{}%
       \csgdef{Xafternote@#1}{1em plus.4em minus.4em}
+      \csgdef{Xlinerangeseparator@#1}{\endashchar}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook by D. Knuth.
@@ -11487,7 +11512,7 @@
                    \@ifundefined{xpg@main@language}%if polyglossia
                          {}%
                          {\footnotelang@poly[R]}%          
-                    \footnoteoptions@[R]{##1}{true}%
+                    \footnoteoptions@{R}{##1}{true}%
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
@@ -11496,7 +11521,7 @@
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                     }\to\inserts@listR
-                    \footnoteoptions@[R]{##1}{false}%
+                    \footnoteoptions@{R}{##1}{false}%
                     \global\advance\insert@countR \@ne%
                 \else%
                      \ifluatex%
@@ -11505,7 +11530,7 @@
                    \@ifundefined{xpg@main@language}%if polyglossia
                          {}%
                          {\footnotelang@poly}%
-                    \footnoteoptions@{##1}{true}%
+                    \footnoteoptions@{L}{##1}{true}%
                     \xright@appenditem{%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
@@ -11517,7 +11542,7 @@
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                      }\to\inserts@list
                     \global\advance\insert@count \@ne%
-                    \footnoteoptions@{##1}{false}%
+                    \footnoteoptions@{L}{##1}{false}%
                 \fi
             \else
                 \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
@@ -11650,7 +11675,7 @@
            {\ifnumberedpar@\expandonce\@tag\fi}%
            {\expandonce\content}%
            {#1}%
-           {##1}%
+           {\unexpanded{##1}}%
            \@percentchar%
          }%
          \egroup%
@@ -11717,6 +11742,8 @@
       \csgdef{Xendehooklinenumber@#1}{}%
       \csgdef{Xendbhookinplaceofnumber@#1}{}%
       \csgdef{Xendehookinplaceofnumber@#1}{}%
+      
+      \csgdef{Xendlinerangeseparator@#1}{\endashchar}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -12001,6 +12028,8 @@
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
   
+  \newhookcommand@series{Xlinerangeseparator}
+  
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
@@ -12072,26 +12101,46 @@
   \newhookcommand@series{Xendahookinplaceofnumber}%
 
   \newhookcommand@series{Xendhangindent}%
+  
+  \newhookcommand@series{Xendlinerangeseparator}
 \fi
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
-% \begin{macro}{\fulllines@}
-%\protect\cs{fulllines@} toggle is used to print the full lines references, and not the abbreviated form defined by \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines}.
+% \begin{macro}{\newhooktoggle@specific}
+% \cs{newhooktoggle@specific} is a generic command to create boolean hook specific to a note.
 %    \begin{macrocode}
-\newtoggle{fulllines@}%
+\newcommand{\newhooktoggle@specific}[1]{%
+  \newtoggle{#1@}%
+  \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
+  \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
+}
 %    \end{macrocode}
 % \end{macro}
-%  \begin{macro}{\nonum@}
-%\protect\cs{nonum@} toggle is used to disable line number printing in a particular footnote.
+% \begin{macro}{\newhookarg@specific}
+% \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
-\newtoggle{nonum@}
+\newcommand{\newhookarg@specific}[1]{%
+  \define@key[mac]{truefootnoteoption}{#1}{\global\def\linerangesep@{##1}}%When enabling footnote option
+  \define@key[mac]{falsefootnoteoption}{#1}{\global\undef\linerangesep@}%When 
+}
 %    \end{macrocode}
 % \end{macro}
-%  \begin{macro}{\nosep@}
-%\protect\cs{nonum@} toggle is used to disable the lemma separator in a particular footnote.
+% And now, we define some hooks specific to a note.
 %    \begin{macrocode}
-\newtoggle{nosep@}
+\newhooktoggle@specific{fulllines}%
+\newhooktoggle@specific{nonum}
+\newhooktoggle@specific{nosep}
+\newhookarg@specific{linerangesep}
 %    \end{macrocode}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{linerangesep@}
+% \cs{linerangesep@} is defined by the option \option{linerangesep} of critical notes to change temporary the line range separator for a specific line.
+% As we have to define it before typesetting the line and undefine it after, we use to family of \package{xkeyval} package's key.
+%    \begin{macrocode}
+%    \end{macrocode}
+%     
+%  
 % \end{macro}
 % \begin{macro}{\nomk@}
 %\protect\cs{nomk@} toggle is used by \parpackage{} to remove the footnote mark in the text when using \protect\cs{footnoteXmk}. Read \parpackage handbook.
@@ -14310,7 +14359,7 @@
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
    \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber%
-   \let\par\relax%No paragraph in verses
+   \let\par\relax\ignorespaces%No paragraph in verses
 }
 
 \newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
