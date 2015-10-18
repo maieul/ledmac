@@ -2528,15 +2528,38 @@
       \csgdef{Xonlyside@#1}{}%
     \fi%
 %    \end{macrocode}
-% \subsubsection{Familiar footnotes without marks}
+% \subsection{Tools specific to familiar footnotes}
+%    \begin{macrocode}
+  \unless\ifnofamiliar@%
+%    \end{macrocode}
+% \paragraph{Managing correct number}
+% One problematic thing, one using familiar footnotes in parallel typesseting is tthe fact that the order of reading notes in \verb.tex. files in not the order they are typesset, because \LaTeX\ reads first all the notes of one side, and the all the notes of the other side.
+% However, it alternates typesseting notes of left side and typesseting notes of right side.
+% Consequently, if we do nothing special, the notes number are sorted in the reading order, and not in the typesseting order.
+% So we could obtain something like 1,3,2,5,4.
+%
+% To prevent this problem, we use a double numbering system. 
+% Every note, in parallel typesetting, has two associated counters: its reading number, in the form \cs{footnoteXorder} and its printing order, in the form \cs{footnoteX}. User should preoccupate only on the secund number.
+% 
+% The reading order is increased normally, when \parpackage\  reads the content of \env{Leftside} or \env{Rightside} environment. 
+% The printing order is increased when \parpackage\ outputs the typeset notes.
+% As \parpackage inserts the notes number when reading the side's environments, 
+% the equivalence between printing order and output order are stored in the numbered auxiliary files, and use at the secund reading (and following) to get the correct number in the maintext.
+%
+%
+% So here, we only defined the new counter, the reading counter. 
+% All the rest of code is dissiminated in definition of familiar footnotes.
+%    \begin{macrocode}
+      \newcounter{footnote#1order}
+%    \end{macrocode}
+% 
+% \paragraph{Familiar footnotes without marks}
 % The \protect\cs{footnoteXnomk} commands are for notes which are printed on the left side, while they are called in the right side.
 % Basically, they set first toggle \protect\cs{nomark@} to true, then call the \protect\cs{footnoteX}.
 % and finally add the footnote counter in the footnote counter list.
 %
 % First, check the \verb+nofamiliar+ option of \macpackage.
 %
-%    \begin{macrocode}
-  \unless\ifnofamiliar@%
 % So declare the list.
 %    \begin{macrocode}
       \expandafter\list@create\csname footnote#1@mk\endcsname%
@@ -2588,7 +2611,7 @@
          \xspace%
       }%
 %    \end{macrocode}
-% End of tools for familiar notes without marks
+% End of tools specific to familiar notes. 
 %    \begin{macrocode}
   \fi
 %    \end{macrocode}
