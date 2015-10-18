@@ -11609,7 +11609,19 @@
           \begingroup%
               \prepare@prenotesX{#1}%
               \newcommand{\content}{##1}%
-              \stepcounter{footnote#1}%
+%    \end{macrocode}
+% If we are preparing parallel typesetting, we can not just increase the footnote counter.
+% Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
+%    \begin{macrocode}
+               \ifl@dpairing%
+                  \ifcsdef{footnote#1@sec\the\section@num =\the\csname footnote#1@order\endcsname}%
+                    {\setcounter{footnote#1}{\csuse{footnote#1@sec\the\section@num =\the\csname footnote#1@order\endcsname}}}%
+                    {\setcounter{footnote#1}{\the\csname footnote#1@order\endcsname}}%
+               \else%
+                  \stepcounter{footnote#1}%
+               \fi%
+%    \end{macrocode}
+% And now, the feature not depending of wether we are preparing parallel typesetting
               \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
               \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with \parpackage
                  {\csuse{@footnotemark#1}}%
