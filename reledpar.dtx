@@ -2622,6 +2622,26 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Get correct footnote number}
+% \begin{macro}{\get@familiarfootnote@number}
+% \begin{macro{\save@familiarfootnote@number}
+% As user can insert footnote between two \cs{Pairs} or \cs{Pages} commands, we have to set the \cs+footnoteX@typeset+ counter to the last value of the \verb+footnoteX+ counter at the beginning of these two commands.
+%    \begin{macrocode}
+\newcommand{\save@familiarfootnote@number}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{\csxdef{saved@footnote##1}{\the\csname c@footnote##1\endcsname}}%
+    \dolistloop{\@series}%
+  \fi%
+}
+\newcommand{\get@familiarfootnote@number}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{\global\expandafter\csname footnote##1@typeset\endcsname=\csuse{saved@footnote##1}}%
+    \dolistloop{\@series}%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsubsection{Create hooks}
 % Read the \macpackage code handbook about \protect\cs{newhookcommand@series}.
 % Here, we create hooks which are specific to \parpackage.
@@ -2717,6 +2737,7 @@
   \l@dpairingtrue
   \l@dpagingfalse
   \initnumbering@quote
+  \save@familiarfootnote@number%
   \at@begin@pairs%
 }{%
   \l@dpairingfalse
@@ -2739,6 +2760,7 @@
   \l@dpairingtrue
   \l@dpagingtrue
   \initnumbering@quote
+  \save@familiarfootnote@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -4851,6 +4873,7 @@
     \global\par@lineR=\z@
     \global\l@dpscL=\z@
     \global\l@dpscR=\z@
+    \get@familiarfootnote@number%
 %    \end{macrocode}
 % Check if there are chunks to be processed, and process them
 % two by two (left and right pairs).
@@ -5309,6 +5332,7 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
+    \get@familiarfootnote@number%
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \macpackage, as we may want to print the notes on one side only.
 %    \begin{macrocode}
