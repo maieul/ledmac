@@ -10236,10 +10236,21 @@
 %
 %
 % \begin{macro}{\vbfnoteX}
+% This command call the correct familiar footnotes inserting commands.
+% It also get the correct footnote number when typesetting parallel texts. 
 %    \begin{macrocode}
 \newcommand{\vbfnoteX}[3]{%
-  \@namedef{@thefnmark#1}{#3}%
-  \@nameuse{regvfootnote#1}{#1}{#2}}
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+    {%
+      \global\expandafter\advance\csname footnote#1@order\endcsname by \@ne%
+      \setcounter{footnote#1}{\csuse{footnote#1@order}}%
+      \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
+    }%
+    {%
+      \@namedef{@thefnmark#1}{#3}%
+    }%
+  \@nameuse{regvfootnote#1}{#1}{#2}%
+}
 
 %    \end{macrocode}
 % \end{macro}
