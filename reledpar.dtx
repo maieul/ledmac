@@ -746,6 +746,22 @@
 %    \endnumbering
 %   \end{Rightside}
 % \end{verbatim}
+% \subsection{Reinitializing footnote order counter}
+% \begin{macro}{\reinit@footnoteX@order}
+% As explained in \reff{familiarfootnotenumber}, familiar footnotes have specific counters, corresponding to the order there are reading in the .tex file.
+% We have to reinitialize them in the begin of parallel typesetting environments and commands.
+% 
+%    \begin{macrocode}
+\newcommand{\reinit@footnoteX@order}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+       \csname footnote##1@order\endcsname=\z@%
+     }%
+     \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Left and right texts}\label{leftright}
 % \subsection{Environments}
 % Parallel texts are divided into Leftside and Rightside. The form of the
@@ -2714,6 +2730,7 @@
 \newenvironment{pairs}{%}
   \l@dpairingtrue
   \l@dpagingfalse
+  \reinit@footnoteX@order%
   \initnumbering@quote
   \at@begin@pairs%
 }{%
@@ -2736,6 +2753,7 @@
 \newenvironment{pages}{%
   \l@dpairingtrue
   \l@dpagingtrue
+  \reinit@footnoteX@order%
   \initnumbering@quote
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
@@ -4849,6 +4867,7 @@
     \global\par@lineR=\z@
     \global\l@dpscL=\z@
     \global\l@dpscR=\z@
+    \reinit@footnoteX@order%
 %    \end{macrocode}
 % Check if there are chunks to be processed, and process them
 % two by two (left and right pairs).
@@ -5307,6 +5326,7 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
+    \reinit@footnoteX@order%
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \macpackage, as we may want to print the notes on one side only.
 %    \begin{macrocode}
