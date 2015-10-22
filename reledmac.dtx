@@ -11074,6 +11074,7 @@
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
+% \changes{v2.5.0}{2015/10/19}{\protect\cs{endnotes} take six arguments.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11081,9 +11082,10 @@
 %   \item \verb+#3+ Note content.
 %   \item \verb+#4+ Series.
 %   \item \verb+#5+ Optional argument of \protect\cs{Xendnote}.
+%   \item \verb+#6+ Side (L or R).
 % \end{itemize}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6{{%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
@@ -11100,7 +11102,9 @@
   \notblank{#5}{\docsvlist{#5}}{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
+  \IfStrEq{#6}{R}{\ledRcol@true}{}%
   \printlineendnote{#1}{#4}%
+  \IfStrEq{#6}{R}{\ledRcol@false}{}%
   \nottoggle{Xendlemmadisablefontselection@#4}%
     {\select@lemmafont#1|#2}%
     {#2}%
@@ -11323,7 +11327,7 @@
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
   \printnpnum{#1}%
-  \linenumrep{#2}%
+  \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
   \egroup%
 %    \end{macrocode}
@@ -11347,7 +11351,7 @@
       \fi%
     \fi%
     \ifl@d@pnum \printnpnum{#4}\fi%
-    \ifl@d@elin \linenumrep{#5}\fi%
+    \ifl@d@elin \linenumrep{#5}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}\fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
@@ -11696,6 +11700,7 @@
            {\expandonce\content}%
            {#1}%
            {\unexpanded{##1}}%
+           {\ifledRcol R\else L\fi}
            \@percentchar%
          }%
          \egroup%
@@ -11764,6 +11769,8 @@
       \csgdef{Xendehookinplaceofnumber@#1}{}%
       
       \csgdef{Xendlinerangeseparator@#1}{\endashchar}%
+      
+      \newtoggle{Xendlineflag@#1}
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -12118,6 +12125,8 @@
   \newhookcommand@series{Xendahookinplaceofnumber}%
 
   \newhookcommand@series{Xendhangindent}%
+  
+  \newhooktoggle@series{Xendlineflag}
   
 \fi
 \newhookcommand@series{Xendtwolines}[apprefwithpage]
