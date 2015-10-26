@@ -9973,32 +9973,65 @@
 %
 % \begin{macro}{\l@dbfnote}
 % \begin{macro}{\vl@dbfnote}
+% \begin{macro}{\footnote}
 % \protect\cs{l@dbfnote} adds the footnote to the insert list, and
 % \protect\cs{vl@dbfnote} calls the original \protect\cs{@footnotetext}.
 % \changes{v0.6.0}{2004/11/23}{Changed \protect\cs{l@dbfnote} and \protect\cs{vl@dbfnote} as
 % originals could give incorrect markers in the footnotes}
+% We also patch \cs{footnote} in order to get correct footnote number when typesetting parallel texts.
 % \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
 
+\patchcmd%
+  {\footnote}%
+  {\stepcounter\@mpfn}%
+  {%
+  \ifl@dpairing%
+   \global\advance\footnote@reading by \@ne%
+   \ifcsdef{footnotereading\the\footnote@reading=typeset}%
+    {\setcounter{\@mpfn}{\csuse{footnotereading\the\footnote@reading=typeset}}}%
+    {\setcounter{\@mpfn}{\footnote@reading}}%
+  \else%
+    \stepcounter\@mpfn%
+  \fi%
+  }%
+  {}
+  {}
 \newcommand{\l@dbfnote}[1]{%
   \ifnumberedpar@
+    \ifl@dpairing
+      \protected@xdef\thisfootnote{\the\footnote@reading}%
+    \else%
+      \protected@xdef\thisfootnote{\thefootnote}%
+    \fi%
   \gdef\@tag{#1\relax}%
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\@thefnmark}}%
+      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
   \fi\ignorespaces}
 
 \newcommand{\vl@dbfnote}[2]{%
-  \def\@thefnmark{#2}%
-  \@footnotetext{#1}%
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+    {%
+      \global\advance\footnote@typeset by \@ne%
+        \immediate\write\@mainaux{%
+          \global\csdef{footnotereading#2=typeset}{\the\footnote@typeset}%
+         }%
+      \def\@thefnmark{\the\footnote@typeset}%
+    }%
+    {%
+      \@namedef{@thefnmark}{#2}%
+    }%  
+    \@footnotetext{#1}%
   }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %

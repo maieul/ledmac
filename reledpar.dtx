@@ -2539,7 +2539,7 @@
 %    \begin{macrocode}
   \unless\ifnofamiliar@%
 %    \end{macrocode}
-% \paragraph{Managing correct number}\label{familiarfootnotenumber}
+% \subsubsection{Managing correct number}\label{familiarfootnotenumber}
 % One problematic thing, one using familiar footnotes in parallel typesseting is tthe fact that the order of reading notes in \verb.tex. files in not the order they are typesset, because \LaTeX\ reads first all the notes of one side, and the all the notes of the other side.
 % However, it alternates typeseting notes of left side and typeseting notes of right side.
 % Consequently, if we do nothing special, the notes number are sorted in the reading order, and not in the typeseting order.
@@ -2561,7 +2561,7 @@
       \expandafter\newcount\csname footnote#1@typeset\endcsname%
 %    \end{macrocode}
 % 
-% \paragraph{Familiar footnotes without marks}
+% \subsubsection{Familiar footnotes without marks}
 % The \protect\cs{footnoteXnomk} commands are for notes which are printed on the left side, while they are called in the right side.
 % Basically, they set first toggle \protect\cs{nomark@} to true, then call the \protect\cs{footnoteX}.
 % and finally add the footnote counter in the footnote counter list.
@@ -2628,7 +2628,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Get correct footnote number}
+% \subsubsection{Get correct footnote number}
 % \begin{macro}{\get@familiarfootnote@number}
 % \begin{macro{\save@familiarfootnote@number}
 % As user can insert footnote between two \cs{Pairs} or \cs{Pages} commands, we have to set the \cs+footnoteX@typeset+ counter to the last value of the \verb+footnoteX+ counter at the beginning of these two commands.
@@ -2638,17 +2638,19 @@
     \def\do##1{\csxdef{saved@footnote##1}{\the\csname c@footnote##1\endcsname}}%
     \dolistloop{\@series}%
   \fi%
+  \xdef\saved@footnote{\the\c@footnote}%
 }
 \newcommand{\get@familiarfootnote@number}{%
   \unless\ifnofamiliar@%
     \def\do##1{\global\expandafter\csname footnote##1@typeset\endcsname=\csuse{saved@footnote##1}}%
     \dolistloop{\@series}%
   \fi%
+  \global\footnote@typeset=\saved@footnote%
 }
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \subsubsection{Create hooks}
+% \subsection{Create hooks}
 % Read the \macpackage code handbook about \protect\cs{newhookcommand@series}.
 % Here, we create hooks which are specific to \parpackage.
 %    \begin{macrocode}
@@ -2661,7 +2663,7 @@
 
 
 %    \end{macrocode}
-% \subsubsection{Init standards series (A,B,C,D,E,Z)}
+% \subsection{Init standards series (A,B,C,D,E,Z)}
 % \begin{macro}{\init@series@par}
 % \protect\cs{newseries@par} is called by \protect\cs{newseries}.
 % However, this last command is called before \parpackage is loaded.
@@ -2673,6 +2675,17 @@
 }%
 \init@series@par%
 %    \end{macrocode}
+% \end{macro}
+% \subsection{Tools specific to \LaTeX's classical footnotes}
+% As users can use classical footnotes of \LaTeX\ (\cs{footnote}) 
+% in parallel texts, we must integrate the same tools to get correct number as for \macpackage' footnotes (\reff{familiarfootnotenumber}).
+% \begin{macro}{\footnote@reading}
+% \begin{macro}{\footnote@typset}
+%    \begin{macrocode}
+\newcount\footnote@reading%
+\newcount\footnote@typeset%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Pstart numbers dumping and restoration}
 % While in \macpackage the footnotes are inserted in the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
