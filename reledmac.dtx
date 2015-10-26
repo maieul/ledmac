@@ -348,6 +348,8 @@
 % \changes{v2.4.1}{2015/10/26}{Fix bug with \protect\cs{appref} and \protect\cs{apprefwithpage} (introduced in v2.4.0).}
 % \changes{v2.4.1}{2015/10/26}{Fix bug with tabular environments when using \protect\package{babel} or \protect\package{polyglossia} language which override \LaTeX\ \protect\cs{roman} command, like greek language.}
 % \changes{v2.5.0}{2015/10/31}{Compatibility with new hook and tools of \protect\reledpar~2.6.0.}
+% \changes{v2.6.0}{2015/10/31}{\protect\cs{lemma} can be used even the the \protect\option{nocritical} is enabled.}
+% \changes{v2.6.0}{2015/10/31}{New hook to customize page and line number apparence in endnotes.}
 %
 %
 % \title{\Macpackage \\
@@ -1217,11 +1219,7 @@
 % However you can use the \protect\cs{Xendlemmaseparator} macro to define one (\reff{Xendlemmaseparator}).
 %
 % As endnotes may be printed at any point in the document they always
-% start with the page number where they are called. The
-% macro \protect\cs{printnpnum}\marg{num} is used to print these numbers.
-% Its default definition is: \\
-% \verb?\newcommand*{\printnpnum}[1]{p.#1) }?
-%
+% start with the page number where they are called. 
 %
 % \subsubsection{Paragraph in critical apparatus}
 % By default, no paragraph can be made in the notes of critical apparatus. 
@@ -1775,6 +1773,16 @@
 % \protect\cs{Xendboxlinenum}\oarg{s}\marg{l}, \protect\cs{Xendboxlinenumalign}\oarg{s}\marg{text},  \protect\cs{Xendboxstartlinenum}\oarg{s}\marg{l},  \protect\cs{Xendboxendlinenum}\oarg{s}\marg{l} are the same as, respectively, \protect\cs{Xboxlinenum} and \protect\cs{Xboxlinenumalign}, \protect\cs{Xboxstartlinenum}, \protect\cs{Xboxendlinenum} except in endnotes.
 %
 %
+% \subsection{For endnotes}\label{pagelineendnotes}
+% \DescribeMacro{\Xendbeforepagenumber}
+% \cs{Xendbeforepagenumber}\oarg{s}\marg{text} defines the text before the page number in endnotes. Default value is \verb+p.+ (``p'' followed by a dot).
+%
+% \DescribeMacro{\Xendafterpagenumber}
+% \cs{Xendafterpagenumber}\oarg{s}\marg{text} defines the text after the page number in endnotes. Default value is \verb+) + (open parenthesis followed by a single space). 
+% \DescribeMacro{\Xendlineprefixsingle}
+% \cs{Xendlineprefixsingle}\oarg{s}\marg{text} defines the text before the line number in endnotes, when there is only one line. Default value is empty.
+% \DescribeMacro{\Xendlineprefixmore}
+% \cs{Xendlineprefixmore}\oarg{s}\marg{text} defines the text before the line number in endnotes, when there is more than one line. Default value is empty. If you don't define it, use the value defined by \cs{Xendlineprefixsingle}.
 % \subsection{Arbitrary code around line number}
 % \DescribeMacro{\Xendbhooklinenumber}
 % \cs{Xendbhooklinenumber}\oarg{s}\marg{code} is used to execute code before line number in endnotes. The code is executed before the \cs{Xendbeforelinenumber} space  and before the \cs{Xendnotenumfont} font setting.
@@ -6590,7 +6598,6 @@
 % that is passed on to the notes.
 % Read about \protect\cs{@tag} in normal \protect\cs{edtext} macro for more details about \protect\cs{sw@list@inedtext} and \protect\cs{no@expands} (\reff{@tag}).
 %    \begin{macrocode}
-\unless\ifnocritical@
 \newcommand*{\lemma}[1]{%
   \global\@lemmacommand@true%
   \global\renewcommand{\@tag}{%
@@ -6608,7 +6615,6 @@
 \newcommand{\@lemma}{%
   \booltrue{lemmacommand@\the\@edtext@level}%
 }%
-\fi
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\if@lemmacommand@}
@@ -11380,6 +11386,17 @@
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
   \printnpnum{#1}%
+  \ifl@d@dash%
+   \ifl@d@pnum%
+    \csuse{Xendlineprefixsingle@\@currentseries}%
+   \else%
+    \ifcsempty{Xendlineprefixmore@\@currentseries}%
+      {\csuse{Xendlineprefixsingle@\@currentseries}}
+      {\csuse{Xendlineprefixmore@\@currentseries}}%
+   \fi%
+  \else%
+   \csuse{Xendlineprefixsingle@\@currentseries}%
+  \fi%
   \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
   \egroup%
@@ -11404,7 +11421,11 @@
       \fi%
     \fi%
     \ifl@d@pnum \printnpnum{#4}\fi%
-    \ifl@d@elin \linenumrep{#5}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}\fi%
+    \ifl@d@elin%
+      \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
+      \linenumrep{#5}%
+      \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
+    \fi%
     \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
@@ -11418,9 +11439,9 @@
 % \end{macro}
 %
 % \begin{macro}{\printnpnum}
-% A macro to print a page number in an endnote.
+% A macro to print a page number in an endnote. Should not be override anymore
 %    \begin{macrocode}
-\newcommand*{\printnpnum}[1]{p.#1) }
+\newcommand*{\printnpnum}[1]{\csuse{Xendbeforepagenumber@\@currentseries}#1\csuse{Xendafterpagenumber@\@currentseries}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11836,6 +11857,11 @@
       
       \csgdef{Xendlinerangeseparator@#1}{\endashchar}%
       
+      \csgdef{Xendbeforepagenumber@#1}{p.}%
+      \csgdef{Xendafterpagenumber@#1}{) }%
+      \csgdef{Xendlineprefixsingle@#1}{}%
+      \csgdef{Xendlineprefixmore@#1}{}%
+      
       \newtoggle{Xendlineflag@#1}
 %    \end{macrocode}
 % End of endnotes declaration
@@ -12200,6 +12226,10 @@
 \newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
 \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
 \newhookcommand@series{Xendlinerangeseparator}[apprefwithpage]
+\newhookcommand@series{Xendbeforepagenumber}[apprefwithpage]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage]
+\newhookcommand@series{Xendlineprefixsingle}[apprefwithpage]
+\newhookcommand@series{Xendlineprefixmore}[apprefwithpage]
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -12990,17 +13020,10 @@
 % \begin{macro}{\apprefwithpage}
 % \begin{macro}{\@apprefprefixsingle}
 % \begin{macro}{\@apprefprefixmore}
-% \begin{macro}{\setapprefprefixsingle}
-% \begin{macro}{\setapprefprefixmore}
 % \protect\cs{appref} prints a crossref to some lines of the apparatus defined by \protect\cs{applabel}.
 % It prints the lines as they should be printed in the apparatus.
 % 
-% If \protect\cs{@apprefprefixsingle} is not empty, it prints it before the line number.
-% If \protect\cs{@apprefprefixmore} is not empty, it prints it before the line numbers when the first line is not the same as the last line.
-% \protect\cs{apprefwithpage} prints a crossref to some lines of the apparatus defined by \protect\cs{applabel}.
-% It always prints the page number, as it should be printed in the end notes.
-% The \protect\cs{Xtwolinesappref} and \protect\cs{Xmorethantwolinesappref} are similar to the footnote
-% hooks and \protect\cs{Xtwolines} \protect\cs{Xmorethantwolines}.
+% Here we defines hooks similar to some of those are related to critical footnotes or endnotes.
 %
 % So, first declare the default value of the hooks for the pseudo-series appref. 
 % Also declare the internal toggle which are switch by \macpackage{}.
@@ -13013,7 +13036,11 @@
 
 \def\Xendtwolines@apprefwithpage{}%
 \def\Xendmorethantwolines@apprefwithpage{}%
-\def\Xendlinerangeseparator@apprefwithpage{\endashchar}%
+\def\Xendlinerangeseparator@apprefwithpage{\endashchar}
+\def\Xendbeforepagenumber@apprefwithpage{p.}%
+\def\Xendafterpagenumber@apprefwithpage{) }%
+\def\Xendlineprefixsingle@apprefwithpage{}%
+\def\Xendlineprefixmore@apprefwithpage{}%
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
 \newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 
