@@ -344,6 +344,8 @@
 % \changes{v2.4.0}{2015/10/19}{Fix spurious space in two columns and three columns notes.}
 % \changes{v2.4.0}{2015/10/19}{Fix bug of \protect\cs{parindentX} and \protect\cs{Xparindent} with two columns and three columns notes.}
 % \changes{v2.4.0}{2015/10/19}{Fix spurious space when using optional argument of \protect{stanza} (introduced in v2.3.0).}
+% \changes{v2.4.1}{2015/10/26}{Fix bug with \cs{appref} and \cs{apprefwithpage} (introduced in v2.4.0).}
+% \changes{v2.4.1}{2015/10/26}{Fix bug with tabular environments when using \protect\env{babel} or \protect\env{polyglossia} language which override \LaTeX\ \protect\cs{roman} command, like greek language.}
 %
 %
 % \title{\Macpackage \\
@@ -2513,6 +2515,7 @@
 %
 % Note that if you have not used \protect\cs{setapprefprefixmore} is empty, argument of \protect\cs{setapprefprefixsingle} will used in any case.
 % 
+
 % \DescribeMacro{\Xtwolinesappref}
 % \DescribeMacro{\Xmorethantwolinesappref}
 % \DescribeMacro{\Xtwolinesbutnotmoreappref}
@@ -2529,6 +2532,12 @@
 % using \protect\cs{appref}\verb+[fulllines]+\marg{label}.
 %
 %
+% \DescribeMacro{Xlinerangeseparatorappref}
+% If you use \protect\cs{Xlinerangeseparator} \emph{without the optional
+% series argument}, the setting will also be available for \protect\cs{appref}.
+% 
+% The commands \protect\cs{Xlinerangeseparatorappref}\marg{text}, can also be used, if you
+% only want to change the reference style of \protect\cs{appref}.
 % \DescribeMacro{\Xendtwolinesapprefwithpage}
 % \DescribeMacro{\Xendmorethantwolinesapprefwithpage}
 % \DescribeMacro{\Xendtwolinesbutnotmoreapprefwithpage}
@@ -2545,6 +2554,12 @@
 % It is possible to disable this setting for a specific \protect\cs{apprefwithpage} command by
 % using \protect\cs{apprefwithpage}\verb+[fulllines]+\marg{label}.
 % 
+% \DescribeMacro{Xendlinerangeseparatorapprefwithpage}
+% If you use \protect\cs{Xendlinerangeseparator} \emph{without the optional
+% series argument}, the setting will also be available for \protect\cs{apprefwithpage}.
+% 
+% The commands \protect\cs{Xendlinerangeseparatorapprefwithpage}\marg{text}, can also be used, if you
+% only want to change the reference style of \protect\cs{apprefwithpage}.
 % \section{Side notes}
 %
 % \subsection{Basics}
@@ -3106,7 +3121,7 @@
 %  \item['no room for a new count'] is often caused by a conjunction with \protect\package{biblatex}.
 %  Load \macpackage (and \parpackage) \emph{before} \protect\package{biblatex}.
 %  \item['no room for a new write'] can be caused by with multiple indexes.
-% In this case, use \protect\package{indextools} of \protect\package{imakeidx} with the \verb+splitindex+ option, in order to obtain only one \verb+.idx+ file.
+% In this case, use \protect\package{indextools} of \protect\package{imakeidx} with the \verb+splitindex+ option, in order to obtain only one \verb+.idx+ file.
 % If that does not solve your problem, you can use \protect\package{morewrites} package.
 % That should solve the problem, but \LaTeX\ will be slower.
 %
@@ -3321,7 +3336,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/10/19 v2.4.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/10/26 v2.4.1 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9960,7 +9975,7 @@
 % \protect\cs{vl@dbfnote} calls the original \protect\cs{@footnotetext}.
 % \changes{v0.6.0}{2004/11/23}{Changed \protect\cs{l@dbfnote} and \protect\cs{vl@dbfnote} as
 % originals could give incorrect markers in the footnotes}
-% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
+% \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
 
 \newcommand{\l@dbfnote}[1]{%
@@ -11982,10 +11997,6 @@
 %    \begin{macrocode}
 \unless\ifnocritical@
   \newhooktoggle@series{Xparindent}
-  \newhookcommand@series{Xtwolines}[appref]
-  \newhookcommand@series{Xmorethantwolines}[appref]   
-  \newhooktoggle@series{Xtwolinesbutnotmore}[appref]
-  \newhooktoggle@series{Xtwolinesonlyinsamepage}[appref]
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
   \newhookcommand@series{Xhsizetwocol}
@@ -12032,9 +12043,13 @@
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
   
-  \newhookcommand@series{Xlinerangeseparator}
   
 \fi
+\newhookcommand@series{Xtwolines}[appref]
+\newhookcommand@series{Xmorethantwolines}[appref]   
+\newhooktoggle@series{Xtwolinesbutnotmore}[appref]
+\newhooktoggle@series{Xtwolinesonlyinsamepage}[appref]
+\newhookcommand@series{Xlinerangeseparator}[appref]
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -12061,10 +12076,6 @@
 % Before generating the commands that are used to set the endnotes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator}+ and the like, we check the \verb+noend+ option.
 %    \begin{macrocode}
 \unless\ifnoend@
-  \newhookcommand@series{Xendtwolines}[apprefwithpage]
-  \newhookcommand@series{Xendmorethantwolines}[apprefwithpage]   
-  \newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
-  \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{Xendbhooknote}
   
@@ -12106,8 +12117,12 @@
 
   \newhookcommand@series{Xendhangindent}%
   
-  \newhookcommand@series{Xendlinerangeseparator}
 \fi
+\newhookcommand@series{Xendtwolines}[apprefwithpage]
+\newhookcommand@series{Xendmorethantwolines}[apprefwithpage]   
+\newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
+\newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
+\newhookcommand@series{Xendlinerangeseparator}[apprefwithpage]
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -12913,13 +12928,15 @@
 % So, first declare the default value of the hooks for the pseudo-series appref. 
 % Also declare the internal toggle which are switch by \macpackage{}.
 %    \begin{macrocode}
-\xdef\Xtwolines@appref{}%
-\xdef\Xmorethantwolines@appref{}%
+\def\Xtwolines@appref{}%
+\def\Xmorethantwolines@appref{}%
+\def\Xlinerangeseparator@appref{\endashchar}%
 \newtoggle{Xtwolinesbutnotmore@appref}%
 \newtoggle{Xtwolinesonlyinsamepage@appref}%
 
-\xdef\Xendtwolines@apprefwithpage{}%
-\xdef\Xendmorethantwolines@apprefwithpage{}%
+\def\Xendtwolines@apprefwithpage{}%
+\def\Xendmorethantwolines@apprefwithpage{}%
+\def\Xendlinerangeseparator@apprefwithpage{\endashchar}%
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
 \newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 
@@ -15053,9 +15070,10 @@
 % \begin{macro}{\theaddcolcount}
 % A counter to hold the number of a column. We use a roman number so
 % that we can grab the column dimension from \protect\cs{dcol}.
+% We do not use \cs{roman} \LaTeX\ command, because some package, like \package{babel} can override it in some specific case (greek, for example).
 %    \begin{macrocode}
 \newcounter{addcolcount}
-  \renewcommand{\theaddcolcount}{\roman{addcolcount}}
+  \renewcommand{\theaddcolcount}{\romannumeral \c@addcolcount}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
