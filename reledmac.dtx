@@ -13172,21 +13172,29 @@
 }
 
 %    \end{macrocode}
-% And now, the main commands: \protect\cs{appref} and \protect\cs{apprefwithpage}.
-% These commands call \protect\cs{printlines} and \protect\cs{printendlines}. That is why we have previously declared all hooks values tested inside these last commands.
+% \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
+% And now, the main commands: \protect\cs{appref}, \protect\cs{apprefwithpage}, \cs{SEref} and \cs{SErefwithpage}.
+% These commands call \cs{refformated@} and \protect\cs{refformatedwithpage}, which calls \cs{printlines} and \cs{printendlines} . That is why we have previously declared all hooks values tested inside these last commands.
 %    \begin{macrocode}
-\newcommandx{\appref}[2][1,usedefault]{%
+
+\newcommandx{\appref}[2][1,usedefault]{\refformated@{#1}{#2}{appref}}
+\newcommandx{\SEref}[2][1,usedefault]{\refformated@{#1}{#2}{SEref}}
+
+\newcommandx{\apprefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{appref}}
+\newcommandx{\SErefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{SEref}}
+
+\newcommand{\refformated@}[3]{%
   \def\do##1{%
     \setkeys[mac]{truefootnoteoption}{##1}%
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
- \xdef\@currentseries{appref}%
- \ifdefempty{\@apprefprefixmore}%
+ \xdef\@currentseries{#3}%
+ \ifcsempty{@#3prefixmore}%
    {\@apprefprefixsingle}%
    {%
      \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
-       {\@apprefprefixsingle}%
-       {\@apprefprefixmore}%
+       {\csuse{@#3prefixsingle}}%
+       {\csuse{@#3prefixmore}}%
    }%
  \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
   \def\do##1{%
@@ -13195,13 +13203,12 @@
  \notblank{#1}{\docsvlist{#1}}{}%
 }%
 
-% \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
-\newcommandx{\apprefwithpage}[2][1,usedefault]{%
+\newcommand{\refformatedwithpage@}[3]{%
   \def\do##1{%
     \setkeys[mac]{truefootnoteoption}{##1}%
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
- \xdef\@currentseries{apprefwithpage}%
+ \xdef\@currentseries{#3withpage}%
   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
