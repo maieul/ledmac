@@ -352,6 +352,7 @@
 % \changes{v2.6.0}{2015/10/31}{New hooks to customize page and line number apparence in endnotes.}
 % \changes{v2.6.0}{2015/10/31}{New hooks: \cs{Xbhookgroup} and \cs{bhookgroupX}.}
 % \changes{v2.6.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\opt{noend} option is enabled.}
 %
 %
 % \title{\Macpackage \\
@@ -11305,6 +11306,51 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\doendnotes}
+% \begin{macro}{\ifXendinsertsep@}
+% \protect\cs{doendnotes} is
+% the command you use to print one series of endnotes; it
+% takes one argument: the series letter of the note series you want
+% to print.
+% \protect\cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the last one.
+%    \begin{macrocode}
+\newif\ifXendinsertsep@%
+\newcommand*{\doendnotes}[1]{%
+  \l@dend@close{#1}%
+   \begingroup
+      \makeatletter
+      \expandafter\let\csname #1end\endcsname=\endprint
+      \input\jobname.#1end%
+      \global\Xendinsertsep@false%
+   \endgroup}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\doendnotesbysection}
+% \protect\cs{doendnotesbysection} is a variant of the previous macro.
+% While \protect\cs{doendnotes} print endnotes for all of numbered sections 
+% \protect\cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, then for the second section at its second call for the same series, then for the third section at its third call for the same series, and so on.
+%    \begin{macrocode}
+\newcommand*{\doendnotesbysection}[1]{%
+ \l@dend@close{#1}%
+ \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
+ \begingroup%
+    \makeatletter%
+    \def\l@d@section##1{%
+      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
+        {\cslet{#1end}{\endprint}}%
+        {\cslet{#1end}{\@gobblefive}}%
+    }%
+    \input\jobname.#1end%
+    \global\Xendinsertsep@false%
+ \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% We close now the conditional period depending of \cs{ifnoend@}, because the following commands can be used by other commands than the specific to endnotes.
+%    \begin{macrocode}
+}%
+%    \end{macrocode}
 % \begin{macro}{\setprintendlines}
 % The \protect\cs{printendlines} macro is similar to \protect\cs{printlines} but is
 % for printing endnotes rather than footnotes. 
@@ -11485,51 +11531,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\doendnotes}
-% \begin{macro}{\ifXendinsertsep@}
-% \protect\cs{doendnotes} is
-% the command you use to print one series of endnotes; it
-% takes one argument: the series letter of the note series you want
-% to print.
-% \protect\cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the last one.
-%    \begin{macrocode}
-\newif\ifXendinsertsep@%
-\newcommand*{\doendnotes}[1]{%
-  \l@dend@close{#1}%
-   \begingroup
-      \makeatletter
-      \expandafter\let\csname #1end\endcsname=\endprint
-      \input\jobname.#1end%
-      \global\Xendinsertsep@false%
-   \endgroup}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\doendnotesbysection}
-% \protect\cs{doendnotesbysection} is a variant of the previous macro.
-% While \protect\cs{doendnotes} print endnotes for all of numbered sections 
-% \protect\cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, then for the second section at its second call for the same series, then for the third section at its third call for the same series, and so on.
-%    \begin{macrocode}
-\newcommand*{\doendnotesbysection}[1]{%
- \l@dend@close{#1}%
- \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
- \begingroup%
-    \makeatletter%
-    \def\l@d@section##1{%
-      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
-        {\cslet{#1end}{\endprint}}%
-        {\cslet{#1end}{\@gobblefive}}%
-    }%
-    \input\jobname.#1end%
-    \global\Xendinsertsep@false%
- \endgroup%
-}%
-%    \end{macrocode}
-% \end{macro}
-% End of section for end notes
-%    \begin{macrocode}
-}%
-%    \end{macrocode}
 % \section{Generate series of notes}%
 % In this section, X means the name of the series (A, B etc.)
 % \begin{macro}{\series}
