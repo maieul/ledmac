@@ -351,6 +351,8 @@
 % \changes{v2.6.0}{2015/10/31}{\protect\cs{lemma} can be used even the the \protect\option{nocritical} is enabled.}
 % \changes{v2.6.0}{2015/10/31}{New hooks to customize page and line number apparence in endnotes.}
 % \changes{v2.6.0}{2015/10/31}{New hooks: \cs{Xbhookgroup} and \cs{bhookgroupX}.}
+% \changes{v2.6.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\opt{noend} option is enabled.}
 %
 %
 % \title{\Macpackage \\
@@ -1188,7 +1190,7 @@
 % The mechanism is similar to the one for footnotes: each macro takes one or more optional arguments and one single argument, like:\\
 % \protect\cs{Aendnote}\oarg{option}\marg{text}.
 % 
-% \meta{option} can contain a comma-separated list of values. Allowed values are: 
+% \label{Xendnoteopt}\meta{option} can contain a comma-separated list of values. Allowed values are: 
 % \begin{itemize}
 % \item \verb|fulllines| to disable \protect\cs{Xendtwolines} and \protect\cs{Xendmorethantwolines} features for this particular note (cf. \reff{Xtwolines}).
 % \item \verb+nonum+ to disable line number for this particular note.
@@ -2498,7 +2500,28 @@
 % \changes{v0.2.1}{2003/08/25}{Added text about normal labeling}
 %    The normal \protect\cs{label}, \protect\cs{ref} and \protect\cs{pageref} macros may be used
 % within numbered text, and operate in the familiar fashion. 
-% \subsection{References to lines commented in the apparatus}
+% \subsection{References to start and end lines}
+% \subsubsection{Reference to main text lines}
+% \changes{v2.5.0}{2015/10/31}{New tools to easily make cross-reference to a passage defined by a start and an end line}
+% Many time, you may want to make a cross-reference to a passage that is defined by a start line and an end line.
+% \Mackpackage provides specific tools for this scenario.
+
+% \DescribeMacro{\edlabelS}
+% Use \cs{edlabelS}\marg{label} to mark the start line of the passage.
+%
+% \DescribeMacro{\edlabelE}
+% Use \cs{edlabelE} to mark the end the end line of the passage.
+%
+% These two commands just create to label which are named \meta{label}\verb+:start+ and \meta{label}\verb+:end+. 
+% 
+% The main utility is to use them with two other commands.
+% \DescribeMacro{\SEref}
+% \cs{SEref}\marg{label} will make a cross-reference printed as a reference in critical footnotes.
+% 
+% \DescribeMacro{\SErefwithpage}
+% \cs{SErefwithpage} will make a cross-reference printed as a reference in critical endnotes.
+% 
+% \subsubsection{References to lines commented in the apparatus}
 % \changes{v1.21.0}{2015/03/09}{Add \protect\cs{applabel} and related}
 % You may want to make a cross-reference to a passage that is referred to by \protect\cs{edtext}.
 % \Macpackage provides specific tools for this scenario.
@@ -2518,10 +2541,12 @@
 % The first one will print the lines as they are printed in the critical footnotes, 
 % while the second will print the lines as they are printed in endnotes.
 %
+% \subsubsection{Settings}
+% \paragraph{Specific to these tools}
 % \DescribeMacro{\setapprefprefixsingle}\DescribeMacro{\setapprefprefixmore}
-% If you use \protect\cs{setapprefprefixsingle}\marg{prefix}, \meta{prefix} will be printed
+% If you use \protect\cs{apprefprefixsingle}\marg{prefix}, \meta{prefix} will be printed
 % before the line numbers of a \protect\cs{appref}-reference.
-% If you use \protect\cs{setapprefprefixmore}\marg{prefix}, \meta{prefix} will be printed
+% If you use \protect\cs{apprefprefixmore}\marg{prefix}, \meta{prefix} will be printed
 % before the line numbers, if you refer to more than one line.
 % 
 % For example, you may use:
@@ -2531,52 +2556,44 @@
 % \end{verbatim}
 %
 % Note that if you have not used \protect\cs{setapprefprefixmore} is empty, argument of \protect\cs{setapprefprefixsingle} will used in any case.
-% 
-
-% \DescribeMacro{\Xtwolinesappref}
-% \DescribeMacro{\Xmorethantwolinesappref}
-% \DescribeMacro{\Xtwolinesbutnotmoreappref}
-% \DescribeMacro{\Xtwolinesonlyinsamepage}
-% If you use \protect\cs{Xtwolines}, \protect\cs{Xmorethantwolines},  \protect\cs{Xtwolinesbutnotmore} and/or \protect\cs{Xtwolinesonlyinsamepage}
-% (\reff{Xtwolines}) \emph{without the optional
-% series argument}, the setting will also be available for \protect\cs{appref}.
-% 
-% The commands \protect\cs{Xtwolinesappref}\marg{text},
-% \protect\cs{Xmorethantwolinesappref}\marg{text}, \protect\cs{Xtwolinesbutnotmoreappref} \protect\cs{Xtwolinesonlyinsamepageappref} can also be used, if you
-% only want to change the reference style of \protect\cs{appref}.
-%
-% It is possible to disable this setting for a specific \protect\cs{appref} command by
-% using \protect\cs{appref}\verb+[fulllines]+\marg{label}.
 %
 %
-% \DescribeMacro{Xlinerangeseparatorappref}
-% If you use \protect\cs{Xlinerangeseparator} \emph{without the optional
-% series argument}, the setting will also be available for \protect\cs{appref}.
+% \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{setSErefprefixmore} 
+% \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
 % 
-% The commands \protect\cs{Xlinerangeseparatorappref}\marg{text}, can also be used, if you
-% only want to change the reference style of \protect\cs{appref}.
-% \DescribeMacro{\Xendtwolinesapprefwithpage}
-% \DescribeMacro{\Xendmorethantwolinesapprefwithpage}
-% \DescribeMacro{\Xendtwolinesbutnotmoreapprefwithpage}
-% \DescribeMacro{\Xendtwolinesonlyinsamepageapprefwithpage}
-% If you use one of  \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines},  \protect\cs{Xendtwolinesbutnotmore},
-% \protect\cs{Xendtwolinesonlyinsamepage})
-% (\reff{Xendtwolines}) \emph{without the optional
-% series argument}, the setting will also be available for \protect\cs{apprefwithpage}.
+% \paragraph{Linked to setting of critical endnotes and footnotes}
+% Somes commands who set the appearence of line numbers in critical footnotes also sets the appearenc of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
+% 
+% These commandes are the following:
+% \begin{itemize}
+%   \item \cs{Xlineflag} (for \parpackage)
+%   \item \cs{Xlinerangeseparator}
+%   \item \cs{Xmorethantwolines}
+%   \item \cs{Xtwolines}
+%   \item \cs{Xtwolinesbutnotmore}
+%   \item \cs{Xtwolinesonlyinsamepage}
+% \end{itemize}
 %
-% The commands \protect\cs{Xendtwolinesappref}\marg{text},
-% \protect\cs{Xendmorethantwolinesappref}\marg{text}, \protect\cs{Xendtwolinesbutnotmoreappref}, \protect\cs{Xendtwolinesonlyinsamepageappref} can also be used, if you
-% only want to change the reference style of \protect\cs{apprefwithpage}.
+% If you want to make setting specific to \cs{appref} or \cs{SEref}, just call them with optional argument containing a comma separeted list of command name (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
 %
-% It is possible to disable this setting for a specific \protect\cs{apprefwithpage} command by
-% using \protect\cs{apprefwithpage}\verb+[fulllines]+\marg{label}.
-% 
-% \DescribeMacro{Xendlinerangeseparatorapprefwithpage}
-% If you use \protect\cs{Xendlinerangeseparator} \emph{without the optional
-% series argument}, the setting will also be available for \protect\cs{apprefwithpage}.
-% 
-% The commands \protect\cs{Xendlinerangeseparatorapprefwithpage}\marg{text}, can also be used, if you
-% only want to change the reference style of \protect\cs{apprefwithpage}.
+%
+% The same principle is available for \cs{apprefwithpage} and \cs{SErefwithpage} with the following commands:
+% \begin{itemize}
+%   \item\cs{Xendafterpagenumber}
+%   \item\cs{Xendbeforepagenumber}
+%   \item\cs{Xendlineprefixmore}
+%   \item\cs{Xendlineprefixsingle}
+%   \item\cs{Xendlinerangeseparator}
+%   \item\cs{Xendmorethantwolines}
+%   \item\cs{Xendtwolines}
+%   \item\cs{Xendtwolinesbutnotmore}
+%   \item\cs{Xendtwolinesonlyinsamepage}
+% \end{itemize}
+% \paragraph{For one specific command}
+%
+% When calling \cs{appref} and \cs{SEref}, you can use as first optional argument, in brackets, any optional argument which can be use for critical footnotes (\reff{Xfootnoteopt}).  
+%
+% When calling \cs{apprefwithpage} or \cs{SErefwithpage}, you can use as first optional argument, in bracket, any optional argument which can be use for critical endnotes (\reff{Xendnoteopt}). 
 % \section{Side notes}
 %
 % \subsection{Basics}
@@ -11289,6 +11306,51 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\doendnotes}
+% \begin{macro}{\ifXendinsertsep@}
+% \protect\cs{doendnotes} is
+% the command you use to print one series of endnotes; it
+% takes one argument: the series letter of the note series you want
+% to print.
+% \protect\cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the last one.
+%    \begin{macrocode}
+\newif\ifXendinsertsep@%
+\newcommand*{\doendnotes}[1]{%
+  \l@dend@close{#1}%
+   \begingroup
+      \makeatletter
+      \expandafter\let\csname #1end\endcsname=\endprint
+      \input\jobname.#1end%
+      \global\Xendinsertsep@false%
+   \endgroup}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\doendnotesbysection}
+% \protect\cs{doendnotesbysection} is a variant of the previous macro.
+% While \protect\cs{doendnotes} print endnotes for all of numbered sections 
+% \protect\cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, then for the second section at its second call for the same series, then for the third section at its third call for the same series, and so on.
+%    \begin{macrocode}
+\newcommand*{\doendnotesbysection}[1]{%
+ \l@dend@close{#1}%
+ \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
+ \begingroup%
+    \makeatletter%
+    \def\l@d@section##1{%
+      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
+        {\cslet{#1end}{\endprint}}%
+        {\cslet{#1end}{\@gobblefive}}%
+    }%
+    \input\jobname.#1end%
+    \global\Xendinsertsep@false%
+ \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% We close now the conditional period depending of \cs{ifnoend@}, because the following commands can be used by other commands than the specific to endnotes.
+%    \begin{macrocode}
+}%
+%    \end{macrocode}
 % \begin{macro}{\setprintendlines}
 % The \protect\cs{printendlines} macro is similar to \protect\cs{printlines} but is
 % for printing endnotes rather than footnotes. 
@@ -11469,51 +11531,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\doendnotes}
-% \begin{macro}{\ifXendinsertsep@}
-% \protect\cs{doendnotes} is
-% the command you use to print one series of endnotes; it
-% takes one argument: the series letter of the note series you want
-% to print.
-% \protect\cs{Xendinsertsep@} is set to true at the first note of the series, and to false at the last one.
-%    \begin{macrocode}
-\newif\ifXendinsertsep@%
-\newcommand*{\doendnotes}[1]{%
-  \l@dend@close{#1}%
-   \begingroup
-      \makeatletter
-      \expandafter\let\csname #1end\endcsname=\endprint
-      \input\jobname.#1end%
-      \global\Xendinsertsep@false%
-   \endgroup}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\doendnotesbysection}
-% \protect\cs{doendnotesbysection} is a variant of the previous macro.
-% While \protect\cs{doendnotes} print endnotes for all of numbered sections 
-% \protect\cs{doendnotesbysection} print the endnotes for the first numbered section at its first call for a series, then for the second section at its second call for the same series, then for the third section at its third call for the same series, and so on.
-%    \begin{macrocode}
-\newcommand*{\doendnotesbysection}[1]{%
- \l@dend@close{#1}%
- \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
- \begingroup%
-    \makeatletter%
-    \def\l@d@section##1{%
-      \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
-        {\cslet{#1end}{\endprint}}%
-        {\cslet{#1end}{\@gobblefive}}%
-    }%
-    \input\jobname.#1end%
-    \global\Xendinsertsep@false%
- \endgroup%
-}%
-%    \end{macrocode}
-% \end{macro}
-% End of section for end notes
-%    \begin{macrocode}
-}%
-%    \end{macrocode}
 % \section{Generate series of notes}%
 % In this section, X means the name of the series (A, B etc.)
 % \begin{macro}{\series}
@@ -12120,7 +12137,6 @@
 % Before generating the commands that are used to set the critical notes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
-  \newhooktoggle@series{Xlineflag}
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -12171,11 +12187,12 @@
   
   
 \fi
-\newhookcommand@series{Xtwolines}[appref]
-\newhookcommand@series{Xmorethantwolines}[appref]   
-\newhooktoggle@series{Xtwolinesbutnotmore}[appref]
-\newhooktoggle@series{Xtwolinesonlyinsamepage}[appref]
-\newhookcommand@series{Xlinerangeseparator}[appref]
+\newhooktoggle@series{Xlineflag}[appref,SEref]
+\newhookcommand@series{Xtwolines}[appref,SEref]
+\newhookcommand@series{Xmorethantwolines}[appref,SEref]   
+\newhooktoggle@series{Xtwolinesbutnotmore}[appref,SEref]
+\newhooktoggle@series{Xtwolinesonlyinsamepage}[appref,SEref]
+\newhookcommand@series{Xlinerangeseparator}[appref,SEref]
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -12244,18 +12261,18 @@
 
   \newhookcommand@series{Xendhangindent}%
   
-  \newhooktoggle@series{Xendlineflag}
   
 \fi
-\newhookcommand@series{Xendtwolines}[apprefwithpage]
-\newhookcommand@series{Xendmorethantwolines}[apprefwithpage]   
-\newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage]
-\newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage]
-\newhookcommand@series{Xendlinerangeseparator}[apprefwithpage]
-\newhookcommand@series{Xendbeforepagenumber}[apprefwithpage]
-\newhookcommand@series{Xendafterpagenumber}[apprefwithpage]
-\newhookcommand@series{Xendlineprefixsingle}[apprefwithpage]
-\newhookcommand@series{Xendlineprefixmore}[apprefwithpage]
+\newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendtwolines}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendmorethantwolines}[apprefwithpage,SErefwithpage]   
+\newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage,SErefwithpage]
+\newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendlinerangeseparator}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -12870,6 +12887,19 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\edlabelS}
+% \begin{macro}{\edlabelE}
+% \cs{edlabelS} and \cs{edlabelE} are just used to mark the beginning and the end of a passage.
+%    \begin{macrocode}
+\newcommand{\edlabelS}[1]{%
+  \edlabel{#1:start}%
+}
+\newcommand{\edlabelE}[1]{%
+  \edlabel{#1:end}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\wrap@edcrossref}
 % \changes{v1.12.1}{2014/08/06}{Fix spurious spaces.}
 % \changes{v1.12.7}{2014/09/07}{\protect\cs{wrap@edcrossref} is now robust}
@@ -13046,82 +13076,145 @@
 % \begin{macro}{\apprefwithpage}
 % \begin{macro}{\@apprefprefixsingle}
 % \begin{macro}{\@apprefprefixmore}
-% \protect\cs{appref} prints a crossref to some lines of the apparatus defined by \protect\cs{applabel}.
-% It prints the lines as they should be printed in the apparatus.
+% \protect\cs{appref} and \cs{SEref}, \cs{apprefwithpage} \cs{SErefwithpage} print crossref to some start / end lines defined by specific commands.
+% It prints the lines as they should be printed in the apparatus (critical notes for not suffixed versions, endnotes for suffixed versions).
 % 
 % Here we defines hooks similar to some of those are related to critical footnotes or endnotes.
 %
-% So, first declare the default value of the hooks for the pseudo-series appref. 
+% So, first declare the default value of the hooks for the pseudo-series. 
 % Also declare the internal toggle which are switch by \macpackage{}.
 %    \begin{macrocode}
 \def\Xtwolines@appref{}%
+\def\Xtwolines@SEref{}%
+
 \def\Xmorethantwolines@appref{}%
+\def\Xmorethantwolines@SEref{}%
+
 \def\Xlinerangeseparator@appref{\endashchar}%
+\def\Xlinerangeseparator@SEref{\endashchar}%
+
 \newtoggle{Xtwolinesbutnotmore@appref}%
+\newtoggle{Xtwolinesbutnotmore@SEref}%
+
 \newtoggle{Xtwolinesonlyinsamepage@appref}%
+\newtoggle{Xtwolinesonlyinsamepage@SEref}%
+
+\newtoggle{Xlineflag@appref}%
+\newtoggle{Xlineflag@SEref}%
 
 \def\Xendtwolines@apprefwithpage{}%
+\def\Xendtwolines@SEwithpage{}%
+
 \def\Xendmorethantwolines@apprefwithpage{}%
+\def\Xendmorethantwolines@SErefwithpage{}%
+
 \def\Xendlinerangeseparator@apprefwithpage{\endashchar}
+\def\Xendlinerangeseparator@SErefwithpage{\endashchar}
+
 \def\Xendbeforepagenumber@apprefwithpage{p.}%
+\def\Xendbeforepagenumber@SErefwithpage{p.}%
+
 \def\Xendafterpagenumber@apprefwithpage{) }%
+\def\Xendafterpagenumber@SErefwithpage{) }%
+
 \def\Xendlineprefixsingle@apprefwithpage{}%
+\def\Xendlineprefixsingle@SErefwithpage{}%
+
 \def\Xendlineprefixmore@apprefwithpage{}%
+\def\Xendlineprefixmore@SErefwithpage{}%
+
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
+\newtoggle{Xendtwolinesbutnotmore@SErefwithpage}%
+
 \newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
+\newtoggle{Xendtwolinesonlyinsamepage@SErefwithpage}%
+
+\newtoggle{Xendlineflag@apprefwithpage}
+\newtoggle{Xendlineflag@SErefwithpage}
 
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
 
 \xdef\Xboxstartlinenum@appref{0pt}
+\xdef\Xboxstartlinenum@SEref{0pt}
+
 \xdef\Xboxendlinenum@appref{0pt}
+\xdef\Xboxendlinenum@SEref{0pt}
 
 \xdef\Xendboxstartlinenum@apprefwithpage{0pt}
+\xdef\Xendboxstartlinenum@SErefwithpage{0pt}
+
 \xdef\Xendboxendlinenum@apprefwithpage{0pt}
+\xdef\Xendboxendlinenum@SErefwithpage{0pt}
 
 %    \end{macrocode}
-% Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, and the commands which defines them
+% Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
+% \changes{v2.5.0}{2015/10/31}{Debug \protect\cs{setapprefprefixsingle}}
 %    \begin{macrocode}
 \newcommand\@apprefprefixsingle{}%
-\newcommand\@apprefprefixmore{}%
+\newcommand\@SErefprefixsingle{}%
 
-\newcommand{\apprefprefixsingle}[1]{%
+\newcommand\@apprefprefixmore{}%
+\newcommand\@SErefprefixmore{}%
+
+\newcommand{\setapprefprefixsingle}[1]{%
   \gdef\@apprefprefixsingle{#1}%
+}
+\newcommand{\setSErefprefixsingle}[1]{%
+  \gdef\@SErefprefixsingle{#1}%
 }
 
 \newcommand{\setapprefprefixmore}[1]{%
   \gdef\@apprefprefixmore{#1}%
 }
+\newcommand{\setSErefprefixmore}[1]{%
+  \gdef\@SErefprefixmore{#1}%
+}
 
 %    \end{macrocode}
-% And now, the main commands: \protect\cs{appref} and \protect\cs{apprefwithpage}.
-% These commands call \protect\cs{printlines} and \protect\cs{printendlines}. That is why we have previously declared all hooks values tested inside these last commands.
+% \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
+% And now, the main commands: \protect\cs{appref}, \protect\cs{apprefwithpage}, \cs{SEref} and \cs{SErefwithpage}.
+% These commands call \cs{refformated@} and \protect\cs{refformatedwithpage}, which calls \cs{printlines} and \cs{printendlines} . That is why we have previously declared all hooks values tested inside these last commands.
 %    \begin{macrocode}
-\newcommandx{\appref}[2][1,usedefault]{%
- \IfStrEq{#1}{fulllines}%
-   {\toggletrue{fulllines@}}%
-   {}%
- \xdef\@currentseries{appref}%
- \ifdefempty{\@apprefprefixmore}%
+
+\newcommandx{\appref}[2][1,usedefault]{\refformated@{#1}{#2}{appref}}
+\newcommandx{\SEref}[2][1,usedefault]{\refformated@{#1}{#2}{SEref}}
+
+\newcommandx{\apprefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{appref}}
+\newcommandx{\SErefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{SEref}}
+
+\newcommand{\refformated@}[3]{%
+  \def\do##1{%
+    \setkeys[mac]{truefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
+ \xdef\@currentseries{#3}%
+ \ifcsempty{@#3prefixmore}%
    {\@apprefprefixsingle}%
    {%
      \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
-       {\@apprefprefixsingle}%
-       {\@apprefprefixmore}%
+       {\csuse{@#3prefixsingle}}%
+       {\csuse{@#3prefixmore}}%
    }%
  \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
- \togglefalse{fulllines@}%
+  \def\do##1{%
+    \setkeys[mac]{falsefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
 }%
 
-% \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
-\newcommandx{\apprefwithpage}[2][1,usedefault]{%
- \IfStrEq{#1}{fulllines}%
-   {\toggletrue{fulllines@}}%
-   {}%
- \xdef\@currentseries{apprefwithpage}%
+\newcommand{\refformatedwithpage@}[3]{%
+  \def\do##1{%
+    \setkeys[mac]{truefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
+ \xdef\@currentseries{#3withpage}%
   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
- \togglefalse{fulllines@}%
+  \def\do##1{%
+    \setkeys[mac]{falsefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -16691,85 +16784,85 @@
 %    \begin{macrocode}
 \ifeledmaccompat@%
 
-\newcommand{\footnormalX}[1]{\arrangementX[#1]{normal}}%
-\newcommand{\footparagraphX}[1]{\arrangementX[#1]{paragraph}}%
-\newcommand{\foottwocolX}[1]{\arrangementX[#1]{twocol}}%
-\newcommand{\footthreecolX}[1]{\XarrangementX[#1]{threecol}}%
+	\newcommand{\footnormalX}[1]{\arrangementX[#1]{normal}}%
+	\newcommand{\footparagraphX}[1]{\arrangementX[#1]{paragraph}}%
+	\newcommand{\foottwocolX}[1]{\arrangementX[#1]{twocol}}%
+	\newcommand{\footthreecolX}[1]{\XarrangementX[#1]{threecol}}%
+	
+	\unless\ifnocritical@
+	  \newcommand{\footnormal}[1]{\Xarrangement[#1]{normal}}%
+	  \newcommand{\footparagraph}[1]{\Xarrangement[#1]{paragraph}}%
+	  \newcommand{\foottwocol}[1]{\Xarrangement[#1]{twocol}}%
+	  \newcommand{\footthreecol}[1]{\Xarrangement[#1]{threecol}}%
+	  \let\hsizetwocol\Xhsizetwocol
+	  \let\hsizethreecol\Xhsizethreecol
+	  \let\bhookXnote\Xbhooknote
+	  \let\boxsymlinenum\Xboxsymlinenum
+	  \let\symlinenum\Xsymlinenum
+	  \let\beforenumberinfootnote\Xbeforenumber
+	  \let\afternumberinfootnote\Xafternumber
+	  \let\beforeXsymlinenum\Xbeforesymlinenum
+	  \let\afterXsymlinenum\Xaftersymlinenum
+	  \let\inplaceofnumber\Xinplaceofnumber
+	  \let\Xlemmaseparator\lemmaseparator
+	  \let\afterlemmaseparator\Xafterlemmaseparator
+	  \let\beforelemmaseparator\Xbeforelemmaseparator
+	  \let\inplaceoflemmaseparator\Xinplaceoflemmaseparator
+	  \let\txtbeforeXnotes\Xtxtbeforenotes
+	  \let\afterXrule\Xafterrule
+	  \let\numberonlyfirstinline\Xnumberonlyfirstinline
+	  \let\numberonlyfirstintwolines\Xnumberonlyfirstintwolines
+	  \let\nonumberinfootnote\Xnonumberinfootnote
+	  \let\pstartinfootnote\Xpstart
+	  \let\pstartinfootnoteeverytime\Xpstarteverytime
+	  \let\onlyXpstart\Xonlypstart
+	  \let\Xnonumberinfootnote\Xnonumber
+	  \let\nonbreakableafternumber\Xnonbreakableafternumber
+	  \let\maxhXnotes\Xmaxhnotes
+	  \let\beforeXnotes\Xbeforenotes
+	  \let\boxlinenum\Xboxlinenum
+	  \let\boxlinenumalign\Xboxlinenumaligm
+	  \let\boxstartlinenum\Xboxstartlinenum
+	  \let\boxendlinenum\Xboxendlinenum
+	  \let\twolines\Xtwolines
+	  \let\morethantwolines\Xmorethantwolines
+	  \let\twolinesbutnotmore\Xtwolinesbutnotmore
+	  \let\twolinesonlyinsamepage\Xtwolinesonlyinsamepage
+	\fi
+	
+	\unless\ifnofamiliar@
+	  \let\notesXwidthliketwocolumns\noteswidthliketwocolumnsX
+	\fi
+	\newcommandx{\parafootsep}[2][1,usedefault]{%
+	    \Xparafootsep[#1]{#2}%
+	    \parafootsepX[#1]{#2}
+	}%
+	
+	\newcommandx{\afternote}[2][1,usedefault]{%
+	    \Xafternote[#1]{#2}%
+	    \afternoteX[#1]{#2}%
+	}%
+	
+	\unless\ifnoend@
+	  \let\XendXtwolines\Xendtwolines
+	  \let\XendXmorethantwolines\Xendmorethantwolines
+	  \let\bhookXendnote\Xendbhooknote
+	  \let\boxXendlinenum\Xendboxlinenum%
+	  \let\boxXendlinenumalign\Xendboxlinenumalign%
+	  \let\boxXendstartlinenum\Xendboxstartlinenum%
+	  \let\boxXendendlinenum\Xendboxendlinenum% 
+	  \let\XendXlemmaseparator\Xendlemmaseparator
+	  \let\XendXbeforelemmaseparator\Xendbeforelemmaseparator
+	  \let\XendXafterlemmaseparator\Xendafterlemmaseparator
+	  \let\XendXinplaceoflemmaseparator\Xendinplaceoflemmaseparator
+	\fi
+	
+	\AtBeginDocument{%
+	  \ifdef\lineref{}{\let\lineref\edlineref}%
+	}%
 
-\unless\ifnocritical@
-  \newcommand{\footnormal}[1]{\Xarrangement[#1]{normal}}%
-  \newcommand{\footparagraph}[1]{\Xarrangement[#1]{paragraph}}%
-  \newcommand{\foottwocol}[1]{\Xarrangement[#1]{twocol}}%
-  \newcommand{\footthreecol}[1]{\Xarrangement[#1]{threecol}}%
-  \let\hsizetwocol\Xhsizetwocol
-  \let\hsizethreecol\Xhsizethreecol
-  \let\bhookXnote\Xbhooknote
-  \let\boxsymlinenum\Xboxsymlinenum
-  \let\symlinenum\Xsymlinenum
-  \let\beforenumberinfootnote\Xbeforenumber
-  \let\afternumberinfootnote\Xafternumber
-  \let\beforeXsymlinenum\Xbeforesymlinenum
-  \let\afterXsymlinenum\Xaftersymlinenum
-  \let\inplaceofnumber\Xinplaceofnumber
-  \let\Xlemmaseparator\lemmaseparator
-  \let\afterlemmaseparator\Xafterlemmaseparator
-  \let\beforelemmaseparator\Xbeforelemmaseparator
-  \let\inplaceoflemmaseparator\Xinplaceoflemmaseparator
-  \let\txtbeforeXnotes\Xtxtbeforenotes
-  \let\afterXrule\Xafterrule
-  \let\numberonlyfirstinline\Xnumberonlyfirstinline
-  \let\numberonlyfirstintwolines\Xnumberonlyfirstintwolines
-  \let\nonumberinfootnote\Xnonumberinfootnote
-  \let\pstartinfootnote\Xpstart
-  \let\pstartinfootnoteeverytime\Xpstarteverytime
-  \let\onlyXpstart\Xonlypstart
-  \let\Xnonumberinfootnote\Xnonumber
-  \let\nonbreakableafternumber\Xnonbreakableafternumber
-  \let\maxhXnotes\Xmaxhnotes
-  \let\beforeXnotes\Xbeforenotes
-  \let\boxlinenum\Xboxlinenum
-  \let\boxlinenumalign\Xboxlinenumaligm
-  \let\boxstartlinenum\Xboxstartlinenum
-  \let\boxendlinenum\Xboxendlinenum
-  \let\twolines\Xtwolines
-  \let\morethantwolines\Xmorethantwolines
-  \let\twolinesbutnotmore\Xtwolinesbutnotmore
-  \let\twolinesonlyinsamepage\Xtwolinesonlyinsamepage
-  \fi
 
-  \unless\ifnofamiliar@
-  \let\notesXwidthliketwocolumns\noteswidthliketwocolumnsX
-  \fi
-  \newcommandx{\parafootsep}[2][1,usedefault]{%
-    \Xparafootsep[#1]{#2}%
-    \parafootsepX[#1]{#2}
-  }%
-
-  \newcommandx{\afternote}[2][1,usedefault]{%
-    \Xafternote[#1]{#2}%
-    \afternoteX[#1]{#2}%
-  }%
-
-  \unless\ifnoend@
-  \let\XendXtwolines\Xendtwolines
-  \let\XendXmorethantwolines\Xendmorethantwolines
-  \let\bhookXendnote\Xendbhooknote
-  \let\boxXendlinenum\Xendboxlinenum%
-  \let\boxXendlinenumalign\Xendboxlinenumalign%
-  \let\boxXendstartlinenum\Xendboxstartlinenum%
-  \let\boxXendendlinenum\Xendboxendlinenum% 
-  \let\XendXlemmaseparator\Xendlemmaseparator
-  \let\XendXbeforelemmaseparator\Xendbeforelemmaseparator
-  \let\XendXafterlemmaseparator\Xendafterlemmaseparator
-  \let\XendXinplaceoflemmaseparator\Xendinplaceoflemmaseparator
-  \fi
-
-  \AtBeginDocument{%
-    \ifdef\lineref{}{\let\lineref\edlineref}%
-  }%
-
-
-  \fi%
+\fi%
 %    \end{macrocode}
 % 
 %</code>
