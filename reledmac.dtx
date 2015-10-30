@@ -353,6 +353,7 @@
 % \changes{v2.5.0}{2015/10/31}{New hooks: \cs{Xbhookgroup} and \cs{bhookgroupX}.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\opt{noend} option is enabled.}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \cs{appref} work print double quotation mark when the label was not defined.}
 %
 %
 % \title{\Macpackage \\
@@ -3721,6 +3722,7 @@
 % \begin{macro}{\led@warn@DuplicateLabel}
 % \begin{macro}{\led@warn@AppLabelOutEdtext}
 % \begin{macro}{\led@warn@RefUndefined}
+% \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
   \reledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
@@ -3729,7 +3731,11 @@
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.
                   Using `000'.}}
+\newcommand*{\led@warn@pairRefUndefined}[1]{%
+  \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
+                  Using `??'.}}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -13197,7 +13203,12 @@
        {\csuse{@#3prefixsingle}}%
        {\csuse{@#3prefixmore}}%
    }%
- \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
+ \ifboolexpr{%
+   test{\ifcsundef{the@label#2:start}}%
+   or test{\ifcsundef{the@label#2:end}}%
+  }%
+   {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
+   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13210,7 +13221,12 @@
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
  \xdef\@currentseries{#3withpage}%
-  \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||%
+ \ifboolexpr{%
+   test{\ifcsundef{the@label#2:start}}%
+   or test{\ifcsundef{the@label#2:end}}%
+  }%
+   {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
+   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
