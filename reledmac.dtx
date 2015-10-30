@@ -12707,14 +12707,14 @@
 % \changes{v0.2.1}{2003/08/26}{Tweaked \protect\cs{edlabel} to get correct page numbers}
 % \changes{v0.14.0}{2012/04/04}{Tweaked \protect\cs{edlabel} to get correct line number if the command is first element of a paragraph.}
 % \changes{v1.18.0}{2015/02/23}{\protect\cs{edlabel} is now defined only one time for both \eledmac and \eledpar}
-
+% \changes{v2.5.0}{2015/10/31}{Fix bug when calling\protect\cs{edlabel} in a footnotes of the rightside}
 %    \begin{macrocode}
 \newcommand*{\edlabel}[1]{%
   \ifl@dpairing\ifautopar%
     \strut%
   \fi\fi%
   \@bsphack%
-  \ifledRcol%
+  \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
     \write\linenum@outR{\string\@lab}%
     \ifx\labelref@listR\empty%
       \xdef\label@refs{\zz@@@}%
@@ -12732,7 +12732,7 @@
     \protected@write\@auxout{}%
       {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
     \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
-  \else%
+  }{%
     \write\linenum@out{\string\@lab}%
     \ifx\labelref@list\empty%
       \xdef\label@refs{\zz@@@}%
@@ -12745,7 +12745,7 @@
   \protected@write\@auxout{}%
     {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
     \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
-  \fi%
+  }%
 \@esphack}%
 
 %    \end{macrocode}
