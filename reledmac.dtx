@@ -12797,7 +12797,7 @@
   \expandafter\ifx\csname the@label#5\endcsname \relax\else
     \led@warn@DuplicateLabel{#5}%
   \fi
-  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -12953,12 +12953,13 @@
 % \end{macro}
 %
 % \begin{macro}{\edlineref}
+% \begin{macro}{\xlineref}
 % \changes{v1.16.1}{2015/02/05}{\protect\cs{lineref} is not defined if defined by some other package, like lineno.  
 % \Eledmac provides \protect\cs{edlineref} instead.}
-% \begin{macro}{\xlineref}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{xlineref} does not include anymore the side flag. Use \protect\cs{xrefflag} to get it. Not that \protect\cs{edlineref} still contains the flag.}
 % If the specified label exists, \protect\cs{lineref} gives its line number.
 %    \begin{macrocode}
-\newcommand*{\edlineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{2}{#1}}}%
+\newcommand*{\edlineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{2}{#1}\xrefflag{#1}}}%
 \newcommand*{\xlineref}[1]{\l@dgetref@num{2}{#1}}%
 
 %    \end{macrocode}
@@ -12986,6 +12987,12 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\xflagref}
+% \cs{xflagref} finds the side flag of any ref defined with \cs{edlabel}.
+%    \begin{macrocode}
+\newcommand*{\xflagref}[1]{\l@dgetref@num{5}{#1}}
+%    \end{macrocode}
+% \end{macro}
 % The next three macros are used by the referencing commands above,
 % and do the job of extracting the right numbers from the label
 % macro that contains the page, line, and sub-line number.
@@ -13007,7 +13014,7 @@
 % \begin{macro}{\l@dgetref@num}
 % Next, \protect\cs{l@dgetref@num} fetches the number we want.  It has two
 % arguments: the first is simply a digit, specifying whether to
-% fetch a page (1), line (2),  sub-line (3) or (4) pstart number.  (This
+% fetch a page (1), line (2),  sub-line (3), (4) pstart number or (5) side flag.  (This
 % switching is done by calling \protect\cs{l@dlabel@parse}.) The second argument
 % is the label-macro, which because of the \protect\cs{@lab} macro above is
 % defined to be a string of the type \verb"123|456|789".
@@ -13032,17 +13039,18 @@
 % which extracts the appropriate number from its first arguments.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, 3 or 4) which defines which of the earlier three numbers to
+% 2, 3 or 4) which defines which of the earlier fiver numbers to
 % pick out. (It was earlier given as the first argument of
 % \protect\cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4|#5{%
-  \ifcase #5%
+\def\l@dlabel@parse#1|#2|#3|#4|#5|#6{%
+  \ifcase #6%
   \or #1%
   \or #2%
   \or #3%
   \or #4%
+  \or #5%
   \fi}
 %    \end{macrocode}
 % \end{macro}
