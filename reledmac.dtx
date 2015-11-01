@@ -9581,7 +9581,7 @@
       \csuse{Xstanzaseparator@#2}%
     \fi%
   }{}%
-  \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
+  \iftoggle{Xonlypstart@#2}{}{\printlines#1||}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -9668,8 +9668,8 @@
 % specifier in \protect\cs{l@d@nums} style format. The real work is done
 % by \protect\cs{l@dp@rsefootspec} which defines macros holding the numeric values.
 % Just a reminder of the arguments: \\
-% \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7? \\
-% \verb?\printlines start-page | line | subline | end-page | line | subline | font ? 
+% \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7?\\
+% \verb?\printlines start-page | line | subline | end-page | line | subline | font?flag 
 %    \begin{macrocode}
 \newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
 \def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
@@ -9838,12 +9838,14 @@
 % \end{macro}
 %
 % \begin{macro}{\printlines}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{printlines} takes an eighth argument: the line flag}
 % So, we have decided which part of line number sets will be printed depending of these value.
 % Now we are ready to print them. 
 % If the lineation is by pstart, we print the pstart.
 % \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
+% Arguments are 1) start page number 2) start line number 3) start subline number 4) end page number 5) end line number 6) end subline number 7) font specification 8) side flag
 %    \begin{macrocode}
-\def\printlines#1|#2|#3|#4|#5|#6|#7|{%
+\def\printlines#1|#2|#3|#4|#5|#6|#7|#8|{%
   \begingroup%
 %    \end{macrocode}
 % If we use \LuaTeX, ensure we use good text's direction.
@@ -11302,12 +11304,12 @@
   \bgroup%
     \csuse{Xendnotenumfont@#2}%
     \ifdimequal{\csuse{Xendboxlinenum@#2}}{0pt}%
-      {\printendlines#1|}%
+      {\printendlines#1||}%
       {\leavevmode%
        \hbox to \csuse{Xendboxlinenum@#2}%
        {%
        \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
-       \printendlines#1|%
+       \printendlines#1||%
        \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
       }}%
   \egroup%
@@ -11465,7 +11467,7 @@
 % \changes{v0.3.0}{2004/02/14}{Added \protect\cs{linenumr@p} and \protect\cs{sublinenumr@p}
 %              to \protect\cs{printendlines}}
 %    \begin{macrocode}
-\def\printendlines#1|#2|#3|#4|#5|#6|#7|{\begingroup
+\def\printendlines#1|#2|#3|#4|#5|#6|#7|#8|{\begingroup
   \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
 % The only subtlety left here is when to print a period between
@@ -13221,7 +13223,7 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
-   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||}%
+   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|||}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13239,7 +13241,7 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}||}%
+   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|||}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
