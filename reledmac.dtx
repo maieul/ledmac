@@ -4714,7 +4714,7 @@
   \ifsublines@
     \ifnum\subline@num>0\relax
       \unskip%
-      \fullstop%
+      \Xsublinesep@side%
       \sublinenumrep{\subline@num}%
     \fi
   \fi%
@@ -9416,7 +9416,10 @@
 % \changes{v1.4.0}{2012/11/16}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia or LuaTeX).}
 %    \begin{macrocode}
 \def\endashchar{\textnormal{--}}
+
 \newcommand*{\fullstop}{\textnormal{.}}
+\def\Xsublinesep@side{\fullstop}
+
 \newcommand*{\rbracket}{\textnormal{%
    \csuse{text\csuse{footnote@lang}}{%
          \ifluatex%
@@ -9864,11 +9867,11 @@
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
   \ifl@d@pnum #1%
-    \fullstop%
+    \csuse{Xsublinesep@\@currentseries}%
   \fi%
   \linenumrep{#2}\iftoggle{Xlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
-    \fullstop%
+    \csuse{Xsublinesep@\@currentseries}%
     \sublinenumrep{#3}%
   \fi
   \egroup%
@@ -9897,12 +9900,12 @@
     \fi%
     \ifl@d@pnum%
        #4%
-       \fullstop%
+       \csuse{Xsublinesep@\@currentseries}%
     \fi%
     \ifl@d@elin \linenumrep{#5}\iftoggle{Xlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}\fi%
     \ifl@d@esl%
        \ifl@d@elin%
-         \fullstop%
+         \csuse{Xsublinesep@\@currentseries}%
        \fi%
        \sublinenumrep{#6}%
      \fi%
@@ -11502,7 +11505,7 @@
   \fi%
   \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
-    \fullstop% 
+    \csuse{Xendsublinesep@\@currentseries}% 
     \sublinenumrep{#3}%
   \fi%
   \egroup%
@@ -11534,7 +11537,7 @@
     \fi%
     \ifl@d@esl%
       \ifl@d@elin% 
-        \fullstop%
+        \csuse{Xendsublinesep@\@currentseries}%
       \fi% 
       \sublinenumrep{#6}%
     \fi%
@@ -11624,6 +11627,7 @@
       \newtoggle{Xnumberonlyfirstintwolines@#1}%
       \csgdef{Xtwolines@#1}{}%
       \csgdef{Xmorethantwolines@#1}{}%
+      \csgdef{Xsublinesep@#1}{\fullstop}%
       \newtoggle{Xtwolinesbutnotmore@#1}%
       \newtoggle{Xtwolinesonlyinsamepage@#1}%
       \newtoggle{Xonlypstart@#1}%
@@ -11888,6 +11892,8 @@
       \csgdef{Xendnotenumfont@#1}{\normalfont}%
       \csgdef{Xendnotefontsize@#1}{\footnotesize}%
       \csgdef{Xendbhooknote@#1}{}%
+      
+      \csgdef{Xendsublinesep@#1}{\fullstop}%
       
       \csgdef{Xendbeforenumber@#1}{0pt}
       \csgdef{Xendafternumber@#1}{0.5em}
@@ -12217,7 +12223,8 @@
 \fi
 \newhooktoggle@series{Xlineflag}[appref,SEref]
 \newhookcommand@series{Xtwolines}[appref,SEref]
-\newhookcommand@series{Xmorethantwolines}[appref,SEref]   
+\newhookcommand@series{Xmorethantwolines}[appref,SEref]
+\newhookcommand@series{Xsublinesep}[appref,SEref,side]   
 \newhooktoggle@series{Xtwolinesbutnotmore}[appref,SEref]
 \newhooktoggle@series{Xtwolinesonlyinsamepage}[appref,SEref]
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
@@ -12301,6 +12308,8 @@
 \newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
+
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -13126,6 +13135,9 @@
 \def\Xlinerangeseparator@appref{\endashchar}%
 \def\Xlinerangeseparator@SEref{\endashchar}%
 
+\def\Xsublinesep@appref{\fullstop}%
+\def\Xsublinesep@SEref{\fullstop}%
+
 \newtoggle{Xtwolinesbutnotmore@appref}%
 \newtoggle{Xtwolinesbutnotmore@SEref}%
 
@@ -13158,6 +13170,9 @@
 
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
 \newtoggle{Xendtwolinesbutnotmore@SErefwithpage}%
+
+\def\Xendsublinesep@apprefwithpage{\fullstop}%
+\def\Xendsublinesep@SErefwithpage{\fullstop}%
 
 \newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 \newtoggle{Xendtwolinesonlyinsamepage@SErefwithpage}%
