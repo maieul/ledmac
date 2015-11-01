@@ -255,6 +255,7 @@
 % \changes{v2.6.0}{2015/10/31}{\protect\cs{printlinesR} deleted}
 % \changes{v2.6.0}{2015/10/31}{\protect\cs{Xlineflag}  and \protect\cs{Xendlineflag} added}
 % \changes{v2.6.0}{2015/10/31}{Fix bug with footnotes numbering when using the same series of familiar footnotes in both side.}
+% \changes{v2.6.0}{2015/10/31}{Error message when calling \protect\cs{Pages} or \protect\cs{Columns} without previous \protect\env{pages} or \protect\env{pairs} environnment.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -1328,6 +1329,17 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@err@Pages@WithoutEnv}
+% \begin{macro}{\led@err@Columns@WithoutEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@WithoutEnv}{%
+  \reledpar@error{\string\Pages\space called without previous `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@WithoutEnv}{%
+  \reledpar@error{\string\Columns\space called without previous `pairs` environment}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+
 %
 % \begin{macro}{\led@error@fail@patch@thepage}
 %    \begin{macrocode}
@@ -4847,6 +4859,9 @@
   \ifl@dpairing%
     \led@err@Columns@InsideEnv%
   \fi%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Columns@WithoutEnv%
+  \else%
   \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4972,8 +4987,9 @@
   \global\l@dnumpstartsR=\z@
   \l@dprintingcolumnsfalse%
   \ignorespaces
-    \global\instanzaLfalse
-    \global\instanzaRfalse}
+    \global\instanzaLfalse%
+    \global\instanzaRfalse%
+  \fi}
 
 %    \end{macrocode}
 % \end{macro}
@@ -5290,6 +5306,9 @@
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Pages@WithoutEnv%
+  \else%
   \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
@@ -5588,7 +5607,7 @@
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
-  \ignorespaces}
+  \ignorespaces\fi}
 
 
 %    \end{macrocode}
