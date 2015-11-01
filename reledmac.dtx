@@ -355,6 +355,7 @@
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\option{noend} option is enabled.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} work print double quotation mark when the label was not defined.}
+% \changes{v2.5.0}{2015/10/31}{New hook: \cs{Xtxtbeforenumber}}
 %
 %
 % \title{\Macpackage \\
@@ -1606,6 +1607,9 @@
 % \DescribeMacro{\Xendsymlinenum}
 % For endnotes, \cs{Xendnumberonlyfirstinline}; \cs{Xendnumberonlyfirstintwolines} and \cs{Xendsymlinenum} are the equivalents of
 % \\ \cs{Xnumberonlyfirstinline}; \cs{Xnumberonlyfirstintwolines} and \cs{Xsymlinenum}.
+% \subsubsection{Arbitrary text before line number}
+% \DescribeMacro{\Xbeforenumber}
+% \cs{Xbeforenumber}\oarg{s}\marg{txt} allow to insert \meta{txt} before the line number, only when the line number is printed, so taking into accout \cs{Xnumberonlyfirstinline} and similar.
 % \subsubsection{Separator for line range}\label{linerangeseparator}
 % \changes{v2.4.0}{2015/10/19}{New hooks:  \protect\cs{Xlinerangeseparator} and \protect\cs{Xendlinerangeseparator}.}
 % \changes{v2.4.0}{2015/10/19}{Option linerangesep for critical footnotes and endnotes.}
@@ -9581,7 +9585,9 @@
       \csuse{Xstanzaseparator@#2}%
     \fi%
   }{}%
-  \iftoggle{Xonlypstart@#2}{}{\printlines#1|}%
+  \iftoggle{Xonlypstart@#2}{}{%
+    \csuse{Xtxtbeforenumber@#2}%
+    \printlines#1|}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11617,6 +11623,7 @@
       \csgdef{Xsymlinenum@#1}{}%
       \newtoggle{Xnonumber@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
+      \csgdef{Xtxtbeforenumber@#1}{}%
       \csgdef{Xafternumber@#1}{0.5em}%
       \newtoggle{Xnonbreakableafternumber@#1}%
       \csgdef{Xbeforesymlinenum@#1}{\csuse{Xbeforenumber@#1}}%
@@ -12160,6 +12167,7 @@
   \newhookcommand@series{Xboxsymlinenum}%
   \newhookcommand@series{Xsymlinenum}
   \newhookcommand@series{Xbeforenumber}
+  \newhookcommand@series{Xtxtbeforenumber}
   \newhookcommand@series{Xafternumber}
   \newhookcommand@series{Xbeforesymlinenum}
   \newhookcommand@series{Xaftersymlinenum}
