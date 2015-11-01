@@ -355,6 +355,7 @@
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\option{noend} option is enabled.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} work print double quotation mark when the label was not defined.}
+% \changes{v2.5.0}{2015/10/31}{New hooks \protect\cs{Xsublinesep} and \cs{Xendsublinesep}.}
 % \changes{v2.5.0}{2015/10/31}{New hook: \cs{Xtxtbeforenumber}}
 %
 %
@@ -962,6 +963,7 @@
 % or sub-line depending on what it started out as, even if it 
 % changes in the middle.
 %
+% You can change the separator between line number and subline number or using \cs{Xsublinesep} without any option argument (\reff{Xsublinesep) or using \cs{Xsublinesepside}. But in the second case, it will change the separator only for line number in side, not for the footnotes. 
 % \subsubsection{Locking lineation}
 % \DescribeMacro{\startlock}
 % \DescribeMacro{\endlock}
@@ -1700,6 +1702,18 @@
 % When using \cs{Xstanza}, you can use \cs{Xstanzaseparator}\oarg{s}\marg{text} to print \meta{text} after the stanza number.
 % Default value is empty.
 %
+% \subsubsection{Separator between line and subline numbers}\label{Xsublinesep}
+% \DescribeMacro{\Xsublinesep}
+% \cs{Xsublinesep}\oarg{s}\marg{txt} changes the separator between line and subline in footnotes. 
+%
+% \textbf{Employed without optional argument, it also change separator in side number}.
+% 
+% \DescribeMacro{\Xendsublinesep}
+% \cs{Xendsublinesep}\oarg{s}\marg{txt} does the same thing for endnotes. 
+%
+% \textbf{However, it does not change anything for the separator in side number. Use \cs{Xsublinesep} without optional argument or \cs{Xsublinesepside}\marg{txt} to do it.}
+%
+% The default value is \verb+\textnormal{.}+.
 % \subsubsection{Space around number}
 % \DescribeMacro{\Xbeforenumber}
 % With \protect\cs{Xbeforenumber}\oarg{s}\marg{l}, you can add some space before the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0~pt.
@@ -2098,28 +2112,6 @@
 % you preferred to have these line numbers printed using
 % old-style numerals.
 %
-%
-%
-% \DescribeMacro{\fullstop}
-% \font\teni=cmmi10
-% A relatively trivial matter relates to punctuation.  In your
-% footnotes, there will be sometimes lines with sub-line numbers like this: 55.6. The
-% en-dash and the full stop are taken from the same font as the
-% numbers, and it all works nicely.  But what if you wanted to use
-% old-style numbers, like {\teni12} and {\teni34}?  These look nice
-% in an edition, but when you use the fonts provided by \PlainTeX\
-% they are taken from a math font which does not
-% have full stop in the same places as a text font.
-% If you (or your macros) just typed
-% \verb"$\oldstyle 55.6$" you will get 
-% `{\teni55.6}'.  So we define
-% \protect\cs{fullstop}, which produces  a full stop
-% from the normal document font, whatever font you are using
-% for the numbers. This macro is used in the
-% macros which format the line numbers in the margins and
-% footnotes, instead of explicit punctuation.
-%
-% 
 %
 %
 %
@@ -2578,6 +2570,7 @@
 %   \item \cs{Xlineflag} (for \parpackage)
 %   \item \cs{Xlinerangeseparator}
 %   \item \cs{Xmorethantwolines}
+%   \item \cs{Xsublinesep}
 %   \item \cs{Xtwolines}
 %   \item \cs{Xtwolinesbutnotmore}
 %   \item \cs{Xtwolinesonlyinsamepage}
@@ -2594,6 +2587,7 @@
 %   \item\cs{Xendlineprefixsingle}
 %   \item\cs{Xendlinerangeseparator}
 %   \item\cs{Xendmorethantwolines}
+%   \item\cs{Xendsublinesep} 
 %   \item\cs{Xendtwolines}
 %   \item\cs{Xendtwolinesbutnotmore}
 %   \item\cs{Xendtwolinesonlyinsamepage}
@@ -4723,7 +4717,9 @@
   \numlabfont\linenumrep{\line@num}%
   \ifsublines@
     \ifnum\subline@num>0\relax
-      \unskip\fullstop\sublinenumrep{\subline@num}%
+      \unskip%
+      \Xsublinesep@side%
+      \sublinenumrep{\subline@num}%
     \fi
   \fi%
   \egroup%
@@ -9424,7 +9420,10 @@
 % \changes{v1.4.0}{2012/11/16}{Switch the right bracket to a left bracket when the lemma is RTL (needs polyglossia or LuaTeX).}
 %    \begin{macrocode}
 \def\endashchar{\textnormal{--}}
+
 \newcommand*{\fullstop}{\textnormal{.}}
+\def\Xsublinesep@side{\fullstop}
+
 \newcommand*{\rbracket}{\textnormal{%
    \csuse{text\csuse{footnote@lang}}{%
          \ifluatex%
@@ -9873,9 +9872,14 @@
   \ifdimequal{\csuse{Xboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \ifl@d@pnum #1\fullstop\fi
+  \ifl@d@pnum #1%
+    \csuse{Xsublinesep@\@currentseries}%
+  \fi%
   \linenumrep{#2}\iftoggle{Xlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifl@d@ssub%
+    \csuse{Xsublinesep@\@currentseries}%
+    \sublinenumrep{#3}%
+  \fi
   \egroup%
 %    \end{macrocode}
 % Then print the dash + end line number, or the range symbol.
@@ -9900,9 +9904,17 @@
         \csuse{Xlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
-    \ifl@d@pnum #4\fullstop\fi%
+    \ifl@d@pnum%
+       #4%
+       \csuse{Xsublinesep@\@currentseries}%
+    \fi%
     \ifl@d@elin \linenumrep{#5}\iftoggle{Xlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}\fi%
-    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
+    \ifl@d@esl%
+       \ifl@d@elin%
+         \csuse{Xsublinesep@\@currentseries}%
+       \fi%
+       \sublinenumrep{#6}%
+     \fi%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
     {}%
@@ -11498,7 +11510,10 @@
    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
   \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
-  \ifl@d@ssub \fullstop \sublinenumrep{#3}\fi
+  \ifl@d@ssub%
+    \csuse{Xendsublinesep@\@currentseries}% 
+    \sublinenumrep{#3}%
+  \fi%
   \egroup%
 %    \end{macrocode}
 % And now, print the dash + the end line number, or the line number range symbol.
@@ -11526,7 +11541,12 @@
       \linenumrep{#5}%
       \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
     \fi%
-    \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumrep{#6}\fi%
+    \ifl@d@esl%
+      \ifl@d@elin% 
+        \csuse{Xendsublinesep@\@currentseries}%
+      \fi% 
+      \sublinenumrep{#6}%
+    \fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
     {}%
@@ -11613,6 +11633,7 @@
       \newtoggle{Xnumberonlyfirstintwolines@#1}%
       \csgdef{Xtwolines@#1}{}%
       \csgdef{Xmorethantwolines@#1}{}%
+      \csgdef{Xsublinesep@#1}{\fullstop}%
       \newtoggle{Xtwolinesbutnotmore@#1}%
       \newtoggle{Xtwolinesonlyinsamepage@#1}%
       \newtoggle{Xonlypstart@#1}%
@@ -11878,6 +11899,8 @@
       \csgdef{Xendnotenumfont@#1}{\normalfont}%
       \csgdef{Xendnotefontsize@#1}{\footnotesize}%
       \csgdef{Xendbhooknote@#1}{}%
+      
+      \csgdef{Xendsublinesep@#1}{\fullstop}%
       
       \csgdef{Xendbeforenumber@#1}{0pt}
       \csgdef{Xendafternumber@#1}{0.5em}
@@ -12208,7 +12231,8 @@
 \fi
 \newhooktoggle@series{Xlineflag}[appref,SEref]
 \newhookcommand@series{Xtwolines}[appref,SEref]
-\newhookcommand@series{Xmorethantwolines}[appref,SEref]   
+\newhookcommand@series{Xmorethantwolines}[appref,SEref]
+\newhookcommand@series{Xsublinesep}[appref,SEref,side]   
 \newhooktoggle@series{Xtwolinesbutnotmore}[appref,SEref]
 \newhooktoggle@series{Xtwolinesonlyinsamepage}[appref,SEref]
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
@@ -12292,6 +12316,8 @@
 \newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
+
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -13117,6 +13143,9 @@
 \def\Xlinerangeseparator@appref{\endashchar}%
 \def\Xlinerangeseparator@SEref{\endashchar}%
 
+\def\Xsublinesep@appref{\fullstop}%
+\def\Xsublinesep@SEref{\fullstop}%
+
 \newtoggle{Xtwolinesbutnotmore@appref}%
 \newtoggle{Xtwolinesbutnotmore@SEref}%
 
@@ -13149,6 +13178,9 @@
 
 \newtoggle{Xendtwolinesbutnotmore@apprefwithpage}%
 \newtoggle{Xendtwolinesbutnotmore@SErefwithpage}%
+
+\def\Xendsublinesep@apprefwithpage{\fullstop}%
+\def\Xendsublinesep@SErefwithpage{\fullstop}%
 
 \newtoggle{Xendtwolinesonlyinsamepage@apprefwithpage}%
 \newtoggle{Xendtwolinesonlyinsamepage@SErefwithpage}%
