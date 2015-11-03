@@ -41,7 +41,7 @@ README: README.md
 dist: $(PACKAGE) examples
 	rm -rf reledmac
 	mkdir reledmac
-	@xelatex reledmac.dtx#We call it at last time because reledmac handbook can refer to page of reledpar handbook, and so we need to run reledmac.dtx a last time after reledpar.dtx has been run
+	@xelatex reledmac.dtx #We call it at last time because reledmac handbook can refer to page of reledpar handbook, and so we need to run reledmac.dtx a last time after reledpar.dtx has been run
 	$(MAKE) -C examples all
 	mkdir reledmac/examples
 	ln examples/*pdf reledmac/examples
