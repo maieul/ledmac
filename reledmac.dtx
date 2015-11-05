@@ -3968,6 +3968,7 @@
 % \begin{macro}{\l@dnumpstartsL}
 % \begin{macro}{\ifledRcol}
 % \begin{macro}{\ifledRcol@}
+% \begin{macro}{\ifXnote@}
 % In preparation for the \parpackage  package, these are related to 
 % the `right' text of parallel texts (when \protect\cs{ifl@dpairing} is TRUE). 
 % They are explained in the \protect\package{eledpar}
@@ -3996,6 +3997,11 @@
 %    \begin{macrocode}
 \newif\ifnumberingR
 %    \end{macrocode}
+% The \cs{ifXnote@} macro is set to true when we are typesetting a critical footnote.
+%    \begin{macrocode}
+\newif\ifXnote@%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -9470,15 +9476,12 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
-   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
-   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
-   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+   \l@dparsefootspec#1|%
    \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
        }%
        {%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
        }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
@@ -11695,12 +11698,14 @@
                          {\footnotelang@poly[R]}%          
                     \footnoteoptions@{R}{##1}{true}%
                     \xright@appenditem{%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \noexpand\Xnote@false% 
                     }\to\inserts@listR
                     \footnoteoptions@{R}{##1}{false}%
                     \global\advance\insert@countR \@ne%
@@ -11713,6 +11718,7 @@
                          {\footnotelang@poly}%
                     \footnoteoptions@{L}{##1}{true}%
                     \xright@appenditem{%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -11721,6 +11727,7 @@
                       \fi%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                       \noexpand\Xnote@false%
                      }\to\inserts@list
                     \global\advance\insert@count \@ne%
                     \footnoteoptions@{L}{##1}{false}%
@@ -12754,36 +12761,48 @@
   \fi\fi%
   \@bsphack%
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
-    \write\linenum@outR{\string\@lab}%
-    \ifx\labelref@listR\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+     \protected@write\@auxout{}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@listR\to\label@refs%
-    \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
+      \write\linenum@outR{\string\@lab}%
+      \ifx\labelref@listR\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@listR\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
 %    \end{macrocode}
 % Use code from the kernel \protect\cs{label} command to write the correct
 % page number.
 % Also define an hypertarget if \protect\package{hyperref} package is loaded.
 %    \begin{macrocode}
-    \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+    \fi%
   }{%
-    \write\linenum@out{\string\@lab}%
-    \ifx\labelref@list\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+       \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@list\to\label@refs%
+      \write\linenum@out{\string\@lab}%
+      \ifx\labelref@list\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@list\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
-  \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
   }%
 \@esphack}%
 
