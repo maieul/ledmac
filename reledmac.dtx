@@ -963,7 +963,7 @@
 % or sub-line depending on what it started out as, even if it 
 % changes in the middle.
 %
-% You can change the separator between line number and subline number or using \cs{Xsublinesep} without any option argument (\reff{Xsublinesep) or using \cs{Xsublinesepside}. But in the second case, it will change the separator only for line number in side, not for the footnotes. 
+% You can change the separator between line number and subline number or using \cs{Xsublinesep} without any option argument (\reff{Xsublinesep} or using \cs{Xsublinesepside}. But in the second case, it will change the separator only for line number in side, not for the footnotes. 
 % \subsubsection{Locking lineation}
 % \DescribeMacro{\startlock}
 % \DescribeMacro{\endlock}
@@ -2507,12 +2507,15 @@
 % Use \cs{edlabelSE}\marg{label} to mark just one location in the text. Contrary to a classical \cs{edlabel}, the \meta{label} could be use with \cs{SEref} and \cs{SErefwithpage}.
 %
 % 
-% The main utility is to use them with two other commands.
+% The main utility is to use them with three other commands.
 % \DescribeMacro{\SEref}
 % \cs{SEref}\marg{label} will make a cross-reference printed as a reference in critical footnotes.
 % 
 % \DescribeMacro{\SErefwithpage}
 % \cs{SErefwithpage} will make a cross-reference printed as a reference in critical endnotes.
+%
+% \DescribeMacro{\SErefonlypage}
+% \cs{SErefonlypage} will make a cross-reference printed only with page number.
 % 
 % \subsubsection{References to lines commented in the apparatus}\label{appref}
 % \changes{v1.21.0}{2015/03/09}{Add \protect\cs{applabel} and related}
@@ -2571,7 +2574,7 @@
 % If you want to make setting specific to \cs{appref} or \cs{SEref}, just call them with optional argument containing a comma separeted list of command name (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
 %
 %
-% The same principle is available for \cs{apprefwithpage} and \cs{SErefwithpage} with the following commands:
+% The same principle is available for \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SErefonlypage} with the following commands:
 % \begin{itemize}
 %   \item\cs{Xendafterpagenumber}
 %   \item\cs{Xendbeforepagenumber}
@@ -2589,7 +2592,7 @@
 %
 % When calling \cs{appref} and \cs{SEref}, you can use as first optional argument, in brackets, any optional argument which can be use for critical footnotes (\reff{Xfootnoteopt}).  
 %
-% When calling \cs{apprefwithpage} or \cs{SErefwithpage}, you can use as first optional argument, in bracket, any optional argument which can be use for critical endnotes (\reff{Xendnoteopt}). 
+% When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as first optional argument, in bracket, any optional argument which can be use for critical endnotes (\reff{Xendnoteopt}). 
 % \section{Side notes}
 %
 % \subsection{Basics}
@@ -12331,8 +12334,8 @@
 \newhooktoggle@series{Xendtwolinesbutnotmore}[apprefwithpage,SErefwithpage]
 \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlinerangeseparator}[apprefwithpage,SErefwithpage]
-\newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage]
-\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpage]
+\newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage,SErefonlypage]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem,SErefonlypage]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
@@ -13158,9 +13161,10 @@
 %
 % \begin{macro}{\appref}
 % \begin{macro}{\apprefwithpage}
-% \begin{macro}{\@apprefprefixsingle}
-% \begin{macro}{\@apprefprefixmore}
-% \protect\cs{appref} and \cs{SEref}, \cs{apprefwithpage} \cs{SErefwithpage} print crossref to some start / end lines defined by specific commands.
+% \begin{macro}{\SEref}
+% \begin{macro}{\SErefwithpage}
+% \begin{macro}{\SErefwithpage}
+% \protect\cs{appref}, \cs{SEref}, \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SEonlypage}    print crossref to some start / end lines defined by specific commands.
 % It prints the lines as they should be printed in the apparatus (critical notes for not suffixed versions, endnotes for suffixed versions).
 % 
 % Here we defines hooks similar to some of those are related to critical footnotes or endnotes.
@@ -13203,9 +13207,11 @@
 
 \def\Xendbeforepagenumber@apprefwithpage{p.}%
 \def\Xendbeforepagenumber@SErefwithpage{p.}%
+\def\Xendbeforepagenumber@SEonlypage{p.}%
 
 \def\Xendafterpagenumber@apprefwithpage{) }%
 \def\Xendafterpagenumber@SErefwithpage{) }%
+\def\Xendafterpagenumber@SErefonlypage{) }%
 
 \def\Xendlineprefixsingle@apprefwithpage{}%
 \def\Xendlineprefixsingle@SErefwithpage{}%
@@ -13278,6 +13284,8 @@
 
 \newcommandx{\apprefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{appref}}
 \newcommandx{\SErefwithpage}[2][1,usedefault]{\refformatedwithpage@{#1}{#2}{SEref}}
+\newcommandx{\SErefonlypage}[2][1,usedefault]{\refformatedonlypage@{#1}{#2}{SEref}}
+
 
 \newcommand{\refformated@}[3]{%
   \def\do##1{%
@@ -13321,7 +13329,43 @@
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
 }%
+
+\newcommand{\refformatedonlypage@}[3]{%
+  \def\do##1{%
+    \setkeys[mac]{truefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
+ \xdef\@currentseries{#3onlypage}%
+ \ifboolexpr{%
+   test{\ifcsundef{the@label#2:start}}%
+   or test{\ifcsundef{the@label#2:end}}%
+  }%
+   {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
+   {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
+       \printnpnum{\xpageref{#2:start}}
+     \else%
+      \ifdefined\linerangesep@%
+        \printnpnum{%
+          \xpageref{#2:start}%
+          \linerangesep@%
+          \xpageref{#2:end}%
+        }%
+      \else%
+        \printnpnum{%
+          \xpageref{#2:start}%
+          \csuse{Xendlinerangeseparator@\@currentseries}%
+          \xpageref{#2:end}%
+        }%
+      \fi%   
+    \fi%
+   }%
+  \def\do##1{%
+    \setkeys[mac]{falsefootnoteoption}{##1}%
+  }%
+ \notblank{#1}{\docsvlist{#1}}{}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -14053,7 +14097,6 @@
   \thepage%
   \pagelinesep%
   \xlineref{\edindexlab\thelabidx}%
-  \xflagref{\edindexlab\thelabidx}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -14205,8 +14248,6 @@
 % Write the index information to the \file{idx} file.
 %    \begin{macrocode}
 \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
-  \global\let\old@Rlineflag\@Rlineflag%
-  \gdef\@Rlineflag{}%
   \ifl@imakeidx%
     \if@edindex@fornote@%
       \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
@@ -14234,7 +14275,6 @@
     \fi%
    \fi%
    \endgroup
-   \global\let\@Rlineflag\old@Rlineflag%
    \@esphack%
 }
 %    \end{macrocode}
