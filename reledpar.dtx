@@ -251,6 +251,13 @@
 % \changes{v2.5.0}{2015/10/14}{Fix bug introduced in v1.15.0 which made hanging indentation in verse not work anymore.}
 % \changes{v2.5.0}{2015/10/14}{Disable empty lines as paragraph in astanza.}
 % \changes{v2.5.1}{2015/10/19}{Fix spurious space when using optional argument of \protect\env{astanza} environment (introduced in v2.5.0).}
+% \changes{v2.5.2}{2015/10/26}{Fix bug introduced in v2.5.0 with \protect\cs{linenummargin}, \protect\cs{firstlinenum}, \protect\cs{linenumincrement}, \protect\cs{firstsublinenum}, \protect\cs{sublinenumincrement}.}
+% \changes{v2.6.0}{2015/10/31}{\protect\cs{printlinesR} deleted}
+% \changes{v2.6.0}{2015/10/31}{\protect\cs{Xlineflag}  and \protect\cs{Xendlineflag} added}
+% \changes{v2.6.0}{2015/10/31}{Fix bug with footnote numbering when using the same series of familiar footnotes on both sides.}
+% \changes{v2.6.0}{2015/10/31}{Error message when calling \protect\cs{Pages} or \protect\cs{Columns} without previous \protect\env{pages} or \protect\env{pairs} environnment.}
+% \changes{v2.6.0}{2015/10/31}{Fix compatibility with \protect\package{babel} (broken in v.2.0.0.}
+% \changes{v2.6.0}{2015/10/31}{No error messages about ends of left / right page when using the \protect\cs{syntaxonly} command of the \protect\package{syntonly} package.}
 % \hyphenation{man-u-script man-u-scripts}
 %
 %
@@ -714,6 +721,12 @@
 % \Xmaxhnotes{0.6\textheight}
 % \maxhnotesX{0.6\textheight}
 % \end{verbatim}
+% \subsubsection{About the numbering of familiar footnotes}
+% If you use the same series of familiar footnotes on both sides, the numbers won't be correct in the first run. There will be a continuous numbering for left notes, and a continuous numbering for right notes.
+% However, in the second run, numbering will be continuous across both left and right sides, alternating between the sides.
+% For example if you have two left pages and two right pages, with one note by pagge, you will obtain the following numbering at the first run: 1 (left page), 3 (right page), 2 (left page),  4 (right page). But at the next run, you will obtain: 1 (left page), 2 (right page), 3 (left page), 4 (right page).
+%
+% If you use parallel columns, during the second of run of typesetting the footnote numbering will not run down the columns. Instead, it will read both column lines completely across the page, and number footnotes from left to right.
 % \subsubsection{Notes for one side only}
 % \DescribeMacro{\Xonlyside}
 % \DescribeMacro{\onlysideX}
@@ -741,11 +754,15 @@
 %   \begin{Rightside}
 %    \beginnumbering
 %     \pstart 
-%      Un petit chat\footnotemk. And so one ...
+%      Un petit chat\footnoteAmk. And so one ...
 %     \pend
 %    \endnumbering
 %   \end{Rightside}
 % \end{verbatim}
+% \subsection{Using line flag}
+% \DescribeMacro{\Xlineflag}
+% \DescribeMacro{\Xendlineflag}
+% Use \cs{Xlineflag}\oarg{s} to add right line flag (\reff{Rlineflag}) to right critical footnotes and  \cs{Xendlineflag}\oarg{s} to add it to right critical endnotes.
 % \section{Left and right texts}\label{leftright}
 % \subsection{Environments}
 % Parallel texts are divided into Leftside and Rightside. The form of the
@@ -882,7 +899,7 @@
 % \cs{linenummarginR}\marg{margin} sets the line margin for right side.
 % \cs{linenummargin*}\marg{margin} sets for both side.
 % \meta{margin} can be, as for \macpackage's \cs{linenummargin} one of these values: \verb+left+, \verb+right+, \verb+inner+, \verb+outer+.
-% \DescribeMacro{\setRlineflag}
+% \DescribeMacro{\setRlineflag}\label{Rlineflag}
 % A ``R''  is appended to the line numbers of the
 % right texts. 
 % This may be useful for parallel columns but for parallel pages it might
@@ -1117,7 +1134,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/10/19 v2.5.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/10/31 v2.6.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1286,10 +1303,17 @@
 % \begin{macro}{\led@err@LeftOnRightPage}
 % \begin{macro}{\led@err@RightOnLeftPage}
 %    \begin{macrocode}
+\providebool{syntax@}
 \newcommand*{\led@err@LeftOnRightPage}{%
-  \reledpar@error{The left page has ended on a right page}{\@ehc}}
+  \notbool{syntax@}%
+    {\reledpar@error{The left page has ended on a right page}{\@ehc}}%
+    {}%
+  }
 \newcommand*{\led@err@RightOnLeftPage}{%
-  \reledpar@error{The right page has ended on a left page}{\@ehc}}
+  \notbool{syntax@}%
+    {\reledpar@error{The right page has ended on a left page}{\@ehc}}
+    {}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1314,6 +1338,17 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@err@Pages@WithoutEnv}
+% \begin{macro}{\led@err@Columns@WithoutEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@WithoutEnv}{%
+  \reledpar@error{\string\Pages\space called without previous `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@WithoutEnv}{%
+  \reledpar@error{\string\Columns\space called without previous `pairs` environment}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+
 %
 % \begin{macro}{\led@error@fail@patch@thepage}
 %    \begin{macrocode}
@@ -1353,9 +1388,9 @@
 % \begin{macro}{\led@warn@setting@in@rightside}
 %    \begin{macrocode}
 \newcommand{\led@warn@setting@in@rightside}[1]{%
-  \reledpar@warning{You use #1 inside rightside environment.\MessageBreak
-  Such behavior is deprecated.\MessageBreak
-  Use instead #1R or #1* in your preamble}.
+  \reledpar@warning{You use #1 inside rightside environment.\MessageBreak%
+  Such behavior is deprecated.\MessageBreak%
+  Use instead #1R or #1* in your preamble}.%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2528,6 +2563,32 @@
       \csgdef{Xonlyside@#1}{}%
     \fi%
 %    \end{macrocode}
+% \subsection{Tools specific to familiar footnotes}
+%    \begin{macrocode}
+  \unless\ifnofamiliar@%
+%    \end{macrocode}
+% \subsubsection{Managing correct number}\label{familiarfootnotenumber}
+% One problem with using familiar footnotes in parallel typesetting is that the order of reading ​notes is not the same as the order of typesetting notes, because \LaTeX\ reads first all the notes of one side, then all the notes of the other side.
+% Then, however, \LaTeX\ alternates between typesetting left-side note and right-side notes.
+% Consequently, if we do nothing special, the notes number are sorted in the reading order, and not in the typeseting order.
+% So we could obtain something like 1,3,2,5,4.
+%
+% To prevent this problem, we use a two new counters by  series. 
+% Every note, in parallel typesetting, has three associated counters.
+% \begin{enumerate}
+% \item A \LaTeX\ counter \verb+footnoteX+. This the only one manipulated by user, and the only one finally printed.
+% \item A \TeX\ counter \verb+footnoteX@reading+. Its value is increased when reading the \cs{footnoteX} command in the side environments. It is used to get the correct footnote number from the \verb+.aux+ file to typeset in the main text.
+% \item A \TeX\ counter \verb+footnoteX@typeset. Its value is increased when inserting footnotes. Its value is directly used in the footnote, and is stored in the \verb+aux+ files to be used on the next run for the main text.
+% \end{enumerate} 
+% 
+%
+%
+% So here, we only defined the new counters.
+%    \begin{macrocode}
+      \expandafter\newcount\csname footnote#1@reading\endcsname%
+      \expandafter\newcount\csname footnote#1@typeset\endcsname%
+%    \end{macrocode}
+% 
 % \subsubsection{Familiar footnotes without marks}
 % The \protect\cs{footnoteXnomk} commands are for notes which are printed on the left side, while they are called in the right side.
 % Basically, they set first toggle \protect\cs{nomark@} to true, then call the \protect\cs{footnoteX}.
@@ -2535,8 +2596,6 @@
 %
 % First, check the \verb+nofamiliar+ option of \macpackage.
 %
-%    \begin{macrocode}
-  \unless\ifnofamiliar@%
 % So declare the list.
 %    \begin{macrocode}
       \expandafter\list@create\csname footnote#1@mk\endcsname%
@@ -2588,7 +2647,7 @@
          \xspace%
       }%
 %    \end{macrocode}
-% End of tools for familiar notes without marks
+% End of tools specific to familiar notes. 
 %    \begin{macrocode}
   \fi
 %    \end{macrocode}
@@ -2597,7 +2656,29 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Create hooks}
+% \subsubsection{Get correct footnote number}
+% \begin{macro}{\get@familiarfootnote@number}
+% \begin{macro}{\save@familiarfootnote@number}
+% As users can insert footnotes​ between two \cs{Pairs} or \cs{Pages} commands, we have to set the \cs+footnoteX@typeset+ counter to the last value of the \verb+footnoteX+ counter at the beginning of these two commands.
+%    \begin{macrocode}
+\newcommand{\save@familiarfootnote@number}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{\csxdef{saved@footnote##1}{\the\csname c@footnote##1\endcsname}}%
+    \dolistloop{\@series}%
+  \fi%
+  \xdef\saved@footnote{\the\c@footnote}%
+}
+\newcommand{\get@familiarfootnote@number}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{\global\expandafter\csname footnote##1@typeset\endcsname=\csuse{saved@footnote##1}}%
+    \dolistloop{\@series}%
+  \fi%
+  \global\footnote@typeset=\saved@footnote%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsection{Create hooks}
 % Read the \macpackage code handbook about \protect\cs{newhookcommand@series}.
 % Here, we create hooks which are specific to \parpackage.
 %    \begin{macrocode}
@@ -2610,7 +2691,7 @@
 
 
 %    \end{macrocode}
-% \subsubsection{Init standards series (A,B,C,D,E,Z)}
+% \subsection{Init standards series (A,B,C,D,E,Z)}
 % \begin{macro}{\init@series@par}
 % \protect\cs{newseries@par} is called by \protect\cs{newseries}.
 % However, this last command is called before \parpackage is loaded.
@@ -2623,8 +2704,19 @@
 \init@series@par%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Tools specific to \LaTeX's classical footnotes}
+% As users can use classical footnotes of \LaTeX\ (\cs{footnote}) 
+% in parallel texts, we must integrate the same tools to get correct number as for \macpackage' footnotes (\reff{familiarfootnotenumber}).
+% \begin{macro}{\footnote@reading}
+% \begin{macro}{\footnote@typset}
+%    \begin{macrocode}
+\newcount\footnote@reading%
+\newcount\footnote@typeset%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Pstart numbers dumping and restoration}
-% While in \macpackage the footnotes are inserted in the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
+% While in \macpackage the footnotes are inserted at the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the \verb+PstartL+ and \verb+PstartR+ counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \protect\cs{pstart} and restore these at each \protect\cs{pstart} when calling \protect\cs{Columns} or \protect\cs{Pages}. 
 % We also dump and restore the value of the boolean \protect\cs{ifnumberpstart}.
@@ -2692,6 +2784,7 @@
   \l@dpairingtrue
   \l@dpagingfalse
   \initnumbering@quote
+  \save@familiarfootnote@number%
   \at@begin@pairs%
 }{%
   \l@dpairingfalse
@@ -2714,6 +2807,7 @@
   \l@dpairingtrue
   \l@dpagingtrue
   \initnumbering@quote
+  \save@familiarfootnote@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -3912,43 +4006,7 @@
 % \section{Footnotes}
 % \label{footnotes}
 %
-% \subsection{Line number printing} \label{sec:nfootformat}
-%
-% The \protect\cs{printlinesR} macro prints the line
-% numbers for a note---which, in the
-% general case, is a rather complicated task.
-% The seven parameters of the
-% argument are the line numbers as stored in \protect\cs{l@d@nums}, in the
-% form described on \reff{reledmac-linenumbers} of \Eledmac{}' handbook: the starting
-% page, line, and sub-line numbers, followed by the ending page,
-% line, and sub-line numbers, and then the font specifier for
-% the lemma.
-%
-%
-% \begin{macro}{\printlinesR}
-% This is the right text version of \protect\cs{printlines} and takes account
-% of \protect\cs{@Rlineflag}. 
-% Just a reminder of the arguments: \\
-% \verb?\printlinesR    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7? \\
-% \verb?\printlinesR start-page | line | subline | end-page | line | subline | font ? 
-% \changes{v0.3.0}{2005/02/10}{Simplified \protect\cs{printlinesR} by using 
-%                            \protect\cs{setprintlines}}
-%    \begin{macrocode}
-\def\printlinesR#1|#2|#3|#4|#5|#6|#7|{\begingroup
-  \setprintlines{#1}{#2}{#3}{#4}{#5}{#6}%
-  \ifl@d@pnum #1\fullstop\fi
-  \ifledplinenum \linenumr@p{#2}\@Rlineflag\else \symplinenum\fi
-  \ifl@d@ssub \fullstop \sublinenumr@p{#3}\fi
-  \ifl@d@dash \endashchar\fi
-  \ifl@d@pnum #4\fullstop\fi
-  \ifl@d@elin \linenumr@p{#5}\@Rlineflag\fi
-  \ifl@d@esl \ifl@d@elin \fullstop\fi \sublinenumr@p{#6}\fi
-\endgroup}
 
-
-%    \end{macrocode}
-% \end{macro}
-%
 % \subsection{Footnotes output specific to \protect\cs{Pages}}
 % \begin{macro}{\print@Xnotes@forpages}
 % \begin{macro}{\correct@Xfootins@box}
@@ -4150,13 +4208,14 @@
 % \begin{macro}{\l@dmake@labelsR}
 % This is the right text version of \protect\cs{l@dmake@labels}, taking account
 % of \protect\cs{@Rlineflag}.
+% \changes{v2.6.0}{2015/10/31}{\protect\cs{@Rlineflag} is not stored directly after the line number, but as a fith argument of \protect\cs{the@labelX}. Can be retrieved by \protect\cs{xflagref}.}
 %
 %    \begin{macrocode}
 \def\l@dmake@labelsR#1|#2|#3|#4|#5{%
   \expandafter\ifx\csname the@label#5\endcsname \relax\else
     \led@warn@DuplicateLabel{#4}%
   \fi
-  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\@Rlineflag|#3|#4}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4|\@Rlineflag}%
   \ignorespaces}
 \AtBeginDocument{%
   \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
@@ -4556,7 +4615,7 @@
 % that \protect\cs{theledlanguageL} and \protect\cs{theledlanguageR} are unaltered.
 %    \begin{macrocode}
     \renewcommand*{\l@duselanguage}[1]{%
-      \l@doldselectlanguage{#1}}
+      \expandafter\l@doldselectlanguage\expandafter{#1}}
 %    \end{macrocode}
 % Lastly, initialise the left and right languages to the current \protect\package{babel}
 % one.
@@ -4810,6 +4869,9 @@
   \ifl@dpairing%
     \led@err@Columns@InsideEnv%
   \fi%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Columns@WithoutEnv%
+  \else%
   \l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -4826,6 +4888,7 @@
     \global\par@lineR=\z@
     \global\l@dpscL=\z@
     \global\l@dpscR=\z@
+    \get@familiarfootnote@number%
 %    \end{macrocode}
 % Check if there are chunks to be processed, and process them
 % two by two (left and right pairs).
@@ -4934,8 +4997,9 @@
   \global\l@dnumpstartsR=\z@
   \l@dprintingcolumnsfalse%
   \ignorespaces
-    \global\instanzaLfalse
-    \global\instanzaRfalse}
+    \global\instanzaLfalse%
+    \global\instanzaRfalse%
+  \fi}
 
 %    \end{macrocode}
 % \end{macro}
@@ -5252,6 +5316,9 @@
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Pages@WithoutEnv%
+  \else%
   \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
@@ -5284,6 +5351,7 @@
     \global\l@dpscR=\z@%
     \writtenlinesLfalse%
     \writtenlinesRfalse%
+    \get@familiarfootnote@number%
 %    \end{macrocode}
 % The footnotes are printed in a different way from expected in \macpackage, as we may want to print the notes on one side only.
 %    \begin{macrocode}
@@ -5549,7 +5617,7 @@
     \global\instanzaRfalse%
  \l@dprintingpagesfalse%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
-  \ignorespaces}
+  \ignorespaces\fi}
 
 
 %    \end{macrocode}
