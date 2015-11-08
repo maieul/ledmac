@@ -11701,6 +11701,12 @@
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\nindex}}%
                         {}%
+                      \ifbool{indtl@notenumber}%
+                        {\unexpanded{\let\index\nindex}}%There is no note number… so
+                        {}%
+                      \ifbool{indtl@notenumber}%
+                        {\unexpanded{\let\index\orig@@index}}%
+                        {}%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -11725,6 +11731,9 @@
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\nindex}}%
                         {}%
+                      \ifbool{indtl@notenumber}%
+                        {\unexpanded{\let\index\nindex}}%There is no note number… so
+                        {}%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -11734,6 +11743,9 @@
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \ifbool{indtl@innote}%
+                        {\unexpanded{\let\index\orig@@index}}%
+                        {}%
+                      \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
                      }\to\inserts@list
@@ -11830,8 +11842,20 @@
               \ifbool{indtl@innote}%
                 {\let\index\nindex}%
                 {}%
+              \ifbool{indtl@notenumber}%
+                {%
+                \renewcommand{\index}[2][]{%
+                  \orig@@index[####1]{%
+                    ####2|innotenumber{\csuse{thefootnote#1}}%
+                    }%
+                  }%
+                }%
+                {}%
               \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
               \ifbool{indtl@innote}%
+                {\let\index\orig@@index}%
+                {}%
+             \ifbool{indtl@notenumber}%
                 {\let\index\orig@@index}%
                 {}%
           \endgroup%
