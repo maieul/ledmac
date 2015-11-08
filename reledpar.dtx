@@ -1508,21 +1508,49 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\initnumbering@sectcountR}
+% \begin{macro}{\save@section@number}
+% \begin{macro}{\set@sectcountR}
 % \changes{v1.2.1}{2012/11/01}{For the right section, the counter is defined only once.}
-% We do not want the numbering of the right-side section commands to be continuous with the numbering of the left side,
+% We do not want the numbering of the right-side section commands to be continuous with the numbering of the left side, 
+% however, we want they be continous with the numbering of contents typesette before the \env{pages} or \env{columns} env.
 % we switch the \LaTeX\ counter in \protect\cs{numberingR}.
+% 
 %    \begin{macrocode}
 \newcounter{chapterR}
 \newcounter{sectionR}
 \newcounter{subsectionR}
 \newcounter{subsubsectionR}
+
+\newcount\old@chapter%
+\newcount\old@section%
+\newcount\old@subsection%
+\newcount\old@subsubsection%
+\newcommand{\save@section@number}{%
+  \ifdef\c@chapter%
+   \global\old@chapter=\c@chapter%
+ \fi%
+  \global\old@section=\c@section%
+  \global\old@subsection=\c@subsection%
+  \global\old@subsubsection=\c@subsubsection%
+}%
 \newcommand{\initnumbering@sectcountR}{
-    \let\c@chapter\c@chapterR
-    \let\c@section\c@sectionR
-    \let\c@subsection\c@subsectionR
-    \let\c@subsubsection\c@subsubsectionR
-}
+ \ifdef\c@chapter%
+  \global\c@chapterR=\old@chapter%
+ \fi%
+ \global\c@sectionR=\old@section%
+ \global\c@subsectionR=\old@subsection%
+ \global\c@subsubsectionR=\old@subsubsection%
+ \set@sectcountR%
+}%
+\newcommand{\set@sectcountR}{%
+    \let\c@chapter\c@chapterR%
+    \let\c@section\c@sectionR%
+    \let\c@subsection\c@subsectionR%
+    \let\c@subsubsection\c@subsubsectionR%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\pausenumberingR}
@@ -2785,6 +2813,7 @@
   \l@dpagingfalse
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \at@begin@pairs%
 }{%
   \l@dpairingfalse
@@ -2808,6 +2837,7 @@
   \l@dpagingtrue
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -3478,7 +3508,7 @@
 
 \def\print@eledsectionR{%
     \addtocounter{pstartR}{-1}%
-    \initnumbering@sectcountR%
+    \set@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
@@ -5244,7 +5274,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5267,7 +5297,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{after@pendR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5524,7 +5554,7 @@
           \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
-              \initnumbering@sectcountR%
+              \set@sectcountR%
               \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
               \csuse{before@pstartR@\the\l@dpscR}%
               \global\csundef{before@pstartR@\the\l@dpscR}%
