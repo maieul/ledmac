@@ -356,6 +356,7 @@
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\option{noend} option is enabled.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} print double quotation mark when the label was not defined.}
 % \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} work with right side crossref.}
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{edlabel} works now in \cs{Xfootnote}.}
 % \changes{v2.5.0}{2015/10/31}{Log contains `There were undefined references` when using false references in \protect\cs{edlineref} or \protect{edpageref}.}
 % \changes{v2.4.1}{2015/10/26}{Fix bug with tabular environments when using \protect\package{babel} or \protect\package{polyglossia} language which override \LaTeX\ \protect\cs{roman} command, like greek language.}
 % \changes{v2.5.0}{2015/10/31}{Fix spurious vertical space in \protect\env{astanza} environment (\reledpar)}
@@ -2416,23 +2417,12 @@
 % process a document after adding a new \protect\cs{edlabel} command: the
 % auxiliary file will not have been updated yet.)
 %
-% \subsection{Refer to a critical notes}
-% If you want to refer to a word inside an
-% \protect\cs{edtext}\marg{lemma}\marg{app} command, the \protect\cs{edlabel} should be defined inside
-% the first argument, e.g.,
-% \begin{verbatim}
-%   The \edtext{creature\edlabel{elephant} was quite
-%    unafraid}{\Afootnote{Of the mouse, that is.}}
-% \end{verbatim}
+% \subsection{Cross-referencing to a critical note}
+% If you when to refer to a word which is a lemma word, the \cs{edlabel} command should be in the first argument of \cs{edtext} command.
 %
-% If you add the \protect\cs{edlabel} inside some \protect\cs{Xfootnote} command, 
-% it will refer to that note, and a suffix \emph{n} will be added to the reference.
-% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}. 
-% Its actual definition is:
-% \begin{verbatim}
-% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
-% \end{verbatim}
+% If you want to refer to the content of a a \cs{Xfootnote}, the line and subline number printed will be the start line.
 %
+% If you want to refers to the start and end lines, you should use \cs{appref} and related tools (\reff{appref}).
 % \subsection{Cross-referencing which return a number in any case}
 % Where \verb+#1+ stands for the reference.
 % \DescribeMacro{\xpageref}
@@ -2530,7 +2520,7 @@
 % \DescribeMacro{\SErefonlypage}
 % \cs{SErefonlypage} will make a cross-reference printed only with page number.
 % 
-% \subsubsection{References to lines commented in the apparatus}
+% \subsubsection{References to lines commented in the apparatus}\label{appref}
 % \changes{v1.21.0}{2015/03/09}{Add \protect\cs{applabel} and related}
 % You may want to make a cross-reference to a passage that is referred to by \protect\cs{edtext}.
 % \Macpackage provides specific tools for this scenario.
@@ -2687,7 +2677,7 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \protect\package{eledmac}.
+% Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \protect\macpackage.
 % That means you must first run (Xe/Lua)\LaTeX three times, then run \verb+makeindex+, and then finally run (Xe/Lua)\LaTeX\ again, in order to get an index with the right page numbers.
 %
 % If  the \protect\package{imakeidx} or \protect\package{indextools} package is used then the macro takes an optional
@@ -2703,6 +2693,23 @@
 %     \item Load \macpackage.
 %   \item Declare the index with the macro \cs{makeindex} of \package{imakeidx} and \package{indextools}.
 % \end{enumerate}
+% \subsection{Refer to a critical notes}
+% If you want to refer to a word inside an
+% \protect\cs{edtext}\marg{lemma}\marg{app} command, the \protect\cs{edindex} should be defined inside
+% the first argument, e.g.,
+% \begin{verbatim}
+%   The \edtext{creature\edlabel{elephant} was quite
+%    unafraid}{\Afootnote{Of the mouse, that is.}}
+% \end{verbatim}
+%
+% If you add the \protect\cs{edindex} inside some \protect\cs{Xfootnote} command, 
+% it will refer to that note, and a suffix \emph{n} will be added to the reference.
+% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}. 
+% Its actual definition is:
+% \begin{verbatim}
+% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
+% \end{verbatim}
+%
 % \subsection{Separator between page and line numbers}
 % \DescribeMacro{\pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
@@ -3976,6 +3983,7 @@
 % \begin{macro}{\l@dnumpstartsL}
 % \begin{macro}{\ifledRcol}
 % \begin{macro}{\ifledRcol@}
+% \begin{macro}{\ifXnote@}
 % In preparation for the \parpackage  package, these are related to 
 % the `right' text of parallel texts (when \protect\cs{ifl@dpairing} is TRUE). 
 % They are explained in the \protect\package{eledpar}
@@ -4004,6 +4012,11 @@
 %    \begin{macrocode}
 \newif\ifnumberingR
 %    \end{macrocode}
+% The \cs{ifXnote@} macro is set to true when we are typesetting a critical footnote.
+%    \begin{macrocode}
+\newif\ifXnote@%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5906,7 +5919,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{4}%
+\newcommand{\this@line@list@version}{5}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -9478,15 +9491,12 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
-   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
-   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
-   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+   \l@dp@rsefootspec#1|%
    \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
        }%
        {%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
        }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
@@ -9670,7 +9680,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\l@dparsefootspec}
 % \begin{macro}{\l@dp@rsefootspec}
 % \begin{macro}{\l@dparsedstartpage}
 % \begin{macro}{\l@dparsedstartline}
@@ -9678,16 +9687,12 @@
 % \begin{macro}{\l@dparsedendpage}
 % \begin{macro}{\l@dparsedendline}
 % \begin{macro}{\l@dparsedendsub}
-% \protect\cs{l@dparsefootspec}\marg{spec}\marg{lemma}\marg{text} parses a footnote
-% specification. \meta{lemma} and \meta{text} are the lemma and text
-% respectively. \meta{spec} is the line and page number and lemma font
-% specifier in \protect\cs{l@d@nums} style format. The real work is done
-% by \protect\cs{l@dp@rsefootspec} which defines macros holding the numeric values.
+% \changes{v2.5.0}{2015/10/31}{\protect\cs{l@dparsefootspec} deleted, not use anymore since \protect\eledmac release!}
+% \protect\cs{l@dp@rsefootspec} parses  lines specification and defines macros holding the numeric values.
 % Just a reminder of the arguments: \\
 % \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7?\\
 % \verb?\printlines start-page | line | subline | end-page | line | subline | font?flag 
 %    \begin{macrocode}
-\newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
 \def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
   \gdef\l@dparsedstartpage{#1}%
   \gdef\l@dparsedstartline{#2}%
@@ -9707,7 +9712,6 @@
 \def\l@dparsedendsub{0}%
 
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -11703,12 +11707,14 @@
                          {\footnotelang@poly[R]}%          
                     \footnoteoptions@{R}{##1}{true}%
                     \xright@appenditem{%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \noexpand\Xnote@false% 
                     }\to\inserts@listR
                     \footnoteoptions@{R}{##1}{false}%
                     \global\advance\insert@countR \@ne%
@@ -11721,6 +11727,7 @@
                          {\footnotelang@poly}%
                     \footnoteoptions@{L}{##1}{true}%
                     \xright@appenditem{%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -11729,6 +11736,7 @@
                       \fi%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                       \noexpand\Xnote@false%
                      }\to\inserts@list
                     \global\advance\insert@count \@ne%
                     \footnoteoptions@{L}{##1}{false}%
@@ -12762,36 +12770,48 @@
   \fi\fi%
   \@bsphack%
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
-    \write\linenum@outR{\string\@lab}%
-    \ifx\labelref@listR\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+     \protected@write\@auxout{}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@listR\to\label@refs%
-    \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
+      \write\linenum@outR{\string\@lab}%
+      \ifx\labelref@listR\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@listR\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
 %    \end{macrocode}
 % Use code from the kernel \protect\cs{label} command to write the correct
 % page number.
 % Also define an hypertarget if \protect\package{hyperref} package is loaded.
 %    \begin{macrocode}
-    \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+    \fi%
   }{%
-    \write\linenum@out{\string\@lab}%
-    \ifx\labelref@list\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+       \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@list\to\label@refs%
+      \write\linenum@out{\string\@lab}%
+      \ifx\labelref@list\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@list\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
-  \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
   }%
 \@esphack}%
 
