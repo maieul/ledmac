@@ -259,6 +259,7 @@
 % \changes{v2.6.0}{2015/10/31}{Fix compatibility with \protect\package{babel} (broken in v.2.0.0.}
 % \changes{v2.6.0}{2015/10/31}{No error messages about ends of left / right page when using the \protect\cs{syntaxonly} command of the \protect\package{syntonly} package.}
 % \hyphenation{man-u-script man-u-scripts}
+% \changes{v2.6.0}{2015/10/31}{Fix bug with right side  title number when using title commands before \protect\env{pages} or \protect\env{columns} environment.}
 %
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
@@ -1508,21 +1509,49 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\initnumbering@sectcountR}
+% \begin{macro}{\save@section@number}
+% \begin{macro}{\set@sectcountR}
 % \changes{v1.2.1}{2012/11/01}{For the right section, the counter is defined only once.}
-% We do not want the numbering of the right-side section commands to be continuous with the numbering of the left side,
+% We do not want the numbering of the right-side section commands to be continuous with the numbering of the left side, 
+% however, we want they be continous with the numbering of contents typesette before the \env{pages} or \env{columns} env.
 % we switch the \LaTeX\ counter in \protect\cs{numberingR}.
+% 
 %    \begin{macrocode}
 \newcounter{chapterR}
 \newcounter{sectionR}
 \newcounter{subsectionR}
 \newcounter{subsubsectionR}
+
+\newcount\old@chapter%
+\newcount\old@section%
+\newcount\old@subsection%
+\newcount\old@subsubsection%
+\newcommand{\save@section@number}{%
+  \ifdefined\c@chapter%
+   \global\old@chapter\value{chapter}%
+  \fi%
+  \global\old@section\value{section}%
+  \global\old@subsection\value{subsection}%
+  \global\old@subsubsection\value{subsubsection}%
+}%
 \newcommand{\initnumbering@sectcountR}{
-    \let\c@chapter\c@chapterR
-    \let\c@section\c@sectionR
-    \let\c@subsection\c@subsectionR
-    \let\c@subsubsection\c@subsubsectionR
+ \ifdefined\c@chapter%
+   \setcounter{chapterR}{\old@chapter}%
+ \fi%
+ \setcounter{sectionR}{\old@section}%
+ \setcounter{subsectionR}{\old@subsection}%
+ \setcounter{subsubsectionR}{\old@subsubsection}%
+ \set@sectcountR%
 }
+\newcommand{\set@sectcountR}{%
+    \let\c@chapter\c@chapterR%
+    \let\c@section\c@sectionR%
+    \let\c@subsection\c@subsectionR%
+    \let\c@subsubsection\c@subsubsectionR%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\pausenumberingR}
@@ -2785,6 +2814,7 @@
   \l@dpagingfalse
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \at@begin@pairs%
 }{%
   \l@dpairingfalse
@@ -2808,6 +2838,7 @@
   \l@dpagingtrue
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -3478,7 +3509,7 @@
 
 \def\print@eledsectionR{%
     \addtocounter{pstartR}{-1}%
-    \initnumbering@sectcountR%
+    \set@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
@@ -5244,7 +5275,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5267,7 +5298,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{after@pendR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5524,7 +5555,7 @@
           \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
-              \initnumbering@sectcountR%
+              \set@sectcountR%
               \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
               \csuse{before@pstartR@\the\l@dpscR}%
               \global\csundef{before@pstartR@\the\l@dpscR}%
