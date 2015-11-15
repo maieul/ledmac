@@ -4,7 +4,7 @@ PACKAGE = *.dtx \
 		  reledpar.pdf \
 			migration.pdf \
 		  README \
-		  Makefile \
+		  makefile \
 		  latexmkrc \
 
 

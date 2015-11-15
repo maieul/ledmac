@@ -348,14 +348,18 @@
 % \changes{v2.4.0}{2015/10/19}{Fix spurious space when using optional argument of \protect{stanza} (introduced in v2.3.0).}
 % \changes{v2.4.1}{2015/10/26}{Fix bug with \protect\cs{appref} and \protect\cs{apprefwithpage} (introduced in v2.4.0).}
 % \changes{v2.4.1}{2015/10/26}{Fix bug with tabular environments when using \protect\package{babel} or \protect\package{polyglossia} language which override \LaTeX\ \protect\cs{roman} command, like Greek.}
-% \changes{v2.5.0}{2015/10/31}{Compatibility with new hook and tools of \protect\reledpar~2.6.0.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{lemma} can be used even when the \protect\option{nocritical} is enabled.}
-% \changes{v2.5.0}{2015/10/31}{New hooks to customize page and line number appearance in endnotes.}
-% \changes{v2.5.0}{2015/10/31}{New hooks: \protect\cs{Xbhookgroup} and \protect\cs{bhookgroupX}.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} works also when \protect\option{noend} option is enabled.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} print double quotation mark when the label was not defined.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{apprefwithpage} and \protect\cs{appref} work with right side crossref.}
+% \changes{v2.4.1}{2015/10/26}{Fix bug with tabular environments when using \protect\package{babel} or \protect\package{polyglossia} language which override \LaTeX\ \protect\cs{roman} command, like greek language.}
+% \changes{v2.5.0}{2015/11/13}{Compatibility with new hook and tools of \protect\reledpar~2.6.0.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{lemma} can be used even when the \protect\option{nocritical} is enabled.}
+% \changes{v2.5.0}{2015/11/13}{New hooks to customize page and line number appearance in endnotes.}
+% \changes{v2.5.0}{2015/11/13}{New hooks: \protect\cs{Xbhookgroup} and \protect\cs{bhookgroupX}.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{appref} and \protect\cs{apprefwithpage} can take linerangesep optional argument.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{apprefwithpage} works also when \protect\option{noend} option is enabled.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{apprefwithpage} and \protect\cs{appref} print double quotation mark when the label was not defined.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{apprefwithpage} and \protect\cs{appref} work with right side crossref.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{edlabel} works now in \protect\cs{Xfootnote}.}
+% \changes{v2.5.0}{2015/11/13}{Log contains `There were undefined references` when using false references in \protect\cs{edlineref} or \protect{edpageref}.}
+% \changes{v2.5.0}{2015/11/13}{Fix spurious vertical space in \protect\env{astanza} environment (\reledpar)}
 %
 %
 % \title{\Macpackage \\
@@ -2000,7 +2004,7 @@
 % \subsubsection{Code before notes}
 %\DescribeMacro{Xbhookgroup}
 %\DescribeMacro{bhookgroupX}
-% While \cs{Xtxtbeforenotes} is for typeset code before notes, \cs{Xbhookgroup} and \cs{bhookgroupX} (respectively for critical and familiar) are for execute code before a groups of note, between the rules and the printing of the notes. 
+% While \cs{Xtxtbeforenotes} is for typesetting code before notes, \cs{Xbhookgroup} and \cs{bhookgroupX} (respectively for critical and familiar) are for executing code before a groups of notes, between the rules and the printing of the notes. 
 % 
 % 
 % \subsubsection{Spacing}
@@ -2413,23 +2417,12 @@
 % process a document after adding a new \protect\cs{edlabel} command: the
 % auxiliary file will not have been updated yet.)
 %
-% \subsection{Refer to a critical notes}
-% If you want to refer to a word inside an
-% \protect\cs{edtext}\marg{lemma}\marg{app} command, the \protect\cs{edlabel} should be defined inside
-% the first argument, e.g.,
-% \begin{verbatim}
-%   The \edtext{creature\edlabel{elephant} was quite
-%    unafraid}{\Afootnote{Of the mouse, that is.}}
-% \end{verbatim}
+% \subsection{Cross-referencing to a critical note}
+% If you when to refer to a word which is a lemma word, the \cs{edlabel} command should be in the first argument of \cs{edtext} command.
 %
-% If you add the \protect\cs{edlabel} inside some \protect\cs{Xfootnote} command, 
-% it will refer to that note, and a suffix \emph{n} will be added to the reference.
-% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}. 
-% Its actual definition is:
-% \begin{verbatim}
-% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
-% \end{verbatim}
+% If you want to refer to the content of a a \cs{Xfootnote}, the line and subline number printed will be the start line.
 %
+% If you want to refers to the start and end lines, you should use \cs{appref} and related tools (\reff{appref}).
 % \subsection{Cross-referencing which return a number in any case}
 % Where \verb+#1+ stands for the reference.
 % \DescribeMacro{\xpageref}
@@ -2502,7 +2495,7 @@
 % within numbered text, and operate in the familiar fashion. 
 % \subsection{References to start and end lines}
 % \subsubsection{Reference to main text lines}
-% \changes{v2.5.0}{2015/10/31}{New tools to easily make cross-reference to a passage defined by a start and an end line}
+% \changes{v2.5.0}{2015/11/13}{New tools to easily make cross-reference to a passage defined by a start and an end line}
 % Many times, you may want to make a cross-reference to a passage that is defined by a start line and an end line.
 % \Macpackage provides specific tools for this scenario.
 
@@ -2527,7 +2520,7 @@
 % \DescribeMacro{\SErefonlypage}
 % \cs{SErefonlypage} will make a cross-reference printed only with page number.
 % 
-% \subsubsection{References to lines commented in the apparatus}
+% \subsubsection{References to lines commented in the apparatus}\label{appref}
 % \changes{v1.21.0}{2015/03/09}{Add \protect\cs{applabel} and related}
 % You may want to make a cross-reference to a passage that is referred to by \protect\cs{edtext}.
 % \Macpackage provides specific tools for this scenario.
@@ -2568,7 +2561,7 @@
 % \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
 % 
 % \paragraph{Linked to setting of critical endnotes and footnotes}
-% Some commands which set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
+% Some commands who set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
 % 
 % These commandes are the following:
 % \begin{itemize}
@@ -2581,7 +2574,7 @@
 %   \item \cs{Xtwolinesonlyinsamepage}
 % \end{itemize}
 %
-% If you want to make setting specific to \cs{appref} or \cs{SEref}, just call them with an optional argument containing a comma-separated list of command names (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
+% If you want to make settings specific  to \cs{appref} or \cs{SEref}, just call them with an optional argument containing a comma-separated list of command names (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
 %
 %
 % The same principle is available for \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SErefonlypage} with the following commands:
@@ -2600,9 +2593,9 @@
 % \end{itemize}
 % \paragraph{For one specific command}
 %
-% When calling \cs{appref} and \cs{SEref}, the first optional argument (in brackets \verb+[]+), any optional argument also used for critical footnotes(\reff{Xfootnoteopt}).  
+% When calling \cs{appref} and \cs{SEref}, you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical footnotes (\reff{Xfootnoteopt}).  
 %
-% When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as the first optional argument (in brackets \verb+[]+), any optional argument also used for critical footnotes (\reff{Xendnoteopt}). 
+% When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical endnotes (\reff{Xendnoteopt}). 
 % \section{Side notes}
 %
 % \subsection{Basics}
@@ -2684,7 +2677,7 @@
 % that \meta{item} and the current page \& linenumber should be added to
 % the raw index file.
 %
-% Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \protect\package{eledmac}.
+% Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \protect\macpackage.
 % That means you must first run (Xe/Lua)\LaTeX three times, then run \verb+makeindex+, and then finally run (Xe/Lua)\LaTeX\ again, in order to get an index with the right page numbers.
 %
 % If  the \protect\package{imakeidx} or \protect\package{indextools} package is used then the macro takes an optional
@@ -2700,6 +2693,23 @@
 %     \item Load \macpackage.
 %   \item Declare the index with the macro \cs{makeindex} of \package{imakeidx} and \package{indextools}.
 % \end{enumerate}
+% \subsection{Refer to a critical notes}
+% If you want to refer to a word inside an
+% \protect\cs{edtext}\marg{lemma}\marg{app} command, the \protect\cs{edindex} should be defined inside
+% the first argument, e.g.,
+% \begin{verbatim}
+%   The \edtext{creature\edlabel{elephant} was quite
+%    unafraid}{\Afootnote{Of the mouse, that is.}}
+% \end{verbatim}
+%
+% If you add the \protect\cs{edindex} inside some \protect\cs{Xfootnote} command, 
+% it will refer to that note, and a suffix \emph{n} will be added to the reference.
+% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}. 
+% Its actual definition is:
+% \begin{verbatim}
+% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
+% \end{verbatim}
+%
 % \subsection{Separator between page and line numbers}
 % \DescribeMacro{\pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
@@ -3379,7 +3389,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/10/31 v2.5.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/11/13 v2.5.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3737,9 +3747,11 @@
 \newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
   \reledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
+  \G@refundefinedtrue%
   \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.
                   Using `000'.}}
 \newcommand*{\led@warn@pairRefUndefined}[1]{%
+  \G@refundefinedtrue%
   \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
                   Using `??'.}}
 %    \end{macrocode}
@@ -3997,6 +4009,10 @@
 % set to \verb"true" if we're within a right text numbered section.
 %    \begin{macrocode}
 \newif\ifnumberingR
+%    \end{macrocode}
+% The \cs{ifXnote@} macro is set to true when we are typesetting a critical footnote.
+%    \begin{macrocode}
+\newif\ifXnote@%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Booleans provided by other optional packages but required in any case}
@@ -5893,7 +5909,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{4}%
+\newcommand{\this@line@list@version}{5}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -9465,15 +9481,12 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \def\extractline@##1|##2|##3|##4|##5|##6|##7|{##2}%
-   \def\extractsubline@##1|##2|##3|##4|##5|##6|##7|{##3}%
-   \def\extractendline@##1|##2|##3|##4|##5|##6|##7|{##5}%
-   \def\extractendsubline@##1|##2|##3|##4|##5|##6|##7|{##6}%
+   \l@dp@rsefootspec#1|%
    \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1| - \extractendline@ #1| - \extractendsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
        }%
        {%
-       \edef\lineinfo@{\extractline@ #1| - \extractsubline@ #1|}%
+       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
        }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
@@ -9657,7 +9670,6 @@
 % \end{macro}
 %
 %
-% \begin{macro}{\l@dparsefootspec}
 % \begin{macro}{\l@dp@rsefootspec}
 % \begin{macro}{\l@dparsedstartpage}
 % \begin{macro}{\l@dparsedstartline}
@@ -9665,16 +9677,12 @@
 % \begin{macro}{\l@dparsedendpage}
 % \begin{macro}{\l@dparsedendline}
 % \begin{macro}{\l@dparsedendsub}
-% \protect\cs{l@dparsefootspec}\marg{spec}\marg{lemma}\marg{text} parses a footnote
-% specification. \meta{lemma} and \meta{text} are the lemma and text
-% respectively. \meta{spec} is the line and page number and lemma font
-% specifier in \protect\cs{l@d@nums} style format. The real work is done
-% by \protect\cs{l@dp@rsefootspec} which defines macros holding the numeric values.
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{l@dparsefootspec} deleted, not use anymore since \protect\eledmac release!}
+% \protect\cs{l@dp@rsefootspec} parses  lines specification and defines macros holding the numeric values.
 % Just a reminder of the arguments: \\
 % \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7?\\
 % \verb?\printlines start-page | line | subline | end-page | line | subline | font?flag 
 %    \begin{macrocode}
-\newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
 \def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
   \gdef\l@dparsedstartpage{#1}%
   \gdef\l@dparsedstartline{#2}%
@@ -9694,7 +9702,6 @@
 \def\l@dparsedendsub{0}%
 
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -9841,7 +9848,7 @@
 % \end{macro}
 %
 % \begin{macro}{\printlines}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{printlines} takes an eighth argument: the line flag}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{printlines} takes an eighth argument: the line flag}
 % So, we have decided which part of line number sets will be printed depending of these value.
 % Now we are ready to print them. 
 % If the lineation is by pstart, we print the pstart.
@@ -10042,7 +10049,7 @@
 % \protect\cs{vl@dbfnote} calls the original \protect\cs{@footnotetext}.
 % \changes{v0.6.0}{2004/11/23}{Changed \protect\cs{l@dbfnote} and \protect\cs{vl@dbfnote} as
 % originals could give incorrect markers in the footnotes}
-% We also patch \cs{footnote} in order to get the correct footnote number when typesetting parallel texts.
+% We also patch \cs{footnote} in order to get the correct footnote numbers when typesetting parallel texts.
 % \changes{v1.4.1}{2012/11/16}{Compatibility of standard footnotes with \eledmac when these footnotes contain any commands.}
 %    \begin{macrocode}
 
@@ -10359,7 +10366,7 @@
 %
 % \begin{macro}{\vbfnoteX}
 % This command calls the correct footnote-inserting commands.
-% It also get the correct footnote number when typesetting parallel texts. 
+% It also gets the correct footnote number when typesetting parallel texts. 
 %    \begin{macrocode}
 \newcommand{\vbfnoteX}[3]{%
   \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
@@ -11200,7 +11207,7 @@
 % custom macros to do something with it.
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{endnotes} take six arguments.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{endnotes} take six arguments.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11375,7 +11382,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% We close now the conditional period depending of \cs{ifnoend@}, because the following commands can be used by other commands than the specific to endnotes.
+% We close now the conditional period, which depends on  \cs{ifnoend@}, because the following commands can be used by other commands than those speicific to endnotes.
 %    \begin{macrocode}
 }%
 %    \end{macrocode}
@@ -11699,12 +11706,14 @@
                       \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \noexpand\Xnote@false% 
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -11726,6 +11735,7 @@
                       \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
+                      \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -11734,6 +11744,7 @@
                       \fi%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                       \noexpand\Xnote@false%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -12783,7 +12794,7 @@
 % \changes{v0.2.1}{2003/08/26}{Tweaked \protect\cs{edlabel} to get correct page numbers}
 % \changes{v0.14.0}{2012/04/04}{Tweaked \protect\cs{edlabel} to get correct line number if the command is first element of a paragraph.}
 % \changes{v1.18.0}{2015/02/23}{\protect\cs{edlabel} is now defined only one time for both \eledmac and \eledpar}
-% \changes{v2.5.0}{2015/10/31}{Fix bug when calling\protect\cs{edlabel} in a footnotes of the rightside}
+% \changes{v2.5.0}{2015/11/13}{Fix bug when calling\protect\cs{edlabel} in a footnotes of the rightside}
 %    \begin{macrocode}
 \newcommand*{\edlabel}[1]{%
   \ifl@dpairing\ifautopar%
@@ -12791,36 +12802,48 @@
   \fi\fi%
   \@bsphack%
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
-    \write\linenum@outR{\string\@lab}%
-    \ifx\labelref@listR\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+     \protected@write\@auxout{}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@listR\to\label@refs%
-    \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
+      \write\linenum@outR{\string\@lab}%
+      \ifx\labelref@listR\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@listR\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
 %    \end{macrocode}
 % Use code from the kernel \protect\cs{label} command to write the correct
 % page number.
 % Also define an hypertarget if \protect\package{hyperref} package is loaded.
 %    \begin{macrocode}
-    \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
+      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+    \fi%
   }{%
-    \write\linenum@out{\string\@lab}%
-    \ifx\labelref@list\empty%
-      \xdef\label@refs{\zz@@@}%
+    \ifXnote@%
+       \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \else%
-      \gl@p\labelref@list\to\label@refs%
+      \write\linenum@out{\string\@lab}%
+      \ifx\labelref@list\empty%
+        \xdef\label@refs{\zz@@@}%
+      \else%
+        \gl@p\labelref@list\to\label@refs%
+      \fi%
+      \ifvmode%
+          \advancelabel@refs%
+      \fi%
+      \protected@write\@auxout{}%
+        {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
+        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
     \fi%
-    \ifvmode%
-        \advancelabel@refs%
-    \fi%
-  \protected@write\@auxout{}%
-    {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-    \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
   }%
 \@esphack}%
 
@@ -13032,7 +13055,7 @@
 % \begin{macro}{\xlineref}
 % \changes{v1.16.1}{2015/02/05}{\protect\cs{lineref} is not defined if defined by some other package, like lineno.  
 % \Eledmac provides \protect\cs{edlineref} instead.}
-% \changes{v2.5.0}{2015/10/31}{\protect\cs{xlineref} does not include anymore the side flag. Use \protect\cs{xflagref} to get it. Not that \protect\cs{edlineref} still contains the flag.}
+% \changes{v2.5.0}{2015/11/13}{\protect\cs{xlineref} does not include anymore the side flag. Use \protect\cs{xflagref} to get it. Not that \protect\cs{edlineref} still contains the flag.}
 % If the specified label exists, \protect\cs{lineref} gives its line number.
 %    \begin{macrocode}
 \newcommand*{\edlineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{2}{#1}\xflagref{#1}}}%
@@ -13175,7 +13198,7 @@
 % \protect\cs{appref}, \cs{SEref}, \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SEonlypage}    print crossref to some start / end lines defined by specific commands.
 % It prints the lines as they should be printed in the apparatus (critical notes for not suffixed versions, endnotes for suffixed versions).
 % 
-% Here we define hooks similar to some of those related to critical footnotes or endnotes.
+% Here we define hooks similar to some those related to critical footnotes or endnotes.
 %
 % So, first declare the default value of the hooks for the pseudo-series. 
 % Also declare the internal toggle which are switch by \macpackage{}.
@@ -13259,7 +13282,7 @@
 
 %    \end{macrocode}
 % Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
-% \changes{v2.5.0}{2015/10/31}{Debug \protect\cs{setapprefprefixsingle}}
+% \changes{v2.5.0}{2015/11/13}{Debug \protect\cs{setapprefprefixsingle}}
 %    \begin{macrocode}
 \newcommand\@apprefprefixsingle{}%
 \newcommand\@SErefprefixsingle{}%
@@ -14566,11 +14589,11 @@
 \newcounter{stanzaindentsrepetition}
 \newcount\stanza@modulo
 
-\newcommand*{\managestanza@modulo}[0]{
-    \advance\stanza@modulo\@ne
-    \ifnum\stanza@modulo>\value{stanzaindentsrepetition}
-     \stanza@modulo\@ne
-    \fi
+\newcommand*{\managestanza@modulo}[0]{%
+    \advance\stanza@modulo\@ne%
+    \ifnum\stanza@modulo>\value{stanzaindentsrepetition}%
+     \stanza@modulo\@ne%
+    \fi%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -15446,7 +15469,7 @@
 % \begin{macro}{\theaddcolcount}
 % A counter to hold the number of a column. We use a roman number so
 % that we can grab the column dimension from \protect\cs{dcol}.
-% We do not use \cs{roman} \LaTeX\ command, because some packages, like \package{babel} can override it in some specific case (Greek, for example).
+% We do not use the \cs{roman} \LaTeX\ command, because some packages, like \package{babel} can override it in some specific cases (Greek, for example).
 %    \begin{macrocode}
 \newcounter{addcolcount}
   \renewcommand{\theaddcolcount}{\romannumeral \c@addcolcount}
