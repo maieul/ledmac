@@ -10048,6 +10048,7 @@
 % \begin{macro}{\vl@dbfnote}
 % \begin{macro}{\footnote}
 % \begin{macro}{\get@fnmark}
+% \begin{macro}{\get@thisfootnote}
 % \protect\cs{l@dbfnote} adds the footnote to the insert list, and
 % \protect\cs{vl@dbfnote} calls the original \protect\cs{@footnotetext}.
 % \changes{v0.6.0}{2004/11/23}{Changed \protect\cs{l@dbfnote} and \protect\cs{vl@dbfnote} as
@@ -10072,14 +10073,17 @@
   {}
   {}
 
-
-\newcommand{\l@dbfnote}[1]{%
-  \ifnumberedpar@
+\newcommand{\get@thisfootnote}{%
     \ifl@dpairing
       \protected@xdef\thisfootnote{\the\footnote@reading}%
     \else%
       \protected@xdef\thisfootnote{\thefootnote}%
     \fi%
+}%
+
+\newcommand{\l@dbfnote}[1]{%
+ \ifnumberedpar@%
+ \get@thisfootnote%
   \gdef\@tag{#1\relax}%
     \ifledRcol%
       \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
@@ -10112,6 +10116,7 @@
   \@footnotetext{#1}%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -10213,6 +10218,8 @@
 % The minipage version.
 %    \begin{macrocode}
 \newcommand*{\mpnormalvfootnoteX}[2]{%
+  \get@thisfootnoteX{#1}%
+  \get@fnmarkX{#1}{\thisfootnote}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
@@ -10342,11 +10349,7 @@
 
 \newcommand{\normalbfnoteX}[2]{%
   \ifnumberedpar@
-    \ifl@dpairing
-      \protected@xdef\thisfootnote{\the\csname footnote#1@reading\endcsname}%
-    \else%
-      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
-    \fi%
+  \get@thisfootnoteX{#1}%
     \ifledRcol%
       \ifluatex
           \footnotelang@lua[R]%
@@ -10373,7 +10376,18 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%
+% \begin{macro}{\get@thisfootnoteX}
+% The macro \cs{get@thisfootnote} command just save the footnote number in the \cs{thisfootnote} macro, depending of the use of pairing environments.
+%    \begin{macrocode}
+\newcommand{\get@thisfootnoteX}[1]{%
+    \ifl@dpairing%
+      \protected@xdef\thisfootnote{\the\csname footnote#1@reading\endcsname}%
+    \else%
+      \protected@xdef\thisfootnote{\csuse{thefootnote#1}}%
+    \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\vbfnoteX}
 % This command calls the correct footnote-inserting commands.
 % 
@@ -10777,7 +10791,9 @@
 % \protect\cs{para@vfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \newcommand*{\para@vfootnoteX}[2]{%
-  \insert\csname footins#1\endcsname
+ \get@thisfootnoteX{#1}%
+ \get@fnmarkX{#1}{\thisfootnote}%
+ \insert\csname footins#1\endcsname%
   \bgroup
     \csuse{notefontsizeX@#1}
     \footsplitskips
