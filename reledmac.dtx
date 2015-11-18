@@ -362,6 +362,7 @@
 % \changes{v2.5.0}{2015/11/13}{Fix spurious vertical space in \protect\env{astanza} environment (\reledpar)}
 % \changes{v2.6.0}{2015/11/20}{Adds compatibility with the \protect\option{innnote} and \protect\option{notenumber} options of \protect\package{indextools} package.}
 % \changes{v2.6.0}{2015/11/20}{Fix bug with footnote counter in \protect\env{ledgroup} (added in v2.5.0).}
+% \changes{v2.6.0}{2015/11/20}{Fix bug, introduced in v2.5.0, with footnote numbering in parallel typesetting when using \protect\package{perpage} package.}
 %
 %
 % \title{\Macpackage \\
@@ -10064,13 +10065,11 @@
   {%
   \ifl@dpairing%
   \global\advance\footnote@reading by \@ne%
-  \if@ledgroup%
        \get@thisfootnote%
        \get@fnmark{\thisfootnote}%
    \ifcsdef{footnotereading\the\footnote@reading=typeset}%
     {\setcounter{\@mpfn}{\csuse{footnotereading\the\footnote@reading=typeset}}}%
     {\setcounter{\@mpfn}{\footnote@reading}}%
-  \fi%
   \else%
     \stepcounter\@mpfn%
   \fi%
@@ -10104,12 +10103,12 @@
 \newcommand{\get@fnmark}[1]{%
   \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
-      \global\advance\footnote@typeset by \@ne%
-      \setcounter{footnote}{\footnote@typeset}%
+      \stepcounter{footnote@typeset}%
+      \setcounter{footnote}{\c@footnote@typeset}%
         \immediate\write\@mainaux{%
-          \global\csdef{footnotereading#1=typeset}{\the\footnote@typeset}%
+          \global\csdef{footnotereading#1=typeset}{\the\c@footnote@typeset}%
          }%
-      \def\@thefnmark{\the\footnote@typeset}%
+      \def\@thefnmark{\thefootnote}%
     }%
     {%
       \@namedef{@thefnmark}{#1}%
@@ -10411,11 +10410,11 @@
 \newcommand{\get@fnmarkX}[2]{%
   \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
-      \global\expandafter\advance\csname footnote#1@typeset\endcsname by \@ne%
-      \setcounter{footnote#1}{\csuse{footnote#1@typeset}}%
+      \stepcounter{footnote#1@typeset}%
+      \setcounter{footnote#1}{\value{footnote#1@typeset}}%
       \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
         \immediate\write\@mainaux{%
-          \global\csdef{footnote#1reading#2=typeset}{\the\csname footnote#1@typeset\endcsname}%
+          \global\csdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
          }%
     }%
     {%
@@ -10796,8 +10795,6 @@
 % \protect\cs{para@vfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \newcommand*{\para@vfootnoteX}[2]{%
- \get@thisfootnoteX{#1}%
- \get@fnmarkX{#1}{\thisfootnote}%
  \insert\csname footins#1\endcsname%
   \bgroup
     \csuse{notefontsizeX@#1}
@@ -10813,6 +10810,8 @@
     \penalty0
   \egroup}
 \newcommand*{\mppara@vfootnoteX}[2]{%
+  \get@thisfootnoteX{#1}%
+  \get@fnmarkX{#1}{\thisfootnote}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \csuse{notefontsizeX@#1}
