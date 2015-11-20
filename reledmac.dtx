@@ -10362,7 +10362,11 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly[R]}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
@@ -10372,7 +10376,11 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -11742,9 +11750,6 @@
                       \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
-                      \ifbool{indtl@notenumber}%
-                        {\unexpanded{\let\index\orig@@index}}%
-                        {}%
                       \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
@@ -11754,6 +11759,9 @@
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
                       \ifbool{indtl@innote}%
+                        {\unexpanded{\let\index\orig@@index}}%
+                        {}%
+                      \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
                     }\to\inserts@listR
@@ -11881,19 +11889,10 @@
                 \xdef\footnote@luatextextdir{\the\textdir}%
                 \xdef\footnote@luatexpardir{\the\pardir}%
               \fi%
-              \ifbool{indtl@innote}%
-                {\let\index\nindex}%
-                {}%
-              \ifbool{indtl@notenumber}%
-                {%
-                \renewcommand{\index}[2][]{%
-                  \orig@@index[####1]{%
-                    ####2|innotenumber{\csuse{thefootnote#1}}%
-                    }%
-                  }%
-                }%
-                {}%
-              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+              \if@ledgroup%
+	        \led@set@index@fornote{#1}%
+	      \fi%
+	      \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
@@ -14506,7 +14505,40 @@
 % \end{macro}
 % \changes{v1.14.0}{2014/10/27}{Delete previous override of \protect\cs{l@d@@wrindexhyp} at the beginning of a document when hyperref is not loaded.}
 %
-%
+% \subsection{`innote' and `notenumber' option of \package{indextols} package}
+% \begin{macro}{\led@set@index@fornote}
+% The \cs{led@set@index@fornote} is called when a familiar footnote is inserted --- and not when it is read --- and changes the \cs{index} command depending of the option of the \package{indextools} package.
+% Its only argument is the note series.
+%    \begin{macrocode}
+\newcommand{\led@set@index@fornote}[1]{%
+  \ifbool{indtl@innote}%
+    {\let\index\nindex}%
+    {}%
+  \ifbool{indtl@notenumber}%
+    {%
+    \renewcommand{\index}[2][]{%
+      \orig@@index[##1]{%
+        ##2|innotenumber{\csuse{thefootnote#1}}%
+        }%
+      }%
+    }%
+    {}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@reinit@index@fornote}
+% The \cs{led@reinit@index@fornote} just reset the default value of \cs{index}.
+%    \begin{macrocode}
+\newcommand{\led@reinit@index@fornote}{%
+  \ifbool{indtl@innote}%
+    {\let\index\orig@@index}%
+    {}%
+ \ifbool{indtl@notenumber}%
+  {\let\index\orig@@index}%
+  {}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Verse}
 %
 % The original code is principally Wayne Sullivan's\index{Sullivan, Wayne} 
