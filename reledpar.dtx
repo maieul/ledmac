@@ -252,10 +252,15 @@
 % \changes{v2.5.0}{2015/10/14}{Disable empty lines as paragraph in astanza.}
 % \changes{v2.5.1}{2015/10/19}{Fix spurious space when using optional argument of \protect\env{astanza} environment (introduced in v2.5.0).}
 % \changes{v2.5.2}{2015/10/26}{Fix bug introduced in v2.5.0 with \protect\cs{linenummargin}, \protect\cs{firstlinenum}, \protect\cs{linenumincrement}, \protect\cs{firstsublinenum}, \protect\cs{sublinenumincrement}.}
-% \changes{v2.6.0}{2015/10/31}{\protect\cs{printlinesR} deleted}
-% \changes{v2.6.0}{2015/10/31}{\protect\cs{Xlineflag}  and \protect\cs{Xendlineflag} added}
-% \changes{v2.6.0}{2015/10/31}{Fix bug with footnotes numbering when using the same series of familiar footnotes in both side.}
+% \changes{v2.6.0}{2015/11/13}{\protect\cs{printlinesR} deleted}
+% \changes{v2.6.0}{2015/11/13}{\protect\cs{Xlineflag}  and \protect\cs{Xendlineflag} added}
+% \changes{v2.6.0}{2015/11/13}{Fix bug with footnote numbering when using the same series of familiar footnotes on both sides.}
+% \changes{v2.6.0}{2015/11/13}{Error message when calling \protect\cs{Pages} or \protect\cs{Columns} without previous \protect\env{pages} or \protect\env{pairs} environnment.}
+% \changes{v2.6.0}{2015/11/13}{Fix compatibility with \protect\package{babel} (broken in v.2.0.0).}
+% \changes{v2.6.0}{2015/11/13}{No error messages about ends of left / right page when using the \protect\cs{syntaxonly} command of the \protect\package{syntonly} package.}
 % \hyphenation{man-u-script man-u-scripts}
+% \changes{v2.6.0}{2015/11/13}{Fix bug with right side title number when using title commands before \protect\env{pages} or \protect\env{columns} environments.}
+% \changes{v2.6.1}{2015/11/20}{Fix bug, introduced in v2.6.0, with footnote numbering when using \protect\package{perpage} package.}
 %
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
@@ -707,7 +712,7 @@
 % \subsubsection{Notes height setting}
 % Since \protect\package{eledpar} v1.13.0, long notes in facing pages can flow from left to right pages, and \emph{vice-versa}.
 %
-% However, the \macpackage default setting for the maximum alloted size to notes is  greater than \protect\cs{textheight}. That makes impossible for long notes to flow across pages.
+% However, the \macpackage default setting for the maximum alloted size to notes is  greater than \protect\cs{textheight}. That makes impossible for long notes to flow across pages.%
 % \footnote{The same applies to \LaTeX\ normal notes. Read \url{http://tex.stackexchange.com/a/228283/7712} for technical informations.}
 % We have not changed this default setting, because we do not want to break compatibility with older version of \macpackage and we want to be as close as possible to default \LaTeX's feature. 
 %
@@ -719,11 +724,28 @@
 % \maxhnotesX{0.6\textheight}
 % \end{verbatim}
 % \subsubsection{About the numbering of familiar footnotes}
-% If you use the same series of familiar footnotes on both side, the numbers won't be correct in the first run. There will be a continuous numbering for left notes, and a continuous numbering for right notes.
-% However, at the second run, the numbering will be continuous alternatively left and right side.
-% For example if you have two left pages and two right pages, with one note by pagge, you will obtain the following numbering at the first run: 1 (left page), 3 (right page), 2 (left page),  4 (right page). But at the next run, you will obtain: 1 (left page), 2 (right page), 3 (left page), 4 (right page).
+% If you use the same series of familiar footnotes on both sides, the numbers won't be correct in the first run. There will be a continuous numbering for left notes, and a continuous numbering for right notes.
+% However,  after the second run, the numbering will be continuous, alternating between the left and right side.
+% For example if you have two left pages and two right pages, with one note by page, you will obtain the following numbering at the first run: 1 (left page), 3 (right page), 2 (left page),  4 (right page). But at the next run, you will obtain: 1 (left page), 2 (right page), 3 (left page), 4 (right page).
 %
-% If you use parallel columns, the numbering will, at the second run, continuous pair of lines by pair of lines.  
+% If you use parallel columns, during the second of run of typesetting the footnote numbering will not run down the columns. Instead, it will read both column lines completely across the page, and number footnotes from left to right.
+% \subsubsection{Using \protect\package{perpage} package}\label{perpage}
+%
+% It follows from what has been said in the preceding paragraph that if you use the \cs{MakePerPage} command of the \cs{perpage} package for footnotes called in parallel typesetting, you must append to the counter the suffix \verb+@typeset+.
+%
+% So do not set:
+% \begin{verbatim}
+% \MakePerPage{footnote}
+% \MakePerPage{footnoteA}
+% \MakePerPage{footnoteB}
+% \end{verbatim}
+% But set:
+% \begin{verbatim}
+% \MakePerPage{footnote@typeset}
+% \MakePerPage{footnoteA@typeset}
+% \MakePerPage{footnoteB@typeset}
+% \end{verbatim}
+
 % \subsubsection{Notes for one side only}
 % \DescribeMacro{\Xonlyside}
 % \DescribeMacro{\onlysideX}
@@ -1131,7 +1153,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/10/31 v2.6.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/11/20 v2.6.1 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1300,10 +1322,17 @@
 % \begin{macro}{\led@err@LeftOnRightPage}
 % \begin{macro}{\led@err@RightOnLeftPage}
 %    \begin{macrocode}
+\providebool{syntax@}
 \newcommand*{\led@err@LeftOnRightPage}{%
-  \reledpar@error{The left page has ended on a right page}{\@ehc}}
+  \notbool{syntax@}%
+    {\reledpar@error{The left page has ended on a right page}{\@ehc}}%
+    {}%
+  }
 \newcommand*{\led@err@RightOnLeftPage}{%
-  \reledpar@error{The right page has ended on a left page}{\@ehc}}
+  \notbool{syntax@}%
+    {\reledpar@error{The right page has ended on a left page}{\@ehc}}
+    {}%
+  }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1328,6 +1357,17 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\led@err@Pages@WithoutEnv}
+% \begin{macro}{\led@err@Columns@WithoutEnv}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@WithoutEnv}{%
+  \reledpar@error{\string\Pages\space called without previous `pages` environment}{\@ehc}}
+\newcommand*{\led@err@Columns@WithoutEnv}{%
+  \reledpar@error{\string\Columns\space called without previous `pairs` environment}{\@ehc}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+
 %
 % \begin{macro}{\led@error@fail@patch@thepage}
 %    \begin{macrocode}
@@ -1487,21 +1527,49 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\initnumbering@sectcountR}
+% \begin{macro}{\save@section@number}
+% \begin{macro}{\set@sectcountR}
 % \changes{v1.2.1}{2012/11/01}{For the right section, the counter is defined only once.}
-% We do not want the numbering of the right-side section commands to be continuous with the numbering of the left side,
+% We do not want the right side section commands to be numbered after the left side ones, 
+% instead we want them numbered after which is typeset before the \env{pages} or \env{columns} environments.
 % we switch the \LaTeX\ counter in \protect\cs{numberingR}.
+% 
 %    \begin{macrocode}
 \newcounter{chapterR}
 \newcounter{sectionR}
 \newcounter{subsectionR}
 \newcounter{subsubsectionR}
+
+\newcount\old@chapter%
+\newcount\old@section%
+\newcount\old@subsection%
+\newcount\old@subsubsection%
+\newcommand{\save@section@number}{%
+  \ifdefined\c@chapter%
+   \global\old@chapter\value{chapter}%
+  \fi%
+  \global\old@section\value{section}%
+  \global\old@subsection\value{subsection}%
+  \global\old@subsubsection\value{subsubsection}%
+}%
 \newcommand{\initnumbering@sectcountR}{
-    \let\c@chapter\c@chapterR
-    \let\c@section\c@sectionR
-    \let\c@subsection\c@subsectionR
-    \let\c@subsubsection\c@subsubsectionR
+ \ifdefined\c@chapter%
+   \setcounter{chapterR}{\old@chapter}%
+ \fi%
+ \setcounter{sectionR}{\old@section}%
+ \setcounter{subsectionR}{\old@subsection}%
+ \setcounter{subsubsectionR}{\old@subsubsection}%
+ \set@sectcountR%
 }
+\newcommand{\set@sectcountR}{%
+    \let\c@chapter\c@chapterR%
+    \let\c@section\c@sectionR%
+    \let\c@subsection\c@subsectionR%
+    \let\c@subsubsection\c@subsubsectionR%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\pausenumberingR}
@@ -2547,17 +2615,17 @@
   \unless\ifnofamiliar@%
 %    \end{macrocode}
 % \subsubsection{Managing correct number}\label{familiarfootnotenumber}
-% One problematic thing, one using familiar footnotes in parallel typesseting is tthe fact that the order of reading notes in \verb.tex. files in not the order they are typesset, because \LaTeX\ reads first all the notes of one side, and the all the notes of the other side.
-% However, it alternates typeseting notes of left side and typeseting notes of right side.
-% Consequently, if we do nothing special, the notes number are sorted in the reading order, and not in the typeseting order.
+% One problem with using familiar footnotes in parallel typesetting is the fact that the order of reading ​notes is not the same as the order they are typset, because \LaTeX\ reads first all the notes on one side, then all the notes on the other side.
+% Then, however, \LaTeX\ alternates between typesetting left-side note and right-side notes.
+% Consequently, if we do nothing special, the note numbers are sorted in the reading order, not in the typesetting order.
 % So we could obtain something like 1,3,2,5,4.
 %
 % To prevent this problem, we use a two new counters by  series. 
 % Every note, in parallel typesetting, has three associated counters.
 % \begin{enumerate}
 % \item A \LaTeX\ counter \verb+footnoteX+. This the only one manipulated by user, and the only one finally printed.
-% \item A \TeX\ counter \verb+footnoteX@reading+. Its value is increased when reading the \cs{footnoteX} command in the side environments. It is used to get the correct footnote number from the \verb+.aux+ file to typeset in the main text.
-% \item A \TeX\ counter \verb+footnoteX@typeset. Its value is increased when inserting footnotes. Its value is directly used in the footnote, and is stored in the \verb+aux+ files to be used on the next run for the main text.
+% \item A \TeX\ counter \verb+footnoteX@reading+. Its value is incremented when reading the \cs{footnoteX} command in left or right side environments. It is used to get the correct footnote number from the \verb+.aux+ file to be typeset in the main text.
+% \item A \LaTeX\ counter \verb+footnoteX@typeset. Its value is increased when inserting footnotes. Its value is directly used in the footnote, and is stored in the \verb+aux+ files to be used on the next run for the main text.
 % \end{enumerate} 
 % 
 %
@@ -2565,7 +2633,7 @@
 % So here, we only defined the new counters.
 %    \begin{macrocode}
       \expandafter\newcount\csname footnote#1@reading\endcsname%
-      \expandafter\newcount\csname footnote#1@typeset\endcsname%
+      \newcounter{footnote#1@typeset}%
 %    \end{macrocode}
 % 
 % \subsubsection{Familiar footnotes without marks}
@@ -2637,8 +2705,8 @@
 % \end{macro}
 % \subsubsection{Get correct footnote number}
 % \begin{macro}{\get@familiarfootnote@number}
-% \begin{macro{\save@familiarfootnote@number}
-% As user can insert footnote between two \cs{Pairs} or \cs{Pages} commands, we have to set the \cs+footnoteX@typeset+ counter to the last value of the \verb+footnoteX+ counter at the beginning of these two commands.
+% \begin{macro}{\save@familiarfootnote@number}
+% As users can insert footnotes​ between two \cs{Pairs} or \cs{Pages} commands, we have to set the \cs+footnoteX@typeset+ counter to the last value of the \verb+footnoteX+ counter at the beginning of these two commands.
 %    \begin{macrocode}
 \newcommand{\save@familiarfootnote@number}{%
   \unless\ifnofamiliar@%
@@ -2649,10 +2717,10 @@
 }
 \newcommand{\get@familiarfootnote@number}{%
   \unless\ifnofamiliar@%
-    \def\do##1{\global\expandafter\csname footnote##1@typeset\endcsname=\csuse{saved@footnote##1}}%
+    \def\do##1{\setcounter{footnote##1@typeset}{\csuse{saved@footnote##1}}}%
     \dolistloop{\@series}%
   \fi%
-  \global\footnote@typeset=\saved@footnote%
+  \setcounter{footnote@typeset}{\saved@footnote}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2687,15 +2755,15 @@
 % As users can use classical footnotes of \LaTeX\ (\cs{footnote}) 
 % in parallel texts, we must integrate the same tools to get correct number as for \macpackage' footnotes (\reff{familiarfootnotenumber}).
 % \begin{macro}{\footnote@reading}
-% \begin{macro}{\footnote@typset}
+% \begin{macro}{\footnote@typeset}
 %    \begin{macrocode}
 \newcount\footnote@reading%
-\newcount\footnote@typeset%
+\newcounter{footnote@typeset}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \section{Pstart numbers dumping and restoration}
-% While in \macpackage the footnotes are inserted in the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
+% While in \macpackage the footnotes are inserted at the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the \verb+PstartL+ and \verb+PstartR+ counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \protect\cs{pstart} and restore these at each \protect\cs{pstart} when calling \protect\cs{Columns} or \protect\cs{Pages}. 
 % We also dump and restore the value of the boolean \protect\cs{ifnumberpstart}.
@@ -2764,6 +2832,7 @@
   \l@dpagingfalse
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \at@begin@pairs%
 }{%
   \l@dpairingfalse
@@ -2787,6 +2856,7 @@
   \l@dpagingtrue
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \save@section@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
 }{%
@@ -3457,7 +3527,7 @@
 
 \def\print@eledsectionR{%
     \addtocounter{pstartR}{-1}%
-    \initnumbering@sectcountR%
+    \set@sectcountR%
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
@@ -4187,13 +4257,14 @@
 % \begin{macro}{\l@dmake@labelsR}
 % This is the right text version of \protect\cs{l@dmake@labels}, taking account
 % of \protect\cs{@Rlineflag}.
+% \changes{v2.6.0}{2015/11/13}{\protect\cs{@Rlineflag} is not stored directly after the line number, but as a fith argument of \protect\cs{the@labelX}. Can be retrieved by \protect\cs{xflagref}.}
 %
 %    \begin{macrocode}
 \def\l@dmake@labelsR#1|#2|#3|#4|#5{%
   \expandafter\ifx\csname the@label#5\endcsname \relax\else
-    \led@warn@DuplicateLabel{#4}%
+    \led@warn@DuplicateLabel{#5}%
   \fi
-  \expandafter\gdef\csname the@label#5\endcsname{#1|#2\@Rlineflag|#3|#4}%
+  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4|\@Rlineflag}%
   \ignorespaces}
 \AtBeginDocument{%
   \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
@@ -4593,7 +4664,7 @@
 % that \protect\cs{theledlanguageL} and \protect\cs{theledlanguageR} are unaltered.
 %    \begin{macrocode}
     \renewcommand*{\l@duselanguage}[1]{%
-      \l@doldselectlanguage{#1}}
+      \expandafter\l@doldselectlanguage\expandafter{#1}}
 %    \end{macrocode}
 % Lastly, initialise the left and right languages to the current \protect\package{babel}
 % one.
@@ -4847,7 +4918,10 @@
   \ifl@dpairing%
     \led@err@Columns@InsideEnv%
   \fi%
-  \l@dprintingcolumnstrue%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Columns@WithoutEnv%
+  \else%
+  \global\l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
     \led@err@BadLeftRightPstarts{\the\l@dnumpstartsL}{\the\l@dnumpstartsR}%
@@ -4970,10 +5044,13 @@
   \global\l@dpscR=\z@
   \global\l@dnumpstartsL=\z@
   \global\l@dnumpstartsR=\z@
-  \l@dprintingcolumnsfalse%
+  \if@ledgroup\else%
+    \global\l@dprintingcolumnsfalse%
+  \fi
   \ignorespaces
-    \global\instanzaLfalse
-    \global\instanzaRfalse}
+    \global\instanzaLfalse%
+    \global\instanzaRfalse%
+  \fi}
 
 %    \end{macrocode}
 % \end{macro}
@@ -5218,7 +5295,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5241,7 +5318,7 @@
            }%
            \print@columnseparator%
            \parbox[t][][t]{\Rcolwidth}{%
-             \initnumbering@sectcountR%
+             \set@sectcountR%
              \csuse{after@pendR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
@@ -5290,6 +5367,9 @@
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
+  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@err@Pages@WithoutEnv%
+  \else%
   \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
@@ -5302,7 +5382,7 @@
 % Get onto an empty even (left) page, then initialise counters, etc.
 %    \begin{macrocode}
   \cleartol@devenpage%
-  \l@dprintingpagestrue%
+  \global\l@dprintingpagestrue%
   \begingroup%
 %    \end{macrocode}
 % As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
@@ -5495,7 +5575,7 @@
           \checkpageR%
           \l@duselanguage{\theledlanguageR}%
 {            \loop\ifl@dsamepage%
-              \initnumbering@sectcountR%
+              \set@sectcountR%
               \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
               \csuse{before@pstartR@\the\l@dpscR}%
               \global\csundef{before@pstartR@\the\l@dpscR}%
@@ -5586,9 +5666,11 @@
   \global\l@dnumpstartsR=\z@%
     \global\instanzaLfalse%
     \global\instanzaRfalse%
- \l@dprintingpagesfalse%
+ \if@ledgroup\else%
+   \global\l@dprintingpagesfalse%
+ \fi%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
-  \ignorespaces}
+  \ignorespaces\fi}
 
 
 %    \end{macrocode}
