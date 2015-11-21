@@ -9890,13 +9890,17 @@
   \ifdimequal{\csuse{Xboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \ifl@d@pnum #1%
+  \ifl@d@pnum%
+    \wrap@edcrossref{\@this@crossref@start}{#1}%
     \csuse{Xsublinesep@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  \wrap@edcrossref{\@this@crossref@start}{%
+    \linenumrep{#2}%
+    \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  }%
   \ifl@d@ssub%
     \csuse{Xsublinesep@\@currentseries}%
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
   \egroup%
 %    \end{macrocode}
@@ -9923,15 +9927,20 @@
       \fi%
     \fi%
     \ifl@d@pnum%
-       #4%
+       \wrap@edcrossref{\@this@crossref@end}{#4}%
        \csuse{Xsublinesep@\@currentseries}%
     \fi%
-    \ifl@d@elin \linenumrep{#5}\iftoggle{Xlineflag@\@currentseries}{#8}{}\fi%
+    \ifl@d@elin% 
+      \wrap@edcrossref{\@this@crossref@end}{%
+        \linenumrep{#5}%
+        \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+       }%
+    \fi%
     \ifl@d@esl%
        \ifl@d@elin%
          \csuse{Xsublinesep@\@currentseries}%
        \fi%
-       \sublinenumrep{#6}%
+       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
      \fi%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
@@ -13385,7 +13394,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
-   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+    \def\@this@crossref@start{#2:start}%
+    \def\@this@crossref@end{#2:end}%
+    \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%   
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
