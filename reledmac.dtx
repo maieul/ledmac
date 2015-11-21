@@ -363,6 +363,8 @@
 % \changes{v2.6.0}{2015/11/20}{Adds compatibility with \protect\option{innnote} and \protect\option{notenumber} options of \protect\package{indextools} package.}
 % \changes{v2.6.0}{2015/11/20}{Fix bug with footnote counter in \protect\env{ledgroup} (added in v2.5.0).}
 % \changes{v2.6.0}{2015/11/20}{Fix bug, introduced in v2.5.0, with footnote numbering in parallel typesetting when using \protect\package{perpage} package.}
+% \changes{v2.7.0}{2015/11/28}{Warning for duplicate and undefined labels are parsable by latexmk}
+% \changes{v2.7.0}{2015/11/28}{Warning for duplicate labels does not send any more a false line and page number}
 %
 %
 % \title{\Macpackage \\
@@ -3392,7 +3394,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/11/20 v2.6.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/11/28 v2.7.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3746,13 +3748,18 @@
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
-  \reledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
+  \reledmac@warning{Duplicate definition of label `#1'\@gobble}%
+  \@latex@warning@no@line{Label `#1' multiply defined}%
+}%
 \newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
   \reledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \G@refundefinedtrue%
-  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.
-                  Using `000'.}}
+  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.%
+                  Using `000'.}%
+  \@latex@warning{Reference `#1' on page \thepage \space%
+             undefined}%
+}%
 \newcommand*{\led@warn@pairRefUndefined}[1]{%
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
