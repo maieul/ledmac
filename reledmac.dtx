@@ -363,8 +363,11 @@
 % \changes{v2.6.0}{2015/11/20}{Adds compatibility with \protect\option{innnote} and \protect\option{notenumber} options of \protect\package{indextools} package.}
 % \changes{v2.6.0}{2015/11/20}{Fix bug with footnote counter in \protect\env{ledgroup} (added in v2.5.0).}
 % \changes{v2.6.0}{2015/11/20}{Fix bug, introduced in v2.5.0, with footnote numbering in parallel typesetting when using \protect\package{perpage} package.}
-%
-%
+% \changes{v2.7.0}{2015/11/28}{Warning for duplicate and undefined labels are parsable by latexmk}
+% \changes{v2.7.0}{2015/11/28}{Warning for duplicate labels does not send any more a false line and page number}
+% \changes{v2.7.0}{Fix bug with \cs{SErefwithpage}.}
+% \changes{v2.7.0}{2015/11/28}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.5.0).}
+% \changes{v2.7.0}{2015/11/28}{Fix bugs in compatibility witg \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3392,7 +3395,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/11/20 v2.6.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/11/28 v2.7.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3746,13 +3749,18 @@
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
-  \reledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
+  \reledmac@warning{Duplicate definition of label `#1'\@gobble}%
+  \@latex@warning@no@line{Label `#1' multiply defined}%
+}%
 \newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
   \reledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \G@refundefinedtrue%
-  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.
-                  Using `000'.}}
+  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.%
+                  Using `000'.}%
+  \@latex@warning{Reference `#1' on page \thepage \space%
+             undefined}%
+}%
 \newcommand*{\led@warn@pairRefUndefined}[1]{%
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
@@ -10101,7 +10109,7 @@
   \fi\ignorespaces}
 
 \newcommand{\get@fnmark}[1]{%
-  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote@typeset}%
       \setcounter{footnote}{\c@footnote@typeset}%
@@ -10362,7 +10370,11 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly[R]}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
@@ -10372,7 +10384,11 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
@@ -10409,7 +10425,7 @@
 % This command gets the correct footnote number when typesetting parallel texts.
 %    \begin{macrocode}
 \newcommand{\get@fnmarkX}[2]{%
-  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote#1@typeset}%
       \setcounter{footnote#1}{\value{footnote#1@typeset}}%
@@ -11745,9 +11761,6 @@
                       \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
-                      \ifbool{indtl@notenumber}%
-                        {\unexpanded{\let\index\orig@@index}}%
-                        {}%
                       \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
@@ -11757,6 +11770,9 @@
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
                       \ifbool{indtl@innote}%
+                        {\unexpanded{\let\index\orig@@index}}%
+                        {}%
+                      \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
                     }\to\inserts@listR
@@ -11884,19 +11900,10 @@
                 \xdef\footnote@luatextextdir{\the\textdir}%
                 \xdef\footnote@luatexpardir{\the\pardir}%
               \fi%
-              \ifbool{indtl@innote}%
-                {\let\index\nindex}%
-                {}%
-              \ifbool{indtl@notenumber}%
-                {%
-                \renewcommand{\index}[2][]{%
-                  \orig@@index[####1]{%
-                    ####2|innotenumber{\csuse{thefootnote#1}}%
-                    }%
-                  }%
-                }%
-                {}%
-              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+              \if@ledgroup%
+	        \led@set@index@fornote{#1}%
+	      \fi%
+	      \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
@@ -13270,7 +13277,7 @@
 \toggletrue{Xlineflag@SEref}%%Here exception
 
 \def\Xendtwolines@apprefwithpage{}%
-\def\Xendtwolines@SEwithpage{}%
+\def\Xendtwolines@SErefwithpage{}%
 
 \def\Xendmorethantwolines@apprefwithpage{}%
 \def\Xendmorethantwolines@SErefwithpage{}%
@@ -14053,10 +14060,7 @@
   \@ledgroupfalse%
 }
 
-\apptocmd{\endledgroup}{%
-  \l@dprintingpagesfalse%
-  \l@dprintingcolumnsfalse%
-}{}{}
+
 %    \end{macrocode}
 % \end{environment}
 %
@@ -14135,6 +14139,7 @@
 % \changes{v1.8.5}{2014/08/28}{Debug indexing in right column, with eledpar.}
 % Here is some code for indexing using page and line numbers.
 %
+% \subsection{Looking on package order}
 % First, ensure that \protect\package{imakeidx} or \protect\package{indextools} is loaded \emph{before} \protect\package{eledmac}.
 % \changes{v1.12.0}{2014/08/05}{Ensure that \protect\package{imakeidx} is loaded \emph{before} \protect\package{eledmac}}
 %    \begin{macrocode}
@@ -14147,6 +14152,7 @@
   \fi%
 }
 %    \end{macrocode}
+% \subsection{Auxiliary macros for \cs{edindex}}
 % \begin{macro}{\pagelinesep}
 % \begin{macro}{\edindexlab}
 % \begin{macro}{\c@labidx}
@@ -14203,6 +14209,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Code specific to \cs{edindex} in critical footnotes}
 % \begin{macro}{\if@edindex@fornote@true}
 % This boolean test is switching at the beginning of each critical note,
 % to allow index referring to this note.
@@ -14266,8 +14273,9 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Analysis of command in indexed text}
 % \begin{macro}{\get@index@command}
-% This macro is used to analyse if a text to be indexed has a command after a \verb+|+.
+% This macro is used to analyze if a text to be indexed has a command after a \verb+|+.
 % \changes{v1.8.0}{2014/07/21}{Debug \protect\cs{get@index@command} and compatibility with \protect\package{hyperref} package.}
 %    \begin{macrocode}
 \def\get@index@command#1|#2+{%
@@ -14287,6 +14295,7 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Code for the formatted index}
 % \begin{macro}{\ledinnote}
 % \changes{v1.22.0}{2015/04/25}{\protect\cs{ledinnote} takes a first optional argument, which is the label for hyperlinks.}
 % \begin{macro}{\ledinnotehyperpage}
@@ -14314,6 +14323,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Main code}
 % \changes{v2.0.0}{2015/07/19}{Suppress indexing command specific to \protect\ltxclass{memoir}.}
 % \Eledmac and \ledmac were using the specific indexing tools of the \protect\ltxclass{memoir} in order to allow multiple index.
 % However, \eledmac used \protect\package{imakeidx} or \protect\package{indextools}  tools when one these two package was loaded.
@@ -14376,6 +14386,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Hyperlink}
 % \begin{macro}{\hyperlinkformat}
 % \protect\cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexing.
 %    \begin{macrocode}
@@ -14508,7 +14519,40 @@
 % \end{macro}
 % \changes{v1.14.0}{2014/10/27}{Delete previous override of \protect\cs{l@d@@wrindexhyp} at the beginning of a document when hyperref is not loaded.}
 %
-%
+% \subsection{`innote' and `notenumber' option of \package{indextols} package}
+% \begin{macro}{\led@set@index@fornote}
+% The \cs{led@set@index@fornote} is called when a familiar footnote is inserted --- and not when it is read --- and changes the \cs{index} command depending of the option of the \package{indextools} package.
+% Its only argument is the note series.
+%    \begin{macrocode}
+\newcommand{\led@set@index@fornote}[1]{%
+  \ifbool{indtl@innote}%
+    {\let\index\nindex}%
+    {}%
+  \ifbool{indtl@notenumber}%
+    {%
+    \renewcommand{\index}[2][]{%
+      \orig@@index[##1]{%
+        ##2|innotenumber{\csuse{thefootnote#1}}%
+        }%
+      }%
+    }%
+    {}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@reinit@index@fornote}
+% The \cs{led@reinit@index@fornote} just reset the default value of \cs{index}.
+%    \begin{macrocode}
+\newcommand{\led@reinit@index@fornote}{%
+  \ifbool{indtl@innote}%
+    {\let\index\orig@@index}%
+    {}%
+ \ifbool{indtl@notenumber}%
+  {\let\index\orig@@index}%
+  {}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Verse}
 %
 % The original code is principally Wayne Sullivan's\index{Sullivan, Wayne} 

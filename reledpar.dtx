@@ -261,7 +261,7 @@
 % \hyphenation{man-u-script man-u-scripts}
 % \changes{v2.6.0}{2015/11/13}{Fix bug with right side title number when using title commands before \protect\env{pages} or \protect\env{columns} environments.}
 % \changes{v2.6.1}{2015/11/20}{Fix bug, introduced in v2.6.0, with footnote numbering when using \protect\package{perpage} package.}
-%
+% \changes{v2.6.2}{2015/11/28}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.6.0).}
 %
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
@@ -1153,7 +1153,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/11/20 v2.6.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/11/28 v2.6.2 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2832,6 +2832,9 @@
   \l@dpagingfalse
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \if@ledgroup%
+    \get@familiarfootnote@number%
+  \fi%
   \save@section@number%
   \at@begin@pairs%
 }{%
@@ -2856,6 +2859,9 @@
   \l@dpagingtrue
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \if@ledgroup%
+    \get@familiarfootnote@number%
+  \fi%
   \save@section@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
@@ -5044,9 +5050,7 @@
   \global\l@dpscR=\z@
   \global\l@dnumpstartsL=\z@
   \global\l@dnumpstartsR=\z@
-  \if@ledgroup\else%
-    \global\l@dprintingcolumnsfalse%
-  \fi
+  \global\l@dprintingcolumnsfalse%
   \ignorespaces
     \global\instanzaLfalse%
     \global\instanzaRfalse%
@@ -5666,9 +5670,7 @@
   \global\l@dnumpstartsR=\z@%
     \global\instanzaLfalse%
     \global\instanzaRfalse%
- \if@ledgroup\else%
-   \global\l@dprintingpagesfalse%
- \fi%
+  \global\l@dprintingpagesfalse%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces\fi}
 
