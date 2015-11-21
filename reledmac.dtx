@@ -11543,7 +11543,7 @@
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \printnpnum{#1}%
+  \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
   \ifl@d@dash%
    \ifl@d@pnum%
     \csuse{Xendlineprefixsingle@\@currentseries}%
@@ -11555,10 +11555,11 @@
   \else%
    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
+  \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#2}}%
+  \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
     \csuse{Xendsublinesep@\@currentseries}% 
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi%
   \egroup%
 %    \end{macrocode}
@@ -11581,17 +11582,19 @@
         \csuse{Xendlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
-    \ifl@d@pnum \printnpnum{#4}\fi%
+    \ifl@d@pnum%
+     \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+    \fi%
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
-      \linenumrep{#5}%
+      \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#5}}%
       \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
     \fi%
     \ifl@d@esl%
       \ifl@d@elin% 
         \csuse{Xendsublinesep@\@currentseries}%
       \fi% 
-      \sublinenumrep{#6}%
+      \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#6}}%
     \fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
@@ -13393,7 +13396,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+   \def\@this@crossref@start{#2:start}%
+   \def\@this@crossref@end{#2:start}%
+   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
