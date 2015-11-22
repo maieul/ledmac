@@ -11926,8 +11926,8 @@
 % If we are preparing parallel typesetting, we cannot just increase the footnote counter.
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
+               \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
                \ifl@dpairing%
-                  \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne
                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
                     {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
                     {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
@@ -11959,9 +11959,12 @@
       }
 %    \end{macrocode}
 % Then define the counters.
+% The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by user. That is this one which is printed.
+% The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used for hyperlinks, if using \protect{hyperlink} package, and also to get correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+      \expandafter\newcount\csname footnote#1@reading\endcsname%
 %    \end{macrocode}
 % Do not forget to initialize series
 %    \begin{macrocode}
