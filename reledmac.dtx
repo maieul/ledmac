@@ -1891,7 +1891,15 @@
 % \DescribeMacro{\Xendlemmadisablefontselection}
 % By default, font of the lemma in endnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command allows  \protect\cs{Xendlemmadisablefontselection}\oarg{s} to disable it for a specific series.
 %
-%
+
+% \changes{v2.7.0}{2015/11/28}{New hooks: \protect\cs{Xlemmafont} and \protect{\Xendlemmafont}}
+% \DescribeMacro{\Xlemmafont}\DescribeMacro{\Xendlemmafont}
+% Use \cs{Xlemmafont}\oarg{s}\meta{cmd} to apply a \TeX\ font command to the lemma.
+%For example, to have boldface lemma:
+% \begin{verbatim}
+%\Xlemmafont{\bfseries}
+% \end{verbatim}
+% \cs{Xendlemmafont}\meta{arg}\meta{cmd} is the same for endnotes.
 % \subsubsection{For all notes}
 % \DescribeMacro{\Xnotefontsize}
 % \protect\cs{Xnotefontsize}\oarg{s}\marg{command} is used to define the font size of critical footnotes of the series. The default value is \protect\cs{footnotesize}.
@@ -8544,7 +8552,10 @@
   \hangindent=\csuse{Xhangindent@#4}
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}\relax%
@@ -8967,7 +8978,10 @@
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9237,7 +9251,10 @@
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9364,7 +9381,10 @@
   \csuse{Xcolalign@#4}%
  \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -11298,8 +11318,8 @@
   \printlineendnote{#1}{#4}%
   \IfStrEq{#6}{R}{\ledRcol@false}{}%
   \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|#2}%
-    {#2}%
+    {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
+    {{\csuse{Xendlemmafont@#4}#2}}%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -11675,7 +11695,7 @@
 %    \end{macrocode}
 % \subsubsection{Options}
 %    \begin{macrocode}
-     \newtoggle{Xlineflag@#1}
+      \newtoggle{Xlineflag@#1}
       \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xhangindent@#1}{0pt}%
@@ -11728,9 +11748,11 @@
       \csgdef{Xparafootsep@#1}{}%
       \csgdef{Xafternote@#1}{1em plus.4em minus.4em}
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
+      
+      \csgdef{Xlemmafont@#1}{}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
-% As regards inserts, see chapter 15 of \thetexbook by D. Knuth.
+% As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
 %    \begin{macrocode}
       \expandafter\newinsert\csname #1footins\endcsname%
       \unless\ifnoledgroup@%
@@ -12048,6 +12070,8 @@
       \csgdef{Xendlineprefixmore@#1}{}%
       
       \newtoggle{Xendlineflag@#1}
+     
+      \csgdef{Xendlemmafont@#1}{}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -12281,6 +12305,7 @@
 % Before generating the commands that are used to set the critical notes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
+  \newhookcommand@series{Xlemmafont}%
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -12367,6 +12392,7 @@
 %    \begin{macrocode}
 \unless\ifnoend@
   \newhookcommand@series{Xendnotenumfont}
+  \newhookcommand@series{Xendlemmafont}%
   \newhookcommand@series{Xendbhooknote}
   
   \newhookcommand@series{Xendboxlinenum}%
