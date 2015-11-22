@@ -368,6 +368,9 @@
 % \changes{v2.7.0}{2015/11/28}{Fix bug with \protect\cs{SErefwithpage}.}
 % \changes{v2.7.0}{2015/11/28}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.5.0).}
 % \changes{v2.7.0}{2015/11/28}{Fix bugs in compatibility with \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
+% \changes{v2.7.0}{2015/11/28}{New command to make glossaries related to page and linenumber with the \protect\package{glossaries} package}
+%
+%
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -2725,7 +2728,7 @@
 % \end{verbatim}
 %
 % \subsection{Separator between page and line numbers}
-% \DescribeMacro{\pagelinesep}
+% \DescribeMacro{\pagelinesep}\label{pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
 % where the default definition is |\newcommand{\pagelinesep}{-}| so that
 % an item on page 3, line 5 will be noted as being at |3-5|. You can
@@ -2737,7 +2740,7 @@
 % Consequently, if you want to use an other \protect\cs{pagelinesep}, you have to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
 % \begin{verbatim}
 % page_compositor ":"
-% delim_r ":
+% delim_r ":"
 % \end{verbatim}
 %
 % Read the \textsc{MakeIndex} program's handbook about the \verb+.ist+ file. 
@@ -2781,6 +2784,24 @@
 % (\protect\cs{edindex}'s labels are like \protect\cs{label}\verb|{$&27}|).
 % You can change \protect\cs{edindexlab} to something else if you need to.
 %
+% \section{Glossary}
+% \Macpackage provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
+% \subsection{Prealable setting}
+% The standard compositor between page and line number in \macpackage  is a dash, while \package{glossaries} use, in standard, a dot.
+% Consequently, you must:
+% \begin{itemize}
+% \item Or set .
+% \package{glossaries}:\\ \verb+\glsSetCompositor{-}+
+% \item Or set \reledmac:\\  \verb+.
+% \renewcommand{\pagelinesep}{-}+\\
+% In this case, the will have consequences on your use of \cs{edindex}, and you should set your \verb+.ist+ file (\reff{\pagelinesep}).
+%
+% \end{itemize}
+% \subsection{Commands}
+% The \cs{gls}, \cs{Gls}, and related commands of \package{glossaries} packages have a prefixed version with \verb+ed+, which refers to the page line.
+% The argument are the same as for the standard commands.
+% So for example:\\
+% \cs{edgls}\oarg{options}\marg{label}\oarg{insert}
 % \section{Tabular material}
 %
 % \LaTeX's normal |tabular| and |array| environments cannot be used where
@@ -14202,8 +14223,10 @@
 %
 % \begin{macro}{\thepageline}
 % This macro makes up the page/line number combo from the label/ref.
+% The associated counter is never directly used, but it is required in order to not have any error message with \cs{edgls}.
 %    \begin{macrocode}
-\newcommand{\thepageline}{%
+\newcounter{pageline}%
+\renewcommand{\thepageline}{%
   \thepage%
   \pagelinesep%
   \xlineref{\edindexlab\thelabidx}%
@@ -14571,6 +14594,64 @@
   {\let\index\orig@@index}%
   {}%
 }%
+%    \end{macrocode}
+% \end{macro}
+% \section{Glossaries}
+% Here, we define the \cs{gls}-Like commands prefixed by \verb+ed+.
+% \begin{macro}{\edgls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edgls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLS}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLS}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLS[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGlspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGlspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLSpl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLSpl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLSpl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglsdisp}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglsdisp}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glsdisp[counter=pageline,#1]{#2}[#3]%
+}
 %    \end{macrocode}
 % \end{macro}
 % \section{Verse}
