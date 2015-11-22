@@ -375,6 +375,7 @@
 % \changes{v2.7.0}{2015/11/28}{Add dash as default page range separator for \protect\cs{SEonlypage}}
 % \changes{v2.7.0}{2015/11/28}{Delete parenthesis after \protect\cs{SErefonlypage}.}
 % \changes{v2.7.0}{2015/11/28}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
+% \changes{v2.7.0}{2015/11/28}{Debug \protect\cs{SErefonlypage} when referring to only one page.}
 %
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -13614,9 +13615,11 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
-       \printnpnum{\xpageref{#2:start}}
-     \else%
+   {\ifnumequal{\xpageref{#2:end}}{\xpageref{#2:start}}%
+       {%
+       \printnpnum{\xpageref{#2:start}}%
+       }%
+     {%
       \ifcsvoid{#3onlypage@prefixmore}%
         {}%
         {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixmore}}%
@@ -13633,7 +13636,7 @@
           \xpageref{#2:end}%
         }%
       \fi%   
-    \fi%
+     }%
    }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
