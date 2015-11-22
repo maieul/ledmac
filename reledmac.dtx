@@ -365,12 +365,17 @@
 % \changes{v2.6.0}{2015/11/20}{Fix bug, introduced in v2.5.0, with footnote numbering in parallel typesetting when using \protect\package{perpage} package.}
 % \changes{v2.7.0}{2015/11/28}{Warning for duplicate and undefined labels are parsable by latexmk}
 % \changes{v2.7.0}{2015/11/28}{Warning for duplicate labels does not send any more a false line and page number}
-% \changes{v2.7.0}{Fix bug with \cs{SErefwithpage}.}
+% \changes{v2.7.0}{2015/11/28}{Fix bug with \protect\cs{SErefwithpage}.}
 % \changes{v2.7.0}{2015/11/28}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.5.0).}
-% \changes{v2.7.0}{2015/11/28}{Fix bugs in compatibility witg \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
 % \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add links for \protect\cs{SEref} and related, \protect\cs{appref} and related.}
 % \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add links from critical footnotes and critical endnotes to the line of text they refers}
 % \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add link in familiar footnotes between the footnote marks in the text and the footnote marks in the footnote}
+% \changes{v2.7.0}{2015/11/28}{Fix bugs in compatibility with \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
+% \changes{v2.7.0}{2015/11/28}{New command to make glossaries related to page and linenumber with the \protect\package{glossaries} package}
+% \changes{v2.7.0}{2015/11/28}{Add dash as default page range separator for \protect\cs{SEonlypage}}
+% \changes{v2.7.0}{2015/11/28}{Delete parenthesis after \protect\cs{SErefonlypage}.}
+% \changes{v2.7.0}{2015/11/28}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
+%
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1894,7 +1899,15 @@
 % \DescribeMacro{\Xendlemmadisablefontselection}
 % By default, font of the lemma in endnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command allows  \protect\cs{Xendlemmadisablefontselection}\oarg{s} to disable it for a specific series.
 %
-%
+
+% \changes{v2.7.0}{2015/11/28}{New hooks: \protect\cs{Xlemmafont} and \protect\cs{Xendlemmafont}}
+% \DescribeMacro{\Xlemmafont}\DescribeMacro{\Xendlemmafont}
+% Use \cs{Xlemmafont}\oarg{s}\meta{cmd} to apply a \TeX\ font command to the lemma.
+%For example, to have boldface lemma:
+% \begin{verbatim}
+%\Xlemmafont{\bfseries}
+% \end{verbatim}
+% \cs{Xendlemmafont}\meta{arg}\meta{cmd} is the same for endnotes.
 % \subsubsection{For all notes}
 % \DescribeMacro{\Xnotefontsize}
 % \protect\cs{Xnotefontsize}\oarg{s}\marg{command} is used to define the font size of critical footnotes of the series. The default value is \protect\cs{footnotesize}.
@@ -2568,8 +2581,22 @@
 %
 % \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{setSErefprefixmore} 
 % \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
-% 
-% \paragraph{Linked to setting of critical endnotes and footnotes}
+%
+% \DescribeMacro{\setSErefonlypageprefixsingle}
+% \DescribeMacro{\setSErefonlypageprefixmore}
+% Use \cs{setSErefonlypageprefixsingle}\marg{prefix} to set the page prefix for \cs{SErefonlypage} when there is only one page.
+% Use \cs{setSErefonlypageprefixmore}\marg{prefix} to set it when there is more than one page.
+% For example:
+% \begin{verbatim}
+% \setSErefonlypageprefixsingle{p.~}
+% \setSErefonlypageprefixmore{pp.~}
+% \end{verbatim}
+% Note that if you do not use  \cs{setSErefonlypageprefixmore}, the value of \cs{setSErefonlypageprefixsingle} is used instead.
+%
+%
+% \textbf{Also note that \cs{setSErefonlypageprefixsingle} is only a shortcut for \cs{XendbeforepagenumberSErefonlypage} (see \reff{crossrefsetting:linked}).
+% So if you use \cs{Xendbeforepagenumber} without any optional argument, it will override this setting.}
+% \paragraph{Linked to setting of critical endnotes and footnotes}\label{crossrefsetting:linked}
 % Some commands who set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
 % 
 % These commandes are the following:
@@ -2588,7 +2615,7 @@
 %
 % The same principle is available for \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SErefonlypage} with the following commands:
 % \begin{itemize}
-%   \item\cs{Xendafterpagenumber}
+%   \item\cs{Xendafterpagenumber} (not for \cs{SErefonlypage})
 %   \item\cs{Xendbeforepagenumber}
 %   \item\cs{Xendlineflag} (for \parpackage), enabled by default.
 %   \item\cs{Xendlineprefixmore}
@@ -2720,7 +2747,7 @@
 % \end{verbatim}
 %
 % \subsection{Separator between page and line numbers}
-% \DescribeMacro{\pagelinesep}
+% \DescribeMacro{\pagelinesep}\label{pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
 % where the default definition is |\newcommand{\pagelinesep}{-}| so that
 % an item on page 3, line 5 will be noted as being at |3-5|. You can
@@ -2732,7 +2759,7 @@
 % Consequently, if you want to use an other \protect\cs{pagelinesep}, you have to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
 % \begin{verbatim}
 % page_compositor ":"
-% delim_r ":
+% delim_r ":"
 % \end{verbatim}
 %
 % Read the \textsc{MakeIndex} program's handbook about the \verb+.ist+ file. 
@@ -2776,6 +2803,24 @@
 % (\protect\cs{edindex}'s labels are like \protect\cs{label}\verb|{$&27}|).
 % You can change \protect\cs{edindexlab} to something else if you need to.
 %
+% \section{Glossary}
+% \Macpackage provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
+% \subsection{Prealable setting}
+% The standard compositor between page and line number in \macpackage  is a dash, while \package{glossaries} use, in standard, a dot.
+% Consequently, you must:
+% \begin{itemize}
+% \item Or set .
+% \package{glossaries}:\\ \verb+\glsSetCompositor{-}+
+% \item Or set \reledmac:\\  \verb+.
+% \renewcommand{\pagelinesep}{-}+\\
+% In this case, the will have consequences on your use of \cs{edindex}, and you should set your \verb+.ist+ file (\reff{\pagelinesep}).
+%
+% \end{itemize}
+% \subsection{Commands}
+% The \cs{gls}, \cs{Gls}, and related commands of \package{glossaries} packages have a prefixed version with \verb+ed+, which refers to the page line.
+% The argument are the same as for the standard commands.
+% So for example:\\
+% \cs{edgls}\oarg{options}\marg{label}\oarg{insert}
 % \section{Tabular material}
 %
 % \LaTeX's normal |tabular| and |array| environments cannot be used where
@@ -3551,8 +3596,12 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
-%
+% \begin{macro}{\if@ledgroup}
+% Flag set to true inside a \env{ledgroup} environment.
+%    \begin{macrocode}
+\newif\if@ledgroup%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifl@imakeidx}
 % Define a flag for if the \protect\package{imakeidx} package has been used.
 %    \begin{macrocode}
@@ -8564,7 +8613,10 @@
   \hangindent=\csuse{Xhangindent@#4}
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}\relax%
@@ -8987,7 +9039,10 @@
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9257,7 +9312,10 @@
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9384,7 +9442,10 @@
   \csuse{Xcolalign@#4}%
  \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -11386,8 +11447,8 @@
   \undef\@this@crossref@start%
   \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|#2}%
-    {#2}%
+    {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
+    {{\csuse{Xendlemmafont@#4}#2}}%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -11766,7 +11827,7 @@
 %    \end{macrocode}
 % \subsubsection{Options}
 %    \begin{macrocode}
-     \newtoggle{Xlineflag@#1}
+      \newtoggle{Xlineflag@#1}
       \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xhangindent@#1}{0pt}%
@@ -11819,9 +11880,11 @@
       \csgdef{Xparafootsep@#1}{}%
       \csgdef{Xafternote@#1}{1em plus.4em minus.4em}
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
+      
+      \csgdef{Xlemmafont@#1}{}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
-% As regards inserts, see chapter 15 of \thetexbook by D. Knuth.
+% As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
 %    \begin{macrocode}
       \expandafter\newinsert\csname #1footins\endcsname%
       \unless\ifnoledgroup@%
@@ -12002,13 +12065,13 @@
                 \xdef\footnote@luatexpardir{\the\pardir}%
               \fi%
               \if@ledgroup%
-	        \led@set@index@fornote{#1}%
-	      \fi%
-	      \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+	              \led@set@index@fornote{#1}%
+	            \fi%
+	            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
-             \ifbool{indtl@notenumber}%
+              \ifbool{indtl@notenumber}%
                 {\let\index\orig@@index}%
                 {}%
           \endgroup%
@@ -12153,6 +12216,8 @@
       \csgdef{Xendlineprefixmore@#1}{}%
       
       \newtoggle{Xendlineflag@#1}
+     
+      \csgdef{Xendlemmafont@#1}{}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -12386,6 +12451,7 @@
 % Before generating the commands that are used to set the critical notes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
+  \newhookcommand@series{Xlemmafont}%
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -12472,6 +12538,7 @@
 %    \begin{macrocode}
 \unless\ifnoend@
   \newhookcommand@series{Xendnotenumfont}
+  \newhookcommand@series{Xendlemmafont}%
   \newhookcommand@series{Xendbhooknote}
   
   \newhookcommand@series{Xendboxlinenum}%
@@ -12521,7 +12588,7 @@
 \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlinerangeseparator}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage,SErefonlypage]
-\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem,SErefonlypage]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
@@ -13390,6 +13457,7 @@
 
 \def\Xendlinerangeseparator@apprefwithpage{\endashchar}
 \def\Xendlinerangeseparator@SErefwithpage{\endashchar}
+\def\Xendlinerangeseparator@SErefonlypage{\endashchar}
 
 \def\Xendbeforepagenumber@apprefwithpage{p.}%
 \def\Xendbeforepagenumber@SErefwithpage{p.}%
@@ -13397,7 +13465,7 @@
 
 \def\Xendafterpagenumber@apprefwithpage{) }%
 \def\Xendafterpagenumber@SErefwithpage{) }%
-\def\Xendafterpagenumber@SErefonlypage{) }%
+
 
 \def\Xendlineprefixsingle@apprefwithpage{}%
 \def\Xendlineprefixsingle@SErefwithpage{}%
@@ -13436,7 +13504,7 @@
 \xdef\Xendboxendlinenum@SErefwithpage{0pt}
 
 %    \end{macrocode}
-% Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
+% Now, declare the default values of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
 % \changes{v2.5.0}{2015/11/13}{Debug \protect\cs{setapprefprefixsingle}}
 %    \begin{macrocode}
 \newcommand\@apprefprefixsingle{}%
@@ -13459,6 +13527,13 @@
   \gdef\@SErefprefixmore{#1}%
 }
 
+%    \end{macrocode}
+% And not \cs{setSErefonlypageprefixsingle} and \cs{setSErefonlypageprefixmore}. 
+%    \begin{macrocode}
+\let\setSErefonlypageprefixsingle\XendbeforepagenumberSErefonlypage%
+\newcommand{\setSErefonlypageprefixmore}[1]{%
+  \gdef\SErefonlypage@prefixmore{#1}%
+}%
 %    \end{macrocode}
 % \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
 % And now, the main commands: \protect\cs{appref}, \protect\cs{apprefwithpage}, \cs{SEref} and \cs{SErefwithpage}.
@@ -13542,6 +13617,9 @@
    {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
        \printnpnum{\xpageref{#2:start}}
      \else%
+      \ifcsvoid{#3onlypage@prefixmore}%
+        {}%
+        {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixmore}}%
       \ifdefined\linerangesep@%
         \printnpnum{%
           \xpageref{#2:start}%
@@ -14001,7 +14079,6 @@
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{l@dfeetbeginmini}, \protect\cs{l@dfeetendmini}
 %                           and all their supporting code}
 %    \begin{macrocode}
-\newif\if@ledgroup%
 \ifnoledgroup@\else%
 \newcommand*{\l@dfeetbeginmini}{\@ledgrouptrue\l@dedbeginmini\l@dfambeginmini}
 \newcommand*{\l@dfeetendmini}{%
@@ -14294,8 +14371,10 @@
 %
 % \begin{macro}{\thepageline}
 % This macro makes up the page/line number combo from the label/ref.
+% The associated counter is never directly used, but it is required in order to not have any error message with \cs{edgls}.
 %    \begin{macrocode}
-\newcommand{\thepageline}{%
+\newcounter{pageline}%
+\renewcommand{\thepageline}{%
   \thepage%
   \pagelinesep%
   \xlineref{\edindexlab\thelabidx}%
@@ -14642,7 +14721,7 @@
     {}%
   \ifbool{indtl@notenumber}%
     {%
-    \renewcommand{\index}[2][]{%
+    \renewcommand{\index}[2][\indtl@jobname]{%
       \orig@@index[##1]{%
         ##2|innotenumber{\csuse{thefootnote#1}}%
         }%
@@ -14663,6 +14742,64 @@
   {\let\index\orig@@index}%
   {}%
 }%
+%    \end{macrocode}
+% \end{macro}
+% \section{Glossaries}
+% Here, we define the \cs{gls}-Like commands prefixed by \verb+ed+.
+% \begin{macro}{\edgls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edgls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLS}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLS}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLS[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGlspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGlspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLSpl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLSpl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLSpl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglsdisp}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglsdisp}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glsdisp[counter=pageline,#1]{#2}[#3]%
+}
 %    \end{macrocode}
 % \end{macro}
 % \section{Verse}
