@@ -371,7 +371,7 @@
 % \changes{v2.7.0}{2015/11/28}{New command to make glossaries related to page and linenumber with the \protect\package{glossaries} package}
 % \changes{v2.7.0}{2015/11/28}{Add dash as default page range separator for \protect\cs{SEonlypage}}
 % \changes{v2.7.0}{2015/11/28}{Delete parenthesis after \protect\cs{SErefonlypage}.}
-%
+% \changes{v2.7.0}{2015/11/28}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
 %
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -2578,8 +2578,22 @@
 %
 % \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{setSErefprefixmore} 
 % \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
-% 
-% \paragraph{Linked to setting of critical endnotes and footnotes}
+%
+% \DescribeMacro{\setSErefonlypageprefixsingle}
+% \DescribeMacro{\setSErefonlypageprefixmore}
+% Use \cs{setSErefonlypageprefixsingle}\marg{prefix} to set the page prefix for \cs{SErefonlypage} when there is only one page.
+% Use \cs{setSErefonlypageprefixmore}\marg{prefix} to set it when there is more than one page.
+% For example:
+% \begin{verbatim}
+% \setSErefonlypageprefixsingle{p.~}
+% \setSErefonlypageprefixmore{pp.~}
+% \end{verbatim}
+% Note that if you do not use  \cs{setSErefonlypageprefixmore}, the value of \cs{setSErefonlypageprefixsingle} is used instead.
+%
+%
+% \textbf{Also note that \cs{setSErefonlypageprefixsingle} is only a shortcut for \cs{XendbeforepagenumberSErefonlypage} (see \reff{crossrefsetting:linked}).
+% So if you use \cs{Xendbeforepagenumber} without any optional argument, it will override this setting.}
+% \paragraph{Linked to setting of critical endnotes and footnotes}\label{crossrefsetting:linked}
 % Some commands who set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
 % 
 % These commandes are the following:
@@ -13381,7 +13395,7 @@
 \xdef\Xendboxendlinenum@SErefwithpage{0pt}
 
 %    \end{macrocode}
-% Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
+% Now, declare the default values of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
 % \changes{v2.5.0}{2015/11/13}{Debug \protect\cs{setapprefprefixsingle}}
 %    \begin{macrocode}
 \newcommand\@apprefprefixsingle{}%
@@ -13404,6 +13418,13 @@
   \gdef\@SErefprefixmore{#1}%
 }
 
+%    \end{macrocode}
+% And not \cs{setSErefonlypageprefixsingle} and \cs{setSErefonlypageprefixmore}. 
+%    \begin{macrocode}
+\let\setSErefonlypageprefixsingle\XendbeforepagenumberSErefonlypage%
+\newcommand{\setSErefonlypageprefixmore}[1]{%
+  \gdef\SErefonlypage@prefixmore{#1}%
+}%
 %    \end{macrocode}
 % \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
 % And now, the main commands: \protect\cs{appref}, \protect\cs{apprefwithpage}, \cs{SEref} and \cs{SErefwithpage}.
@@ -13475,6 +13496,9 @@
    {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
        \printnpnum{\xpageref{#2:start}}
      \else%
+      \ifcsvoid{#3onlypage@prefixmore}%
+        {}%
+        {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixmore}}%
       \ifdefined\linerangesep@%
         \printnpnum{%
           \xpageref{#2:start}%
