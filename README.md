@@ -80,7 +80,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 - Open *one issue for each problem*, even if problems are similar.
 - Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.
-- Once the problem has a possible solution, Maïeul Rouquette will send you a zip file and ask you to test it:
+- Once the problem has a possible solution, Maïeul Rouquette will ask you to test the new branch:
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
