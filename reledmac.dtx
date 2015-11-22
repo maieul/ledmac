@@ -10221,7 +10221,7 @@
 %    \begin{macrocode}
 \newcommand*{\normal@footnotemarkX}[1]{%
   \prebodyfootmark
-  \@nameuse{bodyfootmark#1}%
+  \wraped@bodyfootmarkX{#1}%
   \postbodyfootmark}
 
 %    \end{macrocode}
@@ -10291,7 +10291,7 @@
   \ledsetnormalparstuffX{#1}%
   \hangindent=\csuse{hangindentX@#1}%
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
-  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%
+  {{\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}}\strut%
     #2\strut\par}}
 
 %    \end{macrocode}
@@ -10402,6 +10402,7 @@
         {\footnotelang@poly[R]}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
       }%
@@ -10416,6 +10417,7 @@
         {\footnotelang@poly}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
       }%
@@ -10599,7 +10601,7 @@
  \@tempdima=\parindent%
  \csuse{colalignX@#1}%
  \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10717,7 +10719,7 @@
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10901,7 +10903,7 @@
   \ledsetnormalparstuff@common%
   {\csuse{notenumfontX@#1}%
    \csuse{notenumfontX@#1}%
-   \@nameuse{footfootmark#1}%
+   \wraped@footfootmarkX{#1}%
    \strut%
     #2\penalty-10}}
 
@@ -10967,6 +10969,45 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \subsection{Wrapping footnote marks in hyperlink}
+% \begin{macro}{\wraped@footfootmarkX}
+% \cs{wraped@footfootmarkX} prints the footnote mark of the footpage, wraped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wraped@footfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@footnotemark#1@\this@footnoteX@reading}%
+        {}%
+      }%
+    \hyperlink%
+        {@bodyfootmark#1@\this@footnoteX@reading}%
+        {\@nameuse{footfootmark#1}}%
+  \else%
+    \@nameuse{footfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\wraped@bodyfootmarkX}
+% \cs{wraped@bodyfootmarkX} prints the footnote mark of the text body, wraped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wraped@bodyfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@bodyfootmark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {}%
+      }%
+      \hyperlink%
+        {@footnotemark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {\@nameuse{bodyfootmark#1}}%
+  \else%
+    \@nameuse{bodyfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \section{Code common to both critical and familiar footnote in normal arrangement}
 % \protect\cs{par} should always be redefined to \protect\cs{endgraf} within
