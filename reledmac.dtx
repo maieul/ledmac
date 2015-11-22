@@ -6427,6 +6427,14 @@
 % \changes{v1.16.0}{2014/01/23}{\protect\cs{edtext} is now defined only in \eledmac, not in \eledpar. Debug wrong numbering when using \protect\cs{sameword} + \protect\package{eledpar} + \protect\cs{tag} command.}
 %
 %
+% \begin{macro}{\theedtext}
+% The \verb+edtext+ counter is increased at each \cs{edtext} command. 
+% It is used to add to insert hyperlinks between a notes and the lemma.
+%    \begin{macrocode}
+\newcounter{edtext}
+\renewcommand{\theedtext}{edtxt@\arabic{edtext}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\edtext}
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{showlemma} to \protect\cs{edtext}}
 % \changes{v1.4.0}{2012/11/16}{Compatibility of \protect\cs{edtext} with the right-to-left direction (with Polyglossia).}
@@ -6440,9 +6448,13 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% We increase the \protect\cs{@edtext@level} counter to know in which level of \protect\cs{edtext} we are.
+% We increase the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
+%    \end{macrocode}
+% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded.
+%    \begin{macrocode}
+      \stepcounter{edtext}%
 %    \end{macrocode}
 % By default, we do not use \protect\cs{lemma}
 %    \begin{macrocode}
@@ -6542,7 +6554,15 @@
 % commands within that expansion.
 %    \begin{macrocode}
       \endgroup%
-      \showlemma{#1}%
+      \ifdef{\hypertarget}%
+        {%
+        \Hy@raisedlink{\hypertarget{\theedtext:start}{}}%
+        \showlemma{#1}%
+        \Hy@raisedlink{\hypertarget{\theedtext:end}{}}%
+        }%
+        {%
+        \showlemma{#1}%
+        }%
 %    \end{macrocode}
 %
 % Finally, we add any insertions that are
@@ -11272,6 +11292,7 @@
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{endnotes} take six arguments.}
+% \changes{v2.7.0}{2015/11/13}{\protect\cs{endnotes} take seven arguments.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11280,9 +11301,10 @@
 %   \item \verb+#4+ Series.
 %   \item \verb+#5+ Optional argument of \protect\cs{Xendnote}.
 %   \item \verb+#6+ Side (L or R).
+%   \item \verb+#7+ Label for cross-referencing.
 % \end{itemize}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
@@ -11300,8 +11322,12 @@
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \IfStrEq{#6}{R}{\ledRcol@true}{}%
+  \def\@this@crossref@start{#7:start}%
+  \def\@this@crossref@end{#7:end}%
   \printlineendnote{#1}{#4}%
   \IfStrEq{#6}{R}{\ledRcol@false}{}%
+  \undef\@this@crossref@start%
+  \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
     {\select@lemmafont#1|#2}%
     {#2}%
@@ -11971,6 +11997,7 @@
          \newlinechar='40%
          \global\@noneed@Footnotetrue%
          \newcommand{\content}{##2}%
+         \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
@@ -11978,7 +12005,8 @@
            {\expandonce\content}%
            {#1}%
            {\unexpanded{##1}}%
-           {\ifledRcol R\else L\fi}
+           {\ifledRcol R\else L\fi}%
+           {\theedtext}%
            \@percentchar%
          }%
          \egroup%
