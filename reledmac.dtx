@@ -367,11 +367,15 @@
 % \changes{v2.7.0}{2015/11/28}{Warning for duplicate labels does not send any more a false line and page number}
 % \changes{v2.7.0}{2015/11/28}{Fix bug with \protect\cs{SErefwithpage}.}
 % \changes{v2.7.0}{2015/11/28}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.5.0).}
+% \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add links for \protect\cs{SEref} and related, \protect\cs{appref} and related.}
+% \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add links from critical footnotes and critical endnotes to the line of text they refers}
+% \changes{v2.7.0}{2015/11/28}{When using \protect\package{hyperref} package, add link in familiar footnotes between the footnote marks in the text and the footnote marks in the footnote}
 % \changes{v2.7.0}{2015/11/28}{Fix bugs in compatibility with \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
 % \changes{v2.7.0}{2015/11/28}{New command to make glossaries related to page and linenumber with the \protect\package{glossaries} package}
 % \changes{v2.7.0}{2015/11/28}{Add dash as default page range separator for \protect\cs{SEonlypage}}
 % \changes{v2.7.0}{2015/11/28}{Delete parenthesis after \protect\cs{SErefonlypage}.}
 % \changes{v2.7.0}{2015/11/28}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
+% \changes{v2.7.0}{2015/11/28}{Debug \protect\cs{SErefonlypage} when referring to only one page.}
 %
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -655,7 +659,7 @@
 % \item[nocritical] disables tools for critical footnotes (\protect\cs{Afootnote}, \protect\cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ run faster. 
 % It will also preserve room for other packages.
 % \item[noeledsec] disables tools for \protect\cs{eledsection} and related commands (\reff{eledsection}).
-% \item[noend] disables tools for endnotes (\protect\cs{Aendnote}, \protect\cs{Bendnote} etc.). If you do not need endnotes, this option lets \eledmac\ run faster. 
+% \item[noend] disables tools for endnotes (\protect\cs{Aendnote}, \protect\cs{Bendnote} etc.). If you do not need endnotes, this option lets \macpackage\ run faster. 
 % It will also preserve room for other packages.
 % \item[nofamiliar] disables tools for familiar footnotes (\protect\cs{footnoteA}, \protect\cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ run faster.
 % It will also preserve room for other packages.
@@ -6476,6 +6480,14 @@
 % \changes{v1.16.0}{2014/01/23}{\protect\cs{edtext} is now defined only in \eledmac, not in \eledpar. Debug wrong numbering when using \protect\cs{sameword} + \protect\package{eledpar} + \protect\cs{tag} command.}
 %
 %
+% \begin{macro}{\theedtext}
+% The \verb+edtext+ counter is increased at each \cs{edtext} command. 
+% It is used to add to insert hyperlinks between a notes and the lemma.
+%    \begin{macrocode}
+\newcounter{edtext}
+\renewcommand{\theedtext}{edtxt@\arabic{edtext}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\edtext}
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{showlemma} to \protect\cs{edtext}}
 % \changes{v1.4.0}{2012/11/16}{Compatibility of \protect\cs{edtext} with the right-to-left direction (with Polyglossia).}
@@ -6489,9 +6501,13 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% We increase the \protect\cs{@edtext@} counter to know in which level of \protect\cs{edtext} we are.
+% We increase the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
+%    \end{macrocode}
+% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded.
+%    \begin{macrocode}
+      \stepcounter{edtext}%
 %    \end{macrocode}
 % By default, we do not use \protect\cs{lemma}
 %    \begin{macrocode}
@@ -6591,7 +6607,16 @@
 % commands within that expansion.
 %    \begin{macrocode}
       \endgroup%
-      \showlemma{#1}%
+      \ifdef{\hypertarget}%
+        {%
+        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
+        \showlemma{#1}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
+        }%
+        {%
+        \showlemma{#1}%
+        }%
 %    \end{macrocode}
 %
 % Finally, we add any insertions that are
@@ -9951,13 +9976,17 @@
   \ifdimequal{\csuse{Xboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \ifl@d@pnum #1%
+  \ifl@d@pnum%
+    \wrap@edcrossref{\@this@crossref@start}{#1}%
     \csuse{Xsublinesep@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  \wrap@edcrossref{\@this@crossref@start}{%
+    \linenumrep{#2}%
+    \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  }%
   \ifl@d@ssub%
     \csuse{Xsublinesep@\@currentseries}%
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
   \egroup%
 %    \end{macrocode}
@@ -9984,15 +10013,20 @@
       \fi%
     \fi%
     \ifl@d@pnum%
-       #4%
+       \wrap@edcrossref{\@this@crossref@end}{#4}%
        \csuse{Xsublinesep@\@currentseries}%
     \fi%
-    \ifl@d@elin \linenumrep{#5}\iftoggle{Xlineflag@\@currentseries}{#8}{}\fi%
+    \ifl@d@elin% 
+      \wrap@edcrossref{\@this@crossref@end}{%
+        \linenumrep{#5}%
+        \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+       }%
+    \fi%
     \ifl@d@esl%
        \ifl@d@elin%
          \csuse{Xsublinesep@\@currentseries}%
        \fi%
-       \sublinenumrep{#6}%
+       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
      \fi%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
@@ -10155,19 +10189,29 @@
 }%
 
 \newcommand{\l@dbfnote}[1]{%
- \ifnumberedpar@%
  \get@thisfootnote%
   \gdef\@tag{#1\relax}%
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
+      \xright@appenditem{%
+          \ifdefined\Hy@footnote@currentHref%
+            \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
+          \fi%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+        }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
+      \xright@appenditem{%
+          \ifdefined\Hy@footnote@currentHref%
+            \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
+          \fi%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+       }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \ignorespaces%
+}%
 
 \newcommand{\get@fnmark}[1]{%
   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
@@ -10252,7 +10296,7 @@
 %    \begin{macrocode}
 \newcommand*{\normal@footnotemarkX}[1]{%
   \prebodyfootmark
-  \@nameuse{bodyfootmark#1}%
+  \wraped@bodyfootmarkX{#1}%
   \postbodyfootmark}
 
 %    \end{macrocode}
@@ -10294,6 +10338,7 @@
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
   \get@fnmarkX{#1}{\thisfootnote}%
+  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}% 
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
@@ -10322,7 +10367,7 @@
   \ledsetnormalparstuffX{#1}%
   \hangindent=\csuse{hangindentX@#1}%
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
-  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%
+  {{\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}}\strut%
     #2\strut\par}}
 
 %    \end{macrocode}
@@ -10422,7 +10467,6 @@
 %    \begin{macrocode}
 
 \newcommand{\normalbfnoteX}[2]{%
-  \ifnumberedpar@
   \get@thisfootnoteX{#1}%
     \ifledRcol%
       \ifluatex
@@ -10433,6 +10477,7 @@
         {\footnotelang@poly[R]}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
       }%
@@ -10447,13 +10492,14 @@
         {\footnotelang@poly}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
       }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \ignorespaces}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10509,6 +10555,7 @@
   \ifnumberedpar@
     \edtext{}{\normalbfnoteX{#1}{#2}}%
   \else
+    \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
 
@@ -10630,7 +10677,7 @@
  \@tempdima=\parindent%
  \csuse{colalignX@#1}%
  \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10748,7 +10795,7 @@
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wraped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10890,6 +10937,7 @@
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
   \get@fnmarkX{#1}{\thisfootnote}%
+  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \csuse{notefontsizeX@#1}
@@ -10932,7 +10980,7 @@
   \ledsetnormalparstuff@common%
   {\csuse{notenumfontX@#1}%
    \csuse{notenumfontX@#1}%
-   \@nameuse{footfootmark#1}%
+   \wraped@footfootmarkX{#1}%
    \strut%
     #2\penalty-10}}
 
@@ -10998,6 +11046,45 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \subsection{Wrapping footnote marks in hyperlink}
+% \begin{macro}{\wraped@footfootmarkX}
+% \cs{wraped@footfootmarkX} prints the footnote mark of the footpage, wraped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wraped@footfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@footnotemark#1@\this@footnoteX@reading}%
+        {}%
+      }%
+    \hyperlink%
+        {@bodyfootmark#1@\this@footnoteX@reading}%
+        {\@nameuse{footfootmark#1}}%
+  \else%
+    \@nameuse{footfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\wraped@bodyfootmarkX}
+% \cs{wraped@bodyfootmarkX} prints the footnote mark of the text body, wraped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wraped@bodyfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@bodyfootmark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {}%
+      }%
+      \hyperlink%
+        {@footnotemark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {\@nameuse{bodyfootmark#1}}%
+  \else%
+    \@nameuse{bodyfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \section{Code common to both critical and familiar footnote in normal arrangement}
 % \protect\cs{par} should always be redefined to \protect\cs{endgraf} within
@@ -11324,6 +11411,7 @@
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{endnotes} take six arguments.}
+% \changes{v2.7.0}{2015/11/13}{\protect\cs{endnotes} take seven arguments.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11332,9 +11420,10 @@
 %   \item \verb+#4+ Series.
 %   \item \verb+#5+ Optional argument of \protect\cs{Xendnote}.
 %   \item \verb+#6+ Side (L or R).
+%   \item \verb+#7+ Label for cross-referencing.
 % \end{itemize}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
@@ -11352,8 +11441,12 @@
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \IfStrEq{#6}{R}{\ledRcol@true}{}%
+  \def\@this@crossref@start{#7:start}%
+  \def\@this@crossref@end{#7:end}%
   \printlineendnote{#1}{#4}%
   \IfStrEq{#6}{R}{\ledRcol@false}{}%
+  \undef\@this@crossref@start%
+  \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
     {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
     {{\csuse{Xendlemmafont@#4}#2}}%
@@ -11620,7 +11713,7 @@
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \printnpnum{#1}%
+  \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
   \ifl@d@dash%
    \ifl@d@pnum%
     \csuse{Xendlineprefixsingle@\@currentseries}%
@@ -11632,10 +11725,11 @@
   \else%
    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
+  \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#2}}%
+  \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
     \csuse{Xendsublinesep@\@currentseries}% 
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi%
   \egroup%
 %    \end{macrocode}
@@ -11658,17 +11752,19 @@
         \csuse{Xendlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
-    \ifl@d@pnum \printnpnum{#4}\fi%
+    \ifl@d@pnum%
+     \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+    \fi%
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
-      \linenumrep{#5}%
+      \wrap@edcrossref{\@this@crossref@end}{\linenumrep{#5}}%
       \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
     \fi%
     \ifl@d@esl%
       \ifl@d@elin% 
         \csuse{Xendsublinesep@\@currentseries}%
       \fi% 
-      \sublinenumrep{#6}%
+      \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
     \fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
@@ -11826,9 +11922,13 @@
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
+                      \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
+                      \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \noexpand\csuse{v#1footnote}{#1}%
-                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}{\expandonce\theedtext}%
                       \noexpand\Xnote@false% 
+                      \unexpanded{\undef\@this@crossref@start}%
+                      \unexpanded{\undef\@this@crossref@end}%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -11860,9 +11960,14 @@
                       \ifl@dpairing%
                         \noexpand\setcounter{stanzaL}{\the\c@stanzaL}%Save stanzaR counter for footnote
                       \fi%
-                      \noexpand\csuse{v#1footnote}{#1}%
-                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
-                       \noexpand\Xnote@false%
+                      \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
+                      \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \noexpand\csuse{v#1footnote}%
+                         {#1}%
+                         {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \unexpanded{\undef\@this@crossref@start}%
+                      \unexpanded{\undef\@this@crossref@end}%
+                      \noexpand\Xnote@false%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -11941,8 +12046,8 @@
 % If we are preparing parallel typesetting, we cannot just increase the footnote counter.
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
+               \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
                \ifl@dpairing%
-                  \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne
                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
                     {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
                     {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
@@ -11974,9 +12079,12 @@
       }
 %    \end{macrocode}
 % Then define the counters.
+% The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by user. That is this one which is printed.
+% The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used for hyperlinks, if using \protect{hyperlink} package, and also to get correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+      \expandafter\newcount\csname footnote#1@reading\endcsname%
 %    \end{macrocode}
 % Do not forget to initialize series
 %    \begin{macrocode}
@@ -12022,6 +12130,7 @@
          \newlinechar='40%
          \global\@noneed@Footnotetrue%
          \newcommand{\content}{##2}%
+         \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
@@ -12029,7 +12138,8 @@
            {\expandonce\content}%
            {#1}%
            {\unexpanded{##1}}%
-           {\ifledRcol R\else L\fi}
+           {\ifledRcol R\else L\fi}%
+           {\theedtext}%
            \@percentchar%
          }%
          \egroup%
@@ -13457,7 +13567,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
-   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+    \def\@this@crossref@start{#2:start}%
+    \def\@this@crossref@end{#2:end}%
+    \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%   
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13475,7 +13591,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+   \def\@this@crossref@start{#2:start}%
+   \def\@this@crossref@end{#2:end}%
+   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13493,26 +13615,30 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
-       \printnpnum{\xpageref{#2:start}}
-     \else%
+   {\ifnumequal{\xpageref{#2:end}}{\xpageref{#2:start}}%
+       {%
+       \printnpnum{%
+         \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
+         }%
+       }%
+     {%
       \ifcsvoid{#3onlypage@prefixmore}%
         {}%
         {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixmore}}%
       \ifdefined\linerangesep@%
         \printnpnum{%
-          \xpageref{#2:start}%
+          \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
           \linerangesep@%
-          \xpageref{#2:end}%
+          \wrap@edcrossref{#2:end}{\xpageref{#2:end}}%
         }%
       \else%
         \printnpnum{%
-          \xpageref{#2:start}%
+          \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
           \csuse{Xendlinerangeseparator@\@currentseries}%
-          \xpageref{#2:end}%
+          \wrap@edcrossref{#2:end}{\xpageref{#2:end}}%
         }%
       \fi%   
-    \fi%
+     }%
    }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
