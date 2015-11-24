@@ -1981,20 +1981,20 @@
 %  \item[\protect\cs{Centering}] to have text centered \emph{with hyphenation} (requires \package{ragged2e}).
 % \end{description}
 %
-% \subsubsection{Size of the columns}
+% \subsubsection{Size of the columns}\label{hsizecols}
 % For the following four macros, be careful that the columns are made from right to left.
 %
 % \DescribeMacro{\Xhsizetwocol}
-% \protect\cs{Xhsizetwocol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in two columns. Defaut value is \verb+.45 \hsize+.
+% \protect\cs{Xhsizetwocol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in two columns. Default value is \verb+.45 \hsize+.
 %
 % \DescribeMacro{\Xhsizethreecol}
-% \protect\cs{Xhsizethreecol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in three columns. Defaut value is \verb+.3 \hsize+.
+% \protect\cs{Xhsizethreecol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
 % \DescribeMacro{\hsizetwocolX}
-% \protect\cs{hsizetwocolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in two columns. Defaut value is \verb+.45 \hsize+.
+% \protect\cs{hsizetwocolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in two columns. Default value is \verb+.45 \hsize+.
 %
 % \DescribeMacro{\hsizethreecolX}
-% \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Defaut value is \verb+.3 \hsize+.
+% \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
 % \subsection{Options for paragraphed footnotes}
 % \subsubsection{Mark separation of notes}
@@ -2092,6 +2092,22 @@
 % Actually, for technical purposes, one paragraphed note is considered as one block. 
 % Consequently, it cannot be broken between two pages, even if you used these commands. 
 % The debug is in the todolist.
+% \subsubsection{Width}
+% \DescribeMacro{\Xhsize}
+% \DescribeMacro{\hsizeX}
+% \cs{Xhsize}\oarg{s}\marg{l} sets the total width of critical footnote.
+% \cs{hsizeX}\oarg{s}\marg{l} does the same for familiar footnotes.
+%
+% \meta{l} can be a length expression, parsable with \cs{dimexpr}.
+% For example:
+% \begin{verbatim}
+%\Xhsize{\columnwidth+\marginparsep+\ledrsnotewidth}
+%\hsizeX{\columnwidth+\marginparsep+\ledrsnotewidth}
+% \end{verbatim}
+%
+% Note that changes the with of the block of notes.
+% If you want to change the width of each column when typesetting notes in columns, use \cs{Xhsizetwocol}, \cs{Xhsizethreecol}, \cs{hsizetwocolX}, \cs{hsizethreecolX}, see \reff{hsizecols}.
+%
 % \subsection{Footnotes and the \parpackage columns} 
 % \changes{v1.13.0}{2014/09/16}{Add \protect\cs{Xnoteswidthliketwocolumns} and \protect\cs{noteswidthliketwocolumnsX}}
 % \DescribeMacro{\Xnoteswidthliketwocolumns}\DescribeMacro{\noteswidthliketwocolumnsX}
@@ -6519,19 +6535,13 @@
 % We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \protect\cs{sw@inthisedtext}.
 %    \begin{macrocode}
       \ifledRcol% 
-        \ifcsundef{sw@list@edtextR@\the\@edtext@level}%
+        \ifcsvoid{sw@list@edtextR@\the\@edtext@level}%
               {\global\let\sw@inthisedtext\empty}%
-              {\ifcsempty{sw@list@edtextR@\the\@edtext@level}%
-		{\global\let\sw@inthisedtext\empty}%
-		{\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-	      }%
+              {\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
       \else%
-        \ifcsundef{sw@list@edtext@\the\@edtext@level}%
+        \ifcsvoid{sw@list@edtext@\the\@edtext@level}%
               {\global\let\sw@inthisedtext\empty}%
-              {\ifcsempty{sw@list@edtext@\the\@edtext@level}%
-		{\global\let\sw@inthisedtext\empty}%
-		{\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-	      }%
+              {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
       \fi%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
@@ -8563,6 +8573,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips
@@ -8816,6 +8827,9 @@
 %    \begin{macrocode}
 \newcommand*{\para@footsetup}[1]{{\csuse{Xbhookgroup@#1}\csuse{Xnotefontsize@#1}
   \setXnoteswidthliketwocolumns@{#1}%
+  \ifcsempty{Xhsize@#1}%
+    {}%
+    {\columnwidth=\expandafter\dimexpr\csuse{Xhsize@#1}\relax}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
@@ -9068,6 +9082,7 @@
 % note series letter.
 %    \begin{macrocode}
 \newcommand*{\parafootgroup}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -9163,6 +9178,8 @@
 %
 % \paragraph{Common tools}
 % \begin{macro}{\rigidbalance}
+% \begin{macro}{\rigidbalanceX}
+% \begin{macro}{\Xrigidbalance}
 % \begin{macro}{\dosplits}
 % \begin{macro}{\splitoff}
 % \begin{macro}{\@h}
@@ -9179,9 +9196,23 @@
 % 
 % The \LaTeX\ \protect\cs{line} macro has no relationship to the 
 % TeX \protect\cs{line}. The \LaTeX\ equivalent is \protect\cs{@@line}.
+% \changes{v2.7.0}{2015/11/28}{\protect\cs{rigidbalance} is split to \cs{Xrigidbalance} and \cs{rigidbalanceX}.}
+%
+% We do not call directly \cs{rigidbalance}, but we call \cs{Xrigidbalance} for critical notes and \cs{rigidbalanceX} for familiar notes. Both of them call \cs{rigidbalance}.
 %    \begin{macrocode}
 \newcount\@k \newdimen\@h
-\newcommand*{\rigidbalance}[3]{\setbox0=\box#1 \@k=#2 \@h=#3
+\newcommand*{\Xrigidbalance}[3]{%
+    \hsize=\expandafter\dimexpr\csuse{Xhsize@\@currentseries}\relax%
+    \rigidbalance{#1}{#2}{#3}%
+}%
+
+\newcommand*{\rigidbalanceX}[3]{%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@\@currentseries}\relax%
+    \rigidbalance{#1}{#2}{#3}%
+}%
+
+\newcommand*{\rigidbalance}[3]{%
+  \setbox0=\box#1 \@k=#2 \@h=#3%
   \@@line{\splittopskip=\@h \vbadness=\@M \hfilneg
   \valign{##\vfil\cr\dosplits}}}
 
@@ -9194,6 +9225,8 @@
   \unvbox2 }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -9286,6 +9319,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
@@ -9344,7 +9378,7 @@
   \noindent\csuse{Xtxtbeforenotes@#1}\csuse{Xbhookgroup@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
+  \Xrigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9374,7 +9408,7 @@
   \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
+  \Xrigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9419,12 +9453,13 @@
 %    \begin{macrocode}
 \newcommand*{\twocolfootsetup}[1]{%
   \count\csname #1footins\endcsname 500
-  \csxdef{default@#1footins}{500}%Use this to confine the  notes to one side only
+  \csxdef{default@#1footins}{500}%
   \multiply\dimen\csname #1footins\endcsname \tw@}
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
@@ -9458,7 +9493,7 @@
   \noindent\csuse{Xtxtbeforenotes@#1}\csuse{Xbhookgroup@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
+  \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9498,7 +9533,7 @@
    \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
+  \Xrigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10319,6 +10354,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}%
     \footsplitskips
@@ -10651,6 +10687,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}%
     \footsplitskips%
@@ -10690,7 +10727,7 @@
 \newcommand*{\twocolfootgroupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
+  \rigidbalanceX\csname footins#1\endcsname \tw@ \splittopskip}}
 
 \newcommand*{\mptwocolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
@@ -10714,7 +10751,7 @@
   \csuse{bhookgroupX@#1}%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
+  \rigidbalanceX\csname mpfootins#1\endcsname \tw@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10770,6 +10807,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}
     \footsplitskips%
@@ -10808,7 +10846,7 @@
 \newcommand*{\threecolfootgroupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
+  \rigidbalanceX\csname footins#1\endcsname \thr@@ \splittopskip}}
 
 \newcommand*{\mpthreecolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
@@ -10832,7 +10870,7 @@
   \csuse{bhookgroupX@#1}%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
+  \rigidbalanceX\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10880,6 +10918,9 @@
 %    \begin{macrocode}
 \newcommand*{\para@footsetupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \setnoteswidthliketwocolumnsX@{#1}%
+  \ifcsempty{hsizeX@#1}%
+    {}%
+    {\columnwidth=\expandafter\dimexpr\csuse{hsizeX@#1}\relax}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide\dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax%
@@ -10992,6 +11033,7 @@
 % \protect\cs{para@footgroupX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\para@footgroupX}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
   \unvbox\csname footins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
@@ -11144,6 +11186,7 @@
 \newcommand{\setXnoteswidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
   \global\old@hsize=\hsize%
+  \let\old@columwidth=\columnwidth%
   \iftoggle{Xnoteswidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -11151,12 +11194,13 @@
     }%
     {}%
   \let\hsize=\hsize@fornote%
-  \let\columnwidth=\hsize@fornote%
+  \let\columnwidth=\old@columwidth%
 }%
 
 \newcommand{\setnoteswidthliketwocolumnsX@}[1]{%
   \global\let\hsize@fornote=\hsize%
   \global\old@hsize=\hsize%
+  \let\old@columwidth=\columnwidth%
   \iftoggle{noteswidthliketwocolumnsX@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -11164,7 +11208,7 @@
     }%
     {}%
   \let\hsize=\hsize@fornote%
-  \let\columnwidth=\hsize@fornote%
+  \let\columnwidth=\old@columwidth%
 }%
 
 %    \end{macrocode}
@@ -11883,6 +11927,7 @@
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
       
       \csgdef{Xlemmafont@#1}{}%
+      \csgdef{Xhsize@#1}{\hsize}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -12024,6 +12069,7 @@
       \newtoggle{noteswidthliketwocolumnsX@#1}%
       \csgdef{parafootsepX@#1}{}%
       \csgdef{afternoteX@#1}{1em plus.4em minus.4em}
+      \csgdef{hsizeX@#1}{\hsize}%
 % End of for familiar footnotes.
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
@@ -12502,6 +12548,7 @@
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
   
+  \newhookcommand@series@reload{Xhsize}%
   
 \fi
 \newhooktoggle@series{Xlineflag}[appref,SEref]
@@ -12532,6 +12579,7 @@
   \newhookcommand@series@reload{notefontsizeX}{familiar}
   \newhookcommand@series{afternoteX}
   \newhookcommand@series{parafootsepX}
+  \newhookcommand@series@reload{hsizeX}%
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for endnotes}
@@ -12716,6 +12764,7 @@
 % \protect\cs{print@Xnotes}, is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@Xnotes[1]{%
+  \xdef\@currentseries{#1}%
   \csuse{#1footstart}{#1}%
   \csuse{#1footgroup}{#1}%%
 }%
@@ -12787,6 +12836,7 @@
 % \protect\cs{print@Xnotes} is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@notesX[1]{%
+  \xdef\@currentseries{#1}%
   \csuse{footstart#1}{#1}%
   \csuse{footgroup#1}{#1}%
 }%
