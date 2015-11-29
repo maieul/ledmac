@@ -363,7 +363,19 @@
 % \changes{v2.6.0}{2015/11/20}{Adds compatibility with \protect\option{innnote} and \protect\option{notenumber} options of \protect\package{indextools} package.}
 % \changes{v2.6.0}{2015/11/20}{Fix bug with footnote counter in \protect\env{ledgroup} (added in v2.5.0).}
 % \changes{v2.6.0}{2015/11/20}{Fix bug, introduced in v2.5.0, with footnote numbering in parallel typesetting when using \protect\package{perpage} package.}
-%
+% \changes{v2.7.0}{2015/11/29}{Warning for duplicate and undefined labels are parsable by latexmk}
+% \changes{v2.7.0}{2015/11/29}{Warning for duplicate labels does not send any more a false line and page number}
+% \changes{v2.7.0}{2015/11/29}{Fix bug with \protect\cs{SErefwithpage}.}
+% \changes{v2.7.0}{2015/11/29}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.5.0).}
+% \changes{v2.7.0}{2015/11/29}{When using \protect\package{hyperref} package, add links for \protect\cs{SEref} and related, \protect\cs{appref} and related.}
+% \changes{v2.7.0}{2015/11/29}{When using \protect\package{hyperref} package, add links from critical footnotes and critical endnotes to the line of text they refers}
+% \changes{v2.7.0}{2015/11/29}{When using \protect\package{hyperref} package, add link in familiar footnotes between the footnote marks in the text and the footnote marks in the footnote}
+% \changes{v2.7.0}{2015/11/29}{Fix bugs in compatibility with \protect\option{innote} and \protect\option{notenumber} options of \protect\package{indextools} package, when indexing outside of a \protect\env{ledgroup}.}
+% \changes{v2.7.0}{2015/11/29}{New command to make glossaries related to page and linenumber with the \protect\package{glossaries} package}
+% \changes{v2.7.0}{2015/11/29}{Add dash as default page range separator for \protect\cs{SEonlypage}}
+% \changes{v2.7.0}{2015/11/29}{Delete parenthesis after \protect\cs{SErefonlypage}.}
+% \changes{v2.7.0}{2015/11/29}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
+% \changes{v2.7.0}{2015/11/29}{Debug \protect\cs{SErefonlypage} when referring to only one page.}
 %
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -647,7 +659,7 @@
 % \item[nocritical] disables tools for critical footnotes (\protect\cs{Afootnote}, \protect\cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ run faster. 
 % It will also preserve room for other packages.
 % \item[noeledsec] disables tools for \protect\cs{eledsection} and related commands (\reff{eledsection}).
-% \item[noend] disables tools for endnotes (\protect\cs{Aendnote}, \protect\cs{Bendnote} etc.). If you do not need endnotes, this option lets \eledmac\ run faster. 
+% \item[noend] disables tools for endnotes (\protect\cs{Aendnote}, \protect\cs{Bendnote} etc.). If you do not need endnotes, this option lets \macpackage\ run faster. 
 % It will also preserve room for other packages.
 % \item[nofamiliar] disables tools for familiar footnotes (\protect\cs{footnoteA}, \protect\cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ run faster.
 % It will also preserve room for other packages.
@@ -1574,11 +1586,10 @@
 % the page if these macros use the wrong
 % values.
 %
-% Note that you \emph{cannot} use paragraphs (e.g. blank lines or
+% \label{nobreaks}Note that you \emph{cannot} use paragraphs (e.g. blank lines or
 % \cs{par}) or line breaks (\cs{break} or \cs{linebreak} or \cs{newline} etc.)
 % inside of notes, when they are
-% set to \texttt{paragraph} arrangement!\footnote{See \reff{nobreak} for
-% further information.}
+% set to \texttt{paragraph} arrangement!
 %
 % The notes arrangement must be called after having defined the document geometry setting.
 % If you must change geometry setting inside your document, do not forget to call note arrangement again.
@@ -1888,7 +1899,15 @@
 % \DescribeMacro{\Xendlemmadisablefontselection}
 % By default, font of the lemma in endnote is the same as font of the lemma in the main text. For example, if the lemma is in italic in the main text, it is also in italic in note. The command allows  \protect\cs{Xendlemmadisablefontselection}\oarg{s} to disable it for a specific series.
 %
-%
+
+% \changes{v2.7.0}{2015/11/29}{New hooks: \protect\cs{Xlemmafont} and \protect\cs{Xendlemmafont}}
+% \DescribeMacro{\Xlemmafont}\DescribeMacro{\Xendlemmafont}
+% Use \cs{Xlemmafont}\oarg{s}\meta{cmd} to apply a \TeX\ font command to the lemma.
+%For example, to have boldface lemma:
+% \begin{verbatim}
+%\Xlemmafont{\bfseries}
+% \end{verbatim}
+% \cs{Xendlemmafont}\meta{arg}\meta{cmd} is the same for endnotes.
 % \subsubsection{For all notes}
 % \DescribeMacro{\Xnotefontsize}
 % \protect\cs{Xnotefontsize}\oarg{s}\marg{command} is used to define the font size of critical footnotes of the series. The default value is \protect\cs{footnotesize}.
@@ -1962,20 +1981,20 @@
 %  \item[\protect\cs{Centering}] to have text centered \emph{with hyphenation} (requires \package{ragged2e}).
 % \end{description}
 %
-% \subsubsection{Size of the columns}
+% \subsubsection{Size of the columns}\label{hsizecols}
 % For the following four macros, be careful that the columns are made from right to left.
 %
 % \DescribeMacro{\Xhsizetwocol}
-% \protect\cs{Xhsizetwocol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in two columns. Defaut value is \verb+.45 \hsize+.
+% \protect\cs{Xhsizetwocol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in two columns. Default value is \verb+.45 \hsize+.
 %
 % \DescribeMacro{\Xhsizethreecol}
-% \protect\cs{Xhsizethreecol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in three columns. Defaut value is \verb+.3 \hsize+.
+% \protect\cs{Xhsizethreecol}\oarg{s}\marg{l} is used to change width of a column when critical notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
 % \DescribeMacro{\hsizetwocolX}
-% \protect\cs{hsizetwocolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in two columns. Defaut value is \verb+.45 \hsize+.
+% \protect\cs{hsizetwocolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in two columns. Default value is \verb+.45 \hsize+.
 %
 % \DescribeMacro{\hsizethreecolX}
-% \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Defaut value is \verb+.3 \hsize+.
+% \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
 % \subsection{Options for paragraphed footnotes}
 % \subsubsection{Mark separation of notes}
@@ -2060,17 +2079,35 @@
 % \DescribeMacro{\maxhnotesX}
 % \protect\cs{maxhnotesX}\oarg{s}\marg{l} is the same as previous, but for familiar footnotes.
 %
-% Note that in many cases, you should call these commands, because the \cs{vsize} in the preamble is not the same as \cs{vsize} after the preamble.
+% Note that in many cases, you should call these commands in the begin of the document, because the \cs{vsize} in the preamble is not the same as \cs{vsize} after the preamble.
 % That why we recommend to you to add in your preamble
 % \begin{verbatim}
-% \maxhnotesX{0.8\textheight}
-% \Xmaxhnotes{0.8\textheight}
+% \AtBeginDocument{
+%   \maxhnotesX{0.8\textheight}
+%   \Xmaxhnotes{0.8\textheight}
+% }
 % \end{verbatim}
 %
 % Be careful with the two previous commands. 
 % Actually, for technical purposes, one paragraphed note is considered as one block. 
 % Consequently, it cannot be broken between two pages, even if you used these commands. 
 % The debug is in the todolist.
+% \subsubsection{Width}
+% \DescribeMacro{\Xhsize}
+% \DescribeMacro{\hsizeX}
+% \cs{Xhsize}\oarg{s}\marg{l} sets the total width of critical footnote.
+% \cs{hsizeX}\oarg{s}\marg{l} does the same for familiar footnotes.
+%
+% \meta{l} can be a length expression, parsable with \cs{dimexpr}.
+% For example:
+% \begin{verbatim}
+%\Xhsize{\columnwidth+\marginparsep+\ledrsnotewidth}
+%\hsizeX{\columnwidth+\marginparsep+\ledrsnotewidth}
+% \end{verbatim}
+%
+% Note that changes the with of the block of notes.
+% If you want to change the width of each column when typesetting notes in columns, use \cs{Xhsizetwocol}, \cs{Xhsizethreecol}, \cs{hsizetwocolX}, \cs{hsizethreecolX}, see \reff{hsizecols}.
+%
 % \subsection{Footnotes and the \parpackage columns} 
 % \changes{v1.13.0}{2014/09/16}{Add \protect\cs{Xnoteswidthliketwocolumns} and \protect\cs{noteswidthliketwocolumnsX}}
 % \DescribeMacro{\Xnoteswidthliketwocolumns}\DescribeMacro{\noteswidthliketwocolumnsX}
@@ -2562,8 +2599,22 @@
 %
 % \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{setSErefprefixmore} 
 % \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
-% 
-% \paragraph{Linked to setting of critical endnotes and footnotes}
+%
+% \DescribeMacro{\setSErefonlypageprefixsingle}
+% \DescribeMacro{\setSErefonlypageprefixmore}
+% Use \cs{setSErefonlypageprefixsingle}\marg{prefix} to set the page prefix for \cs{SErefonlypage} when there is only one page.
+% Use \cs{setSErefonlypageprefixmore}\marg{prefix} to set it when there is more than one page.
+% For example:
+% \begin{verbatim}
+% \setSErefonlypageprefixsingle{p.~}
+% \setSErefonlypageprefixmore{pp.~}
+% \end{verbatim}
+% Note that if you do not use  \cs{setSErefonlypageprefixmore}, the value of \cs{setSErefonlypageprefixsingle} is used instead.
+%
+%
+% \textbf{Also note that \cs{setSErefonlypageprefixsingle} is only a shortcut for \cs{XendbeforepagenumberSErefonlypage} (see \reff{crossrefsetting:linked}).
+% So if you use \cs{Xendbeforepagenumber} without any optional argument, it will override this setting.}
+% \paragraph{Linked to setting of critical endnotes and footnotes}\label{crossrefsetting:linked}
 % Some commands who set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
 % 
 % These commandes are the following:
@@ -2582,7 +2633,7 @@
 %
 % The same principle is available for \cs{apprefwithpage}, \cs{SErefwithpage} and \cs{SErefonlypage} with the following commands:
 % \begin{itemize}
-%   \item\cs{Xendafterpagenumber}
+%   \item\cs{Xendafterpagenumber} (not for \cs{SErefonlypage})
 %   \item\cs{Xendbeforepagenumber}
 %   \item\cs{Xendlineflag} (for \parpackage), enabled by default.
 %   \item\cs{Xendlineprefixmore}
@@ -2714,7 +2765,7 @@
 % \end{verbatim}
 %
 % \subsection{Separator between page and line numbers}
-% \DescribeMacro{\pagelinesep}
+% \DescribeMacro{\pagelinesep}\label{pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
 % where the default definition is |\newcommand{\pagelinesep}{-}| so that
 % an item on page 3, line 5 will be noted as being at |3-5|. You can
@@ -2726,7 +2777,7 @@
 % Consequently, if you want to use an other \protect\cs{pagelinesep}, you have to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
 % \begin{verbatim}
 % page_compositor ":"
-% delim_r ":
+% delim_r ":"
 % \end{verbatim}
 %
 % Read the \textsc{MakeIndex} program's handbook about the \verb+.ist+ file. 
@@ -2770,6 +2821,23 @@
 % (\protect\cs{edindex}'s labels are like \protect\cs{label}\verb|{$&27}|).
 % You can change \protect\cs{edindexlab} to something else if you need to.
 %
+% \section{Glossary}
+% \Macpackage provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
+% \subsection{Prealable setting}
+% The standard compositor between page and line number in \macpackage  is a dash, while \package{glossaries} use, in standard, a dot.
+% Consequently, you must:
+% \begin{itemize}
+% \item Or set .
+% \package{glossaries}:\\ \verb+\glsSetCompositor{-}+
+% \item Or set \reledmac:\\  \verb+\renewcommand{\pagelinesep}{-}+\\
+% In this case, the will have consequences on your use of \cs{edindex}, and you should set your \verb+.ist+ file (\reff{\pagelinesep}).
+%
+% \end{itemize}
+% \subsection{Commands}
+% The \cs{gls}, \cs{Gls}, and related commands of \package{glossaries} packages have a prefixed version with \verb+ed+, which refers to the page line.
+% The argument are the same as for the standard commands.
+% So for example:\\
+% \cs{edgls}\oarg{options}\marg{label}\oarg{insert}
 % \section{Tabular material}
 %
 % \LaTeX's normal |tabular| and |array| environments cannot be used where
@@ -3083,7 +3151,7 @@
 % For technical reasons, the page break before \protect\cs{elechapter} cannot be added automatically.
 % You have to insert it manually via \protect\cs{beforeeledchapter}, which must be called outside of a numbered section.
 %
-% \subsection{Optimization}
+% \subsection{Optimization}\label{optimize}
 % \DescribeMacro{\noeledsec}
 % If you are not going to have any \protect\cs{eledxxx} commands, then load \macpackage  with \protect\cs{noeledsec} option. 
 % That will suppress the generation of unneeded \file{.eledsec} files, save memory, and make \macpackage run faster.
@@ -3165,7 +3233,7 @@
 %
 %
 % \subsection{Known and suspected limitations}
-% \subsection{`No room for a new'}\label{noroom}
+% \subsubsection{`No room for a new'}\label{noroom}
 % Sometime, especially when using \macpackage with other packages, you could obtain warning message such 'no room for a new count' or 'no room for a new write'.
 %
 % The first thing in order to prevent such problem is to use the options to optimize \macpackage.
@@ -3185,7 +3253,7 @@
 %
 % If after reading and applying these advices you have still problem, contact us with a minimal working example.
 %
-% \subsection{Marginal notes}
+% \subsubsection{Marginal notes}
 % In general, \macpackage's system for adding marginal line numbers
 % breaks anything that makes direct use of the \LaTeX\ insert system,
 % which includes marginpars, footnotes and floats.
@@ -3195,7 +3263,7 @@
 % will throw away its contents and send a warning message to the terminal
 % and log file, but will do no harm.
 %
-% \subsection{Paragraph shape}
+% \subsubsection{Paragraph shape}
 % \protect\cs{parshape} cannot be used within numbered text, except in a
 % very restricted way.
 % 
@@ -3215,7 +3283,7 @@
 % or some such figure, and with any
 % luck the page breaks will settle down.  Luckily, this problem
 % does not crop up at all often.
-% \subsection{Paragraphed footnotes}\label{paragraphednotes:advanced}
+% \subsubsection{Paragraphed footnotes}\label{paragraphednotes:advanced}
 % The restriction on explicit line-breaking in paragraphed footnotes,
 % mentioned in a footnote \reff{nobreaks}, and
 % described in more detail on \reff{nobreaks-detail}, really is a
@@ -3231,14 +3299,14 @@
 % run off the bottom of the text block. \protect\cs{footfudgefiddle} can be increased
 % from its default 64 (say, to 68) to increase the estimate. You have to use 
 % \protect\cs{renewcommand} for this, like: \\
-% \verb?\renewcommand{\footfudgefiddle}{68}?
+% \verb?\renewcommand{\footfudgefiddle}{68}?\\ 
 % Note that you must call it \emph{before} \cs{Xarrangement}\arg{paragraph} or \cs{arrangementX}\arg{paragraph}.
 %
 % Any settings to `geometry' must be made before \cs{Xarrangement} / \cs{arrangementX}.
 %
 % Finally, in many cases you should use \cs{Xmaxhnotes} and / or \cs{maxhnotesX} (\reff{Xmaxhnotes}), in order to define the maximum height relative to \cs{textheight} and not to \cs{vsize}, because the \cs{vsize} value is not the same inside and outside of the preamble.
 % 
-% \subsection{Use with other packages}
+% \subsubsection{Use with other packages}
 %
 % Because of \macpackage's complexity, it may not play well with other
 % packages. In particular \macpackage is sensitive to commands in the
@@ -3299,7 +3367,7 @@
 % you must load this package \emph{before} the \macpackage package.
 % 
 
-% \subsection{Parallel typesetting}\label{eledpar}
+% \subsubsection{Parallel typesetting}\label{eledpar}
 %
 %
 % Peter Wilson has developed the \ledpar package
@@ -3392,7 +3460,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/11/20 v2.6.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/11/29 v2.7.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3545,8 +3613,12 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
-%
+% \begin{macro}{\if@ledgroup}
+% Flag set to true inside a \env{ledgroup} environment.
+%    \begin{macrocode}
+\newif\if@ledgroup%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifl@imakeidx}
 % Define a flag for if the \protect\package{imakeidx} package has been used.
 %    \begin{macrocode}
@@ -3746,13 +3818,18 @@
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
 \newcommand*{\led@warn@DuplicateLabel}[1]{%
-  \reledmac@warning{Duplicate definition of label `#1' on page \the\pageno.}}
+  \reledmac@warning{Duplicate definition of label `#1'\@gobble}%
+  \@latex@warning@no@line{Label `#1' multiply defined}%
+}%
 \newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
   \reledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \G@refundefinedtrue%
-  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.
-                  Using `000'.}}
+  \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.%
+                  Using `000'.}%
+  \@latex@warning{Reference `#1' on page \thepage \space%
+             undefined}%
+}%
 \newcommand*{\led@warn@pairRefUndefined}[1]{%
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
@@ -6419,6 +6496,14 @@
 % \changes{v1.16.0}{2014/01/23}{\protect\cs{edtext} is now defined only in \eledmac, not in \eledpar. Debug wrong numbering when using \protect\cs{sameword} + \protect\package{eledpar} + \protect\cs{tag} command.}
 %
 %
+% \begin{macro}{\theedtext}
+% The \verb+edtext+ counter is increased at each \cs{edtext} command. 
+% It is used to add to insert hyperlinks between a notes and the lemma.
+%    \begin{macrocode}
+\newcounter{edtext}
+\renewcommand{\theedtext}{edtxt@\arabic{edtext}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\edtext}
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{showlemma} to \protect\cs{edtext}}
 % \changes{v1.4.0}{2012/11/16}{Compatibility of \protect\cs{edtext} with the right-to-left direction (with Polyglossia).}
@@ -6432,9 +6517,13 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% We increase the \protect\cs{@edtext@} counter to know in which level of \protect\cs{edtext} we are.
+% We increase the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
+%    \end{macrocode}
+% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded.
+%    \begin{macrocode}
+      \stepcounter{edtext}%
 %    \end{macrocode}
 % By default, we do not use \protect\cs{lemma}
 %    \begin{macrocode}
@@ -6446,19 +6535,13 @@
 % We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \protect\cs{sw@inthisedtext}.
 %    \begin{macrocode}
       \ifledRcol% 
-        \ifcsundef{sw@list@edtextR@\the\@edtext@level}%
+        \ifcsvoid{sw@list@edtextR@\the\@edtext@level}%
               {\global\let\sw@inthisedtext\empty}%
-              {\ifcsempty{sw@list@edtextR@\the\@edtext@level}%
-		{\global\let\sw@inthisedtext\empty}%
-		{\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-	      }%
+              {\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
       \else%
-        \ifcsundef{sw@list@edtext@\the\@edtext@level}%
+        \ifcsvoid{sw@list@edtext@\the\@edtext@level}%
               {\global\let\sw@inthisedtext\empty}%
-              {\ifcsempty{sw@list@edtext@\the\@edtext@level}%
-		{\global\let\sw@inthisedtext\empty}%
-		{\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-	      }%
+              {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
       \fi%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
@@ -6534,7 +6617,16 @@
 % commands within that expansion.
 %    \begin{macrocode}
       \endgroup%
-      \showlemma{#1}%
+      \ifdef{\hypertarget}%
+        {%
+        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
+        \showlemma{#1}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
+        }%
+        {%
+        \showlemma{#1}%
+        }%
 %    \end{macrocode}
 %
 % Finally, we add any insertions that are
@@ -8481,6 +8573,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips
@@ -8532,7 +8625,10 @@
   \hangindent=\csuse{Xhangindent@#4}
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}\relax%
@@ -8731,6 +8827,9 @@
 %    \begin{macrocode}
 \newcommand*{\para@footsetup}[1]{{\csuse{Xbhookgroup@#1}\csuse{Xnotefontsize@#1}
   \setXnoteswidthliketwocolumns@{#1}%
+  \ifcsempty{Xhsize@#1}%
+    {}%
+    {\columnwidth=\expandafter\dimexpr\csuse{Xhsize@#1}\relax}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
@@ -8955,7 +9054,10 @@
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -8980,6 +9082,7 @@
 % note series letter.
 %    \begin{macrocode}
 \newcommand*{\parafootgroup}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \unvbox\csname #1footins\endcsname 
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
@@ -9075,6 +9178,8 @@
 %
 % \paragraph{Common tools}
 % \begin{macro}{\rigidbalance}
+% \begin{macro}{\rigidbalanceX}
+% \begin{macro}{\Xrigidbalance}
 % \begin{macro}{\dosplits}
 % \begin{macro}{\splitoff}
 % \begin{macro}{\@h}
@@ -9091,9 +9196,23 @@
 % 
 % The \LaTeX\ \protect\cs{line} macro has no relationship to the 
 % TeX \protect\cs{line}. The \LaTeX\ equivalent is \protect\cs{@@line}.
+% \changes{v2.7.0}{2015/11/29}{\protect\cs{rigidbalance} is split to \cs{Xrigidbalance} and \cs{rigidbalanceX}.}
+%
+% We do not call directly \cs{rigidbalance}, but we call \cs{Xrigidbalance} for critical notes and \cs{rigidbalanceX} for familiar notes. Both of them call \cs{rigidbalance}.
 %    \begin{macrocode}
 \newcount\@k \newdimen\@h
-\newcommand*{\rigidbalance}[3]{\setbox0=\box#1 \@k=#2 \@h=#3
+\newcommand*{\Xrigidbalance}[3]{%
+    \hsize=\expandafter\dimexpr\csuse{Xhsize@\@currentseries}\relax%
+    \rigidbalance{#1}{#2}{#3}%
+}%
+
+\newcommand*{\rigidbalanceX}[3]{%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@\@currentseries}\relax%
+    \rigidbalance{#1}{#2}{#3}%
+}%
+
+\newcommand*{\rigidbalance}[3]{%
+  \setbox0=\box#1 \@k=#2 \@h=#3%
   \@@line{\splittopskip=\@h \vbadness=\@M \hfilneg
   \valign{##\vfil\cr\dosplits}}}
 
@@ -9106,6 +9225,8 @@
   \unvbox2 }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -9198,6 +9319,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
@@ -9225,7 +9347,10 @@
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9253,7 +9378,7 @@
   \noindent\csuse{Xtxtbeforenotes@#1}\csuse{Xbhookgroup@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
+  \Xrigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9283,7 +9408,7 @@
   \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
+  \Xrigidbalance\csname mp#1footins\endcsname \thr@@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9328,12 +9453,13 @@
 %    \begin{macrocode}
 \newcommand*{\twocolfootsetup}[1]{%
   \count\csname #1footins\endcsname 500
-  \csxdef{default@#1footins}{500}%Use this to confine the  notes to one side only
+  \csxdef{default@#1footins}{500}%
   \multiply\dimen\csname #1footins\endcsname \tw@}
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
   \insert\csname #1footins\endcsname\bgroup%
+  \hsize=\expandafter\dimexpr\csuse{Xhsize@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
@@ -9352,7 +9478,10 @@
   \csuse{Xcolalign@#4}%
  \parindent=\@tempdima%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}{\select@lemmafont#1|#2}{#2}}%
+  {\nottoggle{Xlemmadisablefontselection@#4}%
+    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
+    {{\csuse{Xlemmafont@#4}#2}}%
+  }%
   \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
     {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
@@ -9364,7 +9493,7 @@
   \noindent\csuse{Xtxtbeforenotes@#1}\csuse{Xbhookgroup@#1}}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
+  \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9404,7 +9533,7 @@
    \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
+  \Xrigidbalance\csname mp#1footins\endcsname \tw@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9882,13 +10011,17 @@
   \ifdimequal{\csuse{Xboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \ifl@d@pnum #1%
+  \ifl@d@pnum%
+    \wrap@edcrossref{\@this@crossref@start}{#1}%
     \csuse{Xsublinesep@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  \wrap@edcrossref{\@this@crossref@start}{%
+    \linenumrep{#2}%
+    \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+  }%
   \ifl@d@ssub%
     \csuse{Xsublinesep@\@currentseries}%
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
   \egroup%
 %    \end{macrocode}
@@ -9915,15 +10048,20 @@
       \fi%
     \fi%
     \ifl@d@pnum%
-       #4%
+       \wrap@edcrossref{\@this@crossref@end}{#4}%
        \csuse{Xsublinesep@\@currentseries}%
     \fi%
-    \ifl@d@elin \linenumrep{#5}\iftoggle{Xlineflag@\@currentseries}{#8}{}\fi%
+    \ifl@d@elin% 
+      \wrap@edcrossref{\@this@crossref@end}{%
+        \linenumrep{#5}%
+        \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+       }%
+    \fi%
     \ifl@d@esl%
        \ifl@d@elin%
          \csuse{Xsublinesep@\@currentseries}%
        \fi%
-       \sublinenumrep{#6}%
+       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
      \fi%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
@@ -10086,22 +10224,32 @@
 }%
 
 \newcommand{\l@dbfnote}[1]{%
- \ifnumberedpar@%
  \get@thisfootnote%
   \gdef\@tag{#1\relax}%
     \ifledRcol%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
+      \xright@appenditem{%
+          \ifdefined\Hy@footnote@currentHref%
+            \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
+          \fi%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+        }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
-      \xright@appenditem{\noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}}%
+      \xright@appenditem{%
+          \ifdefined\Hy@footnote@currentHref%
+            \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
+          \fi%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+       }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \ignorespaces%
+}%
 
 \newcommand{\get@fnmark}[1]{%
-  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote@typeset}%
       \setcounter{footnote}{\c@footnote@typeset}%
@@ -10183,7 +10331,7 @@
 %    \begin{macrocode}
 \newcommand*{\normal@footnotemarkX}[1]{%
   \prebodyfootmark
-  \@nameuse{bodyfootmark#1}%
+  \wrapped@bodyfootmarkX{#1}%
   \postbodyfootmark}
 
 %    \end{macrocode}
@@ -10206,6 +10354,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
   \insert\@nameuse{footins#1}\bgroup
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}%
     \footsplitskips
@@ -10225,6 +10374,7 @@
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
   \get@fnmarkX{#1}{\thisfootnote}%
+  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}% 
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
@@ -10253,7 +10403,7 @@
   \ledsetnormalparstuffX{#1}%
   \hangindent=\csuse{hangindentX@#1}%
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
-  {{\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}}\strut%
+  {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}\strut%
     #2\strut\par}}
 
 %    \end{macrocode}
@@ -10353,7 +10503,6 @@
 %    \begin{macrocode}
 
 \newcommand{\normalbfnoteX}[2]{%
-  \ifnumberedpar@
   \get@thisfootnoteX{#1}%
     \ifledRcol%
       \ifluatex
@@ -10362,7 +10511,12 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly[R]}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
     \else%
@@ -10372,11 +10526,16 @@
       \@ifundefined{xpg@main@language}%if polyglossia
         {}%
         {\footnotelang@poly}%
-      \xright@appenditem{\noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}}%
+      \xright@appenditem{%
+        \noexpand\led@set@index@fornote{#1}%
+        \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\led@reinit@index@fornote%
+      }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces}
+  \ignorespaces}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10409,7 +10568,7 @@
 % This command gets the correct footnote number when typesetting parallel texts.
 %    \begin{macrocode}
 \newcommand{\get@fnmarkX}[2]{%
-  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote#1@typeset}%
       \setcounter{footnote#1}{\value{footnote#1@typeset}}%
@@ -10432,6 +10591,7 @@
   \ifnumberedpar@
     \edtext{}{\normalbfnoteX{#1}{#2}}%
   \else
+    \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
 
@@ -10527,6 +10687,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}%
     \footsplitskips%
@@ -10553,7 +10714,7 @@
  \@tempdima=\parindent%
  \csuse{colalignX@#1}%
  \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10566,7 +10727,7 @@
 \newcommand*{\twocolfootgroupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname footins#1\endcsname \tw@ \splittopskip}}
+  \rigidbalanceX\csname footins#1\endcsname \tw@ \splittopskip}}
 
 \newcommand*{\mptwocolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
@@ -10590,7 +10751,7 @@
   \csuse{bhookgroupX@#1}%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \tw@ \splittopskip}}
+  \rigidbalanceX\csname mpfootins#1\endcsname \tw@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10646,6 +10807,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
   \insert\csname footins#1\endcsname\bgroup%
+    \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}
     \footsplitskips%
@@ -10671,7 +10833,7 @@
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\@nameuse{footfootmark#1}\strut%
+  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
@@ -10684,7 +10846,7 @@
 \newcommand*{\threecolfootgroupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname footins#1\endcsname \thr@@ \splittopskip}}
+  \rigidbalanceX\csname footins#1\endcsname \thr@@ \splittopskip}}
 
 \newcommand*{\mpthreecolfootgroupX}[1]{{%
   \vskip\skip\@nameuse{mpfootins#1}
@@ -10708,7 +10870,7 @@
   \csuse{bhookgroupX@#1}%
   \splittopskip=\ht\strutbox
   \expandafter
-  \rigidbalance\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
+  \rigidbalanceX\csname mpfootins#1\endcsname \thr@@ \splittopskip}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10756,6 +10918,9 @@
 %    \begin{macrocode}
 \newcommand*{\para@footsetupX}[1]{{\csuse{bhookgroupX@#1}\csuse{notefontsizeX@#1}
   \setnoteswidthliketwocolumnsX@{#1}%
+  \ifcsempty{hsizeX@#1}%
+    {}%
+    {\columnwidth=\expandafter\dimexpr\csuse{hsizeX@#1}\relax}%
   \dimen0=\baselineskip
   \multiply\dimen0 by 1024
   \divide\dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax%
@@ -10813,6 +10978,7 @@
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
   \get@fnmarkX{#1}{\thisfootnote}%
+  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \csuse{notefontsizeX@#1}
@@ -10855,7 +11021,7 @@
   \ledsetnormalparstuff@common%
   {\csuse{notenumfontX@#1}%
    \csuse{notenumfontX@#1}%
-   \@nameuse{footfootmark#1}%
+   \wrapped@footfootmarkX{#1}%
    \strut%
     #2\penalty-10}}
 
@@ -10867,6 +11033,7 @@
 % \protect\cs{para@footgroupX}\marg{series}
 %    \begin{macrocode}
 \newcommand*{\para@footgroupX}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{hsizeX@#1}\relax%
   \unvbox\csname footins#1\endcsname
   \ifcsstring{raggedX@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{raggedX@#1}{R}{\RaggedRight}{}%
@@ -10921,6 +11088,45 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \subsection{Wrapping footnote marks in hyperlink}
+% \begin{macro}{\wrapped@footfootmarkX}
+% \cs{wrapped@footfootmarkX} prints the footnote mark of the footpage, wrapped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wrapped@footfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@footnotemark#1@\this@footnoteX@reading}%
+        {}%
+      }%
+    \hyperlink%
+        {@bodyfootmark#1@\this@footnoteX@reading}%
+        {\@nameuse{footfootmark#1}}%
+  \else%
+    \@nameuse{footfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\wrapped@bodyfootmarkX}
+% \cs{wrapped@bodyfootmarkX} prints the footnote mark of the text body, wrapped in \package{hyperref} package's commands, if needed.
+%    \begin{macrocode}
+\newcommand{\wrapped@bodyfootmarkX}[1]{%
+  \ifdefined\hypertarget%
+    \Hy@raisedlink{%
+      \hypertarget%
+        {@bodyfootmark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {}%
+      }%
+      \hyperlink%
+        {@footnotemark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {\@nameuse{bodyfootmark#1}}%
+  \else%
+    \@nameuse{bodyfootmark#1}%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \section{Code common to both critical and familiar footnote in normal arrangement}
 % \protect\cs{par} should always be redefined to \protect\cs{endgraf} within
@@ -10980,6 +11186,7 @@
 \newcommand{\setXnoteswidthliketwocolumns@}[1]{%
   \global\let\hsize@fornote=\hsize%
   \global\old@hsize=\hsize%
+  \let\old@columwidth=\columnwidth%
   \iftoggle{Xnoteswidthliketwocolumns@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -10987,12 +11194,13 @@
     }%
     {}%
   \let\hsize=\hsize@fornote%
-  \let\columnwidth=\hsize@fornote%
+  \let\columnwidth=\old@columwidth%
 }%
 
 \newcommand{\setnoteswidthliketwocolumnsX@}[1]{%
   \global\let\hsize@fornote=\hsize%
   \global\old@hsize=\hsize%
+  \let\old@columwidth=\columnwidth%
   \iftoggle{noteswidthliketwocolumnsX@#1}%
     {%
     \csuse{setwidthliketwocolumns@\columns@position}%
@@ -11000,7 +11208,7 @@
     }%
     {}%
   \let\hsize=\hsize@fornote%
-  \let\columnwidth=\hsize@fornote%
+  \let\columnwidth=\old@columwidth%
 }%
 
 %    \end{macrocode}
@@ -11247,6 +11455,7 @@
 % \changes{v1.18.0}{2015/02/23}{Option parapparatus works for endnotes.}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{endnotes} take six arguments.}
+% \changes{v2.7.0}{2015/11/13}{\protect\cs{endnotes} take seven arguments.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11255,9 +11464,10 @@
 %   \item \verb+#4+ Series.
 %   \item \verb+#5+ Optional argument of \protect\cs{Xendnote}.
 %   \item \verb+#6+ Side (L or R).
+%   \item \verb+#7+ Label for cross-referencing.
 % \end{itemize}
 %    \begin{macrocode}
-\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6{{%
+\global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
@@ -11275,11 +11485,15 @@
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \IfStrEq{#6}{R}{\ledRcol@true}{}%
+  \def\@this@crossref@start{#7:start}%
+  \def\@this@crossref@end{#7:end}%
   \printlineendnote{#1}{#4}%
   \IfStrEq{#6}{R}{\ledRcol@false}{}%
+  \undef\@this@crossref@start%
+  \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|#2}%
-    {#2}%
+    {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
+    {{\csuse{Xendlemmafont@#4}#2}}%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -11543,7 +11757,7 @@
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \printnpnum{#1}%
+  \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
   \ifl@d@dash%
    \ifl@d@pnum%
     \csuse{Xendlineprefixsingle@\@currentseries}%
@@ -11555,10 +11769,11 @@
   \else%
    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
-  \linenumrep{#2}\iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
+  \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#2}}%
+  \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
     \csuse{Xendsublinesep@\@currentseries}% 
-    \sublinenumrep{#3}%
+    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi%
   \egroup%
 %    \end{macrocode}
@@ -11581,17 +11796,19 @@
         \csuse{Xendlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
-    \ifl@d@pnum \printnpnum{#4}\fi%
+    \ifl@d@pnum%
+     \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+    \fi%
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
-      \linenumrep{#5}%
+      \wrap@edcrossref{\@this@crossref@end}{\linenumrep{#5}}%
       \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
     \fi%
     \ifl@d@esl%
       \ifl@d@elin% 
         \csuse{Xendsublinesep@\@currentseries}%
       \fi% 
-      \sublinenumrep{#6}%
+      \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
     \fi%
   \fi%
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
@@ -11655,7 +11872,7 @@
 %    \end{macrocode}
 % \subsubsection{Options}
 %    \begin{macrocode}
-     \newtoggle{Xlineflag@#1}
+      \newtoggle{Xlineflag@#1}
       \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xhangindent@#1}{0pt}%
@@ -11708,9 +11925,12 @@
       \csgdef{Xparafootsep@#1}{}%
       \csgdef{Xafternote@#1}{1em plus.4em minus.4em}
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
+      
+      \csgdef{Xlemmafont@#1}{}%
+      \csgdef{Xhsize@#1}{\hsize}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
-% As regards inserts, see chapter 15 of \thetexbook by D. Knuth.
+% As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
 %    \begin{macrocode}
       \expandafter\newinsert\csname #1footins\endcsname%
       \unless\ifnoledgroup@%
@@ -11742,18 +11962,22 @@
                       \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
-                      \ifbool{indtl@notenumber}%
-                        {\unexpanded{\let\index\orig@@index}}%
-                        {}%
                       \noexpand\Xnote@true%
                       \noexpand\prepare@preXnotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
+                      \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
+                      \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
+                      \unexpanded{\undef\@this@crossref@start}%
+                      \unexpanded{\undef\@this@crossref@end}%
                       \ifbool{indtl@innote}%
+                        {\unexpanded{\let\index\orig@@index}}%
+                        {}%
+                      \ifbool{indtl@notenumber}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
                     }\to\inserts@listR
@@ -11781,9 +12005,14 @@
                       \ifl@dpairing%
                         \noexpand\setcounter{stanzaL}{\the\c@stanzaL}%Save stanzaR counter for footnote
                       \fi%
-                      \noexpand\csuse{v#1footnote}{#1}%
-                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
-                       \noexpand\Xnote@false%
+                      \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
+                      \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \noexpand\csuse{v#1footnote}%
+                         {#1}%
+                         {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \unexpanded{\undef\@this@crossref@start}%
+                      \unexpanded{\undef\@this@crossref@end}%
+                      \noexpand\Xnote@false%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -11840,6 +12069,7 @@
       \newtoggle{noteswidthliketwocolumnsX@#1}%
       \csgdef{parafootsepX@#1}{}%
       \csgdef{afternoteX@#1}{1em plus.4em minus.4em}
+      \csgdef{hsizeX@#1}{\hsize}%
 % End of for familiar footnotes.
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
@@ -11862,8 +12092,8 @@
 % If we are preparing parallel typesetting, we cannot just increase the footnote counter.
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
+               \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
                \ifl@dpairing%
-                  \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne
                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
                     {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
                     {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
@@ -11881,32 +12111,26 @@
                 \xdef\footnote@luatextextdir{\the\textdir}%
                 \xdef\footnote@luatexpardir{\the\pardir}%
               \fi%
-              \ifbool{indtl@innote}%
-                {\let\index\nindex}%
-                {}%
-              \ifbool{indtl@notenumber}%
-                {%
-                \renewcommand{\index}[2][]{%
-                  \orig@@index[####1]{%
-                    ####2|innotenumber{\csuse{thefootnote#1}}%
-                    }%
-                  }%
-                }%
-                {}%
-              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+              \if@ledgroup%
+	              \led@set@index@fornote{#1}%
+	            \fi%
+	            \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
-             \ifbool{indtl@notenumber}%
+              \ifbool{indtl@notenumber}%
                 {\let\index\orig@@index}%
                 {}%
           \endgroup%
       }
 %    \end{macrocode}
 % Then define the counters.
+% The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by the user. This is this the one which is printed.
+% The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used for hyperlinks,  for using \package{hyperlink} package, and for getting the correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
+      \expandafter\newcount\csname footnote#1@reading\endcsname%
 %    \end{macrocode}
 % Do not forget to initialize series
 %    \begin{macrocode}
@@ -11952,6 +12176,7 @@
          \newlinechar='40%
          \global\@noneed@Footnotetrue%
          \newcommand{\content}{##2}%
+         \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
@@ -11959,7 +12184,8 @@
            {\expandonce\content}%
            {#1}%
            {\unexpanded{##1}}%
-           {\ifledRcol R\else L\fi}
+           {\ifledRcol R\else L\fi}%
+           {\theedtext}%
            \@percentchar%
          }%
          \egroup%
@@ -12037,6 +12263,8 @@
       \csgdef{Xendlineprefixmore@#1}{}%
       
       \newtoggle{Xendlineflag@#1}
+     
+      \csgdef{Xendlemmafont@#1}{}%
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -12270,6 +12498,7 @@
 % Before generating the commands that are used to set the critical notes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
+  \newhookcommand@series{Xlemmafont}%
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -12319,6 +12548,7 @@
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
   
+  \newhookcommand@series@reload{Xhsize}{critical}%
   
 \fi
 \newhooktoggle@series{Xlineflag}[appref,SEref]
@@ -12349,6 +12579,7 @@
   \newhookcommand@series@reload{notefontsizeX}{familiar}
   \newhookcommand@series{afternoteX}
   \newhookcommand@series{parafootsepX}
+  \newhookcommand@series@reload{hsizeX}{familiar}%
 \fi
 %    \end{macrocode}
 % \subsubsection{Options for endnotes}
@@ -12356,6 +12587,7 @@
 %    \begin{macrocode}
 \unless\ifnoend@
   \newhookcommand@series{Xendnotenumfont}
+  \newhookcommand@series{Xendlemmafont}%
   \newhookcommand@series{Xendbhooknote}
   
   \newhookcommand@series{Xendboxlinenum}%
@@ -12405,7 +12637,7 @@
 \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlinerangeseparator}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage,SErefonlypage]
-\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem,SErefonlypage]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
@@ -12461,7 +12693,7 @@
 % \end{macro}
 %
 %
-% \section{Output routine}
+% \section{Output routine}\label{output}
 % 
 %
 % Now we begin the output routine and associated things.
@@ -12532,6 +12764,7 @@
 % \protect\cs{print@Xnotes}, is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@Xnotes[1]{%
+  \xdef\@currentseries{#1}%
   \csuse{#1footstart}{#1}%
   \csuse{#1footgroup}{#1}%%
 }%
@@ -12603,6 +12836,7 @@
 % \protect\cs{print@Xnotes} is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@notesX[1]{%
+  \xdef\@currentseries{#1}%
   \csuse{footstart#1}{#1}%
   \csuse{footgroup#1}{#1}%
 }%
@@ -13267,13 +13501,14 @@
 \toggletrue{Xlineflag@SEref}%%Here exception
 
 \def\Xendtwolines@apprefwithpage{}%
-\def\Xendtwolines@SEwithpage{}%
+\def\Xendtwolines@SErefwithpage{}%
 
 \def\Xendmorethantwolines@apprefwithpage{}%
 \def\Xendmorethantwolines@SErefwithpage{}%
 
 \def\Xendlinerangeseparator@apprefwithpage{\endashchar}
 \def\Xendlinerangeseparator@SErefwithpage{\endashchar}
+\def\Xendlinerangeseparator@SErefonlypage{\endashchar}
 
 \def\Xendbeforepagenumber@apprefwithpage{p.}%
 \def\Xendbeforepagenumber@SErefwithpage{p.}%
@@ -13281,7 +13516,7 @@
 
 \def\Xendafterpagenumber@apprefwithpage{) }%
 \def\Xendafterpagenumber@SErefwithpage{) }%
-\def\Xendafterpagenumber@SErefonlypage{) }%
+
 
 \def\Xendlineprefixsingle@apprefwithpage{}%
 \def\Xendlineprefixsingle@SErefwithpage{}%
@@ -13320,7 +13555,7 @@
 \xdef\Xendboxendlinenum@SErefwithpage{0pt}
 
 %    \end{macrocode}
-% Now, declare the default value of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
+% Now, declare the default values of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
 % \changes{v2.5.0}{2015/11/13}{Debug \protect\cs{setapprefprefixsingle}}
 %    \begin{macrocode}
 \newcommand\@apprefprefixsingle{}%
@@ -13343,6 +13578,13 @@
   \gdef\@SErefprefixmore{#1}%
 }
 
+%    \end{macrocode}
+% And not \cs{setSErefonlypageprefixsingle} and \cs{setSErefonlypageprefixmore}. 
+%    \begin{macrocode}
+\let\setSErefonlypageprefixsingle\XendbeforepagenumberSErefonlypage%
+\newcommand{\setSErefonlypageprefixmore}[1]{%
+  \gdef\SErefonlypage@prefixmore{#1}%
+}%
 %    \end{macrocode}
 % \changes{v1.23.0}{2015/05/18}{Debug \protect\cs{Xendtwolines}, \protect\cs{Xendmorethantwolines}, \protect\cs{Xendtwolinesbutnotmore} and \protect\cs{Xendtwolinesonlyinsamepage} when using \protect\cs{apprefwithpage}.}
 % And now, the main commands: \protect\cs{appref}, \protect\cs{apprefwithpage}, \cs{SEref} and \cs{SErefwithpage}.
@@ -13375,7 +13617,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
-   {\printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+    \def\@this@crossref@start{#2:start}%
+    \def\@this@crossref@end{#2:end}%
+    \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%   
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13393,7 +13641,13 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|}%
+   {%
+   \def\@this@crossref@start{#2:start}%
+   \def\@this@crossref@end{#2:end}%
+   \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
+    \undef\@this@crossref@end%
+    \undef\@this@crossref@start%
+   }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
   }%
@@ -13411,23 +13665,30 @@
    or test{\ifcsundef{the@label#2:end}}%
   }%
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
-   {\ifnum\xpageref{#2:start}=\xpageref{#2:end}%
-       \printnpnum{\xpageref{#2:start}}
-     \else%
+   {\ifnumequal{\xpageref{#2:end}}{\xpageref{#2:start}}%
+       {%
+       \printnpnum{%
+         \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
+         }%
+       }%
+     {%
+      \ifcsvoid{#3onlypage@prefixmore}%
+        {}%
+        {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixmore}}%
       \ifdefined\linerangesep@%
         \printnpnum{%
-          \xpageref{#2:start}%
+          \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
           \linerangesep@%
-          \xpageref{#2:end}%
+          \wrap@edcrossref{#2:end}{\xpageref{#2:end}}%
         }%
       \else%
         \printnpnum{%
-          \xpageref{#2:start}%
+          \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
           \csuse{Xendlinerangeseparator@\@currentseries}%
-          \xpageref{#2:end}%
+          \wrap@edcrossref{#2:end}{\xpageref{#2:end}}%
         }%
       \fi%   
-    \fi%
+     }%
    }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -13873,7 +14134,6 @@
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{l@dfeetbeginmini}, \protect\cs{l@dfeetendmini}
 %                           and all their supporting code}
 %    \begin{macrocode}
-\newif\if@ledgroup%
 \ifnoledgroup@\else%
 \newcommand*{\l@dfeetbeginmini}{\@ledgrouptrue\l@dedbeginmini\l@dfambeginmini}
 \newcommand*{\l@dfeetendmini}{%
@@ -14044,10 +14304,7 @@
   \@ledgroupfalse%
 }
 
-\apptocmd{\endledgroup}{%
-  \l@dprintingpagesfalse%
-  \l@dprintingcolumnsfalse%
-}{}{}
+
 %    \end{macrocode}
 % \end{environment}
 %
@@ -14126,6 +14383,7 @@
 % \changes{v1.8.5}{2014/08/28}{Debug indexing in right column, with eledpar.}
 % Here is some code for indexing using page and line numbers.
 %
+% \subsection{Looking on package order}
 % First, ensure that \protect\package{imakeidx} or \protect\package{indextools} is loaded \emph{before} \protect\package{eledmac}.
 % \changes{v1.12.0}{2014/08/05}{Ensure that \protect\package{imakeidx} is loaded \emph{before} \protect\package{eledmac}}
 %    \begin{macrocode}
@@ -14138,6 +14396,7 @@
   \fi%
 }
 %    \end{macrocode}
+% \subsection{Auxiliary macros for \cs{edindex}}
 % \begin{macro}{\pagelinesep}
 % \begin{macro}{\edindexlab}
 % \begin{macro}{\c@labidx}
@@ -14167,8 +14426,10 @@
 %
 % \begin{macro}{\thepageline}
 % This macro makes up the page/line number combo from the label/ref.
+% The associated counter is never directly used, but it is required in order to not have any error message with \cs{edgls}.
 %    \begin{macrocode}
-\newcommand{\thepageline}{%
+\newcounter{pageline}%
+\renewcommand{\thepageline}{%
   \thepage%
   \pagelinesep%
   \xlineref{\edindexlab\thelabidx}%
@@ -14194,6 +14455,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Code specific to \cs{edindex} in critical footnotes}
 % \begin{macro}{\if@edindex@fornote@true}
 % This boolean test is switching at the beginning of each critical note,
 % to allow index referring to this note.
@@ -14257,8 +14519,9 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Analysis of command in indexed text}
 % \begin{macro}{\get@index@command}
-% This macro is used to analyse if a text to be indexed has a command after a \verb+|+.
+% This macro is used to analyze if a text to be indexed has a command after a \verb+|+.
 % \changes{v1.8.0}{2014/07/21}{Debug \protect\cs{get@index@command} and compatibility with \protect\package{hyperref} package.}
 %    \begin{macrocode}
 \def\get@index@command#1|#2+{%
@@ -14278,6 +14541,7 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Code for the formatted index}
 % \begin{macro}{\ledinnote}
 % \changes{v1.22.0}{2015/04/25}{\protect\cs{ledinnote} takes a first optional argument, which is the label for hyperlinks.}
 % \begin{macro}{\ledinnotehyperpage}
@@ -14305,6 +14569,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Main code}
 % \changes{v2.0.0}{2015/07/19}{Suppress indexing command specific to \protect\ltxclass{memoir}.}
 % \Eledmac and \ledmac were using the specific indexing tools of the \protect\ltxclass{memoir} in order to allow multiple index.
 % However, \eledmac used \protect\package{imakeidx} or \protect\package{indextools}  tools when one these two package was loaded.
@@ -14367,6 +14632,7 @@
 % \end{macro}
 % \end{macro}
 %
+% \subsection{Hyperlink}
 % \begin{macro}{\hyperlinkformat}
 % \protect\cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexing.
 %    \begin{macrocode}
@@ -14499,7 +14765,98 @@
 % \end{macro}
 % \changes{v1.14.0}{2014/10/27}{Delete previous override of \protect\cs{l@d@@wrindexhyp} at the beginning of a document when hyperref is not loaded.}
 %
-%
+% \subsection{`innote' and `notenumber' option of \package{indextols} package}
+% \begin{macro}{\led@set@index@fornote}
+% The \cs{led@set@index@fornote} is called when a familiar footnote is inserted --- and not when it is read --- and changes the \cs{index} command depending of the option of the \package{indextools} package.
+% Its only argument is the note series.
+%    \begin{macrocode}
+\newcommand{\led@set@index@fornote}[1]{%
+  \ifbool{indtl@innote}%
+    {\let\index\nindex}%
+    {}%
+  \ifbool{indtl@notenumber}%
+    {%
+    \renewcommand{\index}[2][\indtl@jobname]{%
+      \orig@@index[##1]{%
+        ##2|innotenumber{\csuse{thefootnote#1}}%
+        }%
+      }%
+    }%
+    {}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@reinit@index@fornote}
+% The \cs{led@reinit@index@fornote} just reset the default value of \cs{index}.
+%    \begin{macrocode}
+\newcommand{\led@reinit@index@fornote}{%
+  \ifbool{indtl@innote}%
+    {\let\index\orig@@index}%
+    {}%
+ \ifbool{indtl@notenumber}%
+  {\let\index\orig@@index}%
+  {}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \section{Glossaries}
+% Here, we define the \cs{gls}-Like commands prefixed by \verb+ed+.
+% \begin{macro}{\edgls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edgls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGls}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGls}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Gls[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLS}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLS}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLS[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGlspl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGlspl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \Glspl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edGLSpl}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edGLSpl}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \GLSpl[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\edglsdisp}
+%    \begin{macrocode}
+\DeclareRobustCommandx{\edglsdisp}[3][1,3,usedefault]{%
+  \doedindexlabel%
+  \glsdisp[counter=pageline,#1]{#2}[#3]%
+}
+%    \end{macrocode}
+% \end{macro}
 % \section{Verse}
 %
 % The original code is principally Wayne Sullivan's\index{Sullivan, Wayne} 

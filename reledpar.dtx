@@ -261,8 +261,9 @@
 % \hyphenation{man-u-script man-u-scripts}
 % \changes{v2.6.0}{2015/11/13}{Fix bug with right side title number when using title commands before \protect\env{pages} or \protect\env{columns} environments.}
 % \changes{v2.6.1}{2015/11/20}{Fix bug, introduced in v2.6.0, with footnote numbering when using \protect\package{perpage} package.}
+% \changes{v2.6.2}{2015/11/29}{Fix (again) bugs with footnote numbering in parallel typesetting while using \protect\env{ledgroup} environments (bug added in v2.6.0).}
 %
-%
+% \changes{v2.6.2}{2015/11/29}{Fix bug (added in v2.6.0) with footnote numbering in parallel typesetting while using \protect\pkg{polyglossia} with specific number formatting (like Greek).}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -720,8 +721,10 @@
 % Both commands are explained in \macpackage handbook (\reff{reledmac-Xmaxhnotes}).
 % As an advisable setting:
 % \begin{verbatim}
-% \Xmaxhnotes{0.6\textheight}
-% \maxhnotesX{0.6\textheight}
+% \AtBeginDocument{%
+%    \Xmaxhnotes{0.6\textheight}
+%    \maxhnotesX{0.6\textheight}
+% }
 % \end{verbatim}
 % \subsubsection{About the numbering of familiar footnotes}
 % If you use the same series of familiar footnotes on both sides, the numbers won't be correct in the first run. There will be a continuous numbering for left notes, and a continuous numbering for right notes.
@@ -1153,7 +1156,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2015/11/20 v2.6.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2015/11/29 v2.6.2 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2624,15 +2627,15 @@
 % Every note, in parallel typesetting, has three associated counters.
 % \begin{enumerate}
 % \item A \LaTeX\ counter \verb+footnoteX+. This the only one manipulated by user, and the only one finally printed.
-% \item A \TeX\ counter \verb+footnoteX@reading+. Its value is incremented when reading the \cs{footnoteX} command in left or right side environments. It is used to get the correct footnote number from the \verb+.aux+ file to be typeset in the main text.
+% \item A \TeX\ counter \verb+footnoteX@reading+. Its value is incremented when reading the \cs{footnoteX} command in left or right side environments. It is used to get the correct footnote number from the \verb+.aux+ file to be typeset in the main text. This counter is already defined in \macpackage, as it is also used for hyperlink.
+% \changes{v2.6.2}{2015/11/29}{The \TeX\ counter \protect\cs{footnoteX@reading} is defined in \protect\reledmac.}
 % \item A \LaTeX\ counter \verb+footnoteX@typeset. Its value is increased when inserting footnotes. Its value is directly used in the footnote, and is stored in the \verb+aux+ files to be used on the next run for the main text.
 % \end{enumerate} 
 % 
 %
 %
-% So here, we only defined the new counters.
+% So here, we only defined the new counter.
 %    \begin{macrocode}
-      \expandafter\newcount\csname footnote#1@reading\endcsname%
       \newcounter{footnote#1@typeset}%
 %    \end{macrocode}
 % 
@@ -2832,6 +2835,9 @@
   \l@dpagingfalse
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \if@ledgroup%
+    \get@familiarfootnote@number%
+  \fi%
   \save@section@number%
   \at@begin@pairs%
 }{%
@@ -2856,6 +2862,9 @@
   \l@dpagingtrue
   \initnumbering@quote
   \save@familiarfootnote@number%
+  \if@ledgroup%
+    \get@familiarfootnote@number%
+  \fi%
   \save@section@number%
   \setlength{\Lcolwidth}{\textwidth}%
   \setlength{\Rcolwidth}{\textwidth}%
@@ -4685,7 +4694,9 @@
         \ifledRcol  \gdef\theledlanguageR{#2}%
         \else      \gdef\theledlanguageL{#2}%
         \fi}%
-      \let\l@duselanguage\select@language%
+      \renewcommand{\l@duselanguage}[1]{%
+        \csuse{no\languagename @numbers}\select@language{#1}%
+      }%
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
 %    \end{macrocode}
@@ -5044,9 +5055,7 @@
   \global\l@dpscR=\z@
   \global\l@dnumpstartsL=\z@
   \global\l@dnumpstartsR=\z@
-  \if@ledgroup\else%
-    \global\l@dprintingcolumnsfalse%
-  \fi
+  \global\l@dprintingcolumnsfalse%
   \ignorespaces
     \global\instanzaLfalse%
     \global\instanzaRfalse%
@@ -5666,9 +5675,7 @@
   \global\l@dnumpstartsR=\z@%
     \global\instanzaLfalse%
     \global\instanzaRfalse%
- \if@ledgroup\else%
-   \global\l@dprintingpagesfalse%
- \fi%
+  \global\l@dprintingpagesfalse%
  \finish@Pages@notes%Needed to prevent final notes overlap line number
   \ignorespaces\fi}
 
