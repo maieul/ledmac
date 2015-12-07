@@ -377,6 +377,7 @@
 % \changes{v2.7.0}{2015/11/29}{New setting commands: \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}}
 % \changes{v2.7.0}{2015/11/29}{Debug \protect\cs{SErefonlypage} when referring to only one page.}
 % \changes{v2.7.1}{2015/12/06}{Debug \protect\cs{Xbhookgroup} hooks executed on column footnote (moved to a larger group, to have indeed effect).}
+% \changes{v2.7.2}{2015/12/07}{Fix problem of hyphenation when using \protect\package{hyperref} package (added in v2.7.0).}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3457,7 +3458,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/12/06 v2.7.1 typeset critical edition]%
+\ProvidesPackage{reledmac}[2015/12/07 v2.7.2 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6617,9 +6618,9 @@
       \ifdef{\hypertarget}%
         {%
         \csedef{thisedtext@\the\@edtext@level}{\theedtext}%
-        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}\hspace{0pt}%
         \showlemma{#1}%
-        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
+        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}\hspace{0pt}%
         }%
         {%
         \showlemma{#1}%
@@ -11098,7 +11099,7 @@
       \hypertarget%
         {@footnotemark#1@\this@footnoteX@reading}%
         {}%
-      }%
+      }\hspace{0pt}%
     \hyperlink%
         {@bodyfootmark#1@\this@footnoteX@reading}%
         {\@nameuse{footfootmark#1}}%
@@ -11117,7 +11118,7 @@
       \hypertarget%
         {@bodyfootmark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
         {}%
-      }%
+      }\hspace{0pt}%
       \hyperlink%
         {@footnotemark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
         {\@nameuse{bodyfootmark#1}}%
@@ -13077,7 +13078,9 @@
     \ifXnote@%
      \protected@write\@auxout{}%
       {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
-      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+      \ifdef{\hypertarget}%
+        {\Hy@raisedlink{\hypertarget{#1}{}}\hspace{0pt}}%
+        {}%
     \else%
       \write\linenum@outR{\string\@lab}%
       \ifx\labelref@listR\empty%
@@ -13095,13 +13098,17 @@
 %    \begin{macrocode}
       \protected@write\@auxout{}%
         {\string\l@dmake@labelsR\space\thepage|\label@refs|\the\c@pstartR|{#1}}%
-      \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+      \ifdef{\hypertarget}%
+        {\Hy@raisedlink{\hypertarget{#1}{}}\hspace{0pt}}%
+        {}%
     \fi%
   }{%
     \ifXnote@%
        \protected@write\@auxout{}%
         {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
-        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+        \ifdef{\hypertarget}%
+          {\Hy@raisedlink{\hypertarget{#1}{}}\hspace{0pt}}%
+          {}%
     \else%
       \write\linenum@out{\string\@lab}%
       \ifx\labelref@list\empty%
@@ -13114,7 +13121,9 @@
       \fi%
       \protected@write\@auxout{}%
         {\string\l@dmake@labels\space\thepage|\label@refs|\the\c@pstart|{#1}}%
-        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1}{}}}{}%
+        \ifdef{\hypertarget}%
+          {\Hy@raisedlink{\hypertarget{#1}{}}\hspace{0pt}}%
+          {}%
     \fi%
   }%
 \@esphack}%
@@ -13243,13 +13252,17 @@
       \ifledRcol%
         \protected@write\@auxout{}%
           {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1:start}}%
-        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1:start}{}}}{}%
+        \ifdef{\hypertarget}%
+          {\Hy@raisedlink{\hypertarget{#1:start}{}}\hspace{0pt}}%
+          {}%
         \protected@write\@auxout{}%
           {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
       \else%
         \protected@write\@auxout{}%
           {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1:start}}%
-        \ifdef{\hypertarget}{\Hy@raisedlink{\hypertarget{#1:start}{}}}{}%
+        \ifdef{\hypertarget}%
+          {\Hy@raisedlink{\hypertarget{#1:start}{}}\hspace{0pt}}%
+          {}%
         \protected@write\@auxout{}%
           {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
       \fi%
