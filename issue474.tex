@@ -1,0 +1,47 @@
+\documentclass{article}
+\begin{document}
+\makeatletter
+\let\old@sect\@sect
+\def\@sect#1#2#3#4#5#6[#7]#8{%
+  \ifnum #2>\c@secnumdepth
+    \let\@svsec\@empty
+  \else
+    \refstepcounter{#1}%
+    \protected@edef\@svsec{\@seccntformat{#1}\relax}%
+  \fi
+  \@tempskipa #5\relax
+  \ifdim \@tempskipa>\z@
+    \begingroup
+      #6{%
+        \global\setbox0=\vbox{\@hangfrom{\hskip #3\relax\@svsec}%
+           #8\@@par}
+        }%
+        \vsplit0 to \baselineskip
+        \vsplit0 to \baselineskip
+       %
+    \endgroup
+    \csname #1mark\endcsname{#7}%
+    \addcontentsline{toc}{#1}{%
+      \ifnum #2>\c@secnumdepth \else
+        \protect\numberline{\csname the#1\endcsname}%
+      \fi
+      #7}%
+  \else
+    \def\@svsechd{%
+      #6{\hskip #3\relax
+      \@svsec #8}%
+      \csname #1mark\endcsname{#7}%
+      \addcontentsline{toc}{#1}{%
+        \ifnum #2>\c@secnumdepth \else
+          \protect\numberline{\csname the#1\endcsname}%
+        \fi
+        #7}}%
+  \fi
+  \@xsect{#5}}
+
+\section{Lorem ipsum dolor amet Lorem ipsum dolor amet Lorem ipsum dolor amet}
+
+\let\@sect\old@sect
+\section{Lorem ipsum dolor amet Lorem ipsum dolor amet Lorem ipsum dolor amet}
+
+\end{document}
