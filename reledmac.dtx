@@ -6636,7 +6636,7 @@
       \ifdef{\hypertarget}%
         {%
         \csedef{thisedtext@\the\@edtext@level}{\theedtext}%
-        \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}\hspace{0pt}%Cf  http://tex.stackexchange.com/q/281978/7712
+        \Hy@raisedlink@left{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:begin}{}}%
         \showlemma{#1}%
         \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
         }%
@@ -17397,6 +17397,39 @@
           }{}%
         \fi%
     \fi\fi\fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \section{Tools for \package{hyperrer} package}}
+% \begin{macro}{\Hy@raisedlink@left}
+% The \package{hyperref} package provides a \cs{Hy@raisedlink} command, to be used to add anchor to the top of a line and not on the bottom.\footcite{\url{http://tex.stackexchange.com/a/17138/7712}.}
+%
+% However, this command disturbs line breaking when called before any word.
+% That is why \macpackage defines a \cs{Hy@raisedlink@left} be called at the left of a word, for the begin of an \cs{edtext} or for using inside the  \cs{edlabel} command.\footnote{The code ins inspired by an answer of @unbonpetit.
+% Thanks to him.
+% \url{http://texnique.fr:80/osqa/questions/781/hyraisedlink-perturbe-la-maniere-dont-se-fait-la-coupure-de-ligne/801}.} 
+% 
+%    \begin{macrocode}
+\def\Hy@raisedlink@left#1{%
+    \ifvmode
+        #1%
+    \else
+        \Hy@SaveSpaceFactor
+        \llap{\smash{% 
+        \begingroup
+            \let\HyperRaiseLinkLength\@tempdima
+            \setlength\HyperRaiseLinkLength\HyperRaiseLinkDefault
+            \HyperRaiseLinkHook
+        \expandafter\endgroup
+        \expandafter\raise\the\HyperRaiseLinkLength\hbox{%
+            \Hy@RestoreSpaceFactor
+            #1%
+            \Hy@SaveSpaceFactor
+        }%
+        }}% 
+        \Hy@RestoreSpaceFactor
+        \penalty\@M\hskip\z@
+    \fi
 }
 %    \end{macrocode}
 % \end{macro}
