@@ -11815,9 +11815,15 @@
 % Then, print the start page-
 %    \begin{macrocode}
   \ifboolexpr{%
-    test{\ifcsstring{prevpagenum@\@currentseries}{#1}}%
-      and not%
-    (togl{Xendpagenumberonlyfirstifsingle@\@currentseries} and bool{l@d@pnum})%
+    (%  
+      test{\ifcsstring{prevpagenum@\@currentseries}{#1}}%
+        and not%
+      (togl{Xendpagenumberonlyfirstifsingle@\@currentseries} and bool{l@d@pnum})%
+    )%
+    or%
+    (%
+    test {\ifcsstring{prevpagerange@\@currentseries}{#1-#4}}%
+    )%
   }%
     {%
     \ifcsempty{Xendsympagenum@\@currentseries}%
@@ -11881,7 +11887,15 @@
 % Print the end page number.
 %    \begin{macrocode}
     \ifl@d@pnum%
-     \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+     \ifcsstring{prevpagerange@\@currentseries}{#1-#4}%
+       {%
+       \ifcsempty{Xendsympagenum@\@currentseries}%
+         {\hspace{\csuse{Xendinplaceofpagenumber@\@currentseries}}}%
+         {\csuse{Xendsympagenum@\@currentseries}}%
+       }%
+       {%
+       \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+       }%
     \fi%
 %    \end{macrocode}
 % Print the end line number, with if required the line prefix, and followed by the side flag and the subline number.
@@ -11909,7 +11923,10 @@
 % And, finally, save, if needed, the current page number for the Xendpagenumberonlyfirst hooks.
 %    \begin{macrocode}
   \iftoggle{Xendpagenumberonlyfirst@\@currentseries}%
-    {\csxdef{prevpagenum@\@currentseries}{#4}}%
+    {\iftoggle{Xendpagenumberonlyfirstintwo@\@currentseries}%
+      {\csxdef{prevpagerange@\@currentseries}{#1-#4}}%
+      {\csxdef{prevpagenum@\@currentseries}{#4}}%
+    }%
     {}%
 %    \end{macrocode}
 % Now, the end of \cs{printendlines} macro.
