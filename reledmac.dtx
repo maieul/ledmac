@@ -11784,7 +11784,15 @@
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
+ \ifcsstring{prevpagenum@\@currentseries}{#1}%
+    {%
+    \ifcsempty{Xendsympagenum@\@currentseries}%
+      {\hspace{\csuse{Xendinplaceofpagenumber@\@currentseries}}}%
+      {\csuse{Xendsympagenum@\@currentseries}}%
+    }%
+    {%
+    \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
+    }%
   \ifl@d@dash%
    \ifl@d@pnum%
     \csuse{Xendlineprefixsingle@\@currentseries}%
@@ -11842,6 +11850,13 @@
     {}%
     {\hfill}%Prevent underfull hbox
   \egroup%
+%    \end{macrocode}
+% And, finally, save, if needed, the current page number for the Xendpagenumberonlyfirstinline hooks.
+%    \begin{macrocode}
+  \iftoggle{Xendpagenumberonlyfirstinline@\@currentseries}%
+    {\csxdef{prevpagenum@\@currentseries}{#1}}%
+    {}%
+%    \end{macrocode}
   \endgroup%
 }%
 
