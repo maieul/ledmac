@@ -11796,7 +11796,8 @@
 % \changes{v0.3.0}{2004/02/14}{Added \protect\cs{linenumr@p} and \protect\cs{sublinenumr@p}
 %              to \protect\cs{printendlines}}
 %    \begin{macrocode}
-\def\printendlines#1|#2|#3|#4|#5|#6|#7|#8|{\begingroup
+\def\printendlines#1|#2|#3|#4|#5|#6|#7|#8|{%
+  \begingroup
   \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
 % The only subtlety left here is when to print a period between
@@ -11805,12 +11806,15 @@
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
 %
-% So, first, print the start lines.
+% So, first, start the start line box, if required.
 %    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
- \ifcsstring{prevpagenum@\@currentseries}{#1}%
+%    \end{macrocode}
+% Then, print the start page-
+%    \begin{macrocode}
+  \ifcsstring{prevpagenum@\@currentseries}{#1}%
     {%
     \ifcsempty{Xendsympagenum@\@currentseries}%
       {\hspace{\csuse{Xendinplaceofpagenumber@\@currentseries}}}%
@@ -11819,30 +11823,42 @@
     {%
     \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
     }%
+%    \end{macrocode}
+% Then, determine what must be printed before the start line.
+%    \begin{macrocode}
   \ifl@d@dash%
-   \ifl@d@pnum%
-    \csuse{Xendlineprefixsingle@\@currentseries}%
-   \else%
-    \ifcsempty{Xendlineprefixmore@\@currentseries}%
-      {\csuse{Xendlineprefixsingle@\@currentseries}}
-      {\csuse{Xendlineprefixmore@\@currentseries}}%
-   \fi%
+    \ifl@d@pnum%
+      \csuse{Xendlineprefixsingle@\@currentseries}%
+    \else%
+      \ifcsempty{Xendlineprefixmore@\@currentseries}%
+        {\csuse{Xendlineprefixsingle@\@currentseries}}%
+        {\csuse{Xendlineprefixmore@\@currentseries}}%
+    \fi%
   \else%
-   \csuse{Xendlineprefixsingle@\@currentseries}%
+    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
+%    \end{macrocode}
+% The print the start line, following, if required, by the side flag and the start sub line.
+%    \begin{macrocode}
   \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#2}}%
   \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
     \csuse{Xendsublinesep@\@currentseries}% 
     \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi%
+%    \end{macrocode}
+% Close the box.
+%    \begin{macrocode}
   \egroup%
 %    \end{macrocode}
-% And now, print the dash + the end line number, or the line number range symbol.
+% Open the box for the end line.
 %    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\hbox to \csuse{Xendboxendlinenum@\@currentseries}\bgroup}%
+%    \end{macrocode}
+% Print the dash + the end line number, or the line number range symbol.
+%    \begin{macrocode}
   \ifl@d@Xtwolines%
     \ifl@d@Xmorethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
@@ -11857,9 +11873,15 @@
         \csuse{Xendlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
+%    \end{macrocode}
+% Print the end page number.
+%    \begin{macrocode}
     \ifl@d@pnum%
      \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
     \fi%
+%    \end{macrocode}
+% Print the end line number, with if required the line prefix, and followed by the side flag and the subline number.
+%    \begin{macrocode}
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
       \wrap@edcrossref{\@this@crossref@end}{\linenumrep{#5}}%
@@ -11872,6 +11894,9 @@
       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
     \fi%
   \fi%
+%    \end{macrocode}
+% Close the end line box.
+%    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
     {}%
     {\hfill}%Prevent underfull hbox
@@ -11883,6 +11908,8 @@
     {\csxdef{prevpagenum@\@currentseries}{#4}}%
     {}%
 %    \end{macrocode}
+% Now, the end of \cs{printendlines} macro.
+%    \begin{macrocode}
   \endgroup%
 }%
 
