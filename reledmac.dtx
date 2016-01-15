@@ -378,6 +378,9 @@
 % \changes{v2.7.0}{2015/11/29}{Debug \protect\cs{SErefonlypage} when referring to only one page.}
 % \changes{v2.7.1}{2015/12/06}{Debug \protect\cs{Xbhookgroup} hooks executed on columnar footnotes (moved to a larger group, to take effect).}
 % \changes{v2.7.2}{2015/12/13}{Fix problem of hyphenation when using \protect\package{hyperref} package (added in v2.7.0).}
+% \changes{2.8.0}{2016/01/15}{\protect\macpackage cross-referencing can take advantage of \protect\package{xr} package.}
+% \changes{v2.8.0}{2016/01/15}{No indentation for paragraphed notes in ledgroup. Can be changed with \protect\cs{Xparindent} and \cs{parindentX}.}
+% \changes{v2.8.0}{2016/01/15}{More \cs{edgls…} commands.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1194,7 +1197,7 @@
 % \label{fulllines}The available options are:
 % \begin{itemize}
 % \item \verb|fulllines| to disable \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines} features for this note (cf. \reff{Xtwolines}).
-% \item \verb|nonum| to disable line numbering for this note.
+% \item \verb|nonum| disables line numbering for this note. A horizontal blank space is added instead. You can use \cs{Xinplaceoflemmaseparator} to set it (\reff{Xinplaceoflemmaseparator}).
 % \item \verb|nosep| to disable the lemma separator for this note. 
 % \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
@@ -1218,7 +1221,7 @@
 % \begin{itemize}
 % \item \verb|fulllines| to disable \protect\cs{Xendtwolines} and \protect\cs{Xendmorethantwolines} features for this particular note (cf. \reff{Xtwolines}).
 % \item \verb+nonum+ to disable line number for this particular note.
-% \item \verb|nosep| to disable the lemma separator for this particular note. 
+% \item \verb|nosep| to disable the lemma separator for this particular note. A horizontal blank space is added instead. You can use \cs{Xendinplaceoflemmaseparator} to set it (\reff{Xendinplaceoflemmaseparator}).
 % \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
 %
@@ -1367,7 +1370,7 @@
 % If you use UTF-8 processor, like \XeLaTeX\ or \LuaLaTeX, there should not be any glitches. 
 % However, pay attention to how characters are encoded. Similar-looking characters may be represented differently in unicode numbering.
 %
-% For instance, in Greek, ``ᾳ'' has two possible unicode numbers:
+% For instance, in Greek, ``ᾳ'' has two possible unicode numbers:
 % \begin{itemize}
 %  \item GREEK SMALL LETTER ALPHA (U+03B1) + COMBINING GREEK YPOGEGRAMMENI (U+0345)
 %  \item GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI (U+1FB3)
@@ -1548,6 +1551,14 @@
 
 % When a length, noted \meta{l}, is used, it can be stretchable: \verb|a plus b minus c|. The final length |m| is calculated by \LaTeX{} to have: $a-c \leq m \leq a+b$. If you use some relative unit\footnote{Like \verb|em| which is the width of an `m' in a given font.}, it will be relative to font size of the footnote, except for commands concerning the place kept by the notes --- including blank space. 
 %
+% Some commands are boolean, indicating when an option is enabled.
+% If you want to disable the option after enabling it, you must use \verb+[false+] as the second optional argument.
+% For example:
+% \begin{itemize}
+% \item \verb+\XX[A][false]+ to disable the `XX' option for the series A.
+% \item \verb+\XX[][false]+ to disable it for all series.
+% 
+% \end{itemize}
 % There is also name convention:
 % \begin{itemize}
 %  \item Names prefixed by \verb+X+ are for setting of critical footnotes.
@@ -1604,15 +1615,12 @@
 % By default, the line number is printed in every note. If you want to print it only the first time for a given line number
 % (i.e., one time for line 1, one time for line 2, etc.), you can use \protect\cs{Xnumberonlyfirstinline}\oarg{s}. 
 %
-% Use \protect\cs{Xnumberonlyfirstinline}\oarg{s}\verb+[false]+ to disable this. \meta{s} can be empty if you want to disable it for every series.
 %
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{Xnumberonlyfirstintwolines}}
 % \DescribeMacro{\Xnumberonlyfirstintwolines}
 % Suppose you have a lemma on line~2 and a lemma between line~2 and line~3. 
 % With \protect\cs{Xnumberonlyfirstinline}, the second lemma is considered to be on the same line as the first lemma.
 % But if  you use both \protect\cs{Xnumberonlyfirstinline}\oarg{s} and \protect\cs{Xnumberonlyfirstintwolines}\oarg{s}, a distinction is made.
-% Use the command \linebreak\protect\cs{Xnumberonlyfirstintwolines}\oarg{s}\verb+[false]+
-% to disable this. \meta{s} can be empty if you want to disable it for every series.
 % 
 % 
 % \DescribeMacro{\Xsymlinenum}
@@ -1655,7 +1663,6 @@
 %
 % However, if you want to use a short form (when the lemma overlaps two lines, but not more than two), use \protect\cs{Xtwolinesbutnotmore}\oarg{series}.
 %
-% It is possible to disable this again with \protect\cs{Xtwolinesbutnotmore}\oarg{series}\verb+[false]+.
 %
 % When you use lineation by page, the final page number, if different from the initial page number,  
 % will not be printed, because the final page number is included in the \protect\cs{Xendtwolines} symbol.
@@ -1664,7 +1671,6 @@
 % However, you can force print the final page number with\\ 
 % \protect\cs{Xtwolinesonlyinsamepage}\oarg{series}.
 % 
-% Use \protect\cs{Xtwolinesonlyinsamepage}\oarg{series}\verb+[false]+ to disable this.
 %
 % You can disable \protect\cs{Xtwolines} and related for a specific note by using the `[fulllines]` argument in the note macro cf.~\reff{fulllines}. 
 %
@@ -1677,7 +1683,7 @@
 %
 % \subsubsection{Disable line number}
 % \DescribeMacro{\Xnonumber}
-% You can use \protect\cs{Xnonumber}\oarg{s} if you do not want to have the line number in a footnote. To cancel it, use \protect\cs{Xnonumber}\oarg{s}\verb+[false]+.
+% You can use \protect\cs{Xnonumber}\oarg{s} if you do not want to have the line number in a footnote. 
 % \DescribeMacro{\Xendnonumber} \protect\cs{Xendnonumber}\oarg{s} is the same for endnote. 
 %
 % \subsubsection{Printing pstart number}
@@ -1686,7 +1692,6 @@
 % \changes{v1.18.0}{2015/02/23}{Debug \protect\cs{Xonlypstart} when using \protect\cs{Xnumberonlyfirstinline} and the current line number differs from the previous.}
 % \DescribeMacro{\Xpstart}
 % You can use \protect\cs{Xpstart}\oarg{s} if you want to print the pstart number in the footnote, before the line and subline number. 
-% Use \protect\cs{Xpstart}\oarg{s}\verb+[false]+ to disable this. \meta{s} can be empty if you want to disable it for every series.
 % Note that when you change the lineation system, the option is automatically switched :
 % \begin{itemize}
 %    \item If you use lineation by pstart, the option is enabled.
@@ -1701,13 +1706,11 @@
 %
 % \DescribeMacro{\Xonlypstart}
 % In combination with \protect\cs{Xpstart}, you can use \protect\cs{Xonlypstart}\oarg{s} if you want to print only the pstart number in the footnote, and not the line and subline number.
-% Use \protect\cs{Xonlypstart}\oarg{s}\verb+[false]+ disable this. \meta{s} can be empty, if you want to disable it for every series.
 %
 % \subsubsection{Printing stanza number}
 % 
 % \DescribeMacro{\Xstanza}\label{Xstanza}
 % You can use \cs{Xstanza}\oarg{s} if you want to print the stanza number in the footnote, before the line and subline number. 
-% Use \cs{Xstanza}\oarg{s}\verb+[false]+ to disable this. \meta{s} can be empty if you want to disable it for every series.
 % 
 % Of course the stanza number is printed only when you use \cs{numberstanza}
 %
@@ -1742,7 +1745,6 @@
 %\DescribeMacro{\Xnonbreakableafternumber}
 % By default, the space defined by \protect\cs{Xafternumber} is breakable.
 % With \protect\cs{Xnonbreakableafternumber}\oarg{s} it becomes nonbreakable.
-% Use \protect\cs{Xnonbreakableafternumber}\oarg{s}\verb+[false]+ to disable this. \meta{s} can be empty if you want to disable it for every series.
 %
 % \subsubsection{Space around line symbol}
 % \DescribeMacro{\Xbeforesymlinenum} 
@@ -1850,7 +1852,7 @@
 % \DescribeMacro{\Xnolemmaseparator}
 % You can suppress the lemma separator, using \protect\cs{Xnolemmaseparator}\oarg{s}, which is simply a alias of \protect\cs{Xlemmaseparator}\oarg{s}\verb|{}|.
 %
-% \DescribeMacro{\Xinplaceoflemmaseparator}
+% \DescribeMacro{\Xinplaceoflemmaseparator}\label{Xinplaceoflemmaseparator}
 % With \protect\cs{Xinplaceoflemmaseparator}\oarg{s}\marg{l} you can add a space if no lemma separator is printed. The default value is 1~em. 
 %
 % 
@@ -1869,7 +1871,7 @@
 %  Using \protect\cs{Xendafterlemmaseparator}\oarg{s}\marg{l} you can add some space between the separator and the content of the note. If your lemma separator is empty, this space won't be printed. The default value is 0.5~em.
 %
 %
-% \DescribeMacro{\Xendinplaceoflemmaseparator}
+% \DescribeMacro{\Xendinplaceoflemmaseparator}\label{Xendinplaceoflemmaseparator}
 % With \protect\cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add some space if you chose to remove the lemma separator. The default value is 0.5~em. 
 %
 %
@@ -2112,8 +2114,8 @@
 % \DescribeMacro{\Xnoteswidthliketwocolumns}\DescribeMacro{\noteswidthliketwocolumnsX}
 % If you use \parpackage\ \protect\cs{columns} macro, you can call :
 % \begin{itemize}
-%   \item \protect\cs{Xnoteswidthliketwocolumns}\oarg{s} to create critical notes with a two-column size width. Use \protect\cs{Xnoteswidthliketwocolumns}\oarg{s}\verb+[false]+ to disable it.
-%   \item \protect\cs{noteswidthliketwocolumnsX}\oarg{s} to create familiar notes with a two-column size width. Use \protect\cs{noteswidthliketwocolumnsX}\oarg{s}\verb+[false]+ to disable it.
+%   \item \protect\cs{Xnoteswidthliketwocolumns}\oarg{s} to create critical notes with a two-column size width. 
+%   \item \protect\cs{noteswidthliketwocolumnsX}\oarg{s} to create familiar notes with a two-column size width. 
 % \end{itemize}
 % \subsection{Endnotes in one paragraph}
 % \changes{v1.12.0}{2015/04/25}{Add \protect\cs{Xendparagraph} and related settings.}
@@ -2649,10 +2651,19 @@
 % When calling \cs{appref} and \cs{SEref}, you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical footnotes (\reff{Xfootnoteopt}).  
 %
 % When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical endnotes (\reff{Xendnoteopt}). 
+% \subsection{Compatibility with \protect\package{xr} package}
+% The \cs{externaldocument} command of the \cs{xr} package allows making cross-references from an external document, with the standard \LaTeX\ commands \cs{label} and \cs{ref} (and related).
+%
+% To use it with the \macpackage cross-reference commands (i.e. \cs{edlabel} and related), you must do the following:
+% \begin{enumerate}
+% \item Load the \package{xr} package.
+% \item Load the \package{reledmac} package.
+% \item Use the \cs{externaldocument} document command. 
+% \end{enumerate}
 % \section{Side notes}
 %
 % \subsection{Basics}
-%   The \protect\cs{marginpar} command does not work in numbered text. Instead, 
+% The \protect\cs{marginpar} command does not work in numbered text. Instead, 
 % the package provides for non-floating sidenotes in either margin.
 %
 % \DescribeMacro{\ledinnernote}
@@ -3461,7 +3472,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2015/12/13 v2.7.2 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/01/15 v2.8.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9142,6 +9153,7 @@
   \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}}\unhbox0 \removehboxes}%
   \csuse{Xbhookgroup@#1}%
   \csuse{Xnotefontsize@#1}%
+  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -11087,7 +11099,8 @@
   \makehboxofhboxes
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{bhookgroupX@#1}%
-  \csuse{notefontsizeX@#1}
+  \csuse{notefontsizeX@#1}%
+  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -11473,6 +11486,7 @@
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{endnotes} take five arguments.}
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{endnotes} take six arguments.}
 % \changes{v2.7.0}{2015/11/13}{\protect\cs{endnotes} take seven arguments.}
+% \changes{v2.8.0}{2016/01/15}{\cs{Xendhangindent} and \cs{Xendafternote} can take values which are relative to the font size of the endnote.}
 % Arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ Line numbers and font selection.
@@ -11485,6 +11499,8 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
+  \csuse{Xendbhooknote@#4}%
+  \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}%
@@ -11499,8 +11515,6 @@
     \setkeys[mac]{truefootnoteoption}{##1}%
   }%
   \notblank{#5}{\docsvlist{#5}}{}%
-  \csuse{Xendbhooknote@#4}%
-  \csuse{Xendnotefontsize@#4}%
   \IfStrEq{#6}{R}{\ledRcol@true}{}%
   \def\@this@crossref@start{#7:start}%
   \def\@this@crossref@end{#7:end}%
@@ -13207,10 +13221,10 @@
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
 \def\l@dmake@labels#1|#2|#3|#4|#5{%
-  \expandafter\ifx\csname the@label#5\endcsname \relax\else
-    \led@warn@DuplicateLabel{#5}%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#5\endcsname \relax\else
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#5}%
   \fi
-  \expandafter\gdef\csname the@label#5\endcsname{#1|#2|#3|#4|\relax}%
+  \expandafter\gdef\csname the@label\csuse{XR@prefix}#5\endcsname{#1|#2|#3|#4|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -13771,7 +13785,40 @@
 % \end{macro}
 %
 %
+% \subsection{Compatibility with \package{xref}}
+% Here, we provide compatibility with the \package{xref} to enable \macpackage's cross-referencing to external documents.
+% We assume that the user loads \package{xref} \emph{before} \package{reledmac}, but uses \cs{externaldocument} \emph{after} loading \package{reledmac}.
 %
+% \begin{macro}{\XR@test}
+% First, we patch the \package{xr} macro \cs{XR@test}, which is called on every line of the external \verb+.aux+ file, in order to also call macros specific to \macpackage.
+%    \begin{macrocode}
+\pretocmd{\XR@test}%
+  {\XR@test@mac+++#1#2#3#4+++}%
+  {}%
+  {}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\XR@test@mac}
+%  The \cs{XR@test@mac} takes the full content of a line of the external \verb+.aux+ files, with the three final dots added by \package{xr}.
+%    \begin{macrocode}
+\long\def\XR@test@mac+++#1+++{\XR@test@mac@test#1}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\XR@test@mac@test}
+% And finally, \cs{XR@test@mac@test} does the job.
+% This code is based on the \cs{XR@test} macro of the \package{xr} package. However, not that the \cs{XR@prefix} is not called here, but it is integrated directly in \cs{l@dmake@labels} and  \cs{l@dmake@labelsR}.
+%    \begin{macrocode}
+\long\def\XR@test@mac@test#1#2...{%The triple dots (NOT \ldots) are because of the line 22 of xr.sty  v5.02 1994/05/28
+  \ifx#1\l@dmake@labels%
+   \l@dmake@labels#2%
+  \else
+    \ifx#1\l@dmake@labelsR%
+      \l@dmake@labelsR #2%
+    \fi%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Side notes}
 %
 %    Regular \protect\cs{marginpar}s do not work inside numbered text\,---\,they
@@ -14845,63 +14892,86 @@
 %    \end{macrocode}
 % \end{macro}
 % \section{Glossaries}
-% Here, we define the \cs{gls}-Like commands prefixed by \verb+ed+.
-% \begin{macro}{\edgls}
+% Here, we define the \cs{gls}-like commands prefixed by \verb+ed+, only if the package \package{glossaries} is loaded.
 %    \begin{macrocode}
-\DeclareRobustCommandx{\edgls}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \gls[counter=pageline,#1]{#2}[#3]%
-}
+\AtBeginDocument{%
+  \@ifpackageloaded{glossaries}{%
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edGls}
+% First those which arguments are \oarg{options}\marg{label}\oarg{insert}.
 %    \begin{macrocode}
-\DeclareRobustCommandx{\edGls}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \Gls[counter=pageline,#1]{#2}[#3]%
-}
+    \renewcommand{\do}[1]{%
+      \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,3,usedefault]{%
+        \doedindexlabel%
+        \csname#1\endcsname[counter=pageline,##1]{##2}[##3]%
+      }%
+      \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,3,usedefault]{%
+        \doedindexlabel%
+        \csname#1\endcsname*[counter=pageline,##1]{##2}[##3]%
+      }%
+    }%
+    \docsvlist{%
+      gls,%
+      Gls,%
+      GLS,%
+      glspl,%
+      Glspl,%
+      GLSpl,%
+      glstext,%
+      Glstext,%
+      GLStext,%
+      Glsfirst,%
+      GLSfirst,%
+      glsplural%
+      Glsplural,%
+      GLSplural,%
+      glsfirstplural,%
+      Glsfirstplural,%
+      GLSfirstplural,%
+      glsname,%
+      Glsname,%
+      GLSname,%
+      glssymbol,%
+      Glssymbol,%
+      GLSsymbol,%
+      glsdesc,%
+      Glsdesc,%
+      GLSdesc,%
+      glsuseri,%
+      Glsuseri,%
+      GLSuseri,%
+      glsuserii,%
+      Glsuserii,%
+      GLSuserii,%
+      glsuseriii,%
+      Glsuseriii,%
+      GLSuseriii,%
+      glsuseriv,%
+      Glsuseriv,%
+      GLSuseriv,%
+      glsuserv,%
+      Glsuserv,%
+      GLSuserv,%
+      glsuservi,%
+      Glsuservi,%
+      GLSuservi%
+      }%
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edGLS}
+% First those which arguments are \oarg{options}\marg{label}\marg{link text}.
 %    \begin{macrocode}
-\DeclareRobustCommandx{\edGLS}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \GLS[counter=pageline,#1]{#2}[#3]%
-}
+    \renewcommand{\do}[1]{%
+      \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,usedefault]{%
+        \doedindexlabel%
+        \csname#1\endcsname[counter=pageline,##1]{##2}{##3}%
+      }%
+      \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,usedefault]{%
+        \doedindexlabel%
+        \csname#1\endcsname*[counter=pageline,##1]{##2}{##3}%
+      }%
+    }%
+    \docsvlist{glsdisp,glslink}%
+  }{}%
+}%
 %    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edglspl}
-%    \begin{macrocode}
-\DeclareRobustCommandx{\edglspl}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \glspl[counter=pageline,#1]{#2}[#3]%
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edGlspl}
-%    \begin{macrocode}
-\DeclareRobustCommandx{\edGlspl}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \Glspl[counter=pageline,#1]{#2}[#3]%
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edGLSpl}
-%    \begin{macrocode}
-\DeclareRobustCommandx{\edGLSpl}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \GLSpl[counter=pageline,#1]{#2}[#3]%
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\edglsdisp}
-%    \begin{macrocode}
-\DeclareRobustCommandx{\edglsdisp}[3][1,3,usedefault]{%
-  \doedindexlabel%
-  \glsdisp[counter=pageline,#1]{#2}[#3]%
-}
-%    \end{macrocode}
-% \end{macro}
 % \section{Verse}
 %
 % The original code is principally Wayne Sullivan's\index{Sullivan, Wayne} 
