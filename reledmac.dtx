@@ -383,6 +383,9 @@
 % \changes{v2.8.0}{2016/01/15}{No indentation for paragraphed notes in ledgroup. Can be changed with \protect\cs{Xparindent} and \protect\cs{parindentX}.}
 % \changes{v2.8.0}{2016/01/15}{More \protect\cs{edgls…} commands.}
 % \changes{v2.8.1}{2016/02/22}{Warning for undefined labels are really parsable by latexmk}
+% \changes{v2.8.2}{2016/02/27}{Fix bug with \protect\cs{AtEveryPstart} added in version 2.0.0.}
+% \changes{v2.8.2}{2016/02/27}{Fix bug with vertical space after between sectioning command as optional argument of a \protect\cs{pstart} and \protect\cs{pstart} content}
+% \changes{v2.8.2}{2016/02/27}{Fix bug concerning indent in a paragraph immediatly following  a sectioning command (bug NOT fixed on reledpar)}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3474,7 +3477,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/02/22 v2.8.1 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/02/27 v2.8.2 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7210,16 +7213,8 @@
 \newcommandx*{\pstart}[1][1]{%
   \normal@pars%
   \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
-  \ifautopar%
-    \autopar%
-  \fi%
   \ifluatex%
     \edef\l@luatextextdir@L{\the\textdir}%
-  \fi%
-  \if@nobreak%
-    \let\@oldnobreak\@nobreaktrue%
-  \else%
-    \let\@oldnobreak\@nobreakfalse%
   \fi%
   \@nobreaktrue%
   \ifnumbering \else%
@@ -7232,7 +7227,7 @@
   \fi%
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty%
-  \begingroup\normal@pars%
+  \begingroup%
   \global\advance \l@dnumpstartsL\@ne
   \global\setbox\raw@text=\vbox\bgroup%
     \ifautopar\else%
@@ -7317,17 +7312,18 @@
   \fi%
   \addtocounter{pstart}{1}%
 %    \end{macrocode}
-% Restore paragraph, nobreak setting and autopar setting.
+% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
 %    \begin{macrocode}
   \normal@pars%
-  \@oldnobreak%
+  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
+%    \end{macrocode}
+% Restore  standard nobreak setting and autopar setting. 
+% Normally, \cs{if@nobreak} is equal to true only immediatly after a sectioning command (read latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false. 
+%    \begin{macrocode}
+  \@nobreakfalse%
   \ifautopar%
     \autopar%
   \fi%
-%    \end{macrocode}
-% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
-%    \begin{macrocode}
-  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 }
 
 %    \end{macrocode}
@@ -7425,7 +7421,7 @@
 % are in force. We will want to do this within a footnotes, for
 % example.
 %    \begin{macrocode}
-\newcommand*{\normal@pars}{\everypar{}\let\par\endgraf}
+\newcommand*{\normal@pars}{\ifautopar\everypar{}\fi\let\par\endgraf}
 
 %    \end{macrocode}
 % \end{macro}
