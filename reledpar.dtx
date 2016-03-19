@@ -267,6 +267,7 @@
 % \changes{v2.6.3}{2015/12/13}{Fix spurious dot when using \protect\cs{linenummargin} on right side (introduced in v2.5.0).}
 % \changes{v2.7.0}{2016/01/15}{\protect\macpackage cross-referencing can take advantage of \protect\package{xr} package.}
 % \changes{v2.7.1}{2016/03/06}{Fix bug added in \protect\reledmac~2.8.2, when typesetting parallel text just after a sectionning command}
+% \changes{v2.8.0}{2016/03/19}{Allow to make continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1159,7 +1160,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/03/06 v2.7.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/03/19 v2.8.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1232,10 +1233,11 @@
 \DeclareOptionX{parledgroup}{\parledgrouptrue}
 %    \end{macrocode}
 % \begin{macro}{\ifwidthliketwocolumns}
-% The \verb|widthliketwocolumns| option can be called either on \macpackage or \parpackage.
+% The \verb|widthliketwocolumns| and \verb+continuousnumberingwithcolumns+ options can be called either on \macpackage or \parpackage.
 % \changes{v1.9.0}{2014/09/16}{Added widthliketwocolumns option}
 %    \begin{macrocode}
 \DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
+\DeclareOptionX{continuousnumberingwithcolumns}{\continuousnumberingwithcolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\ifsameparallelpagenumber}
@@ -1595,6 +1597,11 @@
      \l@dend@stuff
      \begingroup%
      \initnumbering@sectcountR%
+     \ifcontinuousnumberingwithcolumns%
+       \ifnum\line@numR<\line@num% 
+         \global\line@numR=\line@num%
+       \fi%
+     \fi%
   \else
     \led@err@numberingShouldHaveStarted
      \endnumberingR

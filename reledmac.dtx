@@ -386,6 +386,7 @@
 % \changes{v2.8.2}{2016/02/27}{Fix bug with \protect\cs{AtEveryPstart} added in version 2.0.0.}
 % \changes{v2.8.2}{2016/02/27}{Fix bug with vertical space after between sectioning command as optional argument of a \protect\cs{pstart} and \protect\cs{pstart} content}
 % \changes{v2.8.2}{2016/02/27}{Fix bug concerning indent in a paragraph immediatly following  a sectioning command (bug NOT fixed on reledpar)}
+% \changes{v2.9.0}{2016/03/19}{Allow to make continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3477,7 +3478,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/02/27 v2.8.2 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/03/19 v2.9.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3537,7 +3538,6 @@
 \newif\ifnoquotation@
 \DeclareOptionX{noquotation}{\noquotation@true}
 
-
 \newif\ifledfinal
 \DeclareOptionX{final}{\ledfinaltrue}
 \DeclareOptionX{draft}{\ledfinalfalse}
@@ -3551,6 +3551,9 @@
 
 \newif\ifwidthliketwocolumns%
 \DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
+
+\newif\ifcontinuousnumberingwithcolumns
+\DeclareOptionX{continuousnumberingwithcolumns}{\continuousnumberingwithcolumnstrue}%
 
 \newif\ifxindy@
 \DeclareOptionX{xindy}[eledmac-markup-attr.xdy]{%
@@ -4354,6 +4357,13 @@
           \csuse{setwidthliketwocolumns@\columns@position}%
           \csuse{setpositionliketwocolumns@\columns@position}%
         \fi%
+     \fi%
+     \ifcontinuousnumberingwithcolumns%
+       \ifdefined\line@numR%
+         \ifnum\line@numR>\line@num% 
+           \global\line@num=\line@numR%
+         \fi%
+       \fi%
      \fi%
   \else
     \led@err@NumberingShouldHaveStarted
