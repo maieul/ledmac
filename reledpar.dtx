@@ -269,6 +269,7 @@
 % \changes{v2.7.1}{2016/03/06}{Fix bug added in \protect\reledmac~2.8.2, when typesetting parallel text just after a sectionning command}
 % \changes{v2.8.0}{2016/03/19}{{Allow to make continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering} and the \protect\option{continuousnumberingwithcolumns} option.}}
 % \changes{v2.8.0}{2016/03/19}{Fix bug when the right line number style is not the same to the left line number style}
+% \changes{v2.8.0}{2016/03/19}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -878,9 +879,6 @@
 % When inserted into a numbered line the macro \protect\cs{hidenumbering} causes
 % the number for that particular line to be hidden; namely, no line number will print.
 % Note that if you use it in \protect\cs{stanza}, you must call it at the beginning of the verse.
-% \subsection{Line numbering scheme}
-% Within these environments you can designate the line numbering scheme(s)
-% to be used. 
 % \subsection{Lineation system}
 % \DescribeMacro{\firstlinenum}
 % \DescribeMacro{\linenumincrement}
@@ -937,7 +935,13 @@
 % This may be useful for parallel columns but for parallel pages it might
 % be more appropriate to redefine it using \protect\cs{setRlineflag}\marg{flag}.
 % Use \verb?\setRlineflag{}? to empty it.
-% 
+%
+% \DescribeMacro{\linenumberLevenifblanktrue}
+% \DescribeMacro{\linenumberRevenifblanktrue}
+% By default, when a blank line is printed on one side for the need of synchronism with the other side, no line number is printed.
+% However, you can decide to print them also for blank lines.
+% Use \cs{linenumberLevenifblanktrue} to enable it on the left side, and \cs{linenumberRevenifblanktrue} to enable it on right side.
+%
 % \subsection{Chunks}
 % \DescribeMacro{\pstart}
 % \DescribeMacro{\pend}
@@ -1928,6 +1932,15 @@
 % \end{macro}
 % \end{macro}
 % \subsection{Print marginal line number}
+% \begin{macro}{\iflinenumberLevenifblank}
+% \begin{macro}{\iflinenumberRevenifblank}
+% \cs{iflinenumberLevenifblank} and \cs{iflinenumberRevenifblank} can be switchen to TRUE if we want to print the line number even if the line is blank.
+%    \begin{macrocode}
+\newif\iflinenumberLevenifblank
+\newif\iflinenumberRevenifblank
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\leftlinenumR}
 % \begin{macro}{\rightlinenumR}
 % \begin{macro}{\l@dlinenumR}
@@ -3388,7 +3401,19 @@
     \global\advance\@donereallinesL\@ne%
     \global\advance\@donetotallinesL\@ne%
   \else%
-    \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+    \iflinenumberLevenifblank
+      \new@lineL%
+      \l@demptyd@ta%
+      \getline@numL%
+      \affixline@num%
+      \setbox\l@dleftbox \hb@xt@ \Lcolwidth{%
+        \l@dld@ta %space kept for backward compatibility
+        \hspace*{\Lcolwidth}%
+        \ledrlfill\l@drd@ta%
+      }%
+    \else%
+      \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+    \fi%
     \global\advance\@donetotallinesL\@ne%
   \fi%
 }%
@@ -3535,7 +3560,19 @@
     \global\advance\@donereallinesR\@ne%
     \global\advance\@donetotallinesR\@ne%
   \else%
-    \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
+    \iflinenumberRevenifblank%
+      \new@lineR
+      \l@demptyd@ta%
+      \getline@numR%
+      \setbox\l@drightbox \hb@xt@ \Rcolwidth{%
+        \affixline@numR%
+        \l@dld@ta  %space kept for backward compatibility
+        \hspace*{\Rcolwidth}%
+        \ledrlfill\l@drd@ta%
+      }%
+    \else%
+      \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
+    \fi%
     \global\advance\@donetotallinesR\@ne%
   \fi%
   \ledRcol@false%
@@ -6333,7 +6370,7 @@
 % \begin{macro}{\par@patch@pagenumbering}
 % \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
 % It must be called after any redefinition of \cs{thepage}. 
-% That why we insert it at the end of the \LaTeX macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
+% That why we insert it at the end of the \LaTeX\ macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
 % In the case of \ltxclass{memoir} class using, we insert it at the end of  \cs{@mempnum}.
 % When using \cs{pagenumbering}, we also need to restart \verb+par@page+ counter. Consequently, we have wrapped \cs{par@patch@thepage} and counter restart in \cs{par@patch@pagenumbering}
 % We also call \cs{par@patch@thepage} it at the beginning of the document.
