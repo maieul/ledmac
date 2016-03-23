@@ -389,6 +389,7 @@
 % \changes{v2.9.0}{2016/03/19}{Allow to make continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering} and the \protect\option{continuousnumberingwithcolumns} option.}
 % \changes{v2.9.0}{2016/03/19}{Fix bug when using \protect\cs{linenum}\protect\arg{page} and \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
 % \changes{v2.9.0}{2016/03/19}{Write correct metadata in numbered files when using \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
+% \changes{v2.9.0}{2016/03/19}{Fix bug with three and two columns footnote setting (added in v.2.4.0).}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -9389,12 +9390,14 @@
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
-  \par%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
-  \strut{\printlinefootnote{#1}{#4}}%
+  \strut{%
+  \hspace{\parindent}%
+  \printlinefootnote{#1}{#4}%
+ }%
   {\nottoggle{Xlemmadisablefontselection@#4}%
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
@@ -9521,12 +9524,14 @@
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
-  \par%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
  \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
  \parindent=\@tempdima%
-  \strut{\printlinefootnote{#1}{#4}}%
+  \strut{%
+ \hspace{\parindent}%
+ \printlinefootnote{#1}{#4}%
+ }%
   {\nottoggle{Xlemmadisablefontselection@#4}%
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
@@ -10764,8 +10769,11 @@
  \@tempdima=\parindent%
  \csuse{colalignX@#1}%
  \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}\allowbreak}
+  {\hspace{\parindent}%
+  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+    #2\strut\par}%
+ \allowbreak%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10879,11 +10887,11 @@
   \hsize \csuse{hsizethreecolX@#1}%
   \nottoggle{parindentX@#1}{\parindent=\z@}{}%
   \tolerance=5000\relax%
-  \par%
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+  {\hspace{\parindent}%
+  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
