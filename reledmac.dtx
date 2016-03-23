@@ -382,6 +382,15 @@
 % \changes{v2.8.0}{2016/01/15}{\protect\macpackage cross-referencing can take advantage of \protect\package{xr} package.}
 % \changes{v2.8.0}{2016/01/15}{No indentation for paragraphed notes in ledgroup. Can be changed with \protect\cs{Xparindent} and \protect\cs{parindentX}.}
 % \changes{v2.8.0}{2016/01/15}{More \protect\cs{edgls…} commands.}
+% \changes{v2.8.1}{2016/02/22}{Warnings for undefined labels are really parsable by latexmk}
+% \changes{v2.8.2}{2016/02/27}{Fix bug with \protect\cs{AtEveryPstart} added in version 2.0.0.}
+% \changes{v2.8.2}{2016/02/27}{Fix bug with vertical space after the between-sectioning command as optional argument of a \protect\cs{pstart} and \protect\cs{pstart} content}
+% \changes{v2.8.2}{2016/02/27}{Fix bug concerning indent in a paragraph immediately following a sectioning command (bug NOT fixed on reledpar)}
+% \changes{v2.9.0}{2016/03/23}{Allow continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering} and the \protect\option{continuousnumberingwithcolumns} option.}
+% \changes{v2.9.0}{2016/03/23}{Fix bug when using \protect\cs{linenum}\protect\arg{page} and \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
+% \changes{v2.9.0}{2016/03/23}{Write correct metadata in numbered files when using \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
+% \changes{v2.9.0}{2016/03/23}{Fix bug with three- and two-column footnote setting (added in v.2.4.0).}
+% \changes{v2.9.0}{2016/03/23}{Fix spurious space inside three-column familiar footnote.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -629,6 +638,9 @@
 % but it does not expend the labor to check this thoroughly. If you have
 % problems with a line or two misnumbered at the top of a page, try
 % running \LaTeX\ once or twice more.
+% 
+% However, the best way to be sure that one has made the right number of runs 
+% is to use some of \LaTeX's run scripts like \emph{latexmk}.
 %
 % A file may mix \emph{numbered} and \emph{unnumbered} text.
 %
@@ -811,7 +823,7 @@
 % You can redefine the command \DescribeMacro{\thepstart}\protect\cs{thepstart} to change style. 
 % You can change the value of the pstart number by using \emph{after} \protect\cs{beginnumbering}:
 % \begin{verbatim}
-% \setcounter{numberpstart}{value}
+% \setcounter{pstart}{value}
 % \end{verbatim}
 % On each \protect\cs{beginnumbering} the numbering restarts.
 % \changes{v0.15.0}{2012/06/11}{Possibility to print \protect\cs{pstart} number inside.}
@@ -3473,7 +3485,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/01/15 v2.8.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/03/23 v2.9.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3533,7 +3545,6 @@
 \newif\ifnoquotation@
 \DeclareOptionX{noquotation}{\noquotation@true}
 
-
 \newif\ifledfinal
 \DeclareOptionX{final}{\ledfinaltrue}
 \DeclareOptionX{draft}{\ledfinalfalse}
@@ -3547,6 +3558,9 @@
 
 \newif\ifwidthliketwocolumns%
 \DeclareOptionX{widthliketwocolumns}{\widthliketwocolumnstrue}%
+
+\newif\ifcontinuousnumberingwithcolumns
+\DeclareOptionX{continuousnumberingwithcolumns}{\continuousnumberingwithcolumnstrue}%
 
 \newif\ifxindy@
 \DeclareOptionX{xindy}[eledmac-markup-attr.xdy]{%
@@ -3840,13 +3854,14 @@
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.%
                   Using `000'.}%
-  \@latex@warning{Reference `#1' on page \thepage \space%
-             undefined}%
+  \@latex@warning{Reference `#1' undefined\on@line}%
 }%
 \newcommand*{\led@warn@pairRefUndefined}[1]{%
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1:start' and/or `#1:end' on page \the\pageno\space undefined.
-                  Using `??'.}}
+                  Using `??'.}%
+  \@latex@warning{Reference `#1:start' and/or `#1:end' undefined\on@line}%
+}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -4349,6 +4364,16 @@
           \csuse{setwidthliketwocolumns@\columns@position}%
           \csuse{setpositionliketwocolumns@\columns@position}%
         \fi%
+     \fi%
+     \ifcontinuousnumberingwithcolumns%
+       \ifdefined\line@numR%
+         \ifnum\line@numR>\line@num% 
+           \expandafter\setlinenum\expandafter{\the\line@numR}%
+         \fi% 
+         \ifnum\last@page@numR>\last@page@num%
+           \global\last@page@num=\last@page@numR%
+         \fi%
+       \fi%
      \fi%
   \else
     \led@err@NumberingShouldHaveStarted
@@ -5462,8 +5487,8 @@
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
       \fi
-      \page@numR=#1\relax
-      \last@page@numR=#1\relax
+      \global\page@numR=#1\relax
+      \global\last@page@numR=#1\relax
       \def\next@page@numR{#1}%
     \fi
   \else
@@ -5472,8 +5497,8 @@
       \ifbypage@
         \line@num \z@ \subline@num \z@
       \fi
-      \page@num=#1\relax
-      \last@page@num=#1\relax
+      \global\page@num=#1\relax
+      \global\last@page@num=#1\relax
       \def\next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
@@ -6061,6 +6086,10 @@
      \fi%
      \closeout\linenum@out%
      \openout\linenum@out=#1\relax%
+     \write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \ifl@dpaging%
+       \write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
+     \fi%
   \fi}
 
 %    \end{macrocode}
@@ -7208,16 +7237,8 @@
 \newcommandx*{\pstart}[1][1]{%
   \normal@pars%
   \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
-  \ifautopar%
-    \autopar%
-  \fi%
   \ifluatex%
     \edef\l@luatextextdir@L{\the\textdir}%
-  \fi%
-  \if@nobreak%
-    \let\@oldnobreak\@nobreaktrue%
-  \else%
-    \let\@oldnobreak\@nobreakfalse%
   \fi%
   \@nobreaktrue%
   \ifnumbering \else%
@@ -7230,7 +7251,7 @@
   \fi%
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty%
-  \begingroup\normal@pars%
+  \begingroup%
   \global\advance \l@dnumpstartsL\@ne
   \global\setbox\raw@text=\vbox\bgroup%
     \ifautopar\else%
@@ -7315,17 +7336,18 @@
   \fi%
   \addtocounter{pstart}{1}%
 %    \end{macrocode}
-% Restore paragraph, nobreak setting and autopar setting.
+% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
 %    \begin{macrocode}
   \normal@pars%
-  \@oldnobreak%
+  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
+%    \end{macrocode}
+% Restore standard nobreak setting and autopar setting. 
+% Normally, \cs{if@nobreak} is equal to true only immediately after a sectioning command (read latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false. 
+%    \begin{macrocode}
+  \@nobreakfalse%
   \ifautopar%
     \autopar%
   \fi%
-%    \end{macrocode}
-% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
-%    \begin{macrocode}
-  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 }
 
 %    \end{macrocode}
@@ -7423,7 +7445,7 @@
 % are in force. We will want to do this within a footnotes, for
 % example.
 %    \begin{macrocode}
-\newcommand*{\normal@pars}{\everypar{}\let\par\endgraf}
+\newcommand*{\normal@pars}{\ifautopar\everypar{}\fi\let\par\endgraf}
 
 %    \end{macrocode}
 % \end{macro}
@@ -9369,12 +9391,14 @@
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
-  \par%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
-  \strut{\printlinefootnote{#1}{#4}}%
+  \strut{%
+  \hspace{\parindent}%
+  \printlinefootnote{#1}{#4}%
+ }%
   {\nottoggle{Xlemmadisablefontselection@#4}%
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
@@ -9501,12 +9525,14 @@
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
-  \par%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
  \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
  \parindent=\@tempdima%
-  \strut{\printlinefootnote{#1}{#4}}%
+  \strut{%
+ \hspace{\parindent}%
+ \printlinefootnote{#1}{#4}%
+ }%
   {\nottoggle{Xlemmadisablefontselection@#4}%
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
@@ -10744,8 +10770,11 @@
  \@tempdima=\parindent%
  \csuse{colalignX@#1}%
  \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}\allowbreak}
+  {\hspace{\parindent}%
+  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+    #2\strut\par}%
+ \allowbreak%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -10839,7 +10868,7 @@
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
-    \csuse{notefontsizeX@#1}
+    \csuse{notefontsizeX@#1}%
     \footsplitskips%
     \@nameuse{footfmt#1}{#1}{#2}\egroup}
 
@@ -10859,11 +10888,11 @@
   \hsize \csuse{hsizethreecolX@#1}%
   \nottoggle{parindentX@#1}{\parindent=\z@}{}%
   \tolerance=5000\relax%
-  \par%
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+  {\hspace{\parindent}%
+  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
     #2\strut\par}\allowbreak}
 
 %    \end{macrocode}
