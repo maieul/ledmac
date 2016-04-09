@@ -391,6 +391,7 @@
 % \changes{v2.9.0}{2016/03/23}{Write correct metadata in numbered files when using \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
 % \changes{v2.9.0}{2016/03/23}{Fix bug with three- and two-column footnote setting (added in v.2.4.0).}
 % \changes{v2.9.0}{2016/03/23}{Fix spurious space inside three-column familiar footnote.}
+% \changes{v2.9.1}{2016/04/09}{Fix bug when notes start by \verb`plus` or \verb`minus`.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3485,7 +3486,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/03/23 v2.9.0 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/04/09 v2.9.1 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8678,9 +8679,14 @@
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
   }%
-  \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}\relax%
+  \iftoggle{nosep@}{%
+    \hskip\csuse{Xinplaceoflemmaseparator@#4}%
+    \relax%
+  }%
+  {\ifcsempty{Xlemmaseparator@#4}%
+    {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
+    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+    \relax%
   }}%
   #3\strut\par}
 %    \end{macrocode}
@@ -9083,7 +9089,7 @@
   \unskip            % remove \rightskip,
   \unskip            % remove \parfillskip,
   \unpenalty         % remove \penalty of 10000,
-  \hskip\csuse{Xafternote@#2}}   % but add the glue to go between the notes
+  \hskip\csuse{Xafternote@#2}\relax}% but add the glue to go between the notes
 
 %    \end{macrocode}
 % \end{macro}
@@ -9107,9 +9113,15 @@
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
   }%
-  \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+  \iftoggle{nosep@}{%
+    \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
+    }%
+    {\ifcsempty{Xlemmaseparator@#4}%
+      {%
+        \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
+      }%
+      {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+    \relax%
   }}%
   #3\penalty-10 }
 %    \end{macrocode}
@@ -9403,9 +9415,13 @@
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
   }%
-  \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
-    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+  \iftoggle{nosep@}{%
+    \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
+    }{%
+    \ifcsempty{Xlemmaseparator@#4}%
+      {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
+      {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+    \relax%
   }}%
   #3\strut\par\allowbreak}
 %    \end{macrocode}
@@ -9537,9 +9553,13 @@
     {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
     {{\csuse{Xlemmafont@#4}#2}}%
   }%
-  \iftoggle{nosep@}{\hskip\csuse{Xinplaceoflemmaseparator@#4}}{\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}}%
+  \iftoggle{nosep@}{%
+    \hskip\csuse{Xinplaceoflemmaseparator@#4}%
+    \relax%
+   }{\ifcsempty{Xlemmaseparator@#4}%
+    {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
     {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
+    \relax%
   }}%
   #3\strut\par\allowbreak}
 %    \end{macrocode}
@@ -11065,7 +11085,8 @@
   \unskip            % remove \rightskip,
   \unskip            % remove \parfillskip,
   \unpenalty         % remove \penalty of 10000,
-  \hskip\csuse{afternoteX@#2}}   % but add the glue to go between the notes
+  \hskip\csuse{afternoteX@#2}%
+  \relax}% but add the glue to go between the notes
 
 %    \end{macrocode}
 % \end{macro}
@@ -11533,7 +11554,7 @@
   \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
   \ifXendinsertsep@%
-    \hskip\csuse{Xendafternote@#4}%
+    \hskip\csuse{Xendafternote@#4}\relax%
     \csuse{Xendsep@#4}%
   \else%
     \iftoggle{Xendparagraph@#4}%
@@ -11559,11 +11580,12 @@
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
     }%
-    {\hskip\csuse{Xendinplaceoflemmaseparator@#4}}%
+    {\hskip\csuse{Xendinplaceoflemmaseparator@#4}\relax}%
     {\nobreak%
      \hskip\csuse{Xendbeforelemmaseparator@#4}%
      \csuse{Xendlemmaseparator@#4}%
      \hskip\csuse{Xendafterlemmaseparator@#4}%
+     \relax%
     }%
   #3%
   \nottoggle{Xendparagraph@#4}{\par}{}%
