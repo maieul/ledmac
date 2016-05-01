@@ -15327,6 +15327,7 @@
 % \changes{v1.20.0}{2015/03/22}{\ampersand\ and \textbackslash\ampersand\ can be preceded by spaces.}
 % \begin{macro}{\@stopstanza}
 % \begin{macro}{\AtEveryStopStanza}
+% \begin{macro}{\AtEveryStanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \protect\cs{falseverse} macro.}
 % Now we have the components of the \protect\cs{stanza} macro,
@@ -15361,11 +15362,16 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
-   \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber%
+   \noexpand\stanza@line[#1]%
+   \noexpand\@insertstanzanumber%
    \let\par\relax\ignorespaces%No paragraph in verses
 }
 
-\newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+\newcommandx{\stanza}[1][1,usedefault]{%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
+    {\@startstanza[\at@every@stanza]}%
+    {\@startstanza[#1]}%
+}%
 
 \newcommandx{\@stopstanza}[1][1,usedefault]{%
   \unskip%
@@ -15384,6 +15390,14 @@
 }%
 \def\at@every@stop@stanza{}%
 
+\newcommand{\AtEveryStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{#1}}%
+}%
+\def\at@every@stanza{}%
+
+
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
   \unskip%
   \endlock\pend[#1]\sza@penalty\global%
@@ -15391,6 +15405,7 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
