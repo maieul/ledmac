@@ -3496,7 +3496,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/05/02 v2.9.3 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/05/08 v2.10.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -15326,6 +15326,7 @@
 % \changes{v1.12.0}{2014/08/05}{\ampersand can have an optional argument: content to be printed after.}
 % \changes{v1.20.0}{2015/03/22}{\ampersand\ and \textbackslash\ampersand\ can be preceded by spaces.}
 % \begin{macro}{\@stopstanza}
+% \begin{macro}{\AtEveryStopStanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \protect\cs{falseverse} macro.}
 % Now we have the components of the \protect\cs{stanza} macro,
@@ -15369,10 +15370,19 @@
 \newcommandx{\@stopstanza}[1][1,usedefault]{%
   \unskip%
   \endlock%
-  \pend[#1]%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
+      {\pend[\at@every@stop@stanza]}%
+      {\pend[#1]}%
   \endgroup%
   \instanzafalse%
 }
+
+\newcommand{\AtEveryStopStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{#1}}%
+}%
+\def\at@every@stop@stanza{}%
 
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
   \unskip%
@@ -15381,6 +15391,7 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
