@@ -1921,7 +1921,6 @@
 %
 
 % \changes{v2.7.0}{2015/11/29}{New hooks: \protect\cs{Xlemmafont} and \protect\cs{Xendlemmafont}}
-% \changes{v2.10.0}{2016/05/08}{New hook: \protect\cs{Xwraplemma}}
 % \DescribeMacro{\Xlemmafont}\DescribeMacro{\Xendlemmafont}
 % Use \cs{Xlemmafont}\oarg{s}\marg{cmd} to apply a \TeX\ font command to the lemma.
 %For example, to have boldface lemma:
@@ -1943,11 +1942,16 @@
 % \DescribeMacro{\Xendnotefontsize}
 % \protect\cs{Xendnotefontsize}\oarg{s}\marg{l} is used to define the font size of end critical footnotes of the series. The default value is \protect\cs{footnotesize}.
 % The \meta{command} must not be a size in pt, but a standard \LaTeX\ size, like \protect\cs{small}.
+%
 % \subsection{Wrapping notes}
+% \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
 % \DescribeMacro{\Xwraplemma}\label{Xwraplemma}
 % \cs{Xwraplemma}\oarg{s}\marg{cmd} is used to wrap, in the footnote, the lemma in a \LaTeX\ command. 
 % For example, with the \package{bidi} package, to ensure to have a lemma written right to left, use \cs{Xwraplemma}\arg{\cs{RL}}.
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{Xwrapcontent} hook.}
+%
+% \DescribeMacro{\Xwrapendlemma} 
+% \cs{Xendwraplemma}\oarg{s}\marg{cmd} is the same for endnotes.
 % \DescribeMacro{\Xwrapcontent}
 % \cs{Xwrapcontent}\oarg{s}\marg{cmd} is to wrap the footnote content --- excluding the lemma --- in a \LaTeX command.
 % For example, if the language of your note is not the same as the language of the lemma, use \cs{Xwrapcontent}\arg{\cs{foreignlanguage}\marg{language}} (with \package{babel}) or \cs{Xwrapcontent}\arg{\cs{text\meta{language}}} (for babel).
@@ -11618,8 +11622,12 @@
   \undef\@this@crossref@start%
   \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
-    {{\csuse{Xendlemmafont@#4}#2}}%
+    {\select@lemmafont#1|}%
+    {}%
+  \bgroup%
+    \csuse{Xendlemmafont@#4}%
+    \csuse{Xendwraplemma@#4}{#2}%
+  \egroup%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -12340,6 +12348,7 @@
 %    \end{macrocode}
 % \subsubsection{The options}
 %    \begin{macrocode}
+      \csgdef{Xendwraplemma@#1}{}
       \csgdef{Xendtwolines@#1}{}%
       \csgdef{Xendmorethantwolines@#1}{}%
       \newtoggle{Xendtwolinesbutnotmore@#1}{}%
@@ -12737,6 +12746,7 @@
 % Before generating the commands that are used to set the endnotes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator}+ and the like, we check the \verb+noend+ option.
 %    \begin{macrocode}
 \unless\ifnoend@
+  \newhookcommand@series{Xendwraplemma}
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{Xendlemmafont}%
   \newhookcommand@series{Xendbhooknote}
