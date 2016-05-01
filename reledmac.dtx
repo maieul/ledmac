@@ -1962,6 +1962,9 @@
 %
 % \DescribeMacro{\Xendwrapcontent} 
 % \cs{Xendwrapcontent}\oarg{s}\marg{cmd} is the same for endnotes.
+%
+% \DescribeMacro{\wrapcontentX} 
+% \cs{wrapcontentX}\oarg{s}\marg{cmd} is the same for critical footnotes.
 % \subsection{Indent of notes content}
 % \changes{v1.21.0}{2015/04/13}{Add \protect\cs{Xparindent} and \protect\cs{hangindentX}}
 % \DescribeMacro{\Xparindent}
@@ -10532,7 +10535,8 @@
   \hangindent=\csuse{hangindentX@#1}%
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
   {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}\strut%
-    #2\strut\par}}
+    \csuse{wrapcontentX@#1}{#2}%
+  \strut\par}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10845,7 +10849,8 @@
  \parindent=\@tempdima%
   {\hspace{\parindent}%
   \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}%
+    \csuse{wrapcontentX@#1}{#2}%
+    \strut\par}%
  \allowbreak%
 }%
 
@@ -10967,7 +10972,8 @@
   \parindent=\@tempdima%
   {\hspace{\parindent}%
   \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}\allowbreak}
+    \csuse{wrapcontentX@#1}{#2}%
+    \strut\par}\allowbreak}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11158,7 +11164,8 @@
    \csuse{notenumfontX@#1}%
    \wrapped@footfootmarkX{#1}%
    \strut%
-    #2\penalty-10}}
+    \csuse{wrapcontentX@#1}{#2}%
+    \penalty-10}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -12199,6 +12206,7 @@
 % \subsubsection{Options}
 %    \begin{macrocode}
       \newtoggle{parindentX@#1}
+      \csgdef{wrapcontentX@#1}{}%
       \csgdef{hangindentX@#1}{0pt}%
       \csgdef{beforeinsertingX@#1}{}%
       \csgdef{raggedX@#1}{}%
@@ -12722,6 +12730,7 @@
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
 %    \begin{macrocode}
 \unless\ifnofamiliar@
+  \newhookcommand@series{wrapcontentX}%
   \newhookcommand@series{beforeinsertingX}%
   \newhooktoggle@series{parindentX}
   \newhookcommand@series{hangindentX}
