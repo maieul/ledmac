@@ -393,6 +393,7 @@
 % \changes{v2.9.0}{2016/03/23}{Fix spurious space inside three-column familiar footnote.}
 % \changes{v2.9.1}{2016/04/09}{Fix bug when notes start by ``plus'' or ``minus''.}
 % \changes{v2.9.2}{2016/04/30}{Fix bug with \protect\package{hyperref} package when a lemma starts by ``plus'' or ``minus'' (bug introduced in v.~2.7.0).}
+% \changes{v2.9.3}{2016/05/02}{Fix bug with line number position and reset added by v.~2.9.0}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -640,10 +641,15 @@
 % but it does not expend the labor to check this thoroughly. If you have
 % problems with a line or two misnumbered at the top of a page, try
 % running \LaTeX\ once or twice more.
-% 
+%
+% \section{Compatibility warning}
 % However, the best way to be sure that one has made the right number of runs 
 % is to use some of \LaTeX's run scripts like \emph{latexmk}.
 %
+% If you other class than \cs{article} or \cs{book} or modify geometry layout with \package{geometry} some setting should be made to have correct height for the blocks of note.
+%
+%Please read \reff{Xmaxhnotes}.
+% 
 % A file may mix \emph{numbered} and \emph{unnumbered} text.
 %
 % Numbered text is printed with marginal line numbers and can include
@@ -2103,7 +2109,7 @@
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \macpackage, adds 2.6pt. These 2.6pt are not changed by this command.}
 %
 %
-% \subsubsection{Maximum height} 
+% \subsubsection{Maximum height}\label{Xmaxhnotes}
 % \DescribeMacro{\Xmaxhnotes}\label{Xmaxhnotes}
 % By default, one series of critical notes can take up to 80\% of \cs{vsize}, before being broken to the next page. 
 % If you want to change the size use \protect\cs{Xmaxhnotes}\oarg{s}\marg{l}. 
@@ -3278,6 +3284,9 @@
 %
 %
 % \subsection{Known and suspected limitations}
+% \subsubsection{Not standard geometry}
+% If you use class other than \class{article} or \class{book}, or if you use the geometry package, you should use \protect{maxhnotesX} and / or \cs{Xmaxhnotes} as explained in \reff{Xmaxhnotes} in order to prevent footnotes overlapping bottom margin.
+%
 % \subsubsection{\package{floatrow} package compatibility}
 % The \package{floatrow} package must be loaded before the \macpackage.
 % \subsubsection{`No room for a new'}\label{noroom}
@@ -5269,6 +5278,12 @@
 %
 %    \begin{macrocode}
   \get@linelistfile{#1}%
+  \ifcontinuousnumberingwithcolumns
+       \global\page@numR=\page@numR\relax
+       \global\last@page@numR=\last@page@numR\relax
+       \global\page@num=\page@num\relax
+       \global\last@page@num=\last@page@num\relax
+  \fi
   \endgroup  
 %    \end{macrocode}
 %
@@ -5509,8 +5524,8 @@
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
       \fi
-      \global\page@numR=#1\relax
-      \global\last@page@numR=#1\relax
+      \page@numR=#1\relax
+      \last@page@numR=#1\relax
       \def\next@page@numR{#1}%
     \fi
   \else
@@ -5519,8 +5534,8 @@
       \ifbypage@
         \line@num \z@ \subline@num \z@
       \fi
-      \global\page@num=#1\relax
-      \global\last@page@num=#1\relax
+      \page@num=#1\relax
+      \last@page@num=#1\relax
       \def\next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
