@@ -394,6 +394,7 @@
 % \changes{v2.9.1}{2016/04/09}{Fix bug when notes start by ``plus'' or ``minus''.}
 % \changes{v2.9.2}{2016/04/30}{Fix bug with \protect\package{hyperref} package when a lemma starts by ``plus'' or ``minus'' (bug introduced in v.~2.7.0).}
 % \changes{v2.9.3}{2016/05/02}{Fix bug with line number position and reset added by v.~2.9.0}
+% \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -2377,10 +2378,19 @@
 % \subsection{Content before/after verses}\label{contentverse}
 % It is possible to add content, like a subtitle or a spacing, before or after verse:
 % \begin{itemize}
-%   \item \protect\cs{stanza} command can take a optional argument (in brackets). Its content will be printed before the stanza.
-%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
+%   \item \protect\cs{stanza} command can take a optional argument (in brackets). Its content will be printed before the stanza. 
+%
+% Use \cs{AtEveryStanza}\marg{arg} to automatically add content at the begining of stanza.
+%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse. 
+%
+%  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verse (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verse (including the first one). 
 %   \item \verb+\&+ can take a optional argument (in brackets). Its content will be printed after the stanza.
+% 
+% Use \cs{AtEveryStopStanza} to automatically add content at the end of stanzas.
+%
 % \end{itemize}
+%
+% 
 % \subsection{Numbering stanza}\label{numbering-stanza}
 % \DescribeMacro{\numberstanzatrue}
 % \DescribeMacro{\numberstanzafalse}
@@ -3536,7 +3546,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/05/08 v2.9.3 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/05/08 v2.10.0 typeset critical edition]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -15390,6 +15400,8 @@
 % \changes{v1.12.0}{2014/08/05}{\ampersand can have an optional argument: content to be printed after.}
 % \changes{v1.20.0}{2015/03/22}{\ampersand\ and \textbackslash\ampersand\ can be preceded by spaces.}
 % \begin{macro}{\@stopstanza}
+% \begin{macro}{\AtEveryStopStanza}
+% \begin{macro}{\AtEveryStanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \protect\cs{falseverse} macro.}
 % Now we have the components of the \protect\cs{stanza} macro,
@@ -15424,19 +15436,41 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
-   \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber%
+   \noexpand\stanza@line[#1]%
+   \noexpand\@insertstanzanumber%
    \let\par\relax\ignorespaces%No paragraph in verses
 }
 
-\newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+\newcommandx{\stanza}[1][1,usedefault]{%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
+    {\@startstanza[\at@every@stanza]}%
+    {\@startstanza[#1]}%
+}%
 
 \newcommandx{\@stopstanza}[1][1,usedefault]{%
   \unskip%
   \endlock%
-  \pend[#1]%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
+      {\pend[\at@every@stop@stanza]}%
+      {\pend[#1]}%
   \endgroup%
   \instanzafalse%
 }
+
+\newcommand{\AtEveryStopStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{#1}}%
+}%
+\def\at@every@stop@stanza{}%
+
+\newcommand{\AtEveryStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{#1}}%
+}%
+\def\at@every@stanza{}%
+
 
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
   \unskip%
@@ -15445,6 +15479,8 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
