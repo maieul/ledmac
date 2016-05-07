@@ -271,6 +271,7 @@
 % \changes{v2.8.0}{2016/03/23}{Fix bug when the right line number style is not the same to the left line number style}
 % \changes{v2.8.0}{2016/03/23}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
 % \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
+% \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1430,6 +1431,13 @@
   Such behavior is deprecated.\MessageBreak%
   Use instead #1R or #1* in your preamble.}%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@missing@numbering}
+%    \begin{macrocode}
+\newcommand{\led@error@missing@numbering}[1]{%
+  \reledpar@error{Missing \string\pstart…\string\pend\space inside `#1` environment}{\@ehc}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Sectioning commands}
@@ -2952,6 +2960,9 @@
   \let\old@startstanza\@startstanza
   \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
 }{
+  \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname%
+    \led@error@missing@numbering{Leftside}%
+  \fi%
     \Leftsidehookend}
 %    \end{macrocode}
 % \end{environment}
@@ -3003,6 +3014,9 @@
   \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
 }{%
   \ledRcolfalse
+ \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@error@missing@numbering{Rightside}%
+  \fi%
   \Rightsidehookend
 }
 
