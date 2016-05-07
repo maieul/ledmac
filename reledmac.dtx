@@ -396,6 +396,7 @@
 % \changes{v2.9.3}{2016/05/02}{Fix bug with line number position and reset added by v.~2.9.0}
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
+% \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -14262,21 +14263,30 @@
 % get displayed in the margins.
 %    \begin{macrocode}
 \newcommand*{\setl@dlp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledlsnotewidth\ledlsnotefontsetup
-   \global\setbox\l@dlp@rbox
-   \ifleftnoteup
-     =\vbox to\z@{\vss #1}%
-   \else
-     =\vbox to 0.70\baselineskip{\strut#1\vss}%
-   \fi}}
+   \begingroup%
+     \parindent\z@\hsize=\ledlsnotewidth%
+     \ledlsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
+     \global\setbox\l@dlp@rbox%
+     \ifleftnoteup%
+       =\vbox to\z@{{\ledlsnotefontsetup\vss #1}}%We put \ledlsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+     \else%
+       =\vbox to 0.70\baselineskip{{\ledlsnotefontsetup\strut#1\vss}}%
+     \fi%
+   \endgroup%
+}
+
 \newcommand*{\setl@drp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
-   \global\setbox\l@drp@rbox
-   \ifrightnoteup
-     =\vbox to\z@{\vss#1}%
-   \else
-     =\vbox to0.7\baselineskip{\strut#1\vss}%
-   \fi}}
+  \begingroup%
+     \parindent\z@\hsize=\ledrsnotewidth%
+     \ledrsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
+     \global\setbox\l@drp@rbox%
+     \ifrightnoteup%
+       =\vbox to\z@{{\ledrsnotefontsetup\vss#1}}%We put \ledrsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+     \else%
+       =\vbox to0.7\baselineskip{{\ledrsnotefontsetup\strut#1\vss}}%
+     \fi%
+  \endgroup%
+}%
 \newif\ifleftnoteup
   \leftnoteuptrue
 %    \end{macrocode}
