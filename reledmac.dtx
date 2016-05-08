@@ -391,9 +391,12 @@
 % \changes{v2.9.0}{2016/03/23}{Write correct metadata in numbered files when using \protect\cs{pausenumbering}\protect\ldots\protect\cs{resumenumbering}.}
 % \changes{v2.9.0}{2016/03/23}{Fix bug with three- and two-column footnote setting (added in v.2.4.0).}
 % \changes{v2.9.0}{2016/03/23}{Fix spurious space inside three-column familiar footnote.}
-% \changes{v2.9.1}{2016/04/09}{Fix bug when notes start by ``plus'' or ``minus''.}
-% \changes{v2.9.2}{2016/04/30}{Fix bug with \protect\package{hyperref} package when a lemma starts by ``plus'' or ``minus'' (bug introduced in v.~2.7.0).}
+% \changes{v2.9.1}{2016/04/09}{Fix bug when notes start with ``plus'' or ``minus''.}
+% \changes{v2.9.2}{2016/04/30}{Fix bug with \protect\package{hyperref} package when a lemma starts with ``plus'' or ``minus'' (bug introduced in v.~2.7.0).}
 % \changes{v2.9.3}{2016/05/02}{Fix bug with line number position and reset added by v.~2.9.0}
+% \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
+% \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
+% \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -646,7 +649,7 @@
 % However, the best way to be sure that one has made the right number of runs 
 % is to use some of \LaTeX's run scripts like \emph{latexmk}.
 %
-% If you other class than \cs{article} or \cs{book} or modify geometry layout with \package{geometry} some setting should be made to have correct height for the blocks of note.
+% If you use other classes than \cs{article} or \cs{book}, or modify the layout with \package{geometry}, some settings should be made to have correct height for the blocks of notes.
 %
 %Please read \reff{Xmaxhnotes}.
 % 
@@ -1922,12 +1925,14 @@
 
 % \changes{v2.7.0}{2015/11/29}{New hooks: \protect\cs{Xlemmafont} and \protect\cs{Xendlemmafont}}
 % \DescribeMacro{\Xlemmafont}\DescribeMacro{\Xendlemmafont}
-% Use \cs{Xlemmafont}\oarg{s}\meta{cmd} to apply a \TeX\ font command to the lemma.
+% Use \cs{Xlemmafont}\oarg{s}\marg{cmd} to apply a \TeX\ font command to the lemma.
 %For example, to have boldface lemma:
 % \begin{verbatim}
 %\Xlemmafont{\bfseries}
 % \end{verbatim}
-% \cs{Xendlemmafont}\meta{arg}\meta{cmd} is the same for endnotes.
+% \cs{Xendlemmafont}\oarg{s}\marg{cmd} is the same for endnotes.
+%
+%
 % \subsubsection{For all notes}
 % \DescribeMacro{\Xnotefontsize}
 % \protect\cs{Xnotefontsize}\oarg{s}\marg{command} is used to define the font size of critical footnotes of the series. The default value is \protect\cs{footnotesize}.
@@ -1940,6 +1945,29 @@
 % \DescribeMacro{\Xendnotefontsize}
 % \protect\cs{Xendnotefontsize}\oarg{s}\marg{l} is used to define the font size of end critical footnotes of the series. The default value is \protect\cs{footnotesize}.
 % The \meta{command} must not be a size in pt, but a standard \LaTeX\ size, like \protect\cs{small}.
+%
+% \subsection{Wrapping notes}
+% \subsubsection{Wrapping lemmas}
+% \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
+% \DescribeMacro{\Xwraplemma}\label{Xwraplemma}
+% \cs{Xwraplemma}\oarg{s}\marg{cmd} is used to wrap, in the footnote, the lemma in a \LaTeX\ command. 
+% For example, with the \package{bidi} package, to ensure having a lemma written right to left, use \cs{Xwraplemma}\arg{\cs{RL}}.
+%
+% \DescribeMacro{\Xwrapendlemma} 
+% \cs{Xendwraplemma}\oarg{s}\marg{cmd} is the same for endnotes.
+%
+% \subsubsection{Wrapping contents}
+% \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwrapcontent}, \protect\cs{Xendwrapcontent} and \protect\cs{wrapcontentX}.}
+% \DescribeMacro{\Xwrapcontent}
+% \cs{Xwrapcontent}\oarg{s}\marg{cmd} is used to wrap the footnote contents --- excluding the lemma --- in a \LaTeX command.
+%
+% For example, if the language of your note is not the same as the language of the lemma, use \cs{Xwrapcontent}\arg{\cs{foreignlanguage}\marg{language}} (with \package{babel}) or \cs{Xwrapcontent}\arg{\cs{text\meta{language}}} (for babel).
+%
+% \DescribeMacro{\Xendwrapcontent} 
+% \cs{Xendwrapcontent}\oarg{s}\marg{cmd} is the same for endnotes.
+%
+% \DescribeMacro{\wrapcontentX} 
+% \cs{wrapcontentX}\oarg{s}\marg{cmd} is the same for critical footnotes.
 % \subsection{Indent of notes content}
 % \changes{v1.21.0}{2015/04/13}{Add \protect\cs{Xparindent} and \protect\cs{hangindentX}}
 % \DescribeMacro{\Xparindent}
@@ -1979,6 +2007,21 @@
 %
 % \DescribeMacro{\Xendbhooknote}
 % \protect\cs{Xendbhooknote}\oarg{s}\marg{code} is to be used at the beginning of the endnotes.
+%
+% \subsection{Arbitrary code before inserting note}
+% \DescribeMacro{\Xbeforeinserting}
+% \DescribeMacro{beforeinsertingX}
+% \cs{Xbeforeinserting}\oarg{s}\marg{code} 
+% and \cs{beforeinsertingX}\oarg{s}\marg{code}
+% are very technical commands.
+%
+% They allow one to add any arbitrary code just before the footnotes are added in the list of footnotes.
+% The main use is to insert text direction code.
+% For example, if you edit right-to-left text with \package{bidi}, but want your critical footnote be left-to-right, use \cs{Xbeforeinserting}{\cs{LTR}}.
+% You should also use \cs{Xwraplemma} to ensure your lemmas are right-to-left in a left-to-right paragraph (\reff{Xwraplemma})).
+%
+% Note that the changes are local to the footnote.
+%
 %
 % \subsection{Options for footnotes in columns}
 %
@@ -2337,10 +2380,19 @@
 % \subsection{Content before/after verses}\label{contentverse}
 % It is possible to add content, like a subtitle or a spacing, before or after verse:
 % \begin{itemize}
-%   \item \protect\cs{stanza} command can take a optional argument (in brackets). Its content will be printed before the stanza.
-%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
-%   \item \verb+\&+ can take a optional argument (in brackets). Its content will be printed after the stanza.
+%   \item The \protect\cs{stanza} command can take an optional argument (in brackets). Its content will be printed before the stanza. 
+%
+% Use \cs{AtEveryStanza}\marg{arg} to automatically add content at the begining of stanza.
+%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse. 
+%
+%  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verses (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verses (including the first one). 
+%   \item \verb+\&+ can take an optional argument (in brackets). Its content will be printed after the stanza.
+% 
+% Use \cs{AtEveryStopStanza} to automatically add content at the end of stanzas.
+%
 % \end{itemize}
+%
+% 
 % \subsection{Numbering stanza}\label{numbering-stanza}
 % \DescribeMacro{\numberstanzatrue}
 % \DescribeMacro{\numberstanzafalse}
@@ -2861,7 +2913,7 @@
 % \item Or set .
 % \package{glossaries}:\\ \verb+\glsSetCompositor{-}+
 % \item Or set \reledmac:\\  \verb+\renewcommand{\pagelinesep}{-}+\\
-% In this case, the will have consequences on your use of \cs{edindex}, and you should set your \verb+.ist+ file (\reff{\pagelinesep}).
+% In this case, the above will have consequences for your use of \cs{edindex} and you should set your \verb+.ist+ file (\reff{pagelinesep}).
 %
 % \end{itemize}
 % \subsection{Commands}
@@ -3264,23 +3316,23 @@
 %
 %
 % \subsection{Known and suspected limitations}
-% \subsubsection{Not standard geometry}
-% If you use class other than \ltxclass{article} or \ltxclass{book}, or if you use the geometry package, you should use \protect{maxhnotesX} and / or \cs{Xmaxhnotes} as explained in \reff{Xmaxhnotes} in order to prevent footnotes overlapping bottom margin.
+% \subsubsection{Non-standard geometry}
+% If you use classes other than \ltxclass{article} or \ltxclass{book}, or if you use the geometry package, you should use \protect{maxhnotesX} and\slash{}or \cs{Xmaxhnotes} as explained in \reff{Xmaxhnotes} in order to prevent footnotes from overlapping the bottom margin.
 %
 % \subsubsection{\package{floatrow} package compatibility}
 % The \package{floatrow} package must be loaded before the \macpackage.
 % \subsubsection{`No room for a new'}\label{noroom}
-% Sometime, especially when using \macpackage with other packages, you could obtain warning message such 'no room for a new count' or 'no room for a new write'.
+% Sometimes, especially when using \macpackage with other packages, you could obtain warning messages such 'no room for a new count' or 'no room for a new write'.
 %
-% The first thing in order to prevent such problem is to use the options to optimize \macpackage.
-% For example, if you need only two series of notes, use \verb+series={A,B}+ option.
-% Read \reff{optimize} in order to know which are there  options.
+% In order to prevent such problems, the first thing is to use the options to optimize \macpackage.
+% For example, if you need only two series of notes, use the \verb+series={A,B}+ option.
+% Read \reff{optimize} in order to know which are the available options.
 %
-% However, if with these options you still have such message, here are some tricks.
+% However, if with these options you still have such messages, here are some tricks.
 % \begin{description}
-%  \item['no room for a new count'] is often caused by a conjunction with \protect\package{biblatex}.
+%  \item['no room for a new count'] is often caused by a use in conjunction with \protect\package{biblatex}.
 %  Load \macpackage (and \parpackage) \emph{before} \protect\package{biblatex}.
-%  \item['no room for a new write'] can be caused by with multiple indexes.
+%  \item['no room for a new write'] can be caused by multiple indexes.
 % In this case, use \protect\package{indextools} of \protect\package{imakeidx} with the \verb+splitindex+ option, in order to obtain only one \verb+.idx+ file.
 % If that does not solve your problem, you can use \protect\package{morewrites} package.
 % That should solve the problem, but \LaTeX\ will be slower.
@@ -3496,7 +3548,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/05/02 v2.9.3 typeset critical edition]%
+\ProvidesPackage{reledmac}[2016/05/08 v2.10.0 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3821,7 +3873,8 @@
 %    \begin{macrocode}
 \newcommand*{\led@err@PstartNotNumbered}{%
   \reledmac@error{\string\pstart\space must be used within a 
-                numbered section}{\@ehc}}
+                numbered section %
+                 (\string\beginnumbering…\string\endnumbering)}{\@ehc}}%
 \newcommand*{\led@err@PstartInPstart}{%
   \reledmac@error{\string\pstart\space encountered while another
                 \string\pstart\space was in effect}{\@ehc}}
@@ -8638,6 +8691,7 @@
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
+  \csuse{Xbeforeinserting@#1}%
   \insert\csname #1footins\endcsname\bgroup
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
@@ -8691,20 +8745,9 @@
   \hangindent=\csuse{Xhangindent@#4}
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
   \strut{\printlinefootnote{#1}{#4}}%
-  {\nottoggle{Xlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
-    {{\csuse{Xlemmafont@#4}#2}}%
-  }%
-  \iftoggle{nosep@}{%
-    \hskip\csuse{Xinplaceoflemmaseparator@#4}%
-    \relax%
-  }%
-  {\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
-    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
-    \relax%
-  }}%
-  #3\strut\par}
+  \print@lemma{#1}{#2}{#4}%
+  \csuse{Xwrapcontent@#4}{#3}%
+  \strut\par}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9027,6 +9070,7 @@
 %
 %    \begin{macrocode}
 \newcommand*{\paravfootnote}[2]{%
+  \csuse{Xbeforeinserting@#1}%
   \insert\csname #1footins\endcsname
   \bgroup
     \csuse{Xnotefontsize@#1}
@@ -9115,9 +9159,9 @@
 % \begin{macro}{\parafootfmt}
 % \protect\cs{parafootfmt} is
 % \protect\cs{normalfootfmt} adapted to do the special stuff
-% needed for paragraphed notes---leaving out the \protect\cs{endgraf} at the
-% end, sticking in special penalties and kern, and leaving out the
-% \protect\cs{footstrut}.  The first argument is the line and page
+% needed for paragraphed notes --- leaving out the \protect\cs{endgraf} at the
+% end, sticking in special penalties and kern and leaving out the
+% \protect\cs{footstrut}. The first argument is the line and page
 % number information, the second is the lemma, the third is the
 % text of the footnote, and the fourth is the series (optional, for backward compatibility).
 %    \begin{macrocode}
@@ -9125,21 +9169,9 @@
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
-  {\nottoggle{Xlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
-    {{\csuse{Xlemmafont@#4}#2}}%
-  }%
-  \iftoggle{nosep@}{%
-    \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
-    }%
-    {\ifcsempty{Xlemmaseparator@#4}%
-      {%
-        \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
-      }%
-      {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
-    \relax%
-  }}%
-  #3\penalty-10 }
+  \print@lemma{#1}{#2}{#4}%
+  \csuse{Xwrapcontent@#4}{#3}%
+  \penalty-10 }
 %    \end{macrocode}
 % Note that in the above definition, the penalty of $-10$
 % encourages a line break between notes, so that notes have a
@@ -9396,6 +9428,7 @@
 % of the note (including numbers, lemma and text).
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
+  \csuse{Xbeforeinserting@#1}%
   \insert\csname #1footins\endcsname\bgroup%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
@@ -9426,20 +9459,10 @@
   \strut{%
   \hspace{\parindent}%
   \printlinefootnote{#1}{#4}%
- }%
-  {\nottoggle{Xlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
-    {{\csuse{Xlemmafont@#4}#2}}%
   }%
-  \iftoggle{nosep@}{%
-    \hskip\csuse{Xinplaceoflemmaseparator@#4}\relax%
-    }{%
-    \ifcsempty{Xlemmaseparator@#4}%
-      {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
-      {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
-    \relax%
-  }}%
-  #3\strut\par\allowbreak}
+  \print@lemma{#1}{#2}{#4}%
+  \csuse{Xwrapcontent@#4}{#3}%
+  \strut\par\allowbreak}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9543,6 +9566,7 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
+  \csuse{Xbeforeinserting@#1}%
   \insert\csname #1footins\endcsname\bgroup%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
@@ -9565,19 +9589,9 @@
  \hspace{\parindent}%
  \printlinefootnote{#1}{#4}%
  }%
-  {\nottoggle{Xlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xlemmafont@#4}#2}}%
-    {{\csuse{Xlemmafont@#4}#2}}%
-  }%
-  \iftoggle{nosep@}{%
-    \hskip\csuse{Xinplaceoflemmaseparator@#4}%
-    \relax%
-   }{\ifcsempty{Xlemmaseparator@#4}%
-    {\hskip\csuse{Xinplaceoflemmaseparator@#4}\relax}%
-    {\nobreak\hskip\csuse{Xbeforelemmaseparator@#4}\csuse{Xlemmaseparator@#4}\hskip\csuse{Xafterlemmaseparator@#4}%
-    \relax%
-  }}%
-  #3\strut\par\allowbreak}
+ \print@lemma{#1}{#2}{#4}%
+ \csuse{Xwrapcontent@#4}{#3}%
+ \strut\par\allowbreak}
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
@@ -9695,6 +9709,43 @@
 }
 %    \end{macrocode}
 % 
+% \end{macro}
+% \subsubsection{Lemma printing}
+% 
+% \begin{macro}{\print@lemma}
+% \cs{print@lemma} is called inside critical footnotes to print the lemma and the lemma separator (\#1: line number and font information, \#2: lemma, \#3: series).
+% \changes{v2.10.0}{2016/05/08}{Code refactoring between \protect\cs{parafootfmt}, \protect\cs{twocolfootfmt}, \protect\cs{threecolfootfmt} and \protect\cs{normalfootfmt}.}
+%    \begin{macrocode}
+% 
+\newcommand{\print@lemma}[3]{%
+  \bgroup%
+    \nottoggle{Xlemmadisablefontselection@#3}%
+      {\select@lemmafont#1|}%
+      {}%
+    \bgroup%
+      \csuse{Xlemmafont@#3}%Deprecated
+      \csuse{Xwraplemma@#3}{#2}%
+    \egroup%
+  \egroup%
+  \iftoggle{nosep@}{%
+    \hskip\csuse{Xinplaceoflemmaseparator@#3}%
+    \relax%
+    }%
+    {\ifcsempty{Xlemmaseparator@#3}%
+      {%
+        \hskip\csuse{Xinplaceoflemmaseparator@#3}%
+        \relax%
+      }%
+      {%
+        \nobreak%
+        \hskip\csuse{Xbeforelemmaseparator@#3}%
+        \csuse{Xlemmaseparator@#3}%
+        \hskip\csuse{Xafterlemmaseparator@#3}%
+        \relax%
+      }%
+  }%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \subsubsection{Line number printing}
 % \begin{macro}{\printlinefootnote}
@@ -10445,6 +10496,7 @@
 % \meta{text}.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
+  \csuse{beforeinsertingX@#1}%
   \insert\@nameuse{footins#1}\bgroup
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -10496,7 +10548,8 @@
   \hangindent=\csuse{hangindentX@#1}%
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
   {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}\strut%
-    #2\strut\par}}
+    \csuse{wrapcontentX@#1}{#2}%
+  \strut\par}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -10778,6 +10831,7 @@
 % \protect\cs{twocolvfootnoteX}\marg{series}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
+  \csuse{beforeinsertingX@#1}%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -10808,7 +10862,8 @@
  \parindent=\@tempdima%
   {\hspace{\parindent}%
   \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}%
+    \csuse{wrapcontentX@#1}{#2}%
+    \strut\par}%
  \allowbreak%
 }%
 
@@ -10901,6 +10956,7 @@
 % \protect\cs{threecolvfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
+  \csuse{beforeinsertingX@#1}%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -10929,7 +10985,8 @@
   \parindent=\@tempdima%
   {\hspace{\parindent}%
   \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
-    #2\strut\par}\allowbreak}
+    \csuse{wrapcontentX@#1}{#2}%
+    \strut\par}\allowbreak}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11056,6 +11113,7 @@
 % \protect\cs{para@vfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \newcommand*{\para@vfootnoteX}[2]{%
+ \csuse{beforeinsertingX@#1}%
  \insert\csname footins#1\endcsname%
   \bgroup
     \csuse{notefontsizeX@#1}
@@ -11119,7 +11177,8 @@
    \csuse{notenumfontX@#1}%
    \wrapped@footfootmarkX{#1}%
    \strut%
-    #2\penalty-10}}
+    \csuse{wrapcontentX@#1}{#2}%
+    \penalty-10}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11590,8 +11649,12 @@
   \undef\@this@crossref@start%
   \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|{\csuse{Xendlemmafont@#4}#2}}%
-    {{\csuse{Xendlemmafont@#4}#2}}%
+    {\select@lemmafont#1|}%
+    {}%
+  \bgroup%
+    \csuse{Xendlemmafont@#4}%
+    \csuse{Xendwraplemma@#4}{#2}%
+  \egroup%
   \ifboolexpr{%
     togl {nosep@}%
     or test{\ifcsempty{Xendlemmaseparator@#4}}%
@@ -11603,7 +11666,7 @@
      \hskip\csuse{Xendafterlemmaseparator@#4}%
      \relax%
     }%
-  #3%
+  \csuse{Xendwrapcontent@#4}{#3}%
   \nottoggle{Xendparagraph@#4}{\par}{}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -11974,6 +12037,8 @@
       \newtoggle{Xlineflag@#1}
       \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
+      \csgdef{Xwrapcontent@#1}{}%
+      \csgdef{Xbeforeinserting@#1}{}%
       \csgdef{Xhangindent@#1}{0pt}%
       \csgdef{Xragged@#1}{}%
       \csgdef{Xhsizetwocol@#1}{0.45 \hsize}%
@@ -12026,6 +12091,7 @@
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
       
       \csgdef{Xlemmafont@#1}{}%
+      \csgdef{Xwraplemma@#1}{}
       \csgdef{Xwidth@#1}{\hsize}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
@@ -12153,7 +12219,9 @@
 % \subsubsection{Options}
 %    \begin{macrocode}
       \newtoggle{parindentX@#1}
+      \csgdef{wrapcontentX@#1}{}%
       \csgdef{hangindentX@#1}{0pt}%
+      \csgdef{beforeinsertingX@#1}{}%
       \csgdef{raggedX@#1}{}%
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
       \csgdef{hsizethreecolX@#1}{.3 \hsize}%
@@ -12308,6 +12376,8 @@
 %    \end{macrocode}
 % \subsubsection{The options}
 %    \begin{macrocode}
+      \csgdef{Xendwraplemma@#1}{}
+      \csgdef{Xendwrapcontent@#1}{}%
       \csgdef{Xendtwolines@#1}{}%
       \csgdef{Xendmorethantwolines@#1}{}%
       \newtoggle{Xendtwolinesbutnotmore@#1}{}%
@@ -12597,7 +12667,10 @@
 % Before generating the commands that are used to set the critical notes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator} and the like, we check the \verb+nocritical+ option.
 %    \begin{macrocode}
 \unless\ifnocritical@
+  \newhookcommand@series{Xwrapcontent}%
+  \newhookcommand@series{Xbeforeinserting}%
   \newhookcommand@series{Xlemmafont}%
+  \newhookcommand@series{Xwraplemma}%
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -12670,6 +12743,8 @@
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
 %    \begin{macrocode}
 \unless\ifnofamiliar@
+  \newhookcommand@series{wrapcontentX}%
+  \newhookcommand@series{beforeinsertingX}%
   \newhooktoggle@series{parindentX}
   \newhookcommand@series{hangindentX}
   \newhookcommand@series{raggedX}
@@ -12701,6 +12776,8 @@
 % Before generating the commands that are used to set the endnotes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator}+ and the like, we check the \verb+noend+ option.
 %    \begin{macrocode}
 \unless\ifnoend@
+  \newhookcommand@series{Xendwraplemma}
+  \newhookcommand@series{Xendwrapcontent}
   \newhookcommand@series{Xendnotenumfont}
   \newhookcommand@series{Xendlemmafont}%
   \newhookcommand@series{Xendbhooknote}
@@ -14186,21 +14263,30 @@
 % get displayed in the margins.
 %    \begin{macrocode}
 \newcommand*{\setl@dlp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledlsnotewidth\ledlsnotefontsetup
-   \global\setbox\l@dlp@rbox
-   \ifleftnoteup
-     =\vbox to\z@{\vss #1}%
-   \else
-     =\vbox to 0.70\baselineskip{\strut#1\vss}%
-   \fi}}
+   \begingroup%
+     \parindent\z@\hsize=\ledlsnotewidth%
+     \ledlsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
+     \global\setbox\l@dlp@rbox%
+     \ifleftnoteup%
+       =\vbox to\z@{{\ledlsnotefontsetup\vss #1}}%We put \ledlsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+     \else%
+       =\vbox to 0.70\baselineskip{{\ledlsnotefontsetup\strut#1\vss}}%
+     \fi%
+   \endgroup%
+}
+
 \newcommand*{\setl@drp@rbox}[1]{%
-  {\parindent\z@\hsize=\ledrsnotewidth\ledrsnotefontsetup
-   \global\setbox\l@drp@rbox
-   \ifrightnoteup
-     =\vbox to\z@{\vss#1}%
-   \else
-     =\vbox to0.7\baselineskip{\strut#1\vss}%
-   \fi}}
+  \begingroup%
+     \parindent\z@\hsize=\ledrsnotewidth%
+     \ledrsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
+     \global\setbox\l@drp@rbox%
+     \ifrightnoteup%
+       =\vbox to\z@{{\ledrsnotefontsetup\vss#1}}%We put \ledrsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+     \else%
+       =\vbox to0.7\baselineskip{{\ledrsnotefontsetup\strut#1\vss}}%
+     \fi%
+  \endgroup%
+}%
 \newif\ifleftnoteup
   \leftnoteuptrue
 %    \end{macrocode}
@@ -15326,6 +15412,8 @@
 % \changes{v1.12.0}{2014/08/05}{\ampersand can have an optional argument: content to be printed after.}
 % \changes{v1.20.0}{2015/03/22}{\ampersand\ and \textbackslash\ampersand\ can be preceded by spaces.}
 % \begin{macro}{\@stopstanza}
+% \begin{macro}{\AtEveryStopStanza}
+% \begin{macro}{\AtEveryStanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \protect\cs{falseverse} macro.}
 % Now we have the components of the \protect\cs{stanza} macro,
@@ -15360,19 +15448,41 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
-   \noexpand\stanza@line[#1]\noexpand\@insertstanzanumber%
+   \noexpand\stanza@line[#1]%
+   \noexpand\@insertstanzanumber%
    \let\par\relax\ignorespaces%No paragraph in verses
 }
 
-\newcommandx{\stanza}[1][1,usedefault]{\@startstanza[#1]}
+\newcommandx{\stanza}[1][1,usedefault]{%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
+    {\@startstanza[\at@every@stanza]}%
+    {\@startstanza[#1]}%
+}%
 
 \newcommandx{\@stopstanza}[1][1,usedefault]{%
   \unskip%
   \endlock%
-  \pend[#1]%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
+      {\pend[\at@every@stop@stanza]}%
+      {\pend[#1]}%
   \endgroup%
   \instanzafalse%
 }
+
+\newcommand{\AtEveryStopStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{#1}}%
+}%
+\def\at@every@stop@stanza{}%
+
+\newcommand{\AtEveryStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{#1}}%
+}%
+\def\at@every@stanza{}%
+
 
 \newcommandx*{\newverse}[2][1,2,usedefault]{%
   \unskip%
@@ -15381,6 +15491,8 @@
   }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}

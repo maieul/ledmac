@@ -270,6 +270,8 @@
 % \changes{v2.8.0}{2016/03/23}{{Allow continuing line numbering between normal text and parallel text, using \protect\cs{pausenumbering} and \protect\cs{resumenumbering} and the \protect\option{continuousnumberingwithcolumns} options.}}
 % \changes{v2.8.0}{2016/03/23}{Fix bug when the right line number style is not the same to the left line number style}
 % \changes{v2.8.0}{2016/03/23}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
+% \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
+% \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1170,7 +1172,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/03/23 v2.8.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/05/08 v2.9.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1429,6 +1431,13 @@
   Such behavior is deprecated.\MessageBreak%
   Use instead #1R or #1* in your preamble.}%
 }
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@missing@numbering}
+%    \begin{macrocode}
+\newcommand{\led@error@missing@numbering}[1]{%
+  \reledpar@error{Missing \string\pstart…\string\pend\space inside `#1` environment}{\@ehc}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Sectioning commands}
@@ -2951,6 +2960,9 @@
   \let\old@startstanza\@startstanza
   \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
 }{
+  \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname%
+    \led@error@missing@numbering{Leftside}%
+  \fi%
     \Leftsidehookend}
 %    \end{macrocode}
 % \end{environment}
@@ -3002,6 +3014,9 @@
   \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
 }{%
   \ledRcolfalse
+ \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
+    \led@error@missing@numbering{Rightside}%
+  \fi%
   \Rightsidehookend
 }
 
@@ -4538,7 +4553,9 @@
     \global\advance\stanza@count\@ne
     \@astanza@line}%
   \def\&{\@stopastanza}%
-  \pstart[#1]%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
+    {\pstart[\at@every@stanza]}%
+    {\pstart[#1]}%
   \@astanza@line
   \let\par\relax\ignorespaces%No paragraph in verses
 }{}
@@ -4551,8 +4568,10 @@
 % It allows optional arguments. 
 %    \begin{macrocode}
 \newcommandx{\@stopastanza}[1][1,usedefault]{%
-    \endlock\mbox{}%
-    \pend[#1]%
+  \endlock\mbox{}%
+  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
+      {\pend[\at@every@stop@stanza]}%
+      {\pend[#1]}%
 }%
 %    \end{macrocode}
 % \end{macro}
