@@ -15545,6 +15545,23 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\stopmsdata}
+% The user level \cs{stopmsdata} command only write information about the end of manuscript data on numbered auxiliary file.
+%    \begin{macrocode}
+\newcommand{\stopmsdata}[0]{%
+  \leavevmode%
+  \unless\ifledRcol%
+    \protected@write\linenum@out{}{%
+      \string\@stopmsd%
+    }%
+  \else%
+    \protected@write\linenum@outR{}{%
+      \string\@stopmsd%
+    }%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Counters}
 % \begin{macro}{\@msd@c}
 % \cs{@msd@c} is a counter used for \cs{@msd} read in auxiliary file. 
@@ -15556,20 +15573,38 @@
 % \subsection{Auxiliary file macros}
 % \begin{macro}{\@msd}
 % The \cs{@msd} macro is written in the auxiliary file.
-% It just set three command by \cs{msdata} macro, which allow us to know the manuscript's data, the line number where it was called and the page where it was called.
+% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number where it was called and the page where it was called. 
+% If no \cs{@stopmsd} macro was called before it, it also defines a \cs{@msdata@\meta{number}@endlinenumber} macro. 
 %    \begin{macrocode}
 \newcommand{\@msd}[1]{%
   \unless\ifledRcol%
+    \ifcsundef{@msdata@\@msd@c @stoplinenumber}%
+      {\csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}}%
+      {}%
     \numdef{\@msd@c}{\@msd@c+1}%
     \csxdef{@msdata@\@msd@c @data}{#1}%
     \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
     \csxdef{@msdata@\@msd@c @pagenumber}{\the\page@num}%
   \else%
+    \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}%
+      {\csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}}%
+      {}%
     \numdef{\@msd@cR}{\@msd@cR+1}%
     \csxdef{@msdata@\@msd@cR @dataR}{#1}%
     \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
     \csxdef{@msdata@\@msd@cR @pagenumberR}{\the\page@numR}%
  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@endmsd}
+%    \begin{macrocode}
+\newcommand{\@stopmsd}[0]{%
+  \unless\ifledRcol% 
+     \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
+  \else% 
+    \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
