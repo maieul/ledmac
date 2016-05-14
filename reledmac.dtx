@@ -7599,6 +7599,10 @@
 %    \begin{macrocode}
     \l@dld@ta%
 %    \end{macrocode}
+% Insert manuscript data footnotes.
+%    \begin{macrocode}
+        \insert@msdata%
+%    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
         \add@inserts\affixside@note%
@@ -7647,6 +7651,7 @@
 % Because of how this prints, a vertical spacing correction is added.
 %    \begin{macrocode}
 \def\print@eledsection{%
+    \insert@msdata%
     \add@inserts\affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
@@ -7904,6 +7909,7 @@
 % This macro handles the fixed codes for \protect\cs{do@actions}. It is
 % one big case statement.
 % \changes{v0.7.0}{2005/02/24}{Added \protect\cs{do@actions@fixedcode}}
+% \changes{v2.11.0}{2016/05/21}{Add action 1010}
 %    \begin{macrocode}
 \newcommand*{\do@actions@fixedcode}{%
   \ifcase\@l@dtempcnta
@@ -7931,8 +7937,10 @@
     \l@dskipnumbertrue
   \or%                   	% 1008 = skipping numbering in stanza
     \l@dskipversenumbertrue%
- \or%    									% 1009 = hiding number
+  \or%    								% 1009 = hiding number
     \l@dhidenumbertrue
+  \or%									  % 1010 = inserting msdata
+    \add@msdata%
   \else
     \led@warn@BadAction
   \fi}
@@ -15562,19 +15570,47 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Counters}
+% \subsection{Setting macro}
+% The setting macros of the manuscripts apparatus tools are very easy: they just save argument in internal macro.
+% \begin{macro}{\setmsdataseries}
+% In which seris of note will be printed the manuscripts apparatus? 
+%    \begin{macrocode}
+\newcommand{\setmsdataseries}[1]{%
+  \gdef\@msdata@series{#1}%
+}%
+\def\@msdata@series{A}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Counters and lists}
 % \begin{macro}{\@msd@c}
-% \cs{@msd@c} is a counter used for \cs{@msd} read in auxiliary file. 
+% \cs{@msd@c} is a counter increased at each \cs{@msd} read in auxiliary file. 
 %    \begin{macrocode}
 \numdef{\@msd@c}{0}
 \numdef{\@msd@cR}{0}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@msd@c}
+% \cs{add@msd@} is a counter increased at each \cs{add@msd@}.
+%    \begin{macrocode}
+\numdef{\add@msd@c}{0}%
+\numdef{\add@msd@cR}{0}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@msdata@list}
+% The \cs{@msdata@list} will contain, for each line, the lists of command to be executed to insert the manuscript's apparatus.
+% It will be filled on \cs{add@msdata} and looped then emptied on  \cs{insert@msdata}.
+%    \begin{macrocode}
+\def\@msdata@list{}%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Auxiliary file macros}
 % \begin{macro}{\@msd}
 % The \cs{@msd} macro is written in the auxiliary file.
 % It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number where it was called and the page where it was called. 
+%
 % If no \cs{@stopmsd} macro was called before it, it also defines a \cs{@msdata@\meta{number}@endlinenumber} macro. 
+%
+% It also stores the action code $1010$ in the list of actions by line.
 %    \begin{macrocode}
 \newcommand{\@msd}[1]{%
   \unless\ifledRcol%
@@ -15588,6 +15624,8 @@
     \csgdef{@msdata@\@msd@c @data}{#1}%
     \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
     \csxdef{@msdata@\@msd@c @pagenumber}{\the\page@num}%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%
+    \xright@appenditem{-1010}\to\actions@list%
   \else%
     \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}%
       {%
@@ -15599,6 +15637,8 @@
     \csgdef{@msdata@\@msd@cR @dataR}{#1}%
     \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
     \csxdef{@msdata@\@msd@cR @pagenumberR}{\the\page@numR}%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1010}\to\actions@listR%
  \fi%
 }%
 %    \end{macrocode}
@@ -15613,6 +15653,61 @@
      \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
      \csxdef{@msdata@\@msd@c @stoppagenumberR}{\the\page@numR}%
  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Action macro}
+% \begin{macro}{\add@msdata}
+% \cs{add@msdata} is executed on each line when action code 1009 is seen.
+% It will not insert immediately the manuscript data footnote, as action code are executed before the line be typeset, and, consequently, could be on the previous page.
+% So it just store the manuscript data footnote to \cs{@msdata@list}.
+%    \begin{macrocode}
+\newcommand{\add@msdata}{%
+  \unless\ifledRcol@%
+    \numgdef{\add@msd@c}{\add@msd@c+1}%
+      \ifcsdef{@msdata@\add@msd@c @data}{%
+        \letcs{\@data}{@msdata@\add@msd@c @data}%
+        \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@c @linenumber}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \csuse{@msdata@\add@msd@c @stoplinenumber}|%End line number
+          000|% End sub line number, for now, not used
+          OT1/cmr/m/n%Font
+          }% 
+        \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
+      }%
+      {}%
+  \else%
+    \numgdef{\add@msd@cR}{\add@msd@cR+1}%
+      \ifcsdef{@msdata@\add@msd@cR @data}{%
+        \letcs{\@data}{@msdata@\add@msd@cR @data}%
+        \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@cR @linenumber}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \csuse{@msdata@\add@msd@cR @stoplinenumber}|%End line number
+          000|% End sub line number, for now, not used
+          OT1/cmr/m/n%Font
+          }% 
+        \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
+      }%
+      {}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% 
+% \subsection{Inserting footnote}
+% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript data footnote.
+% \begin{macro}{\insert@msdata}
+%    \begin{macrocode}
+\newcommand{\insert@msdata}{%
+  \def\do##1{##1}%
+  \dolistloop{\@msdata@list}%
+  \global\let\@msdata@list\relax%
 }%
 %    \end{macrocode}
 % \end{macro}
