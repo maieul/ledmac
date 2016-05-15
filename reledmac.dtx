@@ -7621,10 +7621,11 @@
 %    \begin{macrocode}
         \l@dld@ta%
 %    \end{macrocode}
-% Insert text before notes.
+% Insert text before notes, and prepare ms data for this page.
 %    \begin{macrocode}
         \if@firstlineofpage%
           \add@txtbeforenotes%
+          \add@msdata@fistlineofpage%
           \global\@firstlineofpagefalse%
         \fi%
 %    \end{macrocode}
@@ -7682,6 +7683,7 @@
 \def\print@eledsection{%
     \if@firstlineofpage%
       \add@txtbeforenotes%
+      \add@msdata@fistlineofpage%
       \global\@firstlineofpagefalse%
     \fi%
     \insert@msdata%
@@ -15772,6 +15774,55 @@
 %    \end{macrocode}
 % \end{macro}
 % 
+% \begin{macro}{\add@msdata@fistlineofpage}
+% \cs{add@msdata@fistlineofpage} is called at the first line of every page. It will insert manuscript data which start on one of the previous pages and continue on this page. 
+%    \begin{macrocode}
+\newcommand{\add@msdata@fistlineofpage}{%
+  \bgroup%
+  \normalfont%  
+  \unless\ifledRcol@%
+    \ifnumgreater{\csuse{@msdata@\add@msd@c @stoppagenumber}+1}{\the\page@num}%
+      {%
+      \letcs{\@data}{@msdata@\add@msd@c @data}%
+      \edef\l@d@nums{%
+        000|% Start page = we don't print it
+        \the\line@num|% Start line number = first line of the page = current line
+        000|% Start subline number, for now, not used
+        000|% End page number, we don't print it
+        \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%
+          {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
+          {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
+        |%
+        000|% End sub line number, for now, not used
+        \edfont@info%Font
+        }% 
+        \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
+      }%
+      {}%
+  \else%
+    \ifnumgreater{\csuse{@msdata@\add@msd@cR @stoppagenumber}+1}{\the\page@numR}%
+          {%
+          \letcs{\@data}{@msdata@\add@msd@cR @data}%
+          \edef\l@d@nums{%
+            000|% Start page = we don't print it
+            \the\line@num|% Start line number = first line of the page = current line
+            000|% Start subline number, for now, not used
+            000|% End page number, we don't print it
+            \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%
+              {\csuse{@msdata@\add@msd@cR @stoplinenumber}}%End line number if in the same page
+              {\csuse{@lastline@forpage@\the\page@numR}}%Otherwiser, last number of the page
+            |%
+            000|% End sub line number, for now, not used
+            \edfont@info%Font
+            }% 
+            \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
+          }%
+          {}%
+  \fi%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Inserting footnote}
 % Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript data footnote.
 % \begin{macro}{\insert@msdata}
