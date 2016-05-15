@@ -5337,6 +5337,7 @@
        \global\page@num=\page@num\relax
        \global\last@page@num=\last@page@num\relax
   \fi
+  \@stopmsd%Security if people forget last \endms
   \endgroup  
 %    \end{macrocode}
 %
@@ -15712,11 +15713,16 @@
 %    \begin{macrocode}
 \newcommand{\@stopmsd}[0]{%
   \unless\ifledRcol% 
-     \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
-     \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
+     \ifcsundef{@msdata@\@msd@c @stoplinenumber}{%
+       \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
+       \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
+     }{}%
   \else% 
-     \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
-     \csxdef{@msdata@\@msd@c @stoppagenumberR}{\the\page@numR}%
+     \ifcsundef{@msdata@\@msd@cR @stoplinenumber}{%
+       \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
+       \csxdef{@msdata@\@msd@c @stoppagenumberR}{\the\page@numR}%
+     }%
+     {}%
  \fi%
 }%
 %    \end{macrocode}
