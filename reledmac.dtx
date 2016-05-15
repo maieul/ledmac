@@ -5338,6 +5338,11 @@
        \global\last@page@num=\last@page@num\relax
   \fi
   \@stopmsd%Security if people forget last \endms
+  \unless\ifledRcol%Get the last line of the last page
+    \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
+  \else%
+    \csnumgdef{@lastline@forpage@\the\page@numR}{\the\line@numR}%
+  \fi%
   \endgroup  
 %    \end{macrocode}
 %
@@ -15802,7 +15807,17 @@
         000|% End sub line number, for now, not used
         \edfont@info%Font
         }% 
-        \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
+        \listxadd{\@msdata@list}{%
+          \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%Does it  empty all the page?
+            {\ifnumequal{\csuse{@msdata@\add@msd@c @stoplinenumber}}{\csuse{@lastline@forpage@\the\page@num}}%
+              {\noexpand\toggletrue{nonum@}}%
+              {}%
+            }%
+            {%
+            \noexpand\toggletrue{nonum@}%
+            }%
+          \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}%
+        }%
       }%
       {}%
   \else%
@@ -15821,9 +15836,19 @@
             000|% End sub line number, for now, not used
             \edfont@info%Font
             }% 
-            \listxadd{\@msdata@list}{\noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}}%
-          }%
-          {}%
+        \listxadd{\@msdata@list}{%
+          \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%Does it  empty all the page?
+            {\ifnumequal{\csuse{@msdata@\add@msd@cR @stoplinenumber}}{\csuse{@lastline@forpage@\the\page@numR}}%
+              {\noexpand\toggletrue{nonum@}}%
+              {}%
+            }%
+            {%
+            \noexpand\toggletrue{nonum@}%
+            }%
+          \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{ms}{\expandonce\@data}}%
+        }%
+     }%
+     {}%
   \fi%
   \egroup%
 }%
