@@ -5574,6 +5574,7 @@
   \ifledRcol
     \ifnum #1=\last@page@numR
     \else
+      \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
       \fi
@@ -5584,6 +5585,7 @@
   \else
     \ifnum #1=\last@page@num
     \else
+      \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
         \line@num \z@ \subline@num \z@
       \fi
@@ -15733,7 +15735,10 @@
           \csuse{@msdata@\add@msd@c @linenumber}|% Start line number
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
-          \csuse{@msdata@\add@msd@c @stoplinenumber}|%End line number
+          \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%
+            {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
+          |%
           000|% End sub line number, for now, not used
           OT1/cmr/m/n%Font
           }% 
@@ -15749,7 +15754,10 @@
           \csuse{@msdata@\add@msd@cR @linenumber}|% Start line number
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
-          \csuse{@msdata@\add@msd@cR @stoplinenumber}|%End line number
+          \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%
+            {\csuse{@msdata@\add@msd@cR @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwiser, last number of the page
+          |%
           000|% End sub line number, for now, not used
           OT1/cmr/m/n%Font
           }% 
