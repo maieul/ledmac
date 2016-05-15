@@ -397,6 +397,7 @@
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
 % \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
+% \changes{v2.10.1}{2016/05/15}{Add `nopenalties` option.}
 % \changes{v2.10.1}{2016/05/15}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -676,11 +677,12 @@
 % \begin{description}
 % \item[draft] underlines lemmas in the main text.
 % \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
+% \item[nopenalties] to be called in some case when using paragraphed endnotes to solve problem (\reff{nopenalties)}
 % \item[nopbinverse] prevents page breaks inside verses.
 % \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
 % \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
-% \item[xindy] and \verb|xindy+hyperref| are for selecting \verb+xindy+ as the index processor (\reff{xindy}).
 % \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
+% \item[xindy] and \verb|xindy+hyperref| are for selecting \verb+xindy+ as the index processor (\reff{xindy}).
 % \end{description}
 % 
 % \subsection{Optimizing package performance}\label{option:performance}
@@ -1949,7 +1951,7 @@
 %
 % \subsection{Wrapping notes}
 % \subsubsection{Wrapping lemmas}
-% \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
+% \changes{v2.10.2}{2016/05/15}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
 % \DescribeMacro{\Xwraplemma}\label{Xwraplemma}
 % \cs{Xwraplemma}\oarg{s}\marg{cmd} is used to wrap, in the footnote, the lemma in a \LaTeX\ command. 
 % For example, with the \package{bidi} package, to ensure having a lemma written right to left, use \cs{Xwraplemma}\arg{\cs{RL}}.
@@ -3380,7 +3382,12 @@
 % solutions, described by Michael Downes\index{Downes, Michael},
 % but this area remains unsatisfactory.
 %
+% \label{nopenalties}If you use more than one series of  paragraphed notes, it can happen, in some specific case, that footnotes are not printed, but only footnote rules.
+% It this case you should use the \reledmac's package option \opt{nopenalties}. 
+% It should solve the problem, but that could implies widow line orphan line. 
+% For now, we have no solution for this problem.
 %
+% 
 %
 % \DescribeMacro{\footfudgefiddle}
 % For paragraphed footnotes \TeX{} has to estimate the amount of space
@@ -3644,6 +3651,9 @@
 \DeclareOptionX{eledmac-compat}{%
   \eledmaccompat@true%
 }%
+\DeclareOptionX{nopenalties}{%
+  \AtBeginDocument{\let\add@penalties\relax}%
+}
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
