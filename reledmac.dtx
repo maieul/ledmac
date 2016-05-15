@@ -3736,6 +3736,14 @@
 \ifdef{\if@RTL}{}{\newif\if@RTL}
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\if@firstlineofpage}
+% \cs{if@firstlineofpage} is set to TRUE at the first line of every page.
+% \cs{if@firstlineofpageR} is for right side.
+%    \begin{macrocode}
+\newif\if@firstlineofpage%
+\newif\if@firstlineofpageR%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Messages}
 %
 % All the messages are grouped here as macros. This saves \TeX's memory
@@ -7600,6 +7608,13 @@
 %    \begin{macrocode}
         \l@dld@ta%
 %    \end{macrocode}
+% Insert text before notes.
+%    \begin{macrocode}
+        \if@firstlineofpage%
+          \add@txtbeforenotes%
+          \global\@firstlineofpagefalse%
+        \fi%
+%    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
         \add@inserts\affixside@note%
@@ -7648,6 +7663,10 @@
 % Because of how this prints, a vertical spacing correction is added.
 %    \begin{macrocode}
 \def\print@eledsection{%
+    \if@firstlineofpage%
+      \add@txtbeforenotes%
+      \global\@firstlineofpagefalse%
+    \fi%
     \add@inserts\affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
@@ -7841,6 +7860,7 @@
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
+       \global\@firstlineofpagetrue%
        \ifbypage@
          \global\line@num=\z@ \global\subline@num=\z@
          \resetprevline@
@@ -8421,7 +8441,24 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \subsection{Texte before notes}
+% \begin{macro}{\add@txtbeforenotes}
+% The \cs{Xtxtbeforesnotes} allow to insert automatically text before the group of notes, after the footnote rule.
+% In reality, we just automatically add inserts on the first line of every page, using \cs{add@txtbeforenotes}.
+% This macro does do the test about the position of the line in the page: it is done before (\cs{if@firstlineofpage} or \cs{if@firstlineofpageR}).
+%    \begin{macrocode}
+\newcommand{\add@txtbeforenotes}{%
+  \def\do##1{%
+    \ifcsvoid{Xtxtbeforenotes@##1}{}{%
+      \expandafter\insert\csname##1footins\endcsname\bgroup%
+        {\noindent\strut\csuse{Xnotefontsize@##1}\csuse{Xtxtbeforenotes@##1}\endgraf}%
+      \egroup%
+    }%
+  }%
+  \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Critical footnotes}
 % \label{footnotes}
 %
