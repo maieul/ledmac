@@ -5339,8 +5339,10 @@
   \fi
   \@stopmsd%Security if people forget last \endms
   \unless\ifledRcol%Get the last line of the last page
+    \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
     \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
   \else%
+    \csnumgdef{@lastabsline@forpage@\the\page@numR}{\the\absline@numR}%
     \csnumgdef{@lastline@forpage@\the\page@numR}{\the\line@numR}%
   \fi%
   \endgroup  
@@ -5580,6 +5582,7 @@
   \ifledRcol
     \ifnum #1=\last@page@numR
     \else
+      \csnumgdef{@lastabsline@forpageR@\the\page@numR}{\the\absline@numR}%
       \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
@@ -5591,6 +5594,7 @@
   \else
     \ifnum #1=\last@page@num
     \else
+      \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
       \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
         \line@num \z@ \subline@num \z@
@@ -15697,6 +15701,7 @@
     \ifcsundef{@msdata@\@msd@c @stoplinenumber}%
       {%
        \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
+       \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\absline@num}%
        \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
       }%
       {}%
@@ -15710,7 +15715,8 @@
     \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}%
       {%
         \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
-	\csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
+	      \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
+	      \csxdef{@msdata@\@msd@cR @stopabslinenumberR}{\the\absline@numR}%
       }%
       {}%
     \numdef{\@msd@cR}{\@msd@cR+1}%
@@ -15728,11 +15734,13 @@
 \newcommand{\@stopmsd}[0]{%
   \unless\ifledRcol% 
      \ifcsundef{@msdata@\@msd@c @stoplinenumber}{%
+       \csxdef{@msdata@\@msd@c @stopabslinenumber}{\the\absline@num}%
        \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
        \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
      }{}%
   \else% 
      \ifcsundef{@msdata@\@msd@cR @stoplinenumber}{%
+       \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\absline@numR}%
        \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
        \csxdef{@msdata@\@msd@c @stoppagenumberR}{\the\page@numR}%
      }%
@@ -15768,7 +15776,7 @@
           }% 
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumequal{\csuse{@lastline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stoplinenumber}}%
+            \ifnumequal{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}}%
             {\@msd@options@iffullpage}%
             {}%
           \fi%
@@ -15794,7 +15802,7 @@
           }%
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumequal{\csuse{@lastline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stoplinenumber}}%
+            \ifnumequal{\csuse{@lastline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumber}}%
             {\@msd@options@iffullpage}%
             {}%
           \fi%
@@ -15833,7 +15841,7 @@
         }% 
         \listxadd{\@msdata@list}{%
           \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%Does it  empty all the page?
-            {\ifnumequal{\csuse{@msdata@\add@msd@c @stoplinenumber}}{\csuse{@lastline@forpage@\the\page@num}}%
+            {\ifnumequal{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
               {\@msd@options@iffullpage}%
               {}%
             }%
@@ -15864,7 +15872,7 @@
             }% 
         \listxadd{\@msdata@list}{%
           \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%Does it  empty all the page?
-            {\ifnumequal{\csuse{@msdata@\add@msd@cR @stoplinenumber}}{\csuse{@lastline@forpage@\the\page@numR}}%
+            {\ifnumequal{\csuse{@msdata@\add@msd@cR @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@numR}}%
               {\@msd@options@iffullpage}%
               {}%
             }%
