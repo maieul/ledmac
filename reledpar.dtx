@@ -272,6 +272,7 @@
 % \changes{v2.8.0}{2016/03/23}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
 % \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
+% \changes{v2.9.1}{2016/05/15}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1172,7 +1173,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/05/08 v2.9.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/05/15 v2.9.1 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3409,7 +3410,15 @@
         \affixline@num%
       \fi%
       \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-        {\insert@msdata\add@inserts\affixside@note}%
+        {%
+          \if@firstlineofpage%
+            \add@txtbeforenotes%
+            \global\@firstlineofpagefalse%
+          \fi%
+          \add@inserts%
+          \insert@msdata%
+          \affixside@note%
+        }%
         {\print@lineL}%
       }%
     \add@penaltiesL%
@@ -3422,7 +3431,7 @@
       \getline@numL%
       \affixline@num%
       \setbox\l@dleftbox \hb@xt@ \Lcolwidth{%
-        \l@dld@ta %space kept for backward compatibility
+        \l@dld@ta%
         \hspace*{\Lcolwidth}%
         \ledrlfill\l@drd@ta%
       }%
@@ -3443,10 +3452,14 @@
 %    \begin{macrocode}
 \def\print@lineL{%
     \affixpstart@numL%
-    \l@dld@ta %space kept for backward compatibility
+    \l@dld@ta%
+    \if@firstlineofpage%
+      \add@txtbeforenotes%
+      \global\@firstlineofpagefalse%
+    \fi%
     \insert@msdata%
     \add@inserts\affixside@note%
-    \l@dlsn@te %space kept for backward compatibility
+    \l@dlsn@te%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
             \do@insidelineLhook%
             \ifluatex%
@@ -3569,7 +3582,15 @@
         \affixline@numR%
       \fi%
      \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-       {\insert@msdata\add@insertsR\affixside@noteR}%
+       {%
+         \if@firstlineofpageR%
+           \add@txtbeforenotes%
+           \global\@firstlineofpageRfalse%
+         \fi%
+         \insert@msdata%
+         \add@insertsR%
+         \affixside@noteR%
+       }%
        {\print@lineR}%
     }%
     \add@penaltiesR%
@@ -3582,7 +3603,7 @@
       \getline@numR%
       \setbox\l@drightbox \hb@xt@ \Rcolwidth{%
         \affixline@numR%
-        \l@dld@ta  %space kept for backward compatibility
+        \l@dld@ta%
         \hspace*{\Rcolwidth}%
         \ledrlfill\l@drd@ta%
       }%
@@ -3605,10 +3626,14 @@
 % \changes{v1.12.0}{2015/02/23}{Compatibility with \LuaLaTeX\ RTL languages.}
 \def\print@lineR{%
     \affixpstart@numR%
-    \l@dld@ta  %space kept for backward compatibility
+    \l@dld@ta%
+    \if@firstlineofpageR%
+      \add@txtbeforenotes%
+      \global\@firstlineofpageRfalse%
+    \fi%
     \insert@msdata%
     \add@insertsR\affixside@noteR%
-    \l@dlsn@te  %space kept for backward compatibility
+    \l@dlsn@te%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
        \do@insidelineRhook%
        \new@lineR%
@@ -3779,11 +3804,13 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
+      \@firstlineofpageRtrue%
       \global\page@numR=\next@actionR
       \ifbypage@R
         \global\line@numR \z@  \global\subline@numR \z@
       \fi
     \else
+      \@firstlineofpageRfalse%
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
         \advance\@l@dtempcnta by -5001\relax
