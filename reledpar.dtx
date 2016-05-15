@@ -272,6 +272,7 @@
 % \changes{v2.8.0}{2016/03/23}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
 % \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
+% \changes{v2.9.1}{2016/05/15}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1172,7 +1173,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/05/08 v2.9.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/05/15 v2.9.1 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3409,7 +3410,14 @@
         \affixline@num%
       \fi%
       \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-        {\add@inserts\affixside@note}%
+        {%
+          \if@firstlineofpage%
+            \add@txtbeforenotes%
+            \global\@firstlineofpagefalse%
+          \fi%
+          \add@inserts%
+          \affixside@note%
+        }%
         {\print@lineL}%
       }%
     \add@penaltiesL%
@@ -3444,6 +3452,10 @@
 \def\print@lineL{%
     \affixpstart@numL%
     \l@dld@ta%
+    \if@firstlineofpage%
+      \add@txtbeforenotes%
+      \global\@firstlineofpagefalse%
+    \fi%
     \add@inserts\affixside@note%
     \l@dlsn@te%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
@@ -3568,7 +3580,14 @@
         \affixline@numR%
       \fi%
      \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-       {\add@insertsR\affixside@noteR}%
+       {%
+         \if@firstlineofpageR%
+           \add@txtbeforenotes%
+           \global\@firstlineofpageRfalse%
+         \fi%
+         \add@insertsR%
+         \affixside@noteR%
+       }%
        {\print@lineR}%
     }%
     \add@penaltiesR%
@@ -3605,6 +3624,10 @@
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta%
+    \if@firstlineofpageR%
+      \add@txtbeforenotes%
+      \global\@firstlineofpageRfalse%
+    \fi%
     \add@insertsR\affixside@noteR%
     \l@dlsn@te%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
@@ -3774,11 +3797,13 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
+      \@firstlineofpageRtrue%
       \global\page@numR=\next@actionR
       \ifbypage@R
         \global\line@numR \z@  \global\subline@numR \z@
       \fi
     \else
+      \@firstlineofpageRfalse%
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
         \advance\@l@dtempcnta by -5001\relax

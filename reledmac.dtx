@@ -397,7 +397,9 @@
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
 % \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
-% \changes{v2.10.1}{2016/05/15}{Add `nopenalties` option.}
+% \changes{v2.10.1}{2016/05/15}{Add `nopenalities` option.}
+% \changes{v2.10.1}{2016/05/15}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
+% \changes{v2.10.1}{2016/05/15}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3555,7 +3557,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/05/08 v2.10.0 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/05/15 v2.10.1 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3743,6 +3745,14 @@
 % But we define it as well if the \protect\package{bidi} package is not loaded.
 %    \begin{macrocode}
 \ifdef{\if@RTL}{}{\newif\if@RTL}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\if@firstlineofpage}
+% \cs{if@firstlineofpage} is set to TRUE at the first line of every page.
+% \cs{if@firstlineofpageR} is for right side.
+%    \begin{macrocode}
+\newif\if@firstlineofpage%
+\newif\if@firstlineofpageR%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Messages}
@@ -7603,11 +7613,18 @@
 %    \end{macrocode}
 % User hook.
 %    \begin{macrocode}
-	\do@insidelinehook%
+        \do@insidelinehook%
 %    \end{macrocode}
 % Left line number
 %    \begin{macrocode}
-	\l@dld@ta%
+        \l@dld@ta%
+%    \end{macrocode}
+% Insert text before notes.
+%    \begin{macrocode}
+        \if@firstlineofpage%
+          \add@txtbeforenotes%
+          \global\@firstlineofpagefalse%
+        \fi%
 %    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
@@ -7657,6 +7674,10 @@
 % Because of how this prints, a vertical spacing correction is added.
 %    \begin{macrocode}
 \def\print@eledsection{%
+    \if@firstlineofpage%
+      \add@txtbeforenotes%
+      \global\@firstlineofpagefalse%
+    \fi%
     \add@inserts\affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
@@ -7850,6 +7871,7 @@
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
+       \global\@firstlineofpagetrue%
        \ifbypage@
          \global\line@num=\z@ \global\subline@num=\z@
          \resetprevline@
@@ -8430,7 +8452,42 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \subsection{Texte before notes}
+% \begin{macro}{\add@txtbeforenotes}
+% The \cs{Xtxtbeforesnotes} allow to insert automatically text before the group of notes, after the footnote rule.
+% In reality, we just automatically add inserts on the first line of every page, using \cs{add@txtbeforenotes}.
+% This macro does do the test about the position of the line in the page: it is done before (\cs{if@firstlineofpage} or \cs{if@firstlineofpageR}).
+%    \begin{macrocode}
+\newcommand{\add@txtbeforenotes}{%
+  \def\do##1{%
+    \ifcsvoid{Xtxtbeforenotes@##1}{}{%
+      \ifcsstring{series@display##1}{paragraph}%
+      {%
+          \insert\csname ##1footins\endcsname%
+          \bgroup%
+            \csuse{Xnotefontsize@##1}%
+            \footsplitskips%
+            \setbox0=\vbox{\hsize=\maxdimen%
+              \let\bidi@RTL@everypar\@empty%
+              \noindent\csuse{Xtxtbeforenotes@##1}}%
+            \setbox0=\hbox{\Xunvxh{0}{##1}\unskip}%Unskip for backward compatibility…
+            \dp0=0pt%
+            \ht0=\csname ##1footfudgefactor\endcsname\wd0%
+            \if@RTL\noindent \leavevmode\fi\box0%
+            \penalty0%
+          \egroup%
+      }%
+      {%
+        \expandafter\insert\csname##1footins\endcsname\bgroup%
+          {\noindent\strut\csuse{Xnotefontsize@##1}\csuse{Xtxtbeforenotes@##1}\endgraf}%
+        \egroup%
+      }%
+    }%
+  }%
+  \dolistloop{\@series}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Critical footnotes}
 % \label{footnotes}
 %
@@ -8822,7 +8879,7 @@
 % And now, print the footnote's rule to finish the footnote's introduction.
 %   \begin{macrocode}
   \print@Xfootnoterule{#1}%
-  \noindent\leavevmode}
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -8834,7 +8891,6 @@
 % alteration.
 %    \begin{macrocode}
 \newcommand*{\normalfootgroup}[1]{%
-  {\csuse{Xnotefontsize@#1}\noindent\csuse{Xtxtbeforenotes@#1}}%
   \csuse{Xbhookgroup@#1}%
   \unvbox\csname #1footins\endcsname%
   \hsize=\old@hsize%
@@ -8869,7 +8925,6 @@
     \print@Xfootnoterule{#1}%%
   \fi%
   \setlength{\parindent}{0pt}
- {\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}}
  \csuse{Xbhookgroup@#1}%
  \unvbox\csname mp#1footins\endcsname}}
 \fi
@@ -9194,7 +9249,7 @@
 % \thetexbook, p.\,399.  The only difference is the \protect\cs{unpenalty}
 % in \protect\cs{makehboxofhboxes}, which is there to remove the penalty of
 % $0$ which was added to the end of each footnote by
-% \protect\cs{para@vfootnote}.
+% \protect\cs{paravfootnote}.
 %
 % The call to \protect\cs{Xnotefontsize@\meta{s}} is to ensure that the correct
 % \protect\cs{baselineskip} for the footnotes is used. The argument is the
@@ -9206,7 +9261,7 @@
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
-  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}}\unhbox0 \removehboxes}%
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{Xbhookgroup@#1}%
   \csuse{Xnotefontsize@#1}%
   \unhbox0\par%
@@ -9243,7 +9298,7 @@
   \ifcsstring{Xragged@#1}{L}{\RaggedLeft}{}%
   \ifcsstring{Xragged@#1}{R}{\RaggedRight}{}%
   \makehboxofhboxes
-  \setbox0=\hbox{{\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}}\unhbox0 \removehboxes}%
+  \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{Xbhookgroup@#1}%
   \csuse{Xnotefontsize@#1}%
   \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
@@ -9491,8 +9546,7 @@
 % box.  Here, we just print the \protect\cs{line} which comes out of
 % \protect\cs{rigidbalance} directly, without any re-boxing.
 %    \begin{macrocode}
-\newcommand*{\threecolfootgroup}[1]{{\csuse{Xnotefontsize@#1}%
-  \noindent\csuse{Xtxtbeforenotes@#1}}%
+\newcommand*{\threecolfootgroup}[1]{%
   \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9522,7 +9576,6 @@
     \setXnotespositionliketwocolumns@{#1}%
     \print@Xfootnoterule{#1}%
   \fi%
-  {\csuse{Xnotefontsize@#1}\noindent\csuse{Xtxtbeforenotes@#1}}%
   \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9604,8 +9657,7 @@
  \strut\par\allowbreak}
 %    \end{macrocode}
 %    \begin{macrocode}
-\newcommand*{\twocolfootgroup}[1]{{\csuse{Xnotefontsize@#1}
-  \noindent\csuse{Xtxtbeforenotes@#1}}%
+\newcommand*{\twocolfootgroup}[1]{%
   \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
@@ -9645,7 +9697,6 @@
     \setXnotespositionliketwocolumns@{#1}%
     \print@Xfootnoterule{#1}%
   \fi%
-   {\csuse{Xnotefontsize@#1}\noindent\csuse{Xtxtbeforenotes@#1}}%
    \csuse{Xbhookgroup@#1}\par%
   \splittopskip=\ht\strutbox
   \expandafter
