@@ -15713,6 +15713,7 @@
     \numdef{\@msd@c}{\@msd@c+1}%
     \csgdef{@msdata@\@msd@c @data}{#1}%
     \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
+    \csxdef{@msdata@\@msd@c @abslinenumber}{\the\absline@num}%
     \xright@appenditem{\the\absline@num}\to\actionlines@list%
     \xright@appenditem{-1010}\to\actions@list%
   \else%
@@ -15725,6 +15726,7 @@
     \numdef{\@msd@cR}{\@msd@cR+1}%
     \csgdef{@msdata@\@msd@cR @dataR}{#1}%
     \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
+    \csxdef{@msdata@\@msd@cR @abslinenumberR}{\the\absline@numR}%
     \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
     \xright@appenditem{-1010}\to\actions@listR%
  \fi%
@@ -15774,16 +15776,24 @@
           000|% End sub line number, for now, not used
           \edfont@info%Font
           }% 
-        \listxadd{\@msdata@list}{%
-          \if@firstlineofpage%
+          \if@firstlineofpage%Try if the data are for the full page. If yes, add \@msd@options@iffullpage to the list. 
             \unless\if@msdata@insertedfrompreviouspage%
               \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+\@ne}%
-              {\@msd@options@iffullpage}%
-              {}%
+              {%
+              \numdef{\@tmp}{\add@msd@c+\@ne}%
+              \ifcsdef{@msdata@\@tmp @abslinenumber}%
+                {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+                  {}%
+                  {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+                }%
+                {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+              }%
+             {}%
             \fi%
           \fi%
+          \listxadd{\@msdata@list}{%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
-        }%
+         }%
       }%
       {}%
   \else%
@@ -15802,14 +15812,22 @@
           000|% End sub line number, for now, not used
           \edfont@info%Font
           }%
-        \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
             \unless\if@msdata@insertedfrompreviouspage%
-              \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+\@ne}%
-              {\@msd@options@iffullpage}%
-              {}%
+              \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@c @stopabslinenumberR}+\@ne}%
+              {%
+              \numdef{\@tmp}{\add@msd@cR+\@ne}%
+              \ifcsdef{@msdata@\@tmp @abslinenumberR}%
+                {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumberR}}{\csuse{@lastabsline@forpageR@\the\page@numR}}%
+                  {}%
+                  {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+                }%
+                {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+              }%
+             {}%
             \fi%
           \fi%
+          \listxadd{\@msdata@list}{%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
          }%
       }%
@@ -15850,10 +15868,18 @@
           000|% End sub line number, for now, not used
           \edfont@info%Font
           }% 
-        \listxadd{\@msdata@list}{%
-            \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+\@ne}%
-            {\@msd@options@iffullpage}%
-            {}%
+          \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+\@ne}%
+          {%
+          \numdef{\@tmp}{\add@msd@c+\@ne}%
+          \ifcsdef{@msdata@\@tmp @abslinenumber}%
+            {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+              {}%
+              {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+            }%
+            {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+          }%
+         {}%
+         \listxadd{\@msdata@list}{%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
       }%
@@ -15877,10 +15903,18 @@
           000|% End sub line number, for now, not used
           \edfont@info%Font
           }%
-        \listxadd{\@msdata@list}{%
-            \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+\@ne}%
-            {\@msd@options@iffullpage}%
-            {}%
+          \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+\@ne}%
+          {%
+          \numdef{\@tmp}{\add@msd@cR+\@ne}%
+          \ifcsdef{@msdata@\@tmp @abslinenumberR}%
+            {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumberR}}{\csuse{@lastabsline@forpageR@\the\page@numR}}%
+              {}%
+              {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+            }%
+            {\listxadd{\@msdata@list}{\@msd@options@iffullpage}}%
+          }%
+         {}%
+         \listxadd{\@msdata@list}{%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
      }%
