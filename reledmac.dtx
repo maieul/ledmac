@@ -397,9 +397,9 @@
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
 % \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
-% \changes{v2.10.1}{2016/05/15}{Add `nopenalities` option.}
-% \changes{v2.10.1}{2016/05/15}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
-% \changes{v2.10.1}{2016/05/15}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
+% \changes{v2.10.1}{2016/05/18}{Add `nopenalities` option.}
+% \changes{v2.10.1}{2016/05/18}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
+% \changes{v2.10.2}{2016/05/25}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1952,7 +1952,7 @@
 %
 % \subsection{Wrapping notes}
 % \subsubsection{Wrapping lemmas}
-% \changes{v2.10.2}{2016/05/15}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
+% \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
 % \DescribeMacro{\Xwraplemma}\label{Xwraplemma}
 % \cs{Xwraplemma}\oarg{s}\marg{cmd} is used to wrap, in the footnote, the lemma in a \LaTeX\ command. 
 % For example, with the \package{bidi} package, to ensure having a lemma written right to left, use \cs{Xwraplemma}\arg{\cs{RL}}.
@@ -3384,7 +3384,7 @@
 % but this area remains unsatisfactory.
 %
 % \label{nopenalties}If you use more than one series of  paragraphed notes, it can happen, in some specific case, that footnotes are not printed, but only footnote rules.
-% It this case you should use the \reledmac's package option \opt{nopenalties}. 
+% It this case you should use the \reledmac's package option \option{nopenalties}. 
 % It should solve the problem, but that could implies widow line orphan line. 
 % For now, we have no solution for this problem.
 %
@@ -3557,7 +3557,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/05/15 v2.10.1 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/05/25 v2.10.2 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7634,7 +7634,7 @@
 % Insert text before notes, and prepare ms data for this page.
 %    \begin{macrocode}
         \if@firstlineofpage%
-          \add@txtbeforenotes%
+          \set@Xtxtbeforenotes%
           \add@msdata@firstlineofpage%
           \global\@firstlineofpagefalse%
         \fi%
@@ -7692,7 +7692,7 @@
 %    \begin{macrocode}
 \def\print@eledsection{%
     \if@firstlineofpage%
-      \add@txtbeforenotes%
+      \set@Xtxtbeforenotes%
       \add@msdata@firstlineofpage%
       \global\@firstlineofpagefalse%
     \fi%
@@ -8475,38 +8475,36 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Texte before notes}
-% \begin{macro}{\add@txtbeforenotes}
-% The \cs{Xtxtbeforesnotes} allow to insert automatically text before the group of notes, after the footnote rule.
-% In reality, we just automatically add inserts on the first line of every page, using \cs{add@txtbeforenotes}.
-% This macro does do the test about the position of the line in the page: it is done before (\cs{if@firstlineofpage} or \cs{if@firstlineofpageR}).
+% \begin{macro}{\set@Xtxtbeforenotes}
+% The \cs{set@Xtxtbeforenotes} macro resets the Xtxtbeforesnotes@\meta{series}@typeset boolean to false. At the first not of the \meta{series} in a page, the Xtextbeforenotes will be inserted. 
 %    \begin{macrocode}
-\newcommand{\add@txtbeforenotes}{%
-  \def\do##1{%
-    \ifcsvoid{Xtxtbeforenotes@##1}{}{%
-      \ifcsstring{series@display##1}{paragraph}%
-      {%
-          \insert\csname ##1footins\endcsname%
-          \bgroup%
-            \csuse{Xnotefontsize@##1}%
-            \footsplitskips%
-            \setbox0=\vbox{\hsize=\maxdimen%
-              \let\bidi@RTL@everypar\@empty%
-              \noindent\hbox{\csuse{Xtxtbeforenotes@##1}}}%
-            \setbox0=\hbox{\Xunvxh{0}{##1}\unskip}%Unskip for backward compatibility…
-            \dp0=0pt%
-            \ht0=\csname ##1footfudgefactor\endcsname\wd0%
-            \if@RTL\noindent \leavevmode\fi\box0%
-            \penalty0%
-          \egroup%
-      }%
-      {%
-        \expandafter\insert\csname##1footins\endcsname\bgroup%
-          {\noindent\strut\csuse{Xnotefontsize@##1}\csuse{Xtxtbeforenotes@##1}\endgraf}%
+\newcommand{\set@Xtxtbeforenotes}{%
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \global\togglefalse{Xtxtbeforesnotes@##1@typeset}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\insert@Xtxtbeforenotes}
+% \cs{insert@Xtxtbeforenotes}\marg{series}, called when inserting note, will insert the text before note if not already inserted.
+% For paragraphed footnotes, will insert it as a componant of the first footnote.
+% For other types of footnotes, will insert it as a classical footnote.
+%    \begin{macrocode}
+\newcommand{\insert@Xtxtbeforenotes}[1]{%
+  \nottoggle{Xtxtbeforesnotes@#1@typeset}{%
+    \global\toggletrue{Xtxtbeforesnotes@#1@typeset}%
+    \ifcsstring{series@display#1}{paragraph}%
+      {\noindent\csuse{Xtxtbeforenotes@##1}}%
+      {\expandafter\insert\csname#1footins\endcsname%
+        \bgroup%
+          \noindent\strut\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}%
         \egroup%
       }%
-    }%
   }%
-  \dolistloop{\@series}%
+  {}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -8780,6 +8778,7 @@
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
+  \insert@Xtxtbeforenotes{#1}%
   \csuse{Xbeforeinserting@#1}%
   \insert\csname #1footins\endcsname\bgroup
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
@@ -8801,6 +8800,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
   \global\setbox\@nameuse{mp#1footins}\vbox{%
+    \insert@Xtxtbeforenotes{#1}%
     \unvbox\@nameuse{mp#1footins}
     \noindent\csuse{Xbhooknote@#1}%
     \csuse{Xnotefontsize@#1}%
@@ -8881,7 +8881,7 @@
       \iftoggle{preXnotes@}{%
             \togglefalse{preXnotes@}%
             \skip\csname #1footins\endcsname=%
-              \dimexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
+              \glueexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
             }%
           {}%
       }%
@@ -9061,7 +9061,7 @@
       \iftoggle{preXnotes@}{%
             \togglefalse{preXnotes@}%
             \skip\csname #1footins\endcsname=%
-              \dimexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
+              \glueexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
             }%
           {}%
       }%
@@ -9164,6 +9164,7 @@
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen%
       \let\bidi@RTL@everypar\@empty%
+      \insert@Xtxtbeforenotes{#1}%
       \noindent\csuse{Xbhooknote@#1}%
       \csname #1footfmt\endcsname #2{#1}}%
     \setbox0=\hbox{\Xunvxh{0}{#1}}%
@@ -9205,6 +9206,7 @@
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen%
       \let\bidi@RTL@everypar\@empty%
+      \insert@Xtxtbeforenotes{#1}%
       \noindent\color@begingroup%
       \csuse{Xbhooknote@#1}%
       \csname #1footfmt\endcsname #2{#1}\color@endgroup}%
@@ -10657,7 +10659,7 @@
       \iftoggle{prenotesX@}{%
            \togglefalse{prenotesX@}% 
            \skip\csname footins#1\endcsname=%
-             \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+             \glueexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
            }%
           {}%
       }%
@@ -11175,7 +11177,7 @@
       \iftoggle{prenotesX@}{%
             \togglefalse{prenotesX@}%
             \skip\csname footins#1\endcsname=%
-              \dimexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
+              \glueexpr\csuse{prenotesX@}+\csuse{afterruleX@#1}\relax%
             }%
           {}%
       }%
@@ -12166,7 +12168,10 @@
       \csgdef{Xinplaceoflemmaseparator@#1}{1em}%
       \csgdef{Xbeforenotes@#1}{1.2em \@plus .6em \@minus .6em}
       \csgdef{Xafterrule@#1}{0pt}
+      
       \csgdef{Xtxtbeforenotes@#1}{}
+      \newtoggle{Xtxtbeforesnotes@#1@typeset}%Not directly used by user, but internal
+
       \csgdef{Xmaxhnotes@#1}{0.8\vsize}
       \newtoggle{Xnoteswidthliketwocolumns@#1}%
       \csgdef{Xparafootsep@#1}{}%
