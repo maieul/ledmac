@@ -15709,7 +15709,6 @@
       {%
        \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
        \csxdef{@msdata@\@msd@c @stopabslinenumber}{\the\absline@num}%
-       \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
       }%
       {}%
     \numdef{\@msd@c}{\@msd@c+1}%
@@ -15721,7 +15720,6 @@
   \else%
     \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}%
       {%
-        \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
 	      \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
 	      \csxdef{@msdata@\@msd@cR @stopabslinenumberR}{\the\absline@numR}%
       }%
@@ -15743,13 +15741,11 @@
      \ifcsundef{@msdata@\@msd@c @stoplinenumber}{%
        \csxdef{@msdata@\@msd@c @stopabslinenumber}{\the\absline@num}%
        \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
-       \csxdef{@msdata@\@msd@c @stoppagenumber}{\the\page@num}%
      }{}%
   \else% 
      \ifcsundef{@msdata@\@msd@cR @stoplinenumber}{%
        \csxdef{@msdata@\@msd@cR @stopabslinenumberR}{\the\absline@numR}%
        \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
-       \csxdef{@msdata@\@msd@c @stoppagenumberR}{\the\page@numR}%
      }%
      {}%
  \fi%
@@ -15774,7 +15770,7 @@
           \csuse{@msdata@\add@msd@c @linenumber}|% Start line number
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
-          \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%
+          \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
             {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
             {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
           |%
@@ -15783,7 +15779,7 @@
           }% 
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumequal{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}}%
+            \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+1}%
             {\@msd@options@iffullpage}%
             {}%
           \fi%
@@ -15800,7 +15796,7 @@
           \csuse{@msdata@\add@msd@cR @linenumber}|% Start line number
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
-          \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%
+          \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
             {\csuse{@msdata@\add@msd@cR @stoplinenumber}}%End line number if in the same page
             {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwiser, last number of the page
           |%
@@ -15809,7 +15805,7 @@
           }%
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumequal{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumber}}%
+            \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+1}%
             {\@msd@options@iffullpage}%
             {}%
           \fi%
@@ -15831,30 +15827,25 @@
   \normalfont%  
   \unless\ifledRcol@%
     \ifcsdef{@msdata@\add@msd@c @data}{%
-    \ifnumgreater{\csuse{@msdata@\add@msd@c @stoppagenumber}+1}{\the\page@num}%
+    \ifnumless{\the\absline@num-1}{\csuse{@msdata@\add@msd@c @stopabslinenumber}}%
       {%
       \letcs{\@data}{@msdata@\add@msd@c @data}%
       \edef\l@d@nums{%
-        000|% Start page = we don't print it
-        \the\line@num|% Start line number = first line of the page = current line
-        000|% Start subline number, for now, not used
-        000|% End page number, we don't print it
-        \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%
-          {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
-          {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
-        |%
-        000|% End sub line number, for now, not used
-        \edfont@info%Font
-        }% 
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@c @linenumber}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+            {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }% 
         \listxadd{\@msdata@list}{%
-          \ifnumequal{\csuse{@msdata@\add@msd@c @stoppagenumber}}{\the\page@num}%Does it  full all the page?
-            {\ifnumequal{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
-              {\@msd@options@iffullpage}%
-              {}%
-            }%
-            {%
-            \@msd@options@iffullpage%
-            }%
+            \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+1}%
+            {\@msd@options@iffullpage}%
+            {}%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
       }%
@@ -15862,30 +15853,25 @@
   }{}%
   \else%
     \ifcsdef{@msdata@\add@msd@c @data}{%
-    \ifnumgreater{\csuse{@msdata@\add@msd@cR @stoppagenumber}+1}{\the\page@numR}%
+    \ifnumless{\the\absline@numR-1}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}%
           {%
           \letcs{\@data}{@msdata@\add@msd@cR @data}%
           \edef\l@d@nums{%
-            000|% Start page = we don't print it
-            \the\line@num|% Start line number = first line of the page = current line
-            000|% Start subline number, for now, not used
-            000|% End page number, we don't print it
-            \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%
-              {\csuse{@msdata@\add@msd@cR @stoplinenumber}}%End line number if in the same page
-              {\csuse{@lastline@forpage@\the\page@numR}}%Otherwiser, last number of the page
-            |%
-            000|% End sub line number, for now, not used
-            \edfont@info%Font
-            }% 
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@cR @linenumber}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
+            {\csuse{@msdata@\add@msd@cR @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwiser, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }%
         \listxadd{\@msdata@list}{%
-          \ifnumequal{\csuse{@msdata@\add@msd@cR @stoppagenumber}}{\the\page@numR}%Does it  full all the page?
-            {\ifnumequal{\csuse{@msdata@\add@msd@cR @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@numR}}%
-              {\@msd@options@iffullpage}%
-              {}%
-            }%
-            {%
-            \@msd@options@iffullpage%
-            }%
+            \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+1}%
+            {\@msd@options@iffullpage}%
+            {}%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
      }%
