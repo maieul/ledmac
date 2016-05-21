@@ -400,6 +400,8 @@
 % \changes{v2.10.1}{2016/05/18}{Add `nopenalities` option.}
 % \changes{v2.10.1}{2016/05/18}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
 % \changes{v2.10.2}{2016/05/25}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
+% \changes{v2.10.2}{2016/05/25}{Make \protect\cs{parafootsepX} working}
+% \changes{v2.10.2}{2016/05/25}{Fix bug with \cs{Xparafootsep} in parallel typesetting}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -5270,7 +5272,18 @@
 % \begin{macro}{\resetprevpage@}
 %    \begin{macrocode}
 \newcommand*{\resetprevpage@num}{%
-    \def\do##1{\ifcsdef{prevpage##1@num}{\global\csname prevpage##1@num\endcsname=0}{}}%
+    \def\do##1{%
+      \ifcsdef{prevpage##1@num}{%
+        \global\csname prevpage##1@num\endcsname=\z@%
+        \global\csname prevpage##1@numR\endcsname=\z@%
+        }%
+        {}%
+      \ifcsdef{##1prevpage@num}{%
+        \global\csname ##1prevpage@num\endcsname=\z@%
+        \global\csname ##1prevpage@numR\endcsname=\z@%
+        }%
+        {}%
+      }%
     \dolistloop{\@series}%
 }
 %    \end{macrocode}
@@ -8980,6 +8993,7 @@
 \newcommand*{\Xarrangement@paragraph}[1]{%
   \csgdef{series@display#1}{paragraph}
   \expandafter\newcount\csname #1prevpage@num\endcsname
+  \expandafter\newcount\csname #1prevpage@numR\endcsname%
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
   \expandafter\let\csname v#1footnote\endcsname=\paravfootnote
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
@@ -9360,16 +9374,29 @@
 % \begin{macro}{\Xinsertparafootsep}
 %    \begin{macrocode}
 \newcommand{\Xinsertparafootsep}[1]{%
-   \ifnumequal{\csuse{#1prevpage@num}}{\page@num}%
-        {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
-      {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-         {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
-         {\csuse{Xparafootsep@#1}}%
-      }%
-      {\csuse{Xparafootsep@#1}}%
-   }%
-   {}%
-   \global\csname #1prevpage@num\endcsname=\page@num%
+   \ifledRcol@%
+     \ifnumequal{\csuse{#1prevpage@numR}}{\page@numR}%
+          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+        {\ifnumequal{\csuse{prevline#1}}{\line@numR}%
+           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+           {\csuse{Xparafootsep@#1}}%
+        }%
+        {\csuse{Xparafootsep@#1}}%
+     }%
+     {}%
+     \global\csname #1prevpage@numR\endcsname=\page@numR%
+   \else%
+     \ifnumequal{\csuse{#1prevpage@num}}{\page@num}%
+          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+        {\ifnumequal{\csuse{prevline#1}}{\line@num}%
+           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+           {\csuse{Xparafootsep@#1}}%
+        }%
+        {\csuse{Xparafootsep@#1}}%
+     }%
+     {}%
+     \global\csname #1prevpage@num\endcsname=\page@num%
+   \fi%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10839,7 +10866,8 @@
 \newcommand*{\arrangementX@normal}[1]{%
   \csgdef{series@displayX#1}{normal}
   \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
-  \expandafter\newcount\csname prevpage#1@num\endcsname
+  \expandafter\newcount\csname prevpage#1@num\endcsname%
+  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
   \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
   \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
@@ -11124,7 +11152,8 @@
 %    \begin{macrocode}
 \newcommand*{\arrangementX@paragraph}[1]{%
   \csgdef{series@displayX#1}{paragraph}%
-  \expandafter\newcount\csname #1prevpage@num\endcsname
+  \expandafter\newcount\csname prevpage#1@num\endcsname%
+  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
@@ -11320,16 +11349,22 @@
 % \end{macro}
 % \paragraph{Insertion of the footnotes separator}
 % The command \protect\cs{insertparafootsepX}\marg{series} must be called at the beginning of \protect\cs{parafootftmX}. 
-% \begin{macro}{\prevpage@num} 
-% \begin{macro}{\Xinsertparafootsep}
+% \begin{macro}{\insertparafootsepX}
 %    \begin{macrocode}
 \newcommand{\insertparafootsepX}[1]{%
-   \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
-     {\csuse{parafootsepX@#1}}%
-     {}%
+   \ifledRcol@%
+     \ifnumequal{\csuse{prevpage#1@numR}}{\page@numR}%
+        {\csuse{Xparafootsep@#1}}%
+        {}%
+     \global\csname prevpage#1@numR\endcsname=\page@numR%
+   \else%
+     \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
+        {\csuse{Xparafootsep@#1}}%
+        {}%
+     \global\csname prevpage#1@num\endcsname=\page@num%
+   \fi%
 }
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \subsection{Wrapping footnote marks in hyperlink}
 % \begin{macro}{\wrapped@footfootmarkX}
