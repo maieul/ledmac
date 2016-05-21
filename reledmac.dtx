@@ -15778,9 +15778,11 @@
           }% 
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+1}%
-            {\@msd@options@iffullpage}%
-            {}%
+            \unless\if@msdata@insertedfrompreviouspage%
+              \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+1}%
+              {\@msd@options@iffullpage}%
+              {}%
+            \fi%
           \fi%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
@@ -15804,9 +15806,11 @@
           }%
         \listxadd{\@msdata@list}{%
           \if@firstlineofpage%
-            \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+1}%
-            {\@msd@options@iffullpage}%
-            {}%
+            \unless\if@msdata@insertedfrompreviouspage%
+              \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+1}%
+              {\@msd@options@iffullpage}%
+              {}%
+            \fi%
           \fi%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
          }%
@@ -15818,6 +15822,12 @@
 %    \end{macrocode}
 % \end{macro}
 % 
+% \begin{macro}{\if@msdata@insertedfrompreviouspage}
+% The \cs{if@msdata@insertedfrompreviouspage} boolean is set to TRUE if \reledmac automatically insert data from previous page in the first line of a page.
+%    \begin{macrocode}
+\newif\if@msdata@insertedfrompreviouspage%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\add@msdata@firstlineofpage}
 % \cs{add@msdata@firstlineofpage} is called at the first line of every page. It will insert manuscript data which start on one of the previous pages and continue on this page. 
 %    \begin{macrocode}
@@ -15828,6 +15838,7 @@
     \ifcsdef{@msdata@\add@msd@c @data}{%
     \ifnumless{\the\absline@num-\@ne}{\csuse{@msdata@\add@msd@c @stopabslinenumber}}%
       {%
+      \global\@msdata@insertedfrompreviouspagetrue%
       \letcs{\@data}{@msdata@\add@msd@c @data}%
       \edef\l@d@nums{%
           000|% Start page = we don't print it
@@ -15848,12 +15859,13 @@
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
       }%
-      {}%
+      {\global\@msdata@insertedfrompreviouspagefalse}%
   }{}%
   \else%
     \ifcsdef{@msdata@\add@msd@c @data}{%
     \ifnumless{\the\absline@numR-\@ne}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}%
           {%
+          \global\@msdata@insertedfrompreviouspagetrue%
           \letcs{\@data}{@msdata@\add@msd@cR @data}%
           \edef\l@d@nums{%
           000|% Start page = we don't print it
@@ -15874,7 +15886,7 @@
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
         }%
      }%
-     {}%
+     {\global\@msdata@insertedfrompreviouspagefalse}%
   }%
   \fi%
   \egroup%
