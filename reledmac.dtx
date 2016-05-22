@@ -39,6 +39,7 @@
 \usepackage{xspace}
 \usepackage{doctools}
 \usepackage{graphicx,metalogo}
+\usepackage{csquotes}
 % Index and Changelog in one column
 \makeatletter
   \renewenvironment{theglossary}{%
@@ -1485,6 +1486,69 @@
 %  #1\textsuperscript{#2}%
 %}
 % \end{verbatim}
+%
+% \subsection{Manuscript's apparatus}
+% In many case, the critical notes refers to textual variant between different manuscripts containing the edited text.
+% Sometime, these manuscripts contains only some part of the text.
+% In this case, it could be useful to add in each page a list of the manuscript used to edit the part of the text printed in the page.
+% This list of the manuscript is called \enquote{manuscript's apparatus}.
+%
+% To create it with \macpackage, you must insert in your text command marking manuscript's data's sections.
+% These commands will be analyzed, and \textbf{at the second run}, manuscript apparatus will be automatically inserted in the form of critical footnotes of series A. 
+%
+% As the insertion of manuscript's apparatus could change the page breaks, you should do a third or a fourth run, or more in some case.
+% That is why we strongly recommend to you to use tools like \emph{latexmk}.
+%
+% \subsubsection{Marking manuscript's data's section}
+% \DescribeMacro{\msdata}
+% \cs{msdata}\marg{text} must be inserted as the point where a section of text using some specific manuscripts starts.
+% \meta{text} could be any arbitrary text, classically a list of manuscripts used for the starting part of the text.
+% The command must be glued to the beginning of the text's section, without space.
+% For example:
+% \begin{verbatim}
+% \msdata{ABC}Lorem ipsum
+% \end{verbatim}
+% Means that the section of text starting by \enquote{Lorem ipsum} is attested in the manuscripts A, B and C.
+%
+% \DescribeMacro{\stopmsdata}
+% \cs{stopmsdata} must be inserted at point where the section of text started by the previous \cs{msdata} stop.
+% The command must be be glued to the end of the text's section, without space.
+% As \cs{stopmsdata} is a \LaTeX\  parameterless macro, it will be gobble the following spaces. 
+% To kept them, you must use backslash followed by a space, of add \verb+{}+ to \cs{stopmsdata}.
+% 
+% For example:
+% \begin{verbatim}
+% \msdata{ABC}Lorem ipsum dolor
+% …
+% amet\stopmsdata{} \msdata{ABCD}sic transit
+% \end{verbatim}
+% Means that part of text containing \enquote{Lorem ipsum dolor … amet} is attested in manuscripts A, B and C, while the part of text starting by \enquote{sic transit} is attested in manuscripts A, B, C and D.
+%
+% A \cs{stopmsdata} is automatically inserted at the end of the texts.
+%
+% Not that in most case, a \cs{stopmsdata} is followed by a \cs{msdata}. However, as there is in most case a space between them, it could be, in printed form, in different lines.
+% That is why you must use \cs{stopmsdata}, even if, by security, \cs{msdata} insert it if forgotten.
+%
+% \subsubsection{How the manuscript data will be printed}
+% In each page, the apparatus manuscript will print manuscript's data with start and end line numbers.
+% However, the following rules will be applied:
+% \begin{itemize}
+% \item If the manuscript's data section does not start in the current page, the start line number will be the line number of the first line of the page.
+% \item If the manuscript's data section does not stop in the current page, the end line number will be the line number of the last line of the page.
+% \item If the manuscripts's data section neither start in the current page nor stop in the current page, no line number will be printed. The same is available in the case where both the \cs{msdata} is called at the very beginning of the page and \cs{endmsdata} is called at the very end of the page.
+% \end{itemize}
+% \subsubsection{Setting}
+% As the manuscript apparatus is just critical notes of series A, any critical notes setting can be applied (\reff{displayoptions}).
+% However, the following commands are also available.
+%
+% \DescribeMacro{\setmsdataseries}
+% The series used by the manuscript's apparatus is A.
+% However, you can change it using \cs{setmsdataseries}\marg{series}.
+%
+% \DescribeMacro{\setmsdatalabel}
+% As manuscript's data footnote are just specific critical footnotes, there have a lemma associated.
+% By default, it is \enquote{Ms.}.
+% You can change it using \cs{setmsdatalabel}\marg{txt}.
 %
 % \subsection{Familiar notes} \label{sec:desc:familiar}
 % 
