@@ -4177,6 +4177,11 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@warning@msdatawithoutstop}
+\newcommand{\led@warning@msdatawithoutstop}{%
+  \reledmac@warning{\string\msdata\space without previous \string\stopmsdata}%
+}%
+% \end{macro}
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \protect\cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Move gobbling command}
@@ -4430,6 +4435,7 @@
   \global\let\sub@change=\relax
   \resetprevline@
   \resetprevpage@num
+  \global\stopmsdata@inserted@true%
   }
 
 %    \end{macrocode}
@@ -15721,6 +15727,11 @@
 %    \begin{macrocode}
 \newcommand{\msdata}[1]{%
   \leavevmode%
+  \unless\ifstopmsdata@inserted@%
+    \stopmsdata%
+    \led@warning@msdatawithoutstop%
+  \fi%
+  \global\stopmsdata@inserted@false%
   \unless\ifledRcol%
     \protected@write\linenum@out{}{%
       \string\@msd{#1}%
@@ -15747,7 +15758,15 @@
       \string\@stopmsd%
     }%
   \fi%
+  \global\stopmsdata@inserted@true%
 }%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifstopmsdata@inserted@}
+% The \cs{ifstopmsdata@inserted@} boolean is set to TRUE at every \cs{stopmsdata} and reset to FALSE at all \cs{msdata}. It also set to TRUE at every \cs{beginnumbering}.
+% It use to automatically insert \cs{stopmsdata} if forgotten before \cs{msdata}
+%    \begin{macrocode}
+\newif\ifstopmsdata@inserted@%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Setting macro}
@@ -15803,12 +15822,6 @@
 %    \begin{macrocode}
 \newcommand{\@msd}[1]{%
   \unless\ifledRcol%
-    \ifcsundef{@msdata@\@msd@c @stoplinenumber}%
-      {%
-       \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
-       \csxdef{@msdata@\@msd@c @stopabslinenumber}{\the\absline@num}%
-      }%
-      {}%
     \numdef{\@msd@c}{\@msd@c+\@ne}%
     \csgdef{@msdata@\@msd@c @data}{#1}%
     \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
@@ -15816,12 +15829,6 @@
     \xright@appenditem{\the\absline@num}\to\actionlines@list%
     \xright@appenditem{-1010}\to\actions@list%
   \else%
-    \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}%
-      {%
-	      \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
-	      \csxdef{@msdata@\@msd@cR @stopabslinenumberR}{\the\absline@numR}%
-      }%
-      {}%
     \numdef{\@msd@cR}{\@msd@cR+\@ne}%
     \csgdef{@msdata@\@msd@cR @dataR}{#1}%
     \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
