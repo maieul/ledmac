@@ -7721,7 +7721,7 @@
           \global\@firstlineofpagefalse%
         \fi%
 %    \end{macrocode}
-% Insert manuscript data footnotes.
+% Insert manuscript's data's footnotes.
 %    \begin{macrocode}
         \insert@msdata%
 %    \end{macrocode}
@@ -15723,7 +15723,7 @@
 % \section{Manuscripts' apparatus}
 % \subsection{User level macro}
 % \begin{macro}{\msdata}
-% The user level \cs{msdata} command only writes the manuscript data on numbered auxiliary file.
+% The user level \cs{msdata} command only writes the manuscript's data on numbered auxiliary file.
 %    \begin{macrocode}
 \newcommand{\msdata}[1]{%
   \leavevmode%
@@ -15745,7 +15745,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\stopmsdata}
-% The user level \cs{stopmsdata} command only write information about the end of manuscript data on numbered auxiliary file.
+% The user level \cs{stopmsdata} command only write information about the end of manuscript's data on numbered auxiliary file.
 %    \begin{macrocode}
 \newcommand{\stopmsdata}[0]{%
   \leavevmode%
@@ -15770,7 +15770,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Setting macro}
-% The setting macros of the manuscripts apparatus tools are very easy: they just save argument in internal macro.
+% The setting macros of the manuscripts apparatus tools are very easy: they just save their argument in an internal macro.
 % \begin{macro}{\setmsdataseries}
 % In which series of note will be printed the manuscripts apparatus? 
 %    \begin{macrocode}
@@ -15781,7 +15781,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setmsdatalabel}
-% The label for the ms data.
+% The label for the manuscript's data.
 %    \begin{macrocode}
 \def\ms@data@label{Ms.}%
 \newcommand{\setmsdatalabel}[1]{%
@@ -15798,7 +15798,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@msd@c}
-% \cs{add@msd@} is a counter increased at each \cs{add@msd@}.
+% \cs{add@msd@} is a counter increased at each \cs{add@msddata}, that is at each time we prepare the insertion of manuscript's data's footnote.
 %    \begin{macrocode}
 \numdef{\add@msd@c}{0}%
 \numdef{\add@msd@cR}{0}%
@@ -15806,7 +15806,7 @@
 % \end{macro}
 % \begin{macro}{\@msdata@list}
 % The \cs{@msdata@list} will contain, for each line, the lists of command to be executed to insert the manuscript's apparatus.
-% It will be filled on \cs{add@msdata} and looped then emptied on  \cs{insert@msdata}.
+% It will be filled on \cs{add@msdata} and looped  on  \cs{insert@msdata}, then emptied.
 %    \begin{macrocode}
 \def\@msdata@list{}%
 %    \end{macrocode}
@@ -15814,9 +15814,7 @@
 % \subsection{Auxiliary file macros}
 % \begin{macro}{\@msd}
 % The \cs{@msd} macro is written in the auxiliary file.
-% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number where it was called and the page where it was called. 
-%
-% If no \cs{@stopmsd} macro was called before it, it also defines a \cs{@msdata@\meta{number}@endlinenumber} macro. 
+% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number and the absolute line number where it was called 
 %
 % It also stores the action code $1010$ in the list of actions by line.
 %    \begin{macrocode}
@@ -15840,6 +15838,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@endmsd}
+% Inserted in the auxiliary file by \cs{stopmsd}, the \cs{@stopmsd} macro will store in two commands the line number and the absolute line number on which it is called.
 %    \begin{macrocode}
 \newcommand{\@stopmsd}[0]{%
   \unless\ifledRcol% 
@@ -15859,7 +15858,7 @@
 % \end{macro}
 % \subsection{Action macro}
 % \begin{macro}{\add@msdata}
-% \cs{add@msdata} is executed on each line when action code 1009 is seen.
+% \cs{add@msdata} is executed on each line when action code $1010$ is seen.
 % It will not insert immediately the manuscript data footnote, as action code are executed before the line be typeset, and, consequently, could be on the previous page.
 % So it just store the manuscript data footnote to \cs{@msdata@list}.
 %    \begin{macrocode}
@@ -15951,13 +15950,13 @@
 % \end{macro}
 % 
 % \begin{macro}{\if@msdata@insertedfrompreviouspage}
-% The \cs{if@msdata@insertedfrompreviouspage} boolean is set to TRUE if \reledmac automatically insert data from previous page in the first line of a page.
+% The \cs{if@msdata@insertedfrompreviouspage} boolean is set to TRUE if \macpackage\ automatically inserts data from previous page in the first line of a page.
 %    \begin{macrocode}
 \newif\if@msdata@insertedfrompreviouspage%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\add@msdata@firstlineofpage}
-% \cs{add@msdata@firstlineofpage} is called at the first line of every page. It will insert manuscript data which start on one of the previous pages and continue on this page. 
+% \cs{add@msdata@firstlineofpage} is called at the first line of every page. It inserts manuscript data which start on one of the previous pages and continue on this page. 
 %    \begin{macrocode}
 \newcommand{\add@msdata@firstlineofpage}{%
   \bgroup%
@@ -15975,7 +15974,7 @@
           000|% End page number, we don't print it
           \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
             {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
-            {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
+            {\csuse{@lastline@forpage@\the\page@num}}%Otherwise, last number of the page
           |%
           000|% End sub line number, for now, not used
           \edfont@info%Font
@@ -16013,7 +16012,7 @@
           000|% End page number, we don't print it
           \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
             {\csuse{@msdata@\add@msd@cR @stoplinenumberR}}%End line number if in the same page
-            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwiser, last number of the page
+            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwise, last number of the page
           |%
           000|% End sub line number, for now, not used
           \edfont@info%Font
@@ -16044,7 +16043,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Inserting footnote}
-% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript data footnote.
+% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript's data's footnotes.
 % \begin{macro}{\insert@msdata}
 %    \begin{macrocode}
 \newcommand{\insert@msdata}{%
@@ -16057,9 +16056,9 @@
 % \subsection{Other}
 % \begin{macro}{\@msd@options@iffullpage}
 % \begin{macro}{\reset@msd@options@iffullpage}
-% \cs{@msd@options@iffullpage} sets some options if the manuscript's data is for all the page. 
-% \cs{reset@msd@options@iffullpage} reset them after the footnote.
-% \cs{if@msd@options@fullpage} is switch to true in \protect{add@msdata@firstlineofpage} if these option must be inserted
+% \cs{@msd@options@iffullpage} sets some options if the manuscript's data are for all the page. 
+% \cs{reset@msd@options@iffullpage} resets them after the footnote.
+% \cs{if@msd@options@fullpage} is switch to true in \protect{add@msdata@firstlineofpage} if these option must be inserted.
 %    \begin{macrocode}
 \newif\if@msd@options@fullpage%
 \newcommand{\@msd@options@iffullpage}[0]{%
