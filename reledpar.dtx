@@ -273,6 +273,7 @@
 % \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
 % \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
 % \changes{v2.9.1}{2016/05/25}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
+% \changes{v2.10.0}{2016/05/21}{Add new tools to make manuscript's apparatus}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1173,7 +1174,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/05/25 v2.9.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/05/21 v2.10.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1498,6 +1499,7 @@
   \global\sublines@false
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
+  \global\stopmsdata@inserted@true%
   \set@continuousnumberingforR%
   \message{Section \the\section@numR R }%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
@@ -3416,6 +3418,7 @@
             \global\@firstlineofpagefalse%
           \fi%
           \add@inserts%
+          \insert@msdata%
           \affixside@note%
         }%
         {\print@lineL}%
@@ -3456,6 +3459,7 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpagefalse%
     \fi%
+    \insert@msdata%
     \add@inserts\affixside@note%
     \l@dlsn@te%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
@@ -3466,7 +3470,7 @@
             \new@lineL%
             \inserthangingsymbolL%
             \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
-     \l@drsn@te}}
+     \l@drsn@te}}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -3585,6 +3589,7 @@
            \set@Xtxtbeforenotes%
            \global\@firstlineofpageRfalse%
          \fi%
+         \insert@msdata%
          \add@insertsR%
          \affixside@noteR%
        }%
@@ -3628,6 +3633,7 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpageRfalse%
     \fi%
+    \insert@msdata%
     \add@insertsR\affixside@noteR%
     \l@dlsn@te%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
@@ -3754,7 +3760,8 @@
 % It may call itself recursively and we use tail recursion, via
 % \protect\cs{do@actions@nextR} for this.
 % \changes{v0.3.0}{2005/02/24}{Used \protect\cs{do@actions@fixedcode} in \protect\cs{do@actionsR}}
-% \changes{v1.15.0}{2015/04/13}{Add action 1008 and 1009}
+% \changes{v1.15.0}{2015/04/13}{Add actions 1008 and 1009}
+% \changes{v2.10.0}{2016/05/21}{Add action 1010}
 %    \begin{macrocode}
 
 \newif\ifl@dskipversenumberR
@@ -3786,6 +3793,8 @@
     \l@dskipversenumberRtrue%
  \or% 	                   % 1009 = hiding number
     \l@dhidenumbertrue% 
+ \or%									     % 1010 = inserting msdata
+    \add@msdata%      
  \else%
     \led@warn@BadAction
  \fi%
@@ -3802,6 +3811,7 @@
       \ifbypage@R
         \global\line@numR \z@  \global\subline@numR \z@
       \fi
+      \add@msdata@firstlineofpage%
     \else
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR

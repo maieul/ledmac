@@ -39,6 +39,7 @@
 \usepackage{xspace}
 \usepackage{doctools}
 \usepackage{graphicx,metalogo}
+\usepackage{csquotes}
 % Index and Changelog in one column
 \makeatletter
   \renewenvironment{theglossary}{%
@@ -402,6 +403,7 @@
 % \changes{v2.10.2}{2016/05/25}{Avoid \protect\cs{Xtxtbeforenotes} hook made notes overllap bottom margin}
 % \changes{v2.10.2}{2016/05/25}{Make \protect\cs{parafootsepX} working}
 % \changes{v2.10.2}{2016/05/25}{Fix bug with \protect\cs{Xparafootsep} in parallel typesetting}
+% \changes{v2.11.0}{2016/05/21}{Add new tools to make manuscript's apparatus}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1485,6 +1487,69 @@
 %  #1\textsuperscript{#2}%
 %}
 % \end{verbatim}
+%
+% \subsection{Manuscript apparatus}
+% In many cases, the critical notes refer to textual variants between different manuscripts containing the edited text.
+% Sometimes, these manuscripts are only containing some parts of the text.
+% In this case, it can be useful to add a list of the manuscripts used to edit the text on the given page (or parts of it).
+% This list of the manuscript is called \enquote{manuscript apparatus}.
+%
+% To create this apparatus with \macpackage, you have to insert specific commands in your text, which mark the manuscript's sections.
+% These commands will be analyzed, and \textbf{after the second \TeX{} run}, the manuscript apparatus will be inserted in the form of critical footnotes of series A. 
+%
+% As the insertion of the manuscript apparatus can change the page breaks, you should do a third or a fourth \TeX{} run (or more if necessary).
+% That's why we strongly recommend to use tools like \emph{latexmk}.
+%
+% \subsubsection{Marking manuscript sections}
+% \DescribeMacro{\msdata}
+% \cs{msdata}\marg{text} must be inserted at the point where a section of text using some specific manuscript starts.
+% \meta{text} could be any arbitrary text, classically a list of manuscripts used for the starting part of the text.
+% The command must be glued to the beginning of the text's section, without space.
+% For example:
+% \begin{verbatim}
+% \msdata{ABC}Lorem ipsum
+% \end{verbatim}
+% Means that the section of text starting by \enquote{Lorem ipsum} is attested in the manuscripts A, B and C.
+%
+% \DescribeMacro{\stopmsdata}
+% \cs{stopmsdata} must be inserted at point where the section of text started by the previous \cs{msdata} ends.
+% The command must be be glued to the end of the text's section, without space.
+% As \cs{stopmsdata} is a \LaTeX\  parameterless macro, it will gobble the following space. 
+% To keep the space, you have to use backslash followed by a space, or add \verb+{}+ to \cs{stopmsdata}.
+% 
+% For example:
+% \begin{verbatim}
+% \msdata{ABC}Lorem ipsum dolor
+% …
+% amet\stopmsdata{} \msdata{ABCD}sic transit
+% \end{verbatim}
+% Means that part of text containing \enquote{Lorem ipsum dolor … amet} is attested in manuscripts A, B and C, while the part of text starting by \enquote{sic transit} is attested in manuscripts A, B, C and D.
+%
+% A \cs{stopmsdata} is automatically inserted at the end of the texts.
+%
+% Note that in most cases, a \cs{stopmsdata} is followed by a \cs{msdata}. However, as there is in most cases a space between them, it could be, in printed form, in different lines.
+% That is why you must use \cs{stopmsdata}, even if, by security, \cs{msdata} inserts it if forgotten.
+%
+% \subsubsection{How the manuscript apparatus will be printed}
+% On each page, the manuscript apparatus will print the manuscript's sections with start and end line numbers.
+% However, the following rules will be applied:
+% \begin{itemize}
+% \item If the manuscript's section does not start on the current page, the start line number will be the line number of the first line of the page.
+% \item If the manuscript's section does not stop on the current page, the end line number will be the line number of the last line of the page.
+% \item If the manuscripts's section neither starts nor ends on the current page, no line number will be printed. The same is true for the case where both the \cs{msdata} is called at the very beginning of the page and \cs{endmsdata} is called at the very end of the page.
+% \end{itemize}
+% \subsubsection{Setting}
+% As the manuscript apparatus technically consists of critical notes of series A, any setting available for critical notes can be applied (\reff{displayoptions}).
+% However, the following commands are \emph{additionally} available.
+%
+% \DescribeMacro{\setmsdataseries}
+% The series used by the manuscript apparatus is series A.
+% However, you can change it using \cs{setmsdataseries}\marg{series}.
+%
+% \DescribeMacro{\setmsdatalabel}
+% As the manuscript apparatus' footnotes are just specific critical footnotes, they have a lemma associated.
+% By default, it is \enquote{Ms.}.
+% You can change it using \cs{setmsdatalabel}\marg{txt}.
 %
 % \subsection{Familiar notes} \label{sec:desc:familiar}
 % 
@@ -4113,6 +4178,11 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@warning@msdatawithoutstop}
+\newcommand{\led@warning@msdatawithoutstop}{%
+  \reledmac@warning{\string\msdata\space without previous \string\stopmsdata}%
+}%
+% \end{macro}
 % \subsection{Gobbling}
 % \changes{v1.14.0}{2014/10/27}{Provide \protect\cs{@gobblefour}}
 % \changes{v1.14.0}{2014/10/27}{Move gobbling command}
@@ -4366,6 +4436,7 @@
   \global\let\sub@change=\relax
   \resetprevline@
   \resetprevpage@num
+  \global\stopmsdata@inserted@true%
   }
 
 %    \end{macrocode}
@@ -5350,6 +5421,14 @@
        \global\page@num=\page@num\relax
        \global\last@page@num=\last@page@num\relax
   \fi
+  \@stopmsd%Security if people forget last \endms
+  \unless\ifledRcol%Get the last line of the last page
+    \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
+    \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
+  \else%
+    \csnumgdef{@lastabsline@forpageR@\the\page@numR}{\the\absline@numR}%
+    \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
+  \fi%
   \endgroup  
 %    \end{macrocode}
 %
@@ -5587,6 +5666,8 @@
   \ifledRcol
     \ifnum #1=\last@page@numR
     \else
+      \csnumgdef{@lastabsline@forpageR@\the\page@numR}{\the\absline@numR}%
+      \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
       \fi
@@ -5597,6 +5678,8 @@
   \else
     \ifnum #1=\last@page@num
     \else
+      \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
+      \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
         \line@num \z@ \subline@num \z@
       \fi
@@ -6207,7 +6290,7 @@
   \IfStrEq{\led@pb@setting}{after}%
     {\xifinlist{\the\absline@num}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@page+1}%
+        {\numgdef{\@next@page}{\c@page+\@ne}%
         \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
       }%
       {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
@@ -6215,10 +6298,10 @@
     {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
-    {\numdef{\next@absline}{\the\absline@num+1}%
+    {\numdef{\next@absline}{\the\absline@num+\@ne}%
     \xifinlist{\next@absline}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@page+1}%
+        {\numgdef{\nc@page}{\c@page+\@ne}%
         \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
         }%
         {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
@@ -7090,7 +7173,7 @@
 % Now, the real code. First, increment the counter corresponding to the argument.
 %    \begin{macrocode}
   \unless\ifledRcol%
-     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+1}%
+     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+\@ne}%
 %    \end{macrocode}
 % Then, write its value to the numbered file.  
 %    \begin{macrocode}
@@ -7099,7 +7182,7 @@
 % Do the same thing if we are in the right columns.
 %    \begin{macrocode}
   \else%
-     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+1}%
+     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+\@ne}%
      \protected@write\linenum@outR{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt}}{#1}}%
   \fi%
 %    \end{macrocode}
@@ -7413,7 +7496,7 @@
 %    \begin{macrocode}
   \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
-    \csnumdef{pstartline}{\pstartline+1}%
+    \csnumdef{pstartline}{\pstartline+\@ne}%
     \do@line%
     \ifbypstart@%
      \ifnumequal{\pstartline}{1}{%
@@ -7632,12 +7715,16 @@
 %    \begin{macrocode}
         \l@dld@ta%
 %    \end{macrocode}
-% Insert text before notes.
+% Prepare inserting text before notes.
 %    \begin{macrocode}
         \if@firstlineofpage%
           \set@Xtxtbeforenotes%
           \global\@firstlineofpagefalse%
         \fi%
+%    \end{macrocode}
+% Insert manuscript's data's footnotes.
+%    \begin{macrocode}
+        \insert@msdata%
 %    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
@@ -7691,6 +7778,7 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpagefalse%
     \fi%
+    \insert@msdata%
     \add@inserts\affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
@@ -7889,6 +7977,7 @@
          \global\line@num=\z@ \global\subline@num=\z@
          \resetprevline@
        \fi
+       \add@msdata@firstlineofpage%
 %    \end{macrocode}
 %
 % Next, we handle
@@ -7949,6 +8038,7 @@
 % This macro handles the fixed codes for \protect\cs{do@actions}. It is
 % one big case statement.
 % \changes{v0.7.0}{2005/02/24}{Added \protect\cs{do@actions@fixedcode}}
+% \changes{v2.11.0}{2016/05/21}{Add action 1010}
 %    \begin{macrocode}
 \newcommand*{\do@actions@fixedcode}{%
   \ifcase\@l@dtempcnta
@@ -7976,8 +8066,10 @@
     \l@dskipnumbertrue
   \or%                   	% 1008 = skipping numbering in stanza
     \l@dskipversenumbertrue%
- \or%    									% 1009 = hiding number
+  \or%    								% 1009 = hiding number
     \l@dhidenumbertrue
+  \or%									  % 1010 = inserting msdata
+    \add@msdata%
   \else
     \led@warn@BadAction
   \fi}
@@ -12994,7 +13086,7 @@
 % Now we begin the output routine and associated things.
 %
 %
-% \subsubsection{Page number management}
+% \subsection{Page number management}
 % \begin{macro}{\pageno}
 % \begin{macro}{\advancepageno}
 %  \protect\cs{pageno} is a page number, starting at 1, and \protect\cs{advancepageno}
@@ -13009,7 +13101,7 @@
 % \end{macro}
 %
 %
-% \subsubsection{Extra footnotes output}
+% \subsection{Extra footnotes output}
 %
 %    With luck we might only have to change \protect\cs{@makecol} and
 % \protect\cs{@reinserts} of the \LaTeX's kernel. 
@@ -13173,7 +13265,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsubsection{Standard output's commands patching}
+% \subsection{Standard output's commands patching}
 % The \protect\ltxclass{memoir} class does not use the `standard' versions of
 % \protect\cs{@makecol} and \protect\cs{@reinserts}, due to its sidebar insert.
 % We had better add that code if \protect\ltxclass{memoir} is used. (It can
@@ -14421,7 +14513,7 @@
             \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
             {\appto\sidenotecontent@{\@sidenotesep ##1}%
             }%
-            \numgdef{\itemcount@}{\itemcount@+1}%
+            \numgdef{\itemcount@}{\itemcount@+\@ne}%
     }%
     \dolistloop{\l@dcsnotetext}%
     \ifnumgreater{\itemcount@}{1}{\led@err@ManySidenotes}{}%
@@ -15629,7 +15721,362 @@
 %
 %
 %
+% \section{Manuscripts' apparatus}
+% \subsection{User level macro}
+% \begin{macro}{\msdata}
+% The user level \cs{msdata} command only writes the manuscript's data on numbered auxiliary file.
+%    \begin{macrocode}
+\newcommand{\msdata}[1]{%
+  \leavevmode%
+  \unless\ifstopmsdata@inserted@%
+    \stopmsdata%
+    \led@warning@msdatawithoutstop%
+  \fi%
+  \global\stopmsdata@inserted@false%
+  \unless\ifledRcol%
+    \protected@write\linenum@out{}{%
+      \string\@msd{#1}%
+    }%
+  \else%
+    \protected@write\linenum@outR{}{%
+      \string\@msd{#1}%
+    }%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\stopmsdata}
+% The user level \cs{stopmsdata} command only write information about the end of manuscript's data on numbered auxiliary file.
+%    \begin{macrocode}
+\newcommand{\stopmsdata}[0]{%
+  \leavevmode%
+  \unless\ifledRcol%
+    \protected@write\linenum@out{}{%
+      \string\@stopmsd%
+    }%
+  \else%
+    \protected@write\linenum@outR{}{%
+      \string\@stopmsd%
+    }%
+  \fi%
+  \global\stopmsdata@inserted@true%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\ifstopmsdata@inserted@}
+% The \cs{ifstopmsdata@inserted@} boolean is set to TRUE at every \cs{stopmsdata} and reset to FALSE at all \cs{msdata}. It also set to TRUE at every \cs{beginnumbering}.
+% It use to automatically insert \cs{stopmsdata} if forgotten before \cs{msdata}
+%    \begin{macrocode}
+\newif\ifstopmsdata@inserted@%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Setting macro}
+% The setting macros of the manuscripts apparatus tools are very easy: they just save their argument in an internal macro.
+% \begin{macro}{\setmsdataseries}
+% In which series of note will be printed the manuscripts apparatus? 
+%    \begin{macrocode}
+\newcommand{\setmsdataseries}[1]{%
+  \gdef\@msdata@series{#1}%
+}%
+\def\@msdata@series{A}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\setmsdatalabel}
+% The label for the manuscript's data.
+%    \begin{macrocode}
+\def\ms@data@label{Ms.}%
+\newcommand{\setmsdatalabel}[1]{%
+  \gdef\ms@data@label{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Counters and lists}
+% \begin{macro}{\@msd@c}
+% \cs{@msd@c} is a counter increased at each \cs{@msd} read in auxiliary file. 
+%    \begin{macrocode}
+\numdef{\@msd@c}{0}
+\numdef{\@msd@cR}{0}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@msd@c}
+% \cs{add@msd@} is a counter increased at each \cs{add@msddata}, that is at each time we prepare the insertion of manuscript's data's footnote.
+%    \begin{macrocode}
+\numdef{\add@msd@c}{0}%
+\numdef{\add@msd@cR}{0}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@msdata@list}
+% The \cs{@msdata@list} will contain, for each line, the lists of command to be executed to insert the manuscript's apparatus.
+% It will be filled on \cs{add@msdata} and looped  on  \cs{insert@msdata}, then emptied.
+%    \begin{macrocode}
+\def\@msdata@list{}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Auxiliary file macros}
+% \begin{macro}{\@msd}
+% The \cs{@msd} macro is written in the auxiliary file.
+% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number and the absolute line number where it was called 
 %
+% It also stores the action code $1010$ in the list of actions by line.
+%    \begin{macrocode}
+\newcommand{\@msd}[1]{%
+  \unless\ifledRcol%
+    \numdef{\@msd@c}{\@msd@c+\@ne}%
+    \csgdef{@msdata@\@msd@c @data}{#1}%
+    \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
+    \csxdef{@msdata@\@msd@c @abslinenumber}{\the\absline@num}%
+    \xright@appenditem{\the\absline@num}\to\actionlines@list%
+    \xright@appenditem{-1010}\to\actions@list%
+  \else%
+    \numdef{\@msd@cR}{\@msd@cR+\@ne}%
+    \csgdef{@msdata@\@msd@cR @dataR}{#1}%
+    \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
+    \csxdef{@msdata@\@msd@cR @abslinenumberR}{\the\absline@numR}%
+    \xright@appenditem{\the\absline@numR}\to\actionlines@listR%
+    \xright@appenditem{-1010}\to\actions@listR%
+ \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@endmsd}
+% Inserted in the auxiliary file by \cs{stopmsd}, the \cs{@stopmsd} macro will store in two commands the line number and the absolute line number on which it is called.
+%    \begin{macrocode}
+\newcommand{\@stopmsd}[0]{%
+  \unless\ifledRcol% 
+     \ifcsundef{@msdata@\@msd@c @stoplinenumber}{%
+       \csxdef{@msdata@\@msd@c @stopabslinenumber}{\the\absline@num}%
+       \csxdef{@msdata@\@msd@c @stoplinenumber}{\the\line@num}%
+     }{}%
+  \else% 
+     \ifcsundef{@msdata@\@msd@cR @stoplinenumberR}{%
+       \csxdef{@msdata@\@msd@cR @stopabslinenumberR}{\the\absline@numR}%
+       \csxdef{@msdata@\@msd@cR @stoplinenumberR}{\the\line@numR}%
+     }%
+     {}%
+ \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Action macro}
+% \begin{macro}{\add@msdata}
+% \cs{add@msdata} is executed on each line when action code $1010$ is seen.
+% It will not insert immediately the manuscript data footnote, as action code are executed before the line be typeset, and, consequently, could be on the previous page.
+% So it just store the manuscript data footnote to \cs{@msdata@list}.
+%    \begin{macrocode}
+\newcommand{\add@msdata}{%
+  \bgroup%
+  \normalfont%
+  \unless\ifledRcol@%
+    \numgdef{\add@msd@c}{\add@msd@c+\@ne}%
+      \ifcsdef{@msdata@\add@msd@c @data}{%
+        \letcs{\@data}{@msdata@\add@msd@c @data}%
+        \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@c @linenumber}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+            {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpage@\the\page@num}}%Otherwiser, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }% 
+          \@msd@options@fullpagefalse%
+          \if@firstlineofpage%Try if the data are for the full page. If yes, will add options to the list. 
+            \unless\if@msdata@insertedfrompreviouspage%
+              \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+\@ne}%
+              {%
+              \numdef{\@tmp}{\add@msd@c+\@ne}%
+              \ifcsdef{@msdata@\@tmp @abslinenumber}%
+                {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+                  {}%
+                  {\@msd@options@fullpagetrue}%
+                }%
+                {\@msd@options@fullpagetrue}%
+              }%
+             {}%
+            \fi%
+          \fi%
+          \listxadd{\@msdata@list}{%
+            \@msd@options@iffullpage%
+            \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
+            \reset@msd@options@iffullpage%
+         }%
+      }%
+      {}%
+  \else%
+    \numgdef{\add@msd@cR}{\add@msd@cR+\@ne}%
+      \ifcsdef{@msdata@\add@msd@cR @dataR}{%
+        \letcs{\@data}{@msdata@\add@msd@cR @dataR}%
+        \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \csuse{@msdata@\add@msd@cR @linenumberR}|% Start line number
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
+            {\csuse{@msdata@\add@msd@cR @stoplinenumberR}}%End line number if in the same page
+            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwiser, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }%
+          \@msd@options@fullpagefalse%
+          \if@firstlineofpageR%
+            \unless\if@msdata@insertedfrompreviouspage%
+              \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@c @stopabslinenumberR}+\@ne}%
+              {%
+              \numdef{\@tmp}{\add@msd@cR+\@ne}%
+              \ifcsdef{@msdata@\@tmp @abslinenumberR}%
+                {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumberR}}{\csuse{@lastabsline@forpageR@\the\page@numR}}%
+                  {}%
+                  {\@msd@options@fullpagetrue}%
+                }%
+                {\@msd@options@fullpagetrue}%
+              }%
+             {}%
+            \fi%
+          \fi%
+          \listxadd{\@msdata@list}{%
+            \@msd@options@iffullpage%
+            \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
+            \reset@msd@options@iffullpage%
+         }%
+      }%
+      {}%
+  \fi%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% 
+% \begin{macro}{\if@msdata@insertedfrompreviouspage}
+% The \cs{if@msdata@insertedfrompreviouspage} boolean is set to TRUE if \macpackage\ automatically inserts data from previous page in the first line of a page.
+%    \begin{macrocode}
+\newif\if@msdata@insertedfrompreviouspage%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\add@msdata@firstlineofpage}
+% \cs{add@msdata@firstlineofpage} is called at the first line of every page. It inserts manuscript data which start on one of the previous pages and continue on this page. 
+%    \begin{macrocode}
+\newcommand{\add@msdata@firstlineofpage}{%
+  \bgroup%
+  \normalfont%  
+  \unless\ifledRcol@%
+    \ifcsdef{@msdata@\add@msd@c @data}{%
+    \ifnumless{\the\absline@num-\@ne}{\csuse{@msdata@\add@msd@c @stopabslinenumber}}%
+      {%
+      \global\@msdata@insertedfrompreviouspagetrue%
+      \letcs{\@data}{@msdata@\add@msd@c @data}%
+      \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \numexpr\the\line@num+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been increased, we increase it for printing
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+            {\csuse{@msdata@\add@msd@c @stoplinenumber}}%End line number if in the same page
+            {\csuse{@lastline@forpage@\the\page@num}}%Otherwise, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }% 
+          \@msd@options@fullpagefalse%
+          \ifnumless{\csuse{@lastabsline@forpage@\the\page@num}}{\csuse{@msdata@\add@msd@c @stopabslinenumber}+\@ne}%We will test if the ms data is for the full page
+          {%
+          \numdef{\@tmp}{\add@msd@c+\@ne}%
+          \ifcsdef{@msdata@\@tmp @abslinenumber}%
+            {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
+              {}%
+              {\@msd@options@fullpagetrue}%
+            }%
+            {\@msd@options@fullpagetrue}%
+          }%
+         {}%
+         \listxadd{\@msdata@list}{%
+          \@msd@options@iffullpage%
+          \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
+          \reset@msd@options@iffullpage%
+        }%
+      }%
+      {\global\@msdata@insertedfrompreviouspagefalse}%
+  }{}%
+  \else%
+    \ifcsdef{@msdata@\add@msd@cR @dataR}{%
+    \ifnumless{\the\absline@numR-\@ne}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}%
+          {%
+          \global\@msdata@insertedfrompreviouspagetrue%
+          \letcs{\@data}{@msdata@\add@msd@cR @dataR}%
+          \edef\l@d@nums{%
+          000|% Start page = we don't print it
+          \numexpr\the\line@numR+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been increased, we increase it for printing
+          000|% Start subline number, for now, not used
+          000|% End page number, we don't print it
+          \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
+            {\csuse{@msdata@\add@msd@cR @stoplinenumberR}}%End line number if in the same page
+            {\csuse{@lastline@forpageR@\the\page@numR}}%Otherwise, last number of the page
+          |%
+          000|% End sub line number, for now, not used
+          \edfont@info%Font
+          }%
+          \@msd@options@fullpagefalse%
+          \ifnumless{\csuse{@lastabsline@forpageR@\the\page@numR}}{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}+\@ne}%
+          {%
+          \numdef{\@tmp}{\add@msd@cR+\@ne}%
+          \ifcsdef{@msdata@\@tmp @abslinenumberR}%
+            {\ifnumequal{\csuse{@msdata@\@tmp @abslinenumberR}}{\csuse{@lastabsline@forpageR@\the\page@numR}}%
+              {}%
+              {\@msd@options@fullpagetrue}%
+            }%
+            {\@msd@options@fullpagetrue}%
+          }%
+         {}%
+         \listxadd{\@msdata@list}{%
+           \@msd@options@iffullpage%
+           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
+           \reset@msd@options@iffullpage%
+        }%
+     }%
+     {\global\@msdata@insertedfrompreviouspagefalse}%
+  }{}%
+  \fi%
+  \egroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Inserting footnote}
+% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript's data's footnotes.
+% \begin{macro}{\insert@msdata}
+%    \begin{macrocode}
+\newcommand{\insert@msdata}{%
+  \def\do##1{##1}%
+  \dolistloop{\@msdata@list}%
+  \global\let\@msdata@list\relax%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Other}
+% \begin{macro}{\@msd@options@iffullpage}
+% \begin{macro}{\reset@msd@options@iffullpage}
+% \cs{@msd@options@iffullpage} sets some options if the manuscript's data are for all the page. 
+% \cs{reset@msd@options@iffullpage} resets them after the footnote.
+% \cs{if@msd@options@fullpage} is switch to true in \protect{add@msdata@firstlineofpage} if these option must be inserted.
+%    \begin{macrocode}
+\newif\if@msd@options@fullpage%
+\newcommand{\@msd@options@iffullpage}[0]{%
+  \if@msd@options@fullpage%
+    \noexpand\toggletrue{nonum@}%
+    \ifdefvoid{\ms@data@label}%
+      {\noexpand\toggletrue{nosep@}}%
+      {}%
+  \fi%
+}%
+\newcommand{\reset@msd@options@iffullpage}[0]{%
+  \noexpand\togglefalse{nonum@}%
+  \noexpand\togglefalse{nosep@}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \section{Arrays and tables}
 % \subsection{Preamble: macro as environment}
 %
