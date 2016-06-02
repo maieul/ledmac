@@ -271,7 +271,9 @@
 % \changes{v2.8.0}{2016/03/23}{Fix bug when the right line number style is not the same to the left line number style}
 % \changes{v2.8.0}{2016/03/23}{Add \protect\cs{linenumberLevenifblanktrue} and \protect\cs{linenumberRevenifblank} commands}
 % \changes{v2.9.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
-% \changes{v2.9.0}{2016/05/08}{More accurate error messages.}
+% \changes{v2.9.0}{2016/05/08}{More specific error messages.}
+% \changes{v2.9.1}{2016/05/25}{Prevent \protect\cs{Xtxtbeforenotes} hook from causing notes to go beyond the bottom margin}
+% \changes{v2.10.0}{2016/02/02}{Add new tools to make apparatuses of manuscripts}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -474,12 +476,12 @@
 % The general scheme for parallel columns looks like this:
 % \begin{verbatim}
 % \begin{pairs}
-% \begin{Leftside} reledmac numbering text command \end{Leftside}
-% \begin{Rightside} reledmac numbering text command \end{Rightside}
+% \begin{Leftside} reledmac numbered text commands \end{Leftside}
+% \begin{Rightside} reledmac numbered text commands \end{Rightside}
 % \end{pairs}
 % \Columns
 % \begin{pairs}
-% \begin{Leftside} reledmac numbering text command \end{Leftside}
+% \begin{Leftside} reledmac numbered text commands \end{Leftside}
 % ...
 % \end{pairs}
 % \Columns
@@ -566,9 +568,9 @@
 % The general scheme for parallel pages looks like this:
 % \begin{verbatim}
 % \begin{pages}
-% \begin{Leftside} reledmac numbering text command \end{Leftside}
-% \begin{Rightside} reledmac numbering text command \end{Rightside}
-% \begin{Leftside} reledmac numbering text command \end{Leftside}
+% \begin{Leftside} reledmac numberied text commands \end{Leftside}
+% \begin{Rightside} reledmac numbered text commands \end{Rightside}
+% \begin{Leftside} reledmac numbered text commands \end{Leftside}
 % ...
 % \end{pages}
 % \Pages
@@ -1172,7 +1174,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/05/08 v2.9.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/02/02 v2.10.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1497,6 +1499,7 @@
   \global\sublines@false
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
+  \global\stopmsdata@inserted@true%
   \set@continuousnumberingforR%
   \message{Section \the\section@numR R }%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
@@ -3409,7 +3412,15 @@
         \affixline@num%
       \fi%
       \xifinlist{\the\l@dpscL}{\eled@sections@@}%
-        {\add@inserts\affixside@note}%
+        {%
+          \if@firstlineofpage%
+            \set@Xtxtbeforenotes%
+            \global\@firstlineofpagefalse%
+          \fi%
+          \add@inserts%
+          \insert@msdata%
+          \affixside@note%
+        }%
         {\print@lineL}%
       }%
     \add@penaltiesL%
@@ -3444,6 +3455,11 @@
 \def\print@lineL{%
     \affixpstart@numL%
     \l@dld@ta%
+    \if@firstlineofpage%
+      \set@Xtxtbeforenotes%
+      \global\@firstlineofpagefalse%
+    \fi%
+    \insert@msdata%
     \add@inserts\affixside@note%
     \l@dlsn@te%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
@@ -3454,7 +3470,7 @@
             \new@lineL%
             \inserthangingsymbolL%
             \l@dunhbox@line{\one@line}}\ledrlfill\l@drd@ta%
-     \l@drsn@te}}
+     \l@drsn@te}}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -3568,7 +3584,15 @@
         \affixline@numR%
       \fi%
      \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}%
-       {\add@insertsR\affixside@noteR}%
+       {%
+         \if@firstlineofpageR%
+           \set@Xtxtbeforenotes%
+           \global\@firstlineofpageRfalse%
+         \fi%
+         \insert@msdata%
+         \add@insertsR%
+         \affixside@noteR%
+       }%
        {\print@lineR}%
     }%
     \add@penaltiesR%
@@ -3605,6 +3629,11 @@
 \def\print@lineR{%
     \affixpstart@numR%
     \l@dld@ta%
+    \if@firstlineofpageR%
+      \set@Xtxtbeforenotes%
+      \global\@firstlineofpageRfalse%
+    \fi%
+    \insert@msdata%
     \add@insertsR\affixside@noteR%
     \l@dlsn@te%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
@@ -3731,7 +3760,8 @@
 % It may call itself recursively and we use tail recursion, via
 % \protect\cs{do@actions@nextR} for this.
 % \changes{v0.3.0}{2005/02/24}{Used \protect\cs{do@actions@fixedcode} in \protect\cs{do@actionsR}}
-% \changes{v1.15.0}{2015/04/13}{Add action 1008 and 1009}
+% \changes{v1.15.0}{2015/04/13}{Add actions 1008 and 1009}
+% \changes{v2.10.0}{2016/02/02}{Add action 1010}
 %    \begin{macrocode}
 
 \newif\ifl@dskipversenumberR
@@ -3763,6 +3793,8 @@
     \l@dskipversenumberRtrue%
  \or% 	                   % 1009 = hiding number
     \l@dhidenumbertrue% 
+ \or%									     % 1010 = inserting msdata
+    \add@msdata%      
  \else%
     \led@warn@BadAction
  \fi%
@@ -3774,10 +3806,12 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
+      \@firstlineofpageRtrue%
       \global\page@numR=\next@actionR
       \ifbypage@R
         \global\line@numR \z@  \global\subline@numR \z@
       \fi
+      \add@msdata@firstlineofpage%
     \else
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
