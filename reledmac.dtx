@@ -396,14 +396,14 @@
 % \changes{v2.9.2}{2016/04/30}{Fix bug with \protect\package{hyperref} package when a lemma starts with ``plus'' or ``minus'' (bug introduced in v.~2.7.0).}
 % \changes{v2.9.3}{2016/05/02}{Fix bug with line number position and reset added by v.~2.9.0}
 % \changes{v2.10.0}{2016/05/08}{Add \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
-% \changes{v2.10.0}{2016/05/08}{More accurate error messages.}
-% \changes{v2.10.0}{2016/05/08}{Fix bug with \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} when using \protect\cs{color} command inside.}
-% \changes{v2.10.1}{2016/05/18}{Add `nopenalities` option.}
-% \changes{v2.10.1}{2016/05/18}{Fix bug introduced in v.~1.4 which make not paragraphed critical footnotes could break marginal line number typesetting}
-% \changes{v2.11.0}{2016/02/03}{Avoid \protect\cs{Xtxtbeforenotes} hook make notes overlap bottom margin}
-% \changes{v2.11.0}{2016/02/03}{Make \protect\cs{parafootsepX} working}
-% \changes{v2.11.0}{2016/02/03}{Fix bug with \protect\cs{Xparafootsep} in parallel typesetting}
-% \changes{v2.11.0}{2016/02/03}{Add new tools to make manuscript's apparatus}
+% \changes{v2.10.0}{2016/05/08}{More specific error messages.}
+% \changes{v2.10.0}{2016/05/08}{Fix bug in \protect\cs{ledlsnotefontsetup} and \protect\cs{ledrsnotefontsetup} which could not handle \protect\cs{color} command properly.}
+% \changes{v2.10.1}{2016/05/18}{Add `nopenalties` option.}
+% \changes{v2.10.1}{2016/05/18}{Fix bug introduced in v.~1.4: not paragraphed critical footnotes could prevent marginal line number from being displayed}
+% \changes{v2.11.0}{2016/02/03}{Prevent \protect\cs{Xtxtbeforenotes} hook from causing notes to go beyond the bottom margin}
+% \changes{v2.11.0}{2016/02/03}{Make \protect\cs{parafootsepX} work}
+% \changes{v2.11.0}{2016/02/03}{Fix bug in \protect\cs{Xparafootsep} in parallel typesetting}
+% \changes{v2.11.0}{2016/02/03}{Add new tools to produce an apparatus of manuscripts}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -682,12 +682,12 @@
 % \begin{description}
 % \item[draft] underlines lemmas in the main text.
 % \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
-% \item[nopenalties] to be called in some case when using paragraphed endnotes to solve problem (\reff{nopenalties)}
-% \item[nopbinverse] prevents page breaks inside verses.
-% \item[noquotation] by default, the quotation environment is redefined inside numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
+% \item[nopenalties] must be called in some cases when using paragraphed endnotes (\reff{nopenalties)}
+% \item[nopbinverse] prevents page break within verse environment.
+% \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
 % \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
 % \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
-% \item[xindy] and \verb|xindy+hyperref| are for selecting \verb+xindy+ as the index processor (\reff{xindy}).
+% \item[xindy] and \verb|xindy+hyperref| select \verb+xindy+ as the index processor (\reff{xindy}).
 % \end{description}
 % 
 % \subsection{Optimizing package performance}\label{option:performance}
@@ -1488,66 +1488,63 @@
 %}
 % \end{verbatim}
 %
-% \subsection{Manuscript apparatus}
-% In many cases, the critical notes refer to textual variants between different manuscripts containing the edited text.
-% Sometimes, these manuscripts are only containing some parts of the text.
-% In this case, it can be useful to add a list of the manuscripts used to edit the text on the given page (or parts of it).
-% This list of the manuscript is called \enquote{manuscript apparatus}.
+% \subsection{Apparatus of Manuscripts}
+% The critical notes mostly refer to textual variants between manuscripts which contain the text to be edited.
+% It may so happen that the manuscripts only contain parts of the text.
+% Depending on one's wishes, \macpackage\ can generate lists of relevant manuscripts for any delimited portion of text.
+% Such lists are referred to as \enquote{apparatuses of manuscripts}.
 %
-% To create this apparatus with \macpackage, you have to insert specific commands in your text, which mark the manuscript's sections.
-% These commands will be analyzed, and \textbf{after the second \TeX{} run}, the manuscript apparatus will be inserted in the form of critical footnotes of series A. 
+% To produce an apparatus of manuscripts with \macpackage, you have to insert specific commands that are used to mark the sections for which only part of the manuscripts are relevant.
+% These commands will be processed, and \textbf{after the second \TeX{} run}, corresponding apparatuses of manuscripts will be inserted in the first (viz. 'A' series) level of footnotes. 
 %
-% As the insertion of the manuscript apparatus can change the page breaks, you should do a third or a fourth \TeX{} run (or more if necessary).
-% That's why we strongly recommend to use tools like \emph{latexmk}.
+% As the insertion of this apparatus can change the page breaks, you may have to run \TeX{} two or more times.
+% We strongly recommend to use tools like \emph{latexmk} to do that.
 %
-% \subsubsection{Marking manuscript sections}
+% \subsubsection{Marking sections of text}
 % \DescribeMacro{\msdata}
-% \cs{msdata}\marg{text} must be inserted at the point where a section of text using some specific manuscript starts.
-% \meta{text} could be any arbitrary text, classically a list of manuscripts used for the starting part of the text.
-% The command must be glued to the beginning of the text's section, without space.
-% For example:
+% \cs{msdata}\marg{text} must be inserted at the point where a section for which only part of the manuscripts are relevant starts.
+% \meta{text} can be any arbitrary text, viz. a list of the manuscripts that are used for the section that starts.
+% The command must be attached right at the point where the section starts, with no space, like so:
 % \begin{verbatim}
 % \msdata{ABC}Lorem ipsum
 % \end{verbatim}
-% Means that the section of text starting by \enquote{Lorem ipsum} is attested in the manuscripts A, B and C.
+% Which means that the section of text starting by \enquote{Lorem ipsum} is witnessed by manuscripts A, B and C.
 %
 % \DescribeMacro{\stopmsdata}
-% \cs{stopmsdata} must be inserted at point where the section of text started by the previous \cs{msdata} ends.
-% The command must be be glued to the end of the text's section, without space.
-% As \cs{stopmsdata} is a \LaTeX\  parameterless macro, it will gobble the following space. 
-% To keep the space, you have to use backslash followed by a space, or add \verb+{}+ to \cs{stopmsdata}.
-% 
-% For example:
+% \cs{stopmsdata} must be inserted at the point where the section of text previously marked by \cs{msdata} ends.
+% The command must be attached right to the end of the section, with no space.
+% As \cs{stopmsdata} is a \LaTeX\ argumentless macro, it will gobble the following space. 
+% To keep that space, you have to either append a backslash followed by a space or \verb+{}+ to \cs{stopmsdata}, like so:
 % \begin{verbatim}
 % \msdata{ABC}Lorem ipsum dolor
-% …
-% amet\stopmsdata{} \msdata{ABCD}sic transit
+% […]
+% amet\stopmsdata{} \msdata{ABCD}sic transit […]
 % \end{verbatim}
-% Means that part of text containing \enquote{Lorem ipsum dolor … amet} is attested in manuscripts A, B and C, while the part of text starting by \enquote{sic transit} is attested in manuscripts A, B, C and D.
+% Which means that the part of text containing \enquote{Lorem ipsum dolor … amet} is witnessed by manuscripts A, B and C, while the part of text starting by \enquote{sic transit} is witnessed by manuscripts A, B, C and D.
 %
-% A \cs{stopmsdata} is automatically inserted at the end of the texts.
+% \cs{stopmsdata} is also automatically inserted by \cs{msdata}.
 %
-% Note that in most cases, a \cs{stopmsdata} is followed by a \cs{msdata}. However, as there is in most cases a space between them, it could be, in printed form, in different lines.
-% That is why you must use \cs{stopmsdata}, even if, by security, \cs{msdata} inserts it if forgotten.
+% Note that in most cases, any \cs{stopmsdata} is followed by \cs{msdata}. However, as these two command are usually separated by a space, it may happen that a line break be automatically inserted between them.
+% This is why it is advised to always insert \cs{stopmsdata}, even if \cs{msdata} inserts it in case it is forgotten.
 %
-% \subsubsection{How the manuscript apparatus will be printed}
-% On each page, the manuscript apparatus will print the manuscript's sections with start and end line numbers.
+% \subsubsection{Layout of the apparatus of manuscripts}
+% On every page, the apparatus of manuscripts marks the corresponding section with starting and ending line numbers.
 % However, the following rules will be applied:
 % \begin{itemize}
-% \item If the manuscript's section does not start on the current page, the start line number will be the line number of the first line of the page.
-% \item If the manuscript's section does not stop on the current page, the end line number will be the line number of the last line of the page.
-% \item If the manuscripts's section neither starts nor ends on the current page, no line number will be printed. The same is true for the case where both the \cs{msdata} is called at the very beginning of the page and \cs{endmsdata} is called at the very end of the page.
+% \item If the section does not start on the current page, the starting line number will be the line number of the first line on the page.
+% \item If the section does not stop on the current page, the ending line number will be the line number of the last line on the page.
+% \item If the section neither starts nor ends on the current page, no line number will be printed. The same is true in case both \cs{msdata} is called at the very beginning of the page and \cs{endmsdata} is called at the very end of the page.
 % \end{itemize}
-% \subsubsection{Setting}
-% As the manuscript apparatus technically consists of critical notes of series A, any setting available for critical notes can be applied (\reff{displayoptions}).
-% However, the following commands are \emph{additionally} available.
+% \subsubsection{Settings}
+% As the apparatus of manuscripts technically consists of first-level critical notes ('A' series), any setting available for critical notes can be applied (\reff{displayoptions}).
+% However, the following \emph{additional} commands are available.
 %
 % \DescribeMacro{\setmsdataseries}
-% The series used by the manuscript apparatus is series A.
-% However, you can change it using \cs{setmsdataseries}\marg{series}.
+% The series used by default for the apparatus of manuscripts is series A.
+% However, you can change it with \cs{setmsdataseries}\marg{series}.
 %
 % \DescribeMacro{\setmsdatalabel}
-% As the manuscript apparatus' footnotes are just specific critical footnotes, they have a lemma associated.
+% As the apparatus of manuscripts consists of regular critical footnotes, a lemma is associated to them.
 % By default, it is \enquote{Ms.}.
 % You can change it using \cs{setmsdatalabel}\marg{txt}.
 %
@@ -3401,7 +3398,7 @@
 %
 % However, if with these options you still have such messages, here are some tricks.
 % \begin{description}
-%  \item['no room for a new count'] is often caused by a use in conjunction with \protect\package{biblatex}.
+%  \item['no room for a new count'] is often caused by \protect\package{biblatex} being used at the same time.
 %  Load \macpackage (and \parpackage) \emph{before} \protect\package{biblatex}.
 %  \item['no room for a new write'] can be caused by multiple indexes.
 % In this case, use \protect\package{indextools} of \protect\package{imakeidx} with the \verb+splitindex+ option, in order to obtain only one \verb+.idx+ file.
@@ -3450,10 +3447,10 @@
 % solutions, described by Michael Downes\index{Downes, Michael},
 % but this area remains unsatisfactory.
 %
-% \label{nopenalties}If you use more than one series of  paragraphed notes, it can happen, in some specific case, that footnotes are not printed, but only footnote rules.
-% It this case you should use the \reledmac's package option \option{nopenalties}. 
-% It should solve the problem, but that could implies widow line orphan line. 
-% For now, we have no solution for this problem.
+% \label{nopenalties}If you use more than one series of paragraphed notes, it may happen, in some particular cases, that only the footnote rule, with no accompanying footnotes, be printed.
+% In this case use \reledmac\ package option \option{nopenalties} 
+% which should solve the problem, but also may produce widow or orphan lines. 
+% For the time being, we have no solution of this problem.
 %
 % 
 %
@@ -3816,7 +3813,7 @@
 % \end{macro}
 % \begin{macro}{\if@firstlineofpage}
 % \cs{if@firstlineofpage} is set to TRUE at the first line of every page.
-% \cs{if@firstlineofpageR} is for right side.
+% \cs{if@firstlineofpageR} is for the right side.
 %    \begin{macrocode}
 \newif\if@firstlineofpage%
 \newif\if@firstlineofpageR%
@@ -4180,7 +4177,7 @@
 % \end{macro}
 % \begin{macro}{\led@warning@msdatawithoutstop}
 \newcommand{\led@warning@msdatawithoutstop}{%
-  \reledmac@warning{\string\msdata\space without previous \string\stopmsdata}%
+  \reledmac@warning{\string\msdata\space without corresponding \string\stopmsdata}%
 }%
 % \end{macro}
 % \subsection{Gobbling}
@@ -5421,7 +5418,7 @@
        \global\page@num=\page@num\relax
        \global\last@page@num=\last@page@num\relax
   \fi
-  \@stopmsd%Security if people forget last \endms
+  \@stopmsd%Security if last \endms{} is forgotten
   \unless\ifledRcol%Get the last line of the last page
     \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
     \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
@@ -6759,7 +6756,7 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% We increase the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
+% we increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
@@ -7715,14 +7712,14 @@
 %    \begin{macrocode}
         \l@dld@ta%
 %    \end{macrocode}
-% Prepare inserting text before notes.
+% Prepare text to be inserted before notes.
 %    \begin{macrocode}
         \if@firstlineofpage%
           \set@Xtxtbeforenotes%
           \global\@firstlineofpagefalse%
         \fi%
 %    \end{macrocode}
-% Insert manuscript's data's footnotes.
+% Insert footnotes made of manuscripts data.
 %    \begin{macrocode}
         \insert@msdata%
 %    \end{macrocode}
@@ -8557,9 +8554,9 @@
 
 %    \end{macrocode}
 % \end{macro}
-% \subsection{Texte before notes}
+% \subsection{Text before notes}
 % \begin{macro}{\set@Xtxtbeforenotes}
-% The \cs{set@Xtxtbeforenotes} macro resets the Xtxtbeforesnotes@\meta{series}@typeset boolean to false. At the first not of the \meta{series} in a page, the Xtextbeforenotes will be inserted. 
+% The \cs{set@Xtxtbeforenotes} macro resets the Xtxtbeforesnotes@\meta{series}@typeset boolean to false. Just before the first note of the \meta{series} in a page, the Xtextbeforenotes will be inserted. 
 %    \begin{macrocode}
 \newcommand{\set@Xtxtbeforenotes}{%
   \unless\ifnocritical@%
@@ -8572,9 +8569,9 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\insert@Xtxtbeforenotes}
-% \cs{insert@Xtxtbeforenotes}\marg{series}, called when inserting note, will insert the text before note if not already inserted.
-% For paragraphed footnotes, will insert it as a componant of the first footnote.
-% For other types of footnotes, will insert it as a classical footnote.
+% \cs{insert@Xtxtbeforenotes}\marg{series}, called when inserting a note, will insert the text before the note if it is not already inserted.
+% For paragraphed footnotes, it will insert it as a component of the first footnote.
+% For other types of footnotes, it will insert it as a regular footnote.
 %    \begin{macrocode}
 \newcommand{\insert@Xtxtbeforenotes}[1]{%
   \nottoggle{Xtxtbeforesnotes@#1@typeset}{%
@@ -13265,7 +13262,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Standard output's commands patching}
+% \subsection{Patching standard output of commands}
 % The \protect\ltxclass{memoir} class does not use the `standard' versions of
 % \protect\cs{@makecol} and \protect\cs{@reinserts}, due to its sidebar insert.
 % We had better add that code if \protect\ltxclass{memoir} is used. (It can
@@ -14463,7 +14460,7 @@
      \ledlsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
      \global\setbox\l@dlp@rbox%
      \ifleftnoteup%
-       =\vbox to\z@{{\ledlsnotefontsetup\vss #1}}%We put \ledlsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+       =\vbox to\z@{{\ledlsnotefontsetup\vss #1}}%We put \ledlsnotefontsetup inside footnote because required for color command. Note the {} to keep setting local.
      \else%
        =\vbox to 0.70\baselineskip{{\ledlsnotefontsetup\strut#1\vss}}%
      \fi%
@@ -14476,7 +14473,7 @@
      \ledrsnotefontsetup%We kept it outside of the vbox, because can affect the ragging
      \global\setbox\l@drp@rbox%
      \ifrightnoteup%
-       =\vbox to\z@{{\ledrsnotefontsetup\vss#1}}%We put \ledrsnotefontsetup inside footnote because required for color command. Note the {} to kept setting local.
+       =\vbox to\z@{{\ledrsnotefontsetup\vss#1}}%We put \ledrsnotefontsetup inside footnote because required for color command. Note the {} to keep setting local.
      \else%
        =\vbox to0.7\baselineskip{{\ledrsnotefontsetup\strut#1\vss}}%
      \fi%
@@ -15721,10 +15718,10 @@
 %
 %
 %
-% \section{Manuscripts' apparatus}
+% \section{Apparatus of Manuscripts}
 % \subsection{User level macro}
 % \begin{macro}{\msdata}
-% The user level \cs{msdata} command only writes the manuscript's data on numbered auxiliary file.
+% The user level \cs{msdata} command only writes the manuscripts data in numbered auxiliary file.
 %    \begin{macrocode}
 \newcommand{\msdata}[1]{%
   \leavevmode%
@@ -15746,7 +15743,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\stopmsdata}
-% The user level \cs{stopmsdata} command only write information about the end of manuscript's data on numbered auxiliary file.
+% The user level \cs{stopmsdata} command only writes information about the end of manuscripts data in numbered auxiliary file.
 %    \begin{macrocode}
 \newcommand{\stopmsdata}[0]{%
   \leavevmode%
@@ -15765,15 +15762,15 @@
 % \end{macro}
 % \begin{macro}{\ifstopmsdata@inserted@}
 % The \cs{ifstopmsdata@inserted@} boolean is set to TRUE at every \cs{stopmsdata} and reset to FALSE at all \cs{msdata}. It also set to TRUE at every \cs{beginnumbering}.
-% It use to automatically insert \cs{stopmsdata} if forgotten before \cs{msdata}
+% It is used to automatically insert \cs{stopmsdata} if forgotten before \cs{msdata}
 %    \begin{macrocode}
 \newif\ifstopmsdata@inserted@%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Setting macro}
-% The setting macros of the manuscripts apparatus tools are very easy: they just save their argument in an internal macro.
+% Setting macros for the manuscripts apparatus tools is very easy: they just save their argument in an internal macro.
 % \begin{macro}{\setmsdataseries}
-% In which series of note will be printed the manuscripts apparatus? 
+% In which series of notes will be printed the apparatus of manuscripts? 
 %    \begin{macrocode}
 \newcommand{\setmsdataseries}[1]{%
   \gdef\@msdata@series{#1}%
@@ -15782,7 +15779,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setmsdatalabel}
-% The label for the manuscript's data.
+% The label for the manuscripts data.
 %    \begin{macrocode}
 \def\ms@data@label{Ms.}%
 \newcommand{\setmsdatalabel}[1]{%
@@ -15792,21 +15789,21 @@
 % \end{macro}
 % \subsection{Counters and lists}
 % \begin{macro}{\@msd@c}
-% \cs{@msd@c} is a counter increased at each \cs{@msd} read in auxiliary file. 
+% \cs{@msd@c} is a counter incremented at each \cs{@msd} read in auxiliary file. 
 %    \begin{macrocode}
 \numdef{\@msd@c}{0}
 \numdef{\@msd@cR}{0}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@msd@c}
-% \cs{add@msd@} is a counter increased at each \cs{add@msddata}, that is at each time we prepare the insertion of manuscript's data's footnote.
+% \cs{add@msd@} is a counter incremented at each \cs{add@msddata}, that is at each time we prepare the insertion of manuscripts data footnote.
 %    \begin{macrocode}
 \numdef{\add@msd@c}{0}%
 \numdef{\add@msd@cR}{0}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@msdata@list}
-% The \cs{@msdata@list} will contain, for each line, the lists of command to be executed to insert the manuscript's apparatus.
+% The \cs{@msdata@list} will contain, for each line, the lists of command to be executed to insert the manuscripts apparatus.
 % It will be filled on \cs{add@msdata} and looped  on  \cs{insert@msdata}, then emptied.
 %    \begin{macrocode}
 \def\@msdata@list{}%
@@ -15815,7 +15812,7 @@
 % \subsection{Auxiliary file macros}
 % \begin{macro}{\@msd}
 % The \cs{@msd} macro is written in the auxiliary file.
-% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscript's data, the line number and the absolute line number where it was called 
+% It just defines three macros by \cs{msdata} macro, which allow us to know the manuscripts data, the line number and the absolute line number where it was called 
 %
 % It also stores the action code $1010$ in the list of actions by line.
 %    \begin{macrocode}
@@ -15970,7 +15967,7 @@
       \letcs{\@data}{@msdata@\add@msd@c @data}%
       \edef\l@d@nums{%
           000|% Start page = we don't print it
-          \numexpr\the\line@num+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been increased, we increase it for printing
+          \numexpr\the\line@num+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been incremented, we increment it for printing
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
           \ifnumless{\csuse{@msdata@\add@msd@c @stopabslinenumber}}{\csuse{@lastabsline@forpage@\the\page@num}}%
@@ -16008,7 +16005,7 @@
           \letcs{\@data}{@msdata@\add@msd@cR @dataR}%
           \edef\l@d@nums{%
           000|% Start page = we don't print it
-          \numexpr\the\line@numR+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been increased, we increase it for printing
+          \numexpr\the\line@numR+\@ne\relax|% Start line number = first line of the page. As \add@msdata@firstlineofpage is called before line number has been incremented, we increment it for printing
           000|% Start subline number, for now, not used
           000|% End page number, we don't print it
           \ifnumless{\csuse{@msdata@\add@msd@cR @stopabslinenumberR}}{\csuse{@lastline@forpageR@\the\page@numR}}%
@@ -16044,7 +16041,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Inserting footnote}
-% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscript's data's footnotes.
+% Just before inserting standard insert (familiar and critical footnotes, sidenotes), we call \cs{insert@msdata} to insert manuscripts data's footnotes.
 % \begin{macro}{\insert@msdata}
 %    \begin{macrocode}
 \newcommand{\insert@msdata}{%
@@ -16057,7 +16054,7 @@
 % \subsection{Other}
 % \begin{macro}{\@msd@options@iffullpage}
 % \begin{macro}{\reset@msd@options@iffullpage}
-% \cs{@msd@options@iffullpage} sets some options if the manuscript's data are for all the page. 
+% \cs{@msd@options@iffullpage} sets some options if the manuscripts data are for all the page. 
 % \cs{reset@msd@options@iffullpage} resets them after the footnote.
 % \cs{if@msd@options@fullpage} is switch to true in \protect{add@msdata@firstlineofpage} if these option must be inserted.
 %    \begin{macrocode}
