@@ -406,6 +406,7 @@
 % \changes{v2.11.0}{2016/06/02}{Add new tools to produce an apparatus of manuscripts}
 % \changes{v2.12.0}{2016/06/12}{Fix bug with familiar footnote number in optional argument of \protect\cs{pstart} or \protect\cs{pend} in parallel typesetting}
 % \changes{v2.12.0}{2016/06/12}{Add \protect\cs{hidenumberingonleftpage} and \protect\cs{hidenumberingonrightpage}}
+% \changes{v2.12.0}{2016/06/12}{\protect\cs{preXnotes} become \protect\cs{Xprenotes} (name's coherence)}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -2178,10 +2179,10 @@
 %
 % \textbf{Be careful, the standard \LaTeX\ footnote rule, which is used by \macpackage, decreases 3pt. These 3pt are not changed by this command.}
 %
-% \DescribeMacro{\preXnotes}
+% \DescribeMacro{\Xprenotes}
 % You can set the space before the first series of critical notes printed on each page
 % and set a different amount of space for each subsequent series on the page.
-% You can do it with \protect\cs{preXnotes}\marg{l}. The default value is \verb+0pt+.
+% You can do it with \protect\cs{Xprenotes}\marg{l}. The default value is \verb+0pt+.
 % You can disable this feature by setting the length to 0pt.
 %
 % \DescribeMacro{\prenotesX}
@@ -4184,6 +4185,13 @@
 %    \begin{macrocode}
 \newcommand{\led@warning@msdatawithoutstop}{%
   \reledmac@warning{\string\msdata\space without corresponding \string\stopmsdata}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@warning@preXnotes@deprecated}
+%    \begin{macrocode}
+\newcommand{\led@warning@preXnotes@deprecated}{%
+  \reledmac@warning@preXnotes@deprecated%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -8992,7 +9000,7 @@
 % spacing problems if what you add takes up a different amount of
 % space.
 %
-% But if the skip \protect\cs{preXnotes@} is greater than 0~pt,
+% But if the skip \protect\cs{Xprenotes@} is greater than 0~pt,
 % it is used instead of \protect\cs{skip}\protect\cs{footins} for the first printed series in one page. 
 %
 % The \protect\cs{leftskip} and \protect\cs{rightskip} values
@@ -9014,12 +9022,12 @@
 % In order to insert this specific skip without overlap the bottom margin of the page, Maïeul Rouquette have defined an algorithm explained in \reff{skipfirstseries}.
 % Here is part of this algorithm, when the block of notes are ready to be printed.
 %    \begin{macrocode}
-  \ifdimequal{0pt}{\preXnotes@}{}%
+  \ifdimequal{0pt}{\Xprenotes@}{}%
       {%
-      \iftoggle{preXnotes@}{%
-            \togglefalse{preXnotes@}%
+      \iftoggle{Xprenotes@}{%
+            \togglefalse{Xprenotes@}%
             \skip\csname #1footins\endcsname=%
-              \glueexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
+              \glueexpr\csuse{Xprenotes@}+\csuse{Xafterrule@#1}\relax%
             }%
           {}%
       }%
@@ -9195,12 +9203,12 @@
 \newcommand*{\parafootstart}[1]{%
   \rightskip=0pt \leftskip=0pt%
   \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
-    \ifdimequal{0pt}{\preXnotes@}{}%
+    \ifdimequal{0pt}{\Xprenotes@}{}%
       {%
-      \iftoggle{preXnotes@}{%
-            \togglefalse{preXnotes@}%
+      \iftoggle{Xprenotes@}{%
+            \togglefalse{Xprenotes@}%
             \skip\csname #1footins\endcsname=%
-              \glueexpr\csuse{preXnotes@}+\csuse{Xafterrule@#1}\relax%
+              \glueexpr\csuse{Xprenotes@}+\csuse{Xafterrule@#1}\relax%
             }%
           {}%
       }%
@@ -11685,7 +11693,7 @@
 % \section{Specific skip for first series of footnotes}\label{skipfirstseries}
 % \subsubsection{Overview}
 % \protect\cs{Xbeforenotes} inserts a specific skip for the first series of notes in a page.
-% As we can't know in advance which series will be the first, we call \protect\cs{prepare@preXnotes} before inserting any critical notes, in order to prevent page number overlapping. 
+% As we can't know in advance which series will be the first, we call \protect\cs{prepare@Xprenotes} before inserting any critical notes, in order to prevent page number overlapping. 
 % \begin{enumerate}
 %   \item If it is the first note of the current page, it changes the footnote skip for the series to the value specified to \protect\cs{Xbeforenotes}. It also keeps the series of the note as the first one of the current page.
 %   \item If it is not the first note of the current page:
@@ -11707,24 +11715,25 @@
 %
 % And now, implementation !
 % \subsubsection{User level command}
-% \begin{macro}{\preXnotes@}
-% \begin{macro}{\preXnotes}
-% \changes{v1.1.0}{2012/09/25}{New skip \protect\cs{preXnotes@}}
+% \begin{macro}{\Xprenotes@}
+% \begin{macro}{\Xprenotes}
+% \changes{v1.1.0}{2012/09/25}{New skip \protect\cs{Xprenotes@}}
 % \changes{v1.2.0}{2012/10/08}{Debug in familiar footnotes (bug introduced by v1.1).}
-% If user redefines \protect\cs{preXnotes@}, via \protect\cs{preXnotes} to a value greater than 0~pt,
+% If user redefines \protect\cs{Xprenotes@}, via \protect\cs{Xprenotes} to a value greater than 0~pt,
 % this skip will be added before first series notes
 % instead of the notes skip.
 %    \begin{macrocode}
-\newtoggle{preXnotes@}
-\toggletrue{preXnotes@}
-\newcommand{\preXnotes@}{0pt}
-\newcommand*{\preXnotes}[1]{\renewcommand{\preXnotes@}{#1}}
+\newtoggle{Xprenotes@}%
+\toggletrue{Xprenotes@}%
+\newcommand{\Xprenotes@}{0pt}%
+\newcommand*{\Xprenotes}[1]{\renewcommand{\Xprenotes@}{#1}}%
+\newcommand{\preXnotes}[1]{\led@warning@preXnotes@deprecated\Xprenotes{#1}}%For compatibility
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % The same, but for familiar footnotes.
-% \begin{macro}{\preXnotes}
-% \begin{macro}{\preXnotes@}
+% \begin{macro}{\Xprenotes}
+% \begin{macro}{\Xprenotes@}
 %    \begin{macrocode}
 \newtoggle{prenotesX@}
 \toggletrue{prenotesX@}
@@ -11736,15 +11745,15 @@
 %
 % \subsubsection{Internal commands}
 % \begin{macro}{firstXseries@}
-% \begin{macro}{prepare@preXnotes}
+% \begin{macro}{prepare@Xprenotes}
 %    \begin{macrocode}
 \gdef\firstXseries@{}
-\newcommand{\prepare@preXnotes}[1]{%
-  \ifdimequal{0pt}{\preXnotes@}%
+\newcommand{\prepare@Xprenotes}[1]{%
+  \ifdimequal{0pt}{\Xprenotes@}%
   {}%
   {%
     \IfStrEq{\firstXseries@}{}{%
-      \global\skip\csuse{#1footins}=\preXnotes@%
+      \global\skip\csuse{#1footins}=\Xprenotes@%
       \global\advance\skip\csname #1footins\endcsname by\csuse{Xafterrule@#1}%
       \gdef\firstXseries@{#1}%
     }%
@@ -12378,7 +12387,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
                       \noexpand\Xnote@true%
-                      \noexpand\prepare@preXnotes{#1}%
+                      \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
@@ -12414,7 +12423,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number… so
                         {}%
                       \noexpand\Xnote@true%
-                      \noexpand\prepare@preXnotes{#1}%
+                      \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
                       \ifl@dpairing%
