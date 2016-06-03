@@ -10872,11 +10872,11 @@
 % The macro \cs{get@thisfootnote} command just saves the footnote number in the \cs{thisfootnote} macro, depending on the use of pairing environments.
 %    \begin{macrocode}
 \newcommand{\get@thisfootnoteX}[1]{%
-    \ifl@dpairing%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
       \protected@xdef\thisfootnote{\the\csname footnote#1@reading\endcsname}%
-    \else%
+    }{%
       \protected@xdef\thisfootnote{\the\csname c@footnote#1\endcsname}%
-    \fi%
+    }%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -10920,6 +10920,8 @@
     \edtext{}{\normalbfnoteX{#1}{#2}}%
   \else
     \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
+    \get@thisfootnoteX{#1}%
+    \get@fnmarkX{#1}{\expandonce\thisfootnote}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
 
@@ -12454,13 +12456,13 @@
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
                \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
-               \ifl@dpairing%
+               \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
                     {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
                     {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
-               \else%
+               }{%
                   \stepcounter{footnote#1}%
-               \fi%
+               }%
 %    \end{macrocode}
 % And now, the feature not depending of wether we are preparing parallel typesetting
 %    \begin{macrocode}
