@@ -17638,12 +17638,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Auxiliary commands}
-% \begin{macro}{\if@eled@sectioning}
-% The boolean \protect\cs{if@eled@sectioning} is set to true when a sectioning command is called by a \protect\cs{eledxxx} command, and set to false after. It is used to enable/disable line number printing.
-%    \begin{macrocode}
-\newif\if@eled@sectioning
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\print@leftmargin@eledsection}
 % \begin{macro}{\print@rightmargin@eledsection}
 % \protect\cs{print@leftmargin@eledsection} and \protect\cs{print@rightmargin@eledsection} are added by \macpackage inside the code of sectioning command, in order to affix lines numbers.
@@ -17684,7 +17678,6 @@
 % \end{macro}
 % \end{macro}
 % \subsection{Patching standard commands}
-% \begin{macro}{\chapter}
 % \begin{macro}{\M@sect}
 % \begin{macro}{\@mem@old@ssect}
 % \begin{macro}{\@makechapterhead}
@@ -17705,15 +17698,6 @@
 %   
 %    \begin{macrocode}
 \AtBeginDocument{%
-\patchcmd{\chapter}{\clearforchapter}{%
-  \if@eled@sectioning\else%
-    \ifl@dprintingpages\else%
-      \clearforchapter%
-    \fi%
-  \fi%
-  }
-  {}
-  {}
 
 
 \pretocmd{\M@sect}
@@ -17760,15 +17744,7 @@
   {}
   {}
 
-\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
-  \if@eled@sectioning\else%
-    \ifl@dprintingpages\else%
-      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for classical  classes
-    \fi%
-  \fi%
-  }%
-  {}%
-  {}%
+
 
 \patchcmd{\scr@startchapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
   \if@eled@sectioning\else%
@@ -17902,13 +17878,13 @@
     {}
     {}
   }%
-}
+}%
 %    \end{macrocode}
-% Now, we have finished to patch the commands, using \# with a catcode equals to 12. We close the \verb+\notbool{@noeled@sec}+ statement, restore the normal catcode for \# and reopen a new \verb+\notbool{@noeled@sec}+ statement. 
+% Close the \verb+\notbool{@noeled@sec}+ statement.
+% Also, we have finished to patch the commands, using \# with a catcode equals to 12, so we restore the normal catcode for \#.
 %    \begin{macrocode}
 {}}%
 \protect\catcode`\#=6 %Space NEEDS by \catcode
-\notbool{@noeled@sec}{%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -17917,7 +17893,42 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\chapter}
+% We patch the \protect\cs{chapter} command even if the \option{noeledsec} option is called, because we can use \cs{chapter} in the optional argument of a \cs{pstart} in parallel typesetting.
+%    \begin{macrocode}
+\AtBeginDocument{%
+\patchcmd{\chapter}{\clearforchapter}{%
+  \if@eled@sectioning\else%
+    \ifl@dprintingpages\else%
+      \clearforchapter%
+    \fi%
+  \fi%
+  }%
+  {}%
+  {}%
+
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{%
+  \if@eled@sectioning\else%
+    \ifl@dprintingpages\else%
+      \if@openright\cleardoublepage\else\clearpage\fi%No clearpage inside a \Pages: will keep critical notes from printing on the title page. Here for classical  classes
+    \fi%
+  \fi%
+  }%
+  {}%
+  {}%
+}%
+%    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\if@eled@sectioning}
+% The boolean \protect\cs{if@eled@sectioning} is set to true when a sectioning command is called by a \protect\cs{eledxxx} command, and set to false after. It is used to enable/disable line number printing.
+%    \begin{macrocode}
+\newif\if@eled@sectioning%
+%    \end{macrocode}
+% \end{macro}
+%  We reopen a new \verb+\notbool{@noeled@sec}+ statement, as we will define the \cs{elesection} commands.
+%    \begin{macrocode}
+\notbool{@noeled@sec}{%
+%    \end{macrocode}
 % \subsection{Main code of \protect\cs{eledxxx} commands} 
 % \begin{macro}{\eled@sectioning@out}
 % \protect\cs{eled@sectioning@out} is the output file, to dump the pstarts where a sectioning command is used.
