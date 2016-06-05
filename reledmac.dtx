@@ -4135,6 +4135,13 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@toendnotes@outsidenumbering}
+%    \begin{macrocode}
+\newcommand{\led@err@toendnotes@outsidenumbering}{%
+  \reledmac@error{\string\toendnotes\space and related commands must be called inside a numbered texte (\string\beginnumbering…\string\endnumbering)}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@err@EdtextWithoutFootnote}
 %    \begin{macrocode}
 \newcommand{\led@err@EdtextWithoutFootnote}{%
@@ -12056,22 +12063,26 @@
 % \begin{macro}{\toendnotes*}
 %    \begin{macrocode}
 \newcommandx{\toendnotes}[2][1,usedefault]{%
-  \def\do##1{%
-    \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
-      {\unexpanded{#2}\@percentchar}%
-  }%
-  \ifstrempty{#1}%
-    {\dolistloop{\@series}}%
-    {\docsvlist{#1}}%
+  \ifboolexpr{bool{numbering} or bool{numberingR}}{%
+    \def\do##1{%
+      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+        {\unexpanded{#2}\@percentchar}%
+    }%
+    \ifstrempty{#1}%
+      {\dolistloop{\@series}}%
+      {\docsvlist{#1}}%
+  }{\led@err@toendnotes@outsidenumbering}%
 }% 
 \WithSuffix\newcommandx\toendnotes*[2][1,usedefault]{%
-  \def\do##1{%
-    \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
-      {#2\@percentchar}%
-  }%
-  \ifstrempty{#1}%
-    {\dolistloop{\@series}}%
-    {\docsvlist{#1}}%
+  \ifboolexpr{bool{numbering} or bool{numberingR}}{%
+    \def\do##1{%
+      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+        {#2\@percentchar}%
+    }%
+    \ifstrempty{#1}%
+      {\dolistloop{\@series}}%
+      {\docsvlist{#1}}%
+  }{\led@err@toendnotes@outsidenumbering}%
 }% 
 %    \end{macrocode}
 % \end{macro}
