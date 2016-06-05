@@ -87,6 +87,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 		- Click on the cloud, in the right side.
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).
+	- Look on file issueXXX.tex get a MWE of the new feature.
 	- Make your report.
 
 
