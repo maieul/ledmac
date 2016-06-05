@@ -11810,6 +11810,7 @@
 \ifbool{noend@}{}{%Used instead of \ifnoend@ to prevent expansion problem
 %    \end{macrocode}
 %
+% \subsection{Internal commands}
 % \begin{macro}{\l@dend@open}
 % \begin{macro}{\l@dend@close}
 % \protect\cs{l@dend@open} and \protect\cs{l@dend@close} are the
@@ -12012,6 +12013,38 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{User level commands}
+% \subsubsection{Inserting contents to endnotes}
+% The \cs{Xendnotes} command are defined highter, when defining apparatus commands by series.
+% Here, we define.
+% only \cs{addtoendnotes} command not specific to a series, in order to insert arbitrary code.
+% The regular version write unexpanded argument, while the regular version write once expanded argument.
+%
+% \begin{macro}{\addtoendnotes*}
+% \begin{macro}{\addtoendnotes*}
+%    \begin{macrocode}
+\newcommandx{\addtoendnotes}[2][1,usedefault]{%
+  \def\do##1{%
+    \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+      {\unexpanded{#2}\@percentchar}%
+  }%
+  \ifstrempty{#1}%
+    {\dolistloop{\@series}}%
+    {\docsvlist{#1}}%
+}% 
+\WithSuffix\newcommandx\addtoendnotes*[2][1,usedefault]{%
+  \def\do##1{%
+    \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+      {#2\@percentchar}%
+  }%
+  \ifstrempty{#1}%
+    {\dolistloop{\@series}}%
+    {\docsvlist{#1}}%
+}% 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsubsection{Printing endnotes}
 % \begin{macro}{\doendnotes}
 % \begin{macro}{\ifXendinsertsep@}
 % \protect\cs{doendnotes} is
