@@ -14299,23 +14299,8 @@
 \newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
 \newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
 \newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}%
-\newcommand*{\ledinnernote}[1]{%
-  \ifodd\c@page% Do not use \page@num, because it is not yet calculated when command is called
-    \ledleftnote{#1}%
-  \else%
-    \ledrightnote{#1}%
-  \fi%
-}
-
-\newcommand*{\ledouternote}[1]{%
-  \ifodd\c@page% Do not use \page@num, because it is not yet calculated when command is called
-    \ledrightnote{#1}%
-  \else%
-    \ledleftnote{#1}%
-  \fi%
-}
-
-
+\newcommand*{\ledinnernote}[1]{\edtext{}{\l@disnote{#1}}}%
+\newcommand*{\ledouternote}[1]{\edtext{}{\l@dosnote{#1}}}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -14327,6 +14312,8 @@
 % \begin{macro}{\l@dlsnote}
 % \begin{macro}{\l@drsnote}
 % \begin{macro}{\l@dcsnote}
+% \begin{macro}{\l@desnote}
+% \begin{macro}{\l@disnote}
 % \changes{v1.12.0}{2014/08/05}{\protect\cs{l@dlsnote},\protect\cs{l@drsnote} and \protect\cs{l@dcsnote} defined only one time, in \eledmac, including needs for eledpar case.}.
 % The `footnotes' for left, right, and moveable sidenotes. The whole 
 % scheme is reminiscent of the critical footnotes code.
@@ -14347,7 +14334,10 @@
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces\endgroup}
+  \fi%
+  \ignorespaces%
+  \endgroup%
+}%
 
 \newcommand*{\l@drsnote}[1]{%
   \begingroup%
@@ -14362,7 +14352,9 @@
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces\endgroup}
+  \fi\ignorespaces%
+  \endgroup%
+}%
 
 \newcommand*{\l@dcsnote}[1]{%
   \begingroup%
@@ -14377,9 +14369,47 @@
                          \to\inserts@list
       \global\advance\insert@count \@ne%
     \fi
-  \fi\ignorespaces\endgroup}
+  \fi\ignorespaces%
+  \endgroup%
+}%
+
+\newcommand*{\l@disnote}[1]{%
+  \begingroup%
+  \newcommand{\content}{#1}%
+  \ifnumberedpar@%
+    \ifledRcol%
+      \xright@appenditem{\noexpand\vl@disnote{\expandonce\content}}%
+                         \to\inserts@listR%
+       \global\advance\insert@countR \@ne%
+    \else%
+      \xright@appenditem{\noexpand\vl@disnote{\expandonce\content}}%
+                         \to\inserts@list%
+      \global\advance\insert@count \@ne%
+    \fi%
+  \fi\ignorespaces%
+  \endgroup%
+}%
+
+\newcommand*{\l@dosnote}[1]{%
+  \begingroup%
+  \newcommand{\content}{#1}%
+  \ifnumberedpar@%
+    \ifledRcol%
+      \xright@appenditem{\noexpand\vl@dosnote{\expandonce\content}}%
+                         \to\inserts@listR%
+       \global\advance\insert@countR \@ne%
+    \else%
+      \xright@appenditem{\noexpand\vl@dosnote{\expandonce\content}}%
+                         \to\inserts@list%
+      \global\advance\insert@count \@ne%
+    \fi%
+  \fi\ignorespaces%
+  \endgroup%
+}%
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -14387,6 +14417,8 @@
 % \begin{macro}{\vl@dlsnote}
 % \begin{macro}{\vl@drsnote}
 % \begin{macro}{\vl@dcsnote}
+% \begin{macro}{\vl@disnote}
+% \begin{macro}{\vl@dosnote}
 % Put the left/right text into boxes, but just save the moveable text.
 % \protect\cs{l@dcsnotetext}, \protect\cs{l@dcsnotetext@l} and \protect\cs{l@dcsnotetext@r} are \protect\package{etoolbox}'s  lists which will store the content of side notes.
 % We store the content in lists, because we need to loop later on them, in case many sidenote co-exist for the same line.
@@ -14404,6 +14436,7 @@
 %             \item \protect\cs{l@dcsnotetext@l} if \protect\cs{ledsidenote} is to be put on right.
 %         \end{itemize}
 % \end{itemize}
+% \cs{vl@disnote} and \cs{vl@dosnote} just call \cs{vl@dlsnote} or \cs{vl@drsnote}, depending of the page.
 %    \begin{macrocode}
 \newcommand*{\vl@dlsnote}[1]{%
   \ifledRcol@%
@@ -14443,7 +14476,35 @@
 }
 \newcommand*{\vl@dcsnote}[1]{\listgadd{\l@dcsnotetext}{#1}}
 
+\newcommand{\vl@disnote}[1]{%
+  \ifledRcol@%
+    \@tempcnta=\page@numR%
+  \else%
+    \@tempcnta=\page@num%
+  \fi%
+  \ifodd\@tempcnta% ODD => right page => inner side =  left side
+    \vl@dlsnote{#1}%
+  \else%
+    \vl@drsnote{#1}%
+  \fi%
+}%
+
+\newcommand{\vl@dosnote}[1]{%
+  \ifledRcol@%
+    \@tempcnta=\page@numR%
+  \else%
+    \@tempcnta=\page@num%
+  \fi%
+  \ifodd\@tempcnta% ODD => right page => outer side = right side
+    \vl@drsnote{#1}%
+  \else%
+    \vl@dlsnote{#1}%
+  \fi%
+}%
+
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
