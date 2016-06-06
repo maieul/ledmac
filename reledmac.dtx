@@ -407,6 +407,7 @@
 % \changes{v2.12.0}{2016/06/12}{Fix bug with familiar footnote number in optional argument of \protect\cs{pstart} or \protect\cs{pend} in parallel typesetting}
 % \changes{v2.12.0}{2016/06/12}{Add \protect\cs{hidenumberingonleftpage} and \protect\cs{hidenumberingonrightpage}}
 % \changes{v2.12.0}{2016/06/12}{\protect\cs{preXnotes} become \protect\cs{Xprenotes} (naming convention)}
+% \changes{v2.12.0}{2016/06/12}{Add \protect\cs{toendnotes} and related.}
 % \changes{v2.12.0}{2016/06/12}{Fix bug when using \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting in combination with the \protect\option{noeledsec} option.}
 % \changes{v2.12.0}{2016/06/12}{Fix spurious vertical space in \protect\cs{chapter} when used as optional argument of \protect\cs{pstart} in parallel tyepsetting.}
 % \title{\Macpackage \\
@@ -1245,6 +1246,7 @@
 % Example: \protect\cs{Afootnote}\verb|[nonum]|\marg{text}.
 %
 % \subsubsection{Endnotes}
+% \paragraph{Inserting endnotes}
 % \DescribeMacro{\Aendnote}
 % \DescribeMacro{\Bendnote}
 % \DescribeMacro{\Cendnote}
@@ -1265,6 +1267,8 @@
 % \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
 %
+%
+% \paragraph{Printing endnotes}
 % \DescribeMacro{\doendnotes}\label{doendnotes} Normally, endnotes are not printed: you must use the
 % \protect\cs{doendnotes}\marg{s}, where \meta{s} is the letter of the series to be printed. Put this command where you want the corresponding set of endnotes printed.
 % In this case, all the endnotes of the \meta{s} series are printed, for all numbered sections.
@@ -1291,6 +1295,35 @@
 % As endnotes may be printed at any point in the document they always
 % start with the page number where they are called. 
 %
+% \paragraph{Code between endnotes}
+% \DescribeMacro{toendnotes}
+% \DescribeMacro{Xtoendnotes}
+% Sometime, it is useful to insert content between endnotes of the same series, for example to separate endnotes of different sections of the same text.
+% In this case, you could use \emph{inside 
+% numbered text} the command:\\
+% \cs{toendnotes}\oarg{series}\marg{content}
+% where \meta{series} is a comma separated list of the series of endnotes where \meta{content} must be inserted.
+% If \meta{series} is empty, then \meta{content} is inserted to all the series.
+%
+% For example:
+% \begin{verbatim}
+% \toendnotes{\section{Section's title}}
+% \end{verbatim}
+%
+% Alternatively, you can use \cs{Xtoendnotes}\marg{content}, where \enquote{X} must be replace by a series letter.
+%
+% Remember that the endnotes are temporary stored in an auxiliary file. That means in general you want to write the \meta{content} in the auxiliary file \emph{without expanding it}, that is without interpreting \TeX\ content.
+% 
+% However, in some case, you can want to write 
+% once-expanded\footnote{The expansion mechanism' of \TeX is a quite complex problem, but fundamental. We have no place to explain it fully here. Read introduction to \TeX to understand well.
+% } version of the \meta{content}, that is version where the command are expanded on there first level.
+% This can be, for example, to get counter value.
+% Use the starred version in this case.
+% For example:
+% \begin{verbatim}
+% \Atoendnotes*{\string\section{Letter 1 (chap. \thechapter)}}
+% \end{verbatim}
+% 
 % \subsubsection{Paragraph in critical apparatus}
 % By default, no paragraph can be made in the notes of critical apparatus. 
 % You can allow it by adding the options \verb+parapparatus+ when loading the package :
@@ -4105,6 +4138,13 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\led@err@toendnotes@outsidenumbering}
+%    \begin{macrocode}
+\newcommand{\led@err@toendnotes@outsidenumbering}{%
+  \reledmac@error{\string\toendnotes\space and related commands must be called inside a numbered texte (\string\beginnumbering…\string\endnumbering)}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@err@EdtextWithoutFootnote}
 %    \begin{macrocode}
 \newcommand{\led@err@EdtextWithoutFootnote}{%
@@ -11812,6 +11852,7 @@
 \ifbool{noend@}{}{%Used instead of \ifnoend@ to prevent expansion problem
 %    \end{macrocode}
 %
+% \subsection{Internal commands}
 % \begin{macro}{\l@dend@open}
 % \begin{macro}{\l@dend@close}
 % \protect\cs{l@dend@open} and \protect\cs{l@dend@close} are the
@@ -12014,6 +12055,42 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{User level commands}
+% \subsubsection{Inserting contents to endnotes}
+% The \cs{Xendnotes} command are defined highter, when defining apparatus commands by series.
+% Here, we define.
+% only \cs{toendnotes} command not specific to a series, in order to insert arbitrary code.
+% The regular version write unexpanded argument, while the regular version write once expanded argument.
+%
+% \begin{macro}{\toendnotes*}
+% \begin{macro}{\toendnotes*}
+%    \begin{macrocode}
+\newcommandx{\toendnotes}[2][1,usedefault]{%
+  \ifboolexpr{bool{numbering} or bool{numberingR}}{%
+    \def\do##1{%
+      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+        {\unexpanded{#2}\@percentchar}%
+    }%
+    \ifstrempty{#1}%
+      {\dolistloop{\@series}}%
+      {\docsvlist{#1}}%
+  }{\led@err@toendnotes@outsidenumbering}%
+}% 
+\WithSuffix\newcommandx\toendnotes*[2][1,usedefault]{%
+  \ifboolexpr{bool{numbering} or bool{numberingR}}{%
+    \def\do##1{%
+      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+        {#2\@percentchar}%
+    }%
+    \ifstrempty{#1}%
+      {\dolistloop{\@series}}%
+      {\docsvlist{#1}}%
+  }{\led@err@toendnotes@outsidenumbering}%
+}% 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \subsubsection{Printing endnotes}
 % \begin{macro}{\doendnotes}
 % \begin{macro}{\ifXendinsertsep@}
 % \protect\cs{doendnotes} is
@@ -12620,6 +12697,21 @@
          \ignorespaces%
      }%
 %    \end{macrocode}
+% \subsubsection{Tools}
+% The \cs{Xtoendnotes} command insert any arbitrary content to the endnote file.
+% It is an alias of the more generalist \cs{addtoennotes}
+%    \begin{macrocode}
+
+     \global\expandafter\newcommand\csname #1toendnotes\endcsname[1]{%
+       \toendnotes[#1]{##1}%
+     }%
+
+     \expandafter\WithSuffix\expandafter\newcommand\csname #1toendnotes\endcsname*[1]{%
+       \toendnotes*[#1]{##1}%
+     }%
+
+%    \end{macrocode}
+% \subsubsection{Internal commands}
 % \protect\cs{Xendnote}  commands called \protect\cs{Xend} commands on to the endnote file; these are analogous to the various
 % \verb"footfmt" commands above, and they take the same arguments.
 % When we process this file, we want to pick out the notes of one
@@ -12635,6 +12727,7 @@
 %    \begin{macrocode}
    \global\expandafter\newcount\csname #1end@bysection\endcsname%
 %    \end{macrocode}
+% 
 % \subsubsection{The options}
 %    \begin{macrocode}
       \csgdef{Xendwraplemma@#1}{}
