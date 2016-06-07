@@ -407,6 +407,7 @@
 % \changes{v2.12.0}{2016/06/12}{Fix bug with familiar footnote number in optional argument of \protect\cs{pstart} or \protect\cs{pend} in parallel typesetting}
 % \changes{v2.12.0}{2016/06/12}{Add \protect\cs{hidenumberingonleftpage} and \protect\cs{hidenumberingonrightpage}}
 % \changes{v2.12.0}{2016/06/12}{\protect\cs{preXnotes} become \protect\cs{Xprenotes} (naming convention)}
+% \changes{v2.12.0}{2016/06/12}{Add \option{auxdir} option.}
 % \changes{v2.12.0}{2016/06/12}{Add \protect\cs{toendnotes} and related.}
 % \changes{v2.12.0}{2016/06/12}{Fix bug when using \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting in combination with the \protect\option{noeledsec} option.}
 % \changes{v2.12.0}{2016/06/12}{Fix spurious vertical space in \protect\cs{chapter} when used as optional argument of \protect\cs{pstart} in parallel tyepsetting.}
@@ -688,6 +689,14 @@
 % \subsection{Specific features}
 % \begin{description}
 % \item[draft] underlines lemmas in the main text.
+% \item[auxdir] \macpackage generates auxiliary files.
+% It could be useful to store them in a specific directory.
+% You can set it using \option{auxdir}=\meta{folder} option.
+% Note the two following point:
+%    \begin{enumerate}
+%       \item \TeX\ is not able to create folder. You should create it yourself.
+%       \item The option does not change the default \LaTeX auxiliary files (.aux, .toc, \ldots).
+%    \end{enumerate}
 % \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
 % \item[nopenalties] must be called in some cases when using paragraphed endnotes (\reff{nopenalties)}
 % \item[nopbinverse] prevents page break within verse environment.
@@ -3761,6 +3770,10 @@
 \DeclareOptionX{nopenalties}{%
   \AtBeginDocument{\let\add@penalties\relax}%
 }
+\def\l@auxdir{}%
+\DeclareOptionX{auxdir}{%
+  \xdef\l@auxdir{#1/}%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4471,8 +4484,8 @@
   \fi
   \gdef\eled@sections@@{}%
   \if@noeled@sec\else%
-    \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@num}{}{}\makeatother%
-    \immediate\openout\eled@sectioning@out=\jobname.eledsec\the\section@num\relax%
+    \makeatletter\InputIfFileExists{\l@auxdir\jobname.eledsec\the\section@num}{}{}\makeatother%
+    \immediate\openout\eled@sectioning@out=\l@auxdir\jobname.eledsec\the\section@num\relax%
   \fi%
 }
 \newcommand*{\initnumbering@reg}{%
@@ -5537,12 +5550,12 @@
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{get@linelistfile}}
 %    \begin{macrocode}
 \newcommand*{\get@linelistfile}[1]{%
-  \InputIfFileExists{#1}{%
+  \InputIfFileExists{\l@auxdir#1}{%
     \global\noteschanged@false
     \begingroup
       \catcode`\[=1 \catcode`\]=2
       \makeatletter \catcode`\^^M=9}{%
-    \led@warn@NoLineFile{#1}%
+    \led@warn@NoLineFile{\l@auxdir#1}%
     \global\noteschanged@true
     \begingroup}%
 }
@@ -6360,7 +6373,7 @@
   \iffirst@linenum@out@
      \immediate\closeout\linenum@out%
      \global\first@linenum@out@false%
-     \immediate\openout\linenum@out=#1\relax%
+     \immediate\openout\linenum@out=\l@auxdir#1\relax%
      \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
      \ifl@dpaging%
        \immediate\write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
@@ -6375,7 +6388,7 @@
        \leavevmode%
      \fi%
      \closeout\linenum@out%
-     \openout\linenum@out=#1\relax%
+     \openout\linenum@out=\l@auxdir#1\relax%
      \write\linenum@out{\string\line@list@version{\this@line@list@version}}%
      \ifl@dpaging%
        \write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
@@ -11869,7 +11882,7 @@
   \expandafter\immediate%
     \expandafter\openout%
       \csname l@d@#1end\endcsname%
-      =\jobname.#1end\relax%
+      =\l@auxdir\jobname.#1end\relax%
 }%
 \newcommand{\l@dend@close}[1]{%
   \global\boolfalse{l@dend@#1}%
@@ -12106,7 +12119,7 @@
    \begingroup
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
-      \input\jobname.#1end%
+      \input\l@auxdir\jobname.#1end%
       \global\Xendinsertsep@false%
    \endgroup}
 %    \end{macrocode}
@@ -12127,7 +12140,7 @@
         {\cslet{#1end}{\endprint}}%
         {\cslet{#1end}{\@gobblefive}}%
     }%
-    \input\jobname.#1end%
+    \input\l@auxdir\jobname.#1end%
     \global\Xendinsertsep@false%
  \endgroup%
 }%
