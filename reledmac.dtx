@@ -412,6 +412,7 @@
 % \changes{v2.12.0}{2016/06/12}{Fix bug when using \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting in combination with the \protect\option{noeledsec} option.}
 % \changes{v2.12.0}{2016/06/12}{Fix spurious vertical space in \protect\cs{chapter} when used as optional argument of \protect\cs{pstart} in parallel tyepsetting.}
 % \changes{v2.12.0}{2016/06/12}{Fix bug with \protect\cs{ledinnernote} and \protect\cs{ledouternote} in parallel typesetting}
+% \changes{v2.12.0}{2016/06/12}{More accurate message to control the position of \protect\cs{Xfootnote} and \protect\cs{applabel} in the \protect\LaTeX\ code}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3915,7 +3916,7 @@
 % \begin{macro}{\led@err@edtextoutsidepstart}
 %    \begin{macrocode}
 \newcommand*{\led@err@edtextoutsidepstart}{%
-  \reledmac@error{\string\edtext\space outside numbered paragraph (\pstart\ldots\pend)}{\@ehc}}%
+  \reledmac@error{\string\edtext\space outside numbered paragraph (\pstart…\pend)}{\@ehc}}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\led@mess@NotesChanged}
@@ -4043,7 +4044,7 @@
 % \end{macro}
 %
 % \begin{macro}{\led@warn@DuplicateLabel}
-% \begin{macro}{\led@warn@AppLabelOutEdtext}
+% \begin{macro}{\led@warn@AppLabelOutSecondArgEdtext}
 % \begin{macro}{\led@warn@RefUndefined}
 % \begin{macro}{\led@warn@RefUndefined}
 %    \begin{macrocode}
@@ -4051,8 +4052,8 @@
   \reledmac@warning{Duplicate definition of label `#1'\@gobble}%
   \@latex@warning@no@line{Label `#1' multiply defined}%
 }%
-\newcommand*{\led@warn@AppLabelOutEdtext}[1]{%
-  \reledmac@warning{\string\applabel\space outside of \string\edtext\space `#1' on page \the\pageno.}}%
+\newcommand*{\led@warn@AppLabelOutSecondArgEdtext}[1]{%
+  \reledmac@warning{\string\applabel\space outside of the second argument of an \string\edtext\space `#1' on page \the\pageno.}}%
 \newcommand*{\led@warn@RefUndefined}[1]{%
   \G@refundefinedtrue%
   \reledmac@warning{Reference `#1' on page \the\pageno\space undefined.%
@@ -4162,14 +4163,14 @@
 % \begin{macro}{\led@err@EdtextWithoutFootnote}
 %    \begin{macrocode}
 \newcommand{\led@err@EdtextWithoutFootnote}{%
-  \reledmac@error{edtext without Xfootnote. Check syntaxis.}{\@ehc}%
+  \reledmac@error{edtext without Xfootnote. Check syntaxis}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\led@err@FootnoteWithoutEdtext}
+% \begin{macro}{\led@err@FootnoteNotInSecondArgEdtext}
 %    \begin{macrocode}
-\newcommand{\led@err@FootnoteWithoutEdtext}{%
-  \reledmac@error{Xfootnote without edtext. Check syntax.}{\@ehc}%
+\newcommand{\led@err@FootnoteNotInSecondArgEdtext}[1]{%
+  \reledmac@error{#1footnote outside of the second argument of an edtext. Check syntax}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -6846,10 +6847,16 @@
 % \changes{v1.15.0}{2015/01/12}{New boolean \protect\cs{if@edtext@}.}
 % \changes{v1.23.0}{2015/05/18}{The boolean \protect\cs{if@edtext@} becomes the counter \protect\cs{edtext@level}.}
 % This counter is increased by 1 at each level of \protect\cs{edtext}. 
-% That is useful for some commands which can have a different behavior if called inside or outside of the \marg{lemma} argument.
 %    \begin{macrocode}
 \newcount\@edtext@level%
 \@edtext@level=0%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\if@edtext@secondarg@}
+% This boolean is set to TRUE before reading the second argument of a \cs{edtext}.
+% It is tested on some macro which must be executed only inside a second argument.
+%    \begin{macrocode}
+\newif\if@edtext@secondarg@%
 %    \end{macrocode}
 % \end{macro}
 % \changes{v1.16.0}{2014/01/23}{\protect\cs{edtext} is now defined only in \eledmac, not in \eledpar. Debug wrong numbering when using \protect\cs{sameword} + \protect\package{eledpar} + \protect\cs{tag} command.}
@@ -6946,7 +6953,9 @@
 % \protect\cs{ignorespaces} as well, to skip any spaces between macros when
 % several are used in series.
 %    \begin{macrocode}
+        \@edtext@secondarg@true%
         \ignorespaces #2\relax%
+        \@edtext@secondarg@false%
 %    \end{macrocode}
 % With \protect\package{polyglossia}, you must track whether the language reads left to right (English) or right to left (Arabic).
 %    \begin{macrocode}
@@ -6978,7 +6987,7 @@
       \endgroup%
       \ifdef{\hypertarget}%
         {%
-        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%
+        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%We need one macro by level, as #1 can contain new \edtext
         \Hy@raisedlink@left{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
         \showlemma{#1}%
         \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
@@ -12460,7 +12469,7 @@
 % \changes{v1.23.0}{2015/04/29}{Prevent spurious spaces when \protect\cs{Afootnote} and similar commands are followed by spaces (bug added on 1.0.0!).}
 %    \begin{macrocode}
       \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
-          \ifnum\@edtext@level>0%
+          \if@edtext@secondarg@%
             \begingroup%
             \newcommand{\content}{##2}%
             \ifnumberedpar@%
@@ -12545,7 +12554,7 @@
             \fi%
             \endgroup%
           \else%
-            \led@err@FootnoteWithoutEdtext%
+            \led@err@FootnoteNotInSecondArgEdtext{#1}%
           \fi%
    \ignorespaces%
           }
@@ -13788,7 +13797,7 @@
 % \protect\cs{applabel}, if called in \protect\cs{edtext} will insert automatically both a start and an end label for the current edtext lines.
 %    \begin{macrocode}
 \newcommand*{\applabel}[1]{%
-  \ifnum\@edtext@level>0%  
+  \if@edtext@secondarg@% 
 %    \end{macrocode}
 % Label should not be already defined.
 %    \begin{macrocode}
@@ -13834,7 +13843,7 @@
 % Warning if \protect\cs{applabel} is called outside of \protect\cs{edtext}.
 %    \begin{macrocode}  
   \else%
-    \led@warn@AppLabelOutEdtext{#1}%
+    \led@warn@AppLabelOutSecondArgEdtext{#1}%
   \fi%
 %    \end{macrocode}
 % End of \protect\cs{applabel}
