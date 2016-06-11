@@ -414,6 +414,7 @@
 % \changes{v2.12.0}{2016/06/12}{Fix bug with \protect\cs{ledinnernote} and \protect\cs{ledouternote} in parallel typesetting}
 % \changes{v2.12.0}{2016/06/12}{More accurate message to control the position of \protect\cs{Xfootnote} and \protect\cs{applabel} in the \protect\LaTeX\ code}
 % \changes{v2.12.0}{2016/06/12}{Fix bug in critical and familiar footnotes when using uppercase letters with accent mark}
+% \changes{v2.12.0}{2016/06/12}{Make endnote compatible with \protect\cs{sameword} mechanism}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -9043,12 +9044,12 @@
 
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
   \Xledsetnormalparstuff{#4}%
-  \hangindent=\csuse{Xhangindent@#4}
+  \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
-  \printlinefootnote{#1}{#4}%
+  {\printlinefootnote{#1}{#4}}%
   \print@lemma{#1}{#2}{#4}%
   \csuse{Xwrapcontent@#4}{#3}%
-  \@finalstrut\strutbox\par}
+  \strut\par}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -10860,7 +10861,7 @@
   \everypar{\hangindent=\csuse{hangindentX@#1}}%
   {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}%
     \csuse{wrapcontentX@#1}{#2}%
-  \@finalstrut\strutbox\par}}
+  \strut\par}}
 
 %    \end{macrocode}
 % \end{macro}
@@ -12707,6 +12708,7 @@
          \newcommand{\content}{##2}%
          \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
+           \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}} %Volountary space, to add linebreak in the output file
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
            {\ifnumberedpar@\expandonce\@tag\fi}%
