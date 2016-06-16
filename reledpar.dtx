@@ -274,6 +274,7 @@
 % \changes{v2.9.0}{2016/05/08}{More specific error messages.}
 % \changes{v2.9.1}{2016/05/25}{Prevent \protect\cs{Xtxtbeforenotes} hook from causing notes to go beyond the bottom margin}
 % \changes{v2.10.0}{2016/06/02}{Add new tools to make apparatuses of manuscripts}
+% \changes{v2.11.0}{2016/06/16}{Compatibility with \reledmac's \option{auxdir} option.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -770,6 +771,9 @@
 % You may want to typeset notes on one side only (either left or right).
 % Use \protect\cs{Xonlyside}\oarg{s}\marg{p} to set critical notes, and \protect\cs{onlysideX}\oarg{s}\marg{p} to set familiar notes.
 % \meta{p} must be set to \verb+L+ for notes to be confined only on the left side and to \verb+R+ for  notes to be confined only on the right side.
+% 
+% Notice that these options just tell you \LaTeX\ to not continue long notes on the other side. 
+% It is not designed to allow you to call footnotes on one side but print them on the other side.
 % \subsubsection{Familiar notes called in the right side, but to be printed in the left side}
 % \DescribeMacro{\footnoteXnomk}
 % \DescribeMacro{\footnoteXmk}
@@ -1174,7 +1178,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/06/03 v2.10.0a reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/06/16 v2.11.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1405,6 +1409,18 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@error@note@called@onrightside}
+% \begin{macro}{\led@error@note@called@onleftside}
+%    \begin{macrocode}
+\newcommand{\led@error@note@called@onrightside}[1]{%
+  \reledpar@error{#1 called on right side, despite your configuring it to be for the left side only}{\@ehc}%
+}%
+\newcommand{\led@error@note@called@onleftside}[1]{%
+  \reledpar@error{#1 called on left side, despite your configuring it to be for the right side only}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\led@error@fail@patch@@mempnum}
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@@mempnum}{%
@@ -1442,6 +1458,52 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Naming macros}
+%
+%    The \LaTeX\ kernel provides \protect\cs{@namedef} and \protect\cs{@namuse} for defining
+% and using macros that may have non-letters in their names. We need
+% something similar here as we are going to need and use some numbered
+% boxes and counters.
+%
+% \begin{macro}{\newnamebox}
+% \begin{macro}{\setnamebox}
+% \begin{macro}{\unhnamebox}
+% \begin{macro}{\unvnamebox}
+% \begin{macro}{\namebox}
+% A set of macros for creating and using `named' boxes; the macros are called 
+% after the regular box macros, but including the string `name'.
+%    \begin{macrocode}
+\providecommand*{\newnamebox}[1]{%
+  \expandafter\newbox\csname #1\endcsname}
+\providecommand*{\setnamebox}[1]{%
+  \expandafter\setbox\csname #1\endcsname}
+\providecommand*{\unhnamebox}[1]{%
+  \expandafter\unhbox\csname #1\endcsname}
+\providecommand*{\unvnamebox}[1]{%
+  \expandafter\unvbox\csname #1\endcsname}
+\providecommand*{\namebox}[1]{%
+                     \csname #1\endcsname}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\newnamecount}
+% \begin{macro}{\usenamecount}
+% Macros for creating and using `named' counts.
+%    \begin{macrocode}
+\providecommand*{\newnamecount}[1]{%
+  \expandafter\newcount\csname #1\endcsname}
+\providecommand*{\usenamecount}[1]{%
+                       \csname #1\endcsname}
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 % \section{Sectioning commands}
 %
 % \begin{macro}{\section@numR}
@@ -1510,7 +1572,7 @@
   \gdef\eled@sectionsR@@{}%
   \if@noeled@sec\else%
     \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@numR R}{}{}\makeatother%
-    \immediate\openout\eled@sectioningR@out=\jobname.eledsec\the\section@numR R\relax%
+    \immediate\openout\eled@sectioningR@out=\l@auxdir\jobname.eledsec\the\section@numR R\relax%
   \fi%
 }
 %    \end{macrocode}
@@ -2518,7 +2580,7 @@
   \iffirst@linenum@out@R
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
-     \immediate\openout\linenum@outR=#1
+     \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
      \ifl@dpaging%
        \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
@@ -2528,7 +2590,7 @@
        \leavevmode%
      \fi%
      \closeout\linenum@outR%
-     \openout\linenum@outR=#1%
+     \openout\linenum@outR=\l@auxdir#1%
   \fi}
 
 %    \end{macrocode}
@@ -2653,17 +2715,17 @@
 % \subsubsection{Notes to be printed on one side only}
 % \Parpackage allows notes to be printed on one side only.
 % We need to declare these options.
-% We also need boolean flags, and to set them to true when a note series is not printed on one side.
-% We check the \verb+nofamiliar+ and \verb+nocritical+ \Eledmac{} options.
+% We also need box to store temporary the footnote not printed.
+% We check the \verb+nofamiliar+ and \verb+nocritical+ \macpackage\ options.
 % \changes{v1.16.0}{2015/05/18}{Fix bug with \protect\cs{onlysideX}.}
 %    \begin{macrocode}
     \unless\ifnofamiliar@%
       \csgdef{onlysideX@#1}{}%
-      \global\newbool{keepforsideX@#1}%
+      \newnamebox{#1footins@kept}%
     \fi%
     \unless\ifnocritical@%
-      \global\newbool{keepforXside@#1}%
       \csgdef{Xonlyside@#1}{}%
+      \newnamebox{footins#1@kept}%
     \fi%
 %    \end{macrocode}
 % \subsection{Tools specific to familiar footnotes}
@@ -3417,8 +3479,8 @@
             \set@Xtxtbeforenotes%
             \global\@firstlineofpagefalse%
           \fi%
-          \add@inserts%
           \insert@msdata%
+          \add@inserts%
           \affixside@note%
         }%
         {\print@lineL}%
@@ -4190,6 +4252,8 @@
 % \begin{macro}{\correct@footinsX@box}
 % \changes{v1.13.1}{2015/03/12}{Correct \protect\cs{correct@footinsX@box} and \protect\cs{correct@Xfootins@box}}
 % \changes{v1.13.1}{2015/03/12}{Call \protect\cs{correct@footinsX@box} and \protect\cs{correct@Xfootins@box} directly in \protect\cs{print@notesX@forpages} and \protect\cs{print@Xnotes@forpages}.}
+% \changes{v2.11.0}{2016/06/16}{New implementation of \protect\cs{Xonlyside} and \protect\cs{onlysideX} hooks, prevent trouble with vertical spacing.}
+% \changes{v2.11.0}{2016/06/16}{Clarification in the handbook about the use of \protect\cs{Xonlyside} and \protect{onlysideX} and error message if mesuse.}
 % The \protect\cs{Xonlyside} and \protect\cs{onlysideX} hooks for \protect\cs{Pages}
 % allow notes to be printed  either in left or right pages only.
 % The implementation of such features is delegated to \protect\cs{print@Xnotes@forpages},
@@ -4201,23 +4265,11 @@
 %    \item However, that is not enough. Because the problem does not only consists in printing notes in any particular page. It is also not to put aside room for notes in the pages where we do not want to print them.
 %    To take an example: if some note in the left side is too long by 160pt to be printed in full in the left page, we do not want to put aside 160pt a space for it in the following right page. 
 %    \item To solve this problem, we change the magnification factor associated with notes before going to the next page.
-%    If we start a page where no notes are supposed to be  printed, the magnification counter is set to 0. We also set the note skip to 0pt. Before starting a new page where these notes are supposed to be printed, we reset these counter and skip to their default values. (About these counter and skip, read \thetexbook\ p.~122-125).
-%    \item There still remains a last problem. This problem is quite complex to understand, so an example will speak for itself. Suppose we allow 10 lines of notes by page.
-%    Suppose a long note, be it 25 lines, which needs three pages to be printed. Suppose it must be printed only on left pages, namely odd pages. 
-%
-%     On p.~2, the first 10 lines of the notes are printed.
-%     On p.~3, the box associated to the notes contains 10 lines. However, as we are in a right page, we do not void this box. So \TeX\ will keep its content for the pages to come. However, on p.~4 it will also add one line in the footnote box, because in any case, \TeX adds some content in the box when preparing the output routines, even if there is some content left in this box from the previous pages. 
-%     So the lines in the note box at p.~4 will be $10+1=11$. There is one line which should not be there. Furthermore, as the box size is for 10~lines and not for 11~lines, this last line will be glued to the previous one.
-% 
-%     To fix this double issue:
-%  \begin{itemize}
-%        \item For the pages where notes must be NOT printed, we allow to every note box one line less than it ought to be.
-%        In our example, that means that we allow \TeX\ to add only $10-1=9$ line in the note box on p.~3. 
-%        Before shifting to the pages where notes must be  printed, we allow to every notes the expected number of lines. In our example, that means that we allow \TeX to add 10~lines in the note box on p.~4. As on p.~3 only 9 lines were allowed, that means note box of p.~4 will contain $9+1=10$ lines. So the ``one line too many'' problem is solved.
-%        \item Still remains the ``glue'' problem. We solve it by recreating a clean note box. We split the one which is created by \TeX\ to get the next line printed. Then, we create the new box, by bringing together the first part and the last part of the split box, adding some skip between them. That is achieved by \protect\cs{correct@Xfootins@box} (or \protect\cs{correct@footinsX@box} for familiar notes). 
-%  \end{itemize}
+%    If we start a page where no notes are supposed to be  printed, the magnification counter is set to 0. The dimension associated to footnote is set to \cs{maxdimen}, and so we can keep all the notes we want, without any break inside  We also set the note skip to 0pt. Before starting a new page where these notes are supposed to be printed, we reset these counter and skip to their default values. (About these counter, dimension and skip, read \thetexbook\ p.~122-125).
+%    \item In the output macro of the page where notes must NOT be printed, we store the content of the footnote box produced by \TeX\ to a temporary box.
+%    \item After going to the next page, before typesetting any thing in this page, we put the content of this temporary box the footnote insert box.
 % \end{itemize}
-% The code to print critical notes, when processing \protect\cs{Pages}.
+% The code to print critical notes, when processing \protect\cs{Pages}, called in the output routine.
 %    \begin{macrocode}
 \newcommand\print@Xnotes@forpages[1]{%
 %    \end{macrocode}
@@ -4238,77 +4290,39 @@
        (test {\ifcsstring{Xonlyside@#1}{R}} and test{\ifnumodd{\c@page}}))%
        }%
 %    \end{macrocode}
-% If we are in a page where notes must be printed, print the notes, after having made the corrections which are needed for boxes.
+% If we are in a page where notes must be printed, print the notes.
 %    \begin{macrocode}
       {%
-         \correct@Xfootins@box{#1}%
          \csuse{#1footstart}{#1}%
          \csuse{#1footgroup}{#1}%
 %    \end{macrocode}
-% Then, say not to keep room for notes in the next page.
+% Then, set to not to keep room for notes in the next page. 
+% Also set to that, in the next page, notes are not to be split, using \cs{maxdimen}.
 %    \begin{macrocode}
-         \global\count\csuse{#1footins}=0%
-         \global\skip\csuse{#1footins}=0pt%
-%    \end{macrocode}
-% And also, allow one line less for notes in the next page.
-%    \begin{macrocode}
-         \csuse{Xnotefontsize@#1}%
-         \global\advance\dimen\csuse{#1footins} by -\baselineskip%
-%    \end{macrocode}
-% Now we have printed the notes. So we put aside this fact.
-%    \begin{macrocode}
-         \global\boolfalse{keepforXside@#1}%
-       }%
+         \global\count\csuse{#1footins}=\z@%
+         \global\skip\csuse{#1footins}=\z@%
+         \global\dimen\csuse{#1footins}=\maxdimen%
+     }%
 %    \end{macrocode}
 % In case we are on a page where notes must NOT be printed.
-% First, memorize that we have not printed the notes, despite having some to print.
+% First restore expected rooms for notes on the next page. Also reset expected vertical size allowed to notes.
 %    \begin{macrocode}
        {%
-         \global\booltrue{keepforXside@#1}%
-%    \end{macrocode}
-% Then restore expected rooms for notes on the next page.
-%    \begin{macrocode}
          \global\count\csuse{#1footins}=\csuse{default@#1footins}%
          \global\skip\csuse{#1footins}=\csuse{Xbeforenotes@#1}%
-%    \end{macrocode}
-% Last but not least, restore the normal line number allowed to notes for the following page.
-%    \begin{macrocode}
          \bgroup%
             \csuse{Xnotefontsize@#1}%
-            \global\advance\dimen\csuse{#1footins} by \baselineskip%
+            \global\dimen\csuse{#1footins}=\csuse{Xmaxhnotes@#1}%
          \egroup%     
 %    \end{macrocode}
+%  Then, save the current insert box to a temporary insert box.
 %    \begin{macrocode}
-% End of \protect\cs{print@Xnotes@forpages}.
+         \global\setnamebox{#1footins@kept}=\box\namebox{#1footins}%
        }%
+%    \end{macrocode}
+% End of \protect\cs{print@Xnotes@forpages}.
+%    \begin{macrocode}
      }%
-}%
-%    \end{macrocode}
-% Now, \protect\cs{correct@Xfootins@box}, to fix problem of last line being glued to the previous one.
-%    \begin{macrocode}
-\newcommand{\correct@Xfootins@box}[1]{%
-%    \end{macrocode}
-% We need to make correction only in case we have not printed any note in the previous page,
-% although there was to be ``normally'' printed.
-%    \begin{macrocode}
-  \ifbool{keepforXside@#1}{%
-%    \end{macrocode}
-% Some setting needed to do the right splitting.
-%    \begin{macrocode}
-      \csuse{Xnotefontsize@#1}%
-      \splittopskip=0pt%
-%    \end{macrocode}
-% And now, split the last line, and push in the right place.
-%    \begin{macrocode}
-      \global\setbox\csuse{#1footins}=\vbox{%
-        \vsplit\csuse{#1footins} to \dimexpr\ht\csuse{#1footins}-1pt\relax%
-        \vskip \dimexpr-0.5\baselineskip-0.5\lineskip-0.5pt\relax%
-        \unvbox\csuse{#1footins}%
-      }%
-%    \end{macrocode}
-% End of the macro.
-%    \begin{macrocode}
-  }{}%
 }%
 %    \end{macrocode}
 % And now, the same for familiar footnotes.
@@ -4325,41 +4339,55 @@
        (test {\ifcsstring{onlysideX@#1}{R}} and test{\ifnumodd{\c@page}}))%
        }%
       {%
-         \correct@footinsX@box{#1}%
          \csuse{footstart#1}{#1}%
          \csuse{footgroup#1}{#1}%
-         \global\count\csuse{footins#1}=0%
-         \global\skip\csuse{footins#1}=0pt%
-          \csuse{notefontsizeX@#1}%
-          \global\advance\dimen\csuse{footins#1} by -\baselineskip%
-       \global\boolfalse{keepforsideX@#1}%
+         \global\count\csuse{footins#1}=\z@%
+         \global\skip\csuse{footins#1}=\z@%
+         \global\dimen\csuse{footins#1}=\maxdimen%
+
        }%
        {%
-         \global\booltrue{keepforsideX@#1}%
          \global\count\csuse{footins#1}=\csuse{default@footins#1}%
          \global\skip\csuse{footins#1}=\csuse{beforenotesX@#1}%
          \bgroup%
-            \csuse{notefontsizeX@#1}%
-            \global\advance\dimen\csuse{footins#1} by \baselineskip%
-         \egroup%
+            \csuse{Xnotefontsize@#1}%
+            \global\dimen\csuse{footins#1}=\csuse{maxhnotesX@#1}%
+         \egroup%  
+         \global\setnamebox{footins#1@kept}=\box\namebox{footins#1}%
        }%
      }%
-}%
-\newcommand{\correct@footinsX@box}[1]{%
-  \ifbool{keepforsideX@#1}{%
-      \csuse{notefontsizeX@#1}%
-      \splittopskip=0pt%
-      \global\setbox\csuse{footins#1}=\vbox{%
-        \vsplit\csuse{footins#1} to \dimexpr\ht\csuse{footins#1}-1pt\relax%
-        \vskip \dimexpr-0.5\baselineskip-0.5\lineskip-0.5pt\relax%
-        \unvbox\csuse{footins#1}%
-      }%
-  }{}%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+% \begin{macro}{\insert@notes@for@onlyside}
+% \cs{insert@notes@for@onlyside} is everytime \cs{Pages}  go to the next side.
+% It just reinsert the notes note printed on the previous side because of \protect{Xonlyside} or \cs{onlysideX} setting.
+%    \begin{macrocode}
+\newcommand{\insert@notes@for@onlyside}{%
+  \def\do##1{%
+  \unless\ifnocritical@%
+    \ifvoid\csuse{##1footins@kept}\else%
+      \expandafter\insert\csname ##1footins\endcsname%
+      \bgroup%
+        \unvnamebox{##1footins@kept}%
+      \egroup%
+    \fi%
+  \fi%
+  \unless\ifnofamiliar@%
+    \ifvoid\csuse{footins##1@kept}\else%
+      \expandafter\insert\csname footins##1\endcsname%
+      \bgroup%
+        \unvnamebox{footins##1@kept}%
+      \egroup%
+    \fi%
+  \fi%
+  }%
+  \dolistloop{\@series}%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \section{Cross referencing}
 % \label{xref}
@@ -4651,52 +4679,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \section{Naming macros}
-%
-%    The \LaTeX\ kernel provides \protect\cs{@namedef} and \protect\cs{@namuse} for defining
-% and using macros that may have non-letters in their names. We need
-% something similar here as we are going to need and use some numbered
-% boxes and counters.
-%
-% \begin{macro}{\newnamebox}
-% \begin{macro}{\setnamebox}
-% \begin{macro}{\unhnamebox}
-% \begin{macro}{\unvnamebox}
-% \begin{macro}{\namebox}
-% A set of macros for creating and using `named' boxes; the macros are called 
-% after the regular box macros, but including the string `name'.
-%    \begin{macrocode}
-\providecommand*{\newnamebox}[1]{%
-  \expandafter\newbox\csname #1\endcsname}
-\providecommand*{\setnamebox}[1]{%
-  \expandafter\setbox\csname #1\endcsname}
-\providecommand*{\unhnamebox}[1]{%
-  \expandafter\unhbox\csname #1\endcsname}
-\providecommand*{\unvnamebox}[1]{%
-  \expandafter\unvbox\csname #1\endcsname}
-\providecommand*{\namebox}[1]{%
-                     \csname #1\endcsname}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\newnamecount}
-% \begin{macro}{\usenamecount}
-% Macros for creating and using `named' counts.
-%    \begin{macrocode}
-\providecommand*{\newnamecount}[1]{%
-  \expandafter\newcount\csname #1\endcsname}
-\providecommand*{\usenamecount}[1]{%
-                       \csname #1\endcsname}
-
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
 % \section{Fixing babel and polyglossia}
 %
 %    With parallel texts there is the possibility that the two sides
@@ -5816,10 +5798,10 @@
 % E.g. if familiar or critical notes were disabled by \macpackage's  options.
 %    \begin{macrocode}
     \ifnocritical@%
-      \global\newnamebox{##1footins}
+      \global\newnamebox{##1footins}%
     \fi
     \ifnofamiliar@%
-      \global\newnamebox{footins##1}
+      \global\newnamebox{footins##1}%
     \fi
 %    \end{macrocode}
 % And now, add a \protect\cs{newpage} if there is no more footnote to print.
@@ -5898,6 +5880,7 @@
 \newcommand*{\clearl@dleftpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
   \newpage%
+  \insert@notes@for@onlyside%
   \ifodd\c@page\else
     \led@err@LeftOnRightPage
     \hbox{}%
@@ -5907,6 +5890,7 @@
 \newcommand*{\clearl@drightpage}{%
   \ifdim\pagetotal=0pt\hbox{}\fi%
   \newpage%
+  \insert@notes@for@onlyside%
   \ifodd\c@page
     \led@err@RightOnLeftPage
     \hbox{}%
