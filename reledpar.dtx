@@ -1178,7 +1178,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/06/16 v2.11.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/06/18 v2.12.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -4388,6 +4388,35 @@
   \dolistloop{\@series}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \subsection{Critical footnote printed in right side}
+% \changes{v2.12.0}{2016/06/18}{Add \protect\cs{edtextlater} and \protect\cs{edtextnow}.}
+% \begin{macro}{\edtextlater}
+% \begin{macro}{\edtextnow}
+% \cs{edtextlater} and \cs{edtextnow} are used to print critical footnote on the right side, while refering to the text of the left side.
+%    \begin{macrocode}
+\newcommand{\edtextlater}[3]{% #1: id, #2 lemma, #3 critical notes
+  \csxdef{edtext@later@#1}{%
+      \noexpand\edtext{%
+      }%
+      {%
+      \unexpanded{%
+        \lemma{\no@expands #2}%
+        \xxref{start:edtext:later:#1}{end:edtext:later:#1}%
+      }%
+      \noexpand\linenum{||||||\edfont@info}%
+      \unexpanded{#3}%
+    }%
+  }%
+  \edlabel{start:edtext:later:#1}%
+  #2%
+  \edlabel{end:edtext:later:#1}%
+}%
+\newcommand{\edtextnow}[1]{%
+  \csuse{edtext@later@#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Cross referencing}
 % \label{xref}
