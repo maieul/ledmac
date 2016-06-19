@@ -4402,11 +4402,22 @@
 % \end{macro}
 % \subsection{Critical footnote printed in right side}
 % \changes{v2.12.0}{2016/06/19}{Add \protect\cs{edtextlater} and \protect\cs{edtextnow}.}
+% \begin{macro}{\edtext@later}
+% \begin{macro}{\edtext@now}
 % \begin{macro}{\edtextlater}
 % \begin{macro}{\edtextnow}
 % \cs{edtextlater} and \cs{edtextnow} are used to print critical footnote on the right side, while refering to the text of the left side.
+% First, we create two counter, one for \cs{edtextlater} and the other for \cs{edtextnow}.
 %    \begin{macrocode}
-\newcommand{\edtextlater}[3]{% #1: id, #2 lemma, #3 critical notes
+\newcount\edtext@now%
+\newcount\edtext@later%
+%    \end{macrocode}
+%    \begin{macrocode}
+\newcommand{\edtextlater}[2]{%#1 lemma, #2 critical notes
+%    \end{macrocode}
+% First, increase the \cs{edtext@later} counter.
+%    \begin{macrocode}
+  \global\advance\edtext@later by \@ne%
 %    \end{macrocode}
 %    \begin{macrocode}
 % As we are in a simili-\cs{edtext}, we need no to get the \cs{sameword} data stored in the auxiliary file for this \cs{edtextlater}.
@@ -4418,7 +4429,7 @@
 % The main feature of \cs{edtextlater} is to create a macro which will be called on the equivalent \cs{edtextnow}.
 %    \begin{macrocode}
 % 
-  \csxdef{edtext@later@#1}{%
+  \csxdef{edtext@later@\the\edtext@later}{%
 %    \end{macrocode}
 % \cs{edtextnow} will insert a empty \cs{edtext}.
 %    \begin{macrocode}
@@ -4430,8 +4441,8 @@
 %    \begin{macrocode}
       {%
       \unexpanded{%
-        \lemma{\no@expands #2}%
-        \xxref{start:edtext:later:#1}{end:edtext:later:#1}%
+        \lemma{\no@expands #1}%
+        \xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
       }%
       \noexpand\linenum{||||||\edfont@info}%
       \unexpanded{\def\sw@inthisedtext}{\expandonce{\sw@inthisedtext}}%
@@ -4446,15 +4457,15 @@
 %    \end{macrocode}
 % And the footnote command of this \cs{edtextlater}.
 %    \begin{macrocode}
-      \unexpanded{#3}%
+      \unexpanded{#2}%
     }%
   }%
 %    \end{macrocode}
-% After having defined this macro, we print the current lemma data. 
+% And now, we print the current lemma data. 
 % But we save begining and starting line using crossref mechanism.
 % We also store in the auxiliary file information about the existing of a \cs{edtextlater} and, if required, about the use of a \cs{lemma}
 %    \begin{macrocode}
-  \edlabel{start:edtext:later:#1}%
+  \edlabel{start:edtext:later:\the\edtext@later}%
   \flag@start@later%
   \bgroup%
     \def\lemma##1{%
@@ -4466,10 +4477,10 @@
     }%
     \renewcommand{\do}[1]{\expandafter\renewcommandx\csname ##1footnote\endcsname[2][1,usedefault]{}}%
     \dolistloop{\@series}%
-    #3%
+    #2%
   \egroup%
-  \showlemma{#2}%
-  \edlabel{end:edtext:later:#1}%
+  \showlemma{#1}%
+  \edlabel{end:edtext:later:\the\edtext@later}%
   \flag@end@later%
 %    \end{macrocode}
 % We decrease the counter increased on the begining.
@@ -4477,12 +4488,15 @@
   \advance\@edtext@level by -\@ne%
 }%
 %    \end{macrocode}
-% \cs{edtextnow} just call the command defined is \cs{edtextlater}.
+% \cs{edtextnow} just call the command defined is, reading the \cs{edtext@later} list.
 %    \begin{macrocode}
-\newcommand{\edtextnow}[1]{%
-  \csuse{edtext@later@#1}%
+\newcommand{\edtextnow}[0]{%
+  \global\advance\edtext@now by \@ne
+  \csuse{edtext@later@\the\edtext@now}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \section{Cross referencing}
