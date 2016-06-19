@@ -6261,10 +6261,24 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
 %    \end{macrocode}
-% Create a list which stores every second argument of  each \protect\cs{@sw}
+% And now, call \cs{@ref@reg@parsearg}, which can be also called by \cs{@ref@later}
+%    \begin{macrocode}
+     \@ref@reg@parse{#2}%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+  \global\advance\@edtext@level by -1% 
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@ref@reg@parse}%
+% The \cs{@ref@reg@parsearg} command parse the second argument of a \cs{@ref} or the unique argument of \cs{@ref@later}  written in the auxiliary fill.
+%
+% First, create a list which stores every second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
 % Also set the boolean about the use of lemma in this edtext level to false.
 %    \begin{macrocode}
+\newcommand{\@ref@reg@parse}[1]{%
      \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
      \providebool{lemmacommand@\the\@edtext@level}%
      \boolfalse{lemmacommand@\the\@edtext@level}%
@@ -6272,7 +6286,7 @@
 % Execute the second argument of \protect\cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2%
+  #1%
 %    \end{macrocode}
 % Now, we store the list of \protect\cs{@sw} of this current \protect\cs{edtext} as an element of
 % the global list of list of \protect\cs{@sw} for a \protect\cs{edtext} depth.
@@ -6286,10 +6300,6 @@
     \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
   \fi%
 %    \end{macrocode}
-% Decrease edtext level counter.
-%    \begin{macrocode}
-  \global\advance\@edtext@level by -1% 
-%    \end{macrocode}
 %    \begin{macrocode}
 }
 
@@ -6297,7 +6307,21 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\ref@reg@later}
+% This macro is stored in the auxiliary file when using \cs{edtextlater}. 
+% It is used only to get the correct value for the \cs{sameword} tools.
+%    \begin{macrocode}
+\newcommand{\@ref@later}[1]{%
+  \global\advance\@edtext@level by \@ne%
+  \ifledRcol% 
+    \@ref@reg@parseR{#1}%
+  \else%
+    \@ref@reg@parse{#1}%
+  \fi%
+  \global\advance\@edtext@level by -\@ne%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Writing to the line-list file}
 %
 % We have now defined all the counters, lists, and commands involved in
@@ -6472,11 +6496,40 @@
     \fi%
   \fi}%
 
+\newcommand*{\flag@end}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi}%
+
+
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\flag@start@later}
+% \begin{macro}{\flag@end@later}
+% \protect\cs{flag@start@later} and \protect\cs{flag@end@later}: these send the\cs{@ref@later} to the line-list file
+% command to the line-list file
+%    \begin{macrocode}
+\newcommand*{\flag@start@later}{%
+  \ifledRcol%
+    \write\linenum@outR{\string\@ref@later[}%
+  \else%
+    \write\linenum@out{\string\@ref@later[}%
+  \fi%
+}%
+\newcommand{\flag@end@later}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\startsub}
 % \begin{macro}{\endsub}
 % \changes{v1.15.0}{2015/01/12}{Restore subline feature (disabled by mistake in v1.8.0).}
@@ -7028,6 +7081,10 @@
       \global\advance\@edtext@level by -1%
       \global\@lemmacommand@false%
 %    \end{macrocode}
+% We also reset \cs{@beforeinsertofthisedtext}
+%    \begin{macrocode}
+      \global\let\@beforeinsertofthisedtext\relax%
+%    \end{macrocode}
 % If we are outside of a numbered paragraph,
 % we send error message and print the first argument.
 %    \begin{macrocode}
@@ -7036,17 +7093,18 @@
   \fi%
 }%
 
-\newcommand*{\flag@end}{%
-  \ifledRcol%
-    \write\linenum@outR{]}%
-  \else%
-    \write\linenum@out{]}%
-  \fi}%
 
 %    \end{macrocode}
 % \end{macro}
 %
-%
+% 
+% \begin{macro}{\@beforeinsertofthisedtext}
+% \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
+% It content is let to \cs{relax} at the end of every \cs{edtext}.
+%    \begin{macrocode}
+\let\@beforeinsertofthisedtext\relax
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifnumberline}
 % The \protect\cs{ifnumberline} option can be set to FALSE to disable line numbering.
 %  \begin{macrocode}
@@ -12505,6 +12563,7 @@
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \expandonce{\@beforeinsertofthisedtext}%Internal, for now, not any reason to make it public
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
@@ -12543,6 +12602,7 @@
                       \fi%
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \expandonce{\@beforeinsertofthisedtext}%Internal, for now, not any reason to make it public
                       \noexpand\csuse{v#1footnote}%
                          {#1}%
                          {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
