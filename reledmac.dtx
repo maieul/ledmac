@@ -417,6 +417,7 @@
 % \changes{v2.12.0}{2016/06/16}{Make endnote compatible with \protect\cs{sameword} mechanism}
 % \changes{v2.13.0}{2016/06/18}{The version 2.13.0 never existed.}
 % \changes{v2.13.1}{2016/06/18}{In critical footnotes, the right side flag is printed only if asked explicitly with \protect\cs{Xlineflag} (bug added in v.~2.5.0).}
+% \changes{v2.13.2}{2016/06/24}{Fix bug added in v.~11.2 which makes parallel typesetting could not work.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3677,7 +3678,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/06/18 v2.13.1 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/06/24 v2.13.2 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9194,8 +9195,6 @@
 %    \begin{macrocode}
 \newcommand*{\Xarrangement@paragraph}[1]{%
   \csgdef{series@display#1}{paragraph}
-  \expandafter\newcount\csname #1prevpage@num\endcsname
-  \expandafter\newcount\csname #1prevpage@numR\endcsname%
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
   \expandafter\let\csname v#1footnote\endcsname=\paravfootnote
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
@@ -11071,8 +11070,6 @@
 \newcommand*{\arrangementX@normal}[1]{%
   \csgdef{series@displayX#1}{normal}
   \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
-  \expandafter\newcount\csname prevpage#1@num\endcsname%
-  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
   \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
   \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
@@ -11357,8 +11354,6 @@
 %    \begin{macrocode}
 \newcommand*{\arrangementX@paragraph}[1]{%
   \csgdef{series@displayX#1}{paragraph}%
-  \expandafter\newcount\csname prevpage#1@num\endcsname%
-  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
@@ -12570,6 +12565,11 @@
    \ignorespaces%
           }
 %    \end{macrocode}
+% Create counter used to determiner in which page was called the previous note.
+%    \begin{macrocode}
+      \expandafter\newcount\csname #1prevpage@num\endcsname%
+      \expandafter\newcount\csname #1prevpage@numR\endcsname%
+%    \end{macrocode}
 % We need to be able to modify \macpackage's footnote macros and restore their
 %    \begin{macrocode}
       \global\csletcs{#1@@footnote}{#1footnote}
@@ -12678,6 +12678,11 @@
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
       \expandafter\newcount\csname footnote#1@reading\endcsname%
+%    \end{macrocode}
+% Create counter used to determiner in which page was called the previous note.
+%    \begin{macrocode}
+      \expandafter\newcount\csname prevpage#1@num\endcsname%
+      \expandafter\newcount\csname prevpage#1@numR\endcsname%
 %    \end{macrocode}
 % Do not forget to initialize series
 %    \begin{macrocode}
