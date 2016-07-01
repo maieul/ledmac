@@ -275,6 +275,9 @@
 % \changes{v2.9.1}{2016/05/25}{Prevent \protect\cs{Xtxtbeforenotes} hook from causing notes to go beyond the bottom margin}
 % \changes{v2.10.0}{2016/06/02}{Add new tools to make apparatuses of manuscripts}
 % \changes{v2.11.0}{2016/06/16}{Compatibility with \protect\reledmac's \protect\option{auxdir} option.}
+% \changes{v2.12.0}{2016/07/01}{Add \protect\cs{edtextlater} and \cs{edtextnow}.}
+% \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{lineationR}.}
+% \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{AtBeginPairs}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -800,6 +803,22 @@
 %    \endnumbering
 %   \end{Rightside}
 % \end{verbatim}
+% \subsection{Critical notes called on leftside but printed on right side}
+% Sometimes, you need to print the critical notes on the right side, despite the fact that they refer to the lemmas on the left side.
+% In this case, you must use \cs{edtextlater} and \cs{edtextnow}.
+% \DescribeMacro{\edtextlater}
+% The \cs{edtextlater}\marg{lemma}\marg{footnote command} command must be called on the same side as the lemma.
+% It is similar to the standard \cs{edtext} command, but does not add the footnote immediately on the page, keeping it for later.
+% \DescribeMacro{\edtextnow}
+% \cs{edtextnow} must be called on the side on which you want to print the lemma, approximately at the point corresponding to the equivalent \cs{edtextlater} command.
+% It will add the notes stored by the equivalent \cs{edtextlater} command.
+%
+% The relationship between the \cs{edtextlater} and \cs{edtextnow} commands is determined by the order of calling: the first \cs{edtextnow} corresponds to the first \cs{edtextlater}, the second \cs{edtextnow} corresponds to the second \cs{edtextlater} etc.
+%
+%
+% \cs{edtextnow} is a parameterless macro, so it gobbles the following space.
+% If you want to keep it, add \verb+{}+ or backslash followed by a space.
+% 
 % \subsection{Using line flag}
 % \DescribeMacro{\Xlineflag}
 % \DescribeMacro{\Xendlineflag}
@@ -1178,7 +1197,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/06/16 v2.11.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/07/01 v2.12.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1435,10 +1454,17 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@error@edtext@later@now}
+%    \begin{macrocode}
+\newcommand{\led@error@edtext@later@now}{%
+  \reledpar@error{You call \the\edtext@later\space \string\edtextlater\space commands, but \the\edtext@now\space \string\edtextnow\space commands}{\@ehc}% (did I follow your intent correctly here?)
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@warn@ChangeSyncOption}
 %    \begin{macrocode}
 \newcommand*{\led@warn@ChangeSyncOption}[1]{%
-  \reledpar@warning{You have changed synchronization's options since last run. We have not read line-list file #1. Please run LaTeX again.}%
+  \reledpar@warning{You have changed synchronization's options since the last run. We have not read line-list file #1. Please run LaTeX again.}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1763,7 +1789,7 @@
              \Xpstart%
            \fi%
        \else
-           \def@tempb{section}
+           \def\@tempb{section}
            \ifx\@tempa\@tempb
              \global\bypage@Rfalse%
              \global\bypstart@Rfalse%
@@ -2449,6 +2475,22 @@
 %    \begin{macrocode}
      \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
 %    \end{macrocode}
+% And now, call \cs{@ref@reg@parseargR}, which can be also called by \cs{@ref@later}
+%    \begin{macrocode}
+     \@ref@reg@parseR{#2}%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+     \global\advance\@edtext@level by -1% 
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\@ref@reg@parseR}
+%    \begin{macrocode}
+\newcommand{\@ref@reg@parseR}[1]{%
+%    \end{macrocode}
 % Declare and init boolean for lemma in this level.
 %    \begin{macrocode}
      \providebool{lemmacommand@\the\@edtext@level}%
@@ -2457,7 +2499,7 @@
 % Execute the second argument of \protect\cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-    #2
+    #1%
 % Now, we store the list of \protect\cs{@sw} of this current \protect\cs{edtext} as an element of
 % the global list of list of \protect\cs{@sw} for a \protect\cs{edtext} depth.
 %    \begin{macrocode}
@@ -2469,14 +2511,9 @@
       \xright@appenditem{\expandonce\@tmpp}\to\@tmp%
       \global\cslet{sw@list@edtextR@\the\@edtext@level}{\@tmp}%
     \fi%
+}%
 %    \end{macrocode}
-% Decrease edtext level counter.
-%    \begin{macrocode}
-    \global\advance\@edtext@level by -1% 
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
+
 % \end{macro}
 % \begin{macro}{\@pend}
 % \begin{macro}{\@pendR}
@@ -2721,18 +2758,18 @@
 %    \begin{macrocode}
     \unless\ifnofamiliar@%
       \csgdef{onlysideX@#1}{}%
-      \newnamebox{#1footins@kept}%
+      \newnamebox{footins#1@kept}%
     \fi%
     \unless\ifnocritical@%
       \csgdef{Xonlyside@#1}{}%
-      \newnamebox{footins#1@kept}%
+      \newnamebox{#1footins@kept}%
     \fi%
 %    \end{macrocode}
-% \subsection{Tools specific to familiar footnotes}
+% \subsubsection{Tools specific to familiar footnotes}
 %    \begin{macrocode}
   \unless\ifnofamiliar@%
 %    \end{macrocode}
-% \subsubsection{Managing correct number}\label{familiarfootnotenumber}
+% \paragraph{Managing correct number}\label{familiarfootnotenumber}
 % One problem with using familiar footnotes in parallel typesetting is the fact that the order of reading ​notes is not the same as the order they are typset, because \LaTeX\ reads first all the notes on one side, then all the notes on the other side.
 % Then, however, \LaTeX\ alternates between typesetting left-side note and right-side notes.
 % Consequently, if we do nothing special, the note numbers are sorted in the reading order, not in the typesetting order.
@@ -2754,7 +2791,7 @@
       \newcounter{footnote#1@typeset}%
 %    \end{macrocode}
 % 
-% \subsubsection{Familiar footnotes without marks}
+% \paragraph{Familiar footnotes without marks}
 % The \protect\cs{footnoteXnomk} commands are for notes which are printed on the left side, while they are called in the right side.
 % Basically, they set first toggle \protect\cs{nomark@} to true, then call the \protect\cs{footnoteX}.
 % and finally add the footnote counter in the footnote counter list.
@@ -2963,7 +3000,7 @@
 % \begin{macro}{\AtBeginPairs}
 % The \protect\cs{AtBeginPairs} macro just define a \protect\cs{at@begin@pairs} macro, called at the beginning of each \verb+pairs+ environments.
 %    \begin{macrocode}
-\newcommand{\AtBeginPairs}[1]{\xdef\at@begin@pairs{#1}}%
+\newcommand{\AtBeginPairs}[1]{\gdef\at@begin@pairs{#1}}%
 \def\at@begin@pairs{}%
 
 %    \end{macrocode}
@@ -4389,6 +4426,105 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \subsection{Critical footnote printed in right side}
+% \changes{v2.12.0}{2016/07/01}{Add \protect\cs{edtextlater} and \protect\cs{edtextnow}.}
+% \begin{macro}{\edtext@later}
+% \begin{macro}{\edtext@now}
+% \begin{macro}{\edtextlater}
+% \begin{macro}{\edtextnow}
+% \cs{edtextlater} and \cs{edtextnow} are used to print critical footnotes on the right side, while refering to the text on the left side.
+% First, we create two counters, one for \cs{edtextlater} and the other for \cs{edtextnow}.
+%    \begin{macrocode}
+\newcount\edtext@now%
+\newcount\edtext@later%
+%    \end{macrocode}
+%    \begin{macrocode}
+\newcommand{\edtextlater}[2]{%#1 lemma, #2 critical notes
+%    \end{macrocode}
+% First, increase the \cs{edtext@later} counter.
+%    \begin{macrocode}
+  \global\advance\edtext@later by \@ne%
+%    \end{macrocode}
+%    \begin{macrocode}
+% As we are in a pseudo-\cs{edtext}, we now need to get the \cs{sameword} data stored in the auxiliary file for this \cs{edtextlater}.
+  \advance\@edtext@level by \@ne%
+  \ifcsvoid{sw@list@edtext@\the\@edtext@level}%
+              {\global\let\sw@inthisedtext\empty}%
+              {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+%    \end{macrocode}
+% The main feature of \cs{edtextlater} is to create a macro which will be called on the equivalent \cs{edtextnow}.
+%    \begin{macrocode}
+% 
+  \csxdef{edtext@later@\the\edtext@later}{%
+%    \end{macrocode}
+% \cs{edtextnow} will insert a empty \cs{edtext}.
+%    \begin{macrocode}
+      \noexpand\edtext{%
+      }%
+%    \end{macrocode}
+% With a \cs{lemma} and \cs{linenum} defined by the current \cs{edtextlater}.
+% Also with \cs{sameword} data gotten from the current \cs{edtextlater}
+%    \begin{macrocode}
+      {%
+      \unexpanded{%
+        \lemma{\no@expands #1}%
+        \xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
+      }%
+      \noexpand\linenum{||||||\edfont@info}%
+      \unexpanded{\def\sw@inthisedtext}{\expandonce{\sw@inthisedtext}}%
+%    \end{macrocode}
+% As the \cs{edtextnow} is generally called on the other side than the corresponding \cs{edtextlater}, we need to store the side for a proper formatting of the footnote.
+%    \begin{macrocode}
+      \ifledRcol%
+        \unexpanded{\appto\@beforeinsertofthisedtext{\ledRcol@true}}%
+      \else%
+        \unexpanded{\appto\@beforeinsertofthisedtext{\ledRcol@false}}%
+      \fi%
+%    \end{macrocode}
+% And the footnote command of this \cs{edtextlater}.
+%    \begin{macrocode}
+      \unexpanded{#2}%
+    }%
+  }%
+%    \end{macrocode}
+% And now, we print the current lemma data. 
+% But we save the beginning and the starting line using the crossref mechanism.
+% We also store information in the auxiliary file about the existence of a \cs{edtextlater} and, if required, about the use of a \cs{lemma}
+%    \begin{macrocode}
+  \edlabel{start:edtext:later:\the\edtext@later}%
+  \flag@start@later%
+  \bgroup%
+    \def\lemma##1{%
+         \ifledRcol%
+           \write\linenum@outR{\string\@lemma}%
+         \else%
+           \write\linenum@out{\string\@lemma}%
+         \fi%
+    }%
+    \renewcommand{\do}[1]{\expandafter\renewcommandx\csname ##1footnote\endcsname[2][1,usedefault]{}}%
+    \dolistloop{\@series}%
+    #2%
+  \egroup%
+  \showlemma{#1}%
+  \edlabel{end:edtext:later:\the\edtext@later}%
+  \flag@end@later%
+%    \end{macrocode}
+% We decrease the counter increased at the beginning.
+%    \begin{macrocode}
+  \advance\@edtext@level by -\@ne%
+}%
+%    \end{macrocode}
+% \cs{edtextnow} just calls the command defined as is, reading the \cs{edtext@later} list.
+%    \begin{macrocode}
+\newcommand{\edtextnow}[0]{%
+  \global\advance\edtext@now by \@ne
+  \csuse{edtext@later@\the\edtext@now}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \section{Cross referencing}
 % \label{xref}
 %
@@ -4522,28 +4658,6 @@
 % \end{macro}
 %
 %
-% \section{Familiar footnotes}
-%
-%
-% \begin{macro}{\l@dbfnote}
-% \protect\cs{l@dbfnote} adds the footnote to the insert list, and
-% \protect\cs{vl@dbfnote} calls the original \protect\cs{@footnotetext}.
-% \changes{v1.3.1}{2012/11/16}{Compatibility of standard footnotes with eledmac when theses footnotes contain any commands.}
-% \changes{v1.3.3}{2012/11/19}{Spurious space with footnote in right column.}
-% There are both defined in \macpackage.
-% \changes{v2.0.0}{2015/07/19}{\protect\cs{l@dbfnote} defined only in \reledmac.}
-% \end{macro}
-%
-%
-% \begin{macro}{\normalbfnoteX}
-% \changes{v0.3.0}{2005/02/04}{Removed extraneous spaces from \protect\cs{normalbfnoteX}}
-% \changes{v1.3.5}{2013/07/10}{Allows one to redefine \protect\cs{thefootnoteX} with \c{alph} when some packages are loaded.}
-% \changes{v1.4.1}{2013/08/16}{Fix bug with normal familiar footnotes when mixing RTL and LTR text.}
-% \changes{v2.0.0}{2015/07/19}{\protect\cs{normalbfnoteX} defined only in \reledmac.}
-% \end{macro}
-%
-%
-
 % \section{Verse}
 %\changes{v0.11.0}{2012/06/11}{New management of hangingsymbol insertion, preventing undesirable insertions.}
 %\changes{v0.12.0}{2012/08/03}{New management of hangingsymbol insertion, preventing undesirable insertions.}
@@ -5780,16 +5894,28 @@
     \global\instanzaLfalse%
     \global\instanzaRfalse%
   \global\l@dprintingpagesfalse%
- \finish@Pages@notes%Needed to prevent final notes overlap line number
+%    \end{macrocode} 
+% Check the consistency of \cs{edtext@later} and \cs{edtext@now}
+%    \begin{macrocode}
+   \ifnum\edtext@later=\edtext@now%
+   \else%
+     \led@error@edtext@later@now%
+   \fi%
+   \global\edtext@later=\z@%
+   \global\edtext@now=\z@%
+%    \end{macrocode}
+% Prevent final notes from overlapping the line number
+%    \begin{macrocode}
+ \finish@Pages@notes%
   \ignorespaces\fi}
 
 
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsection{Ensure all notes be printed at the end of parallel pages} 
+% \subsection{Ensure all notes are printed at the end of parallel pages} 
 % \begin{macro}{\finish@Pages@notes}
-% This macro ensures that all long notes are printed at the end of \protect\cs{Pages} typesetting, and that there is no more long notes left for the next pages.
+% This macro ensures that all long notes are printed at the end of \protect\cs{Pages} typesetting, and that there are no more long notes left for the next pages.
 %    \begin{macrocode}
 \newcommand{\finish@Pages@notes}{%
   \def\do##1{%

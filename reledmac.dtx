@@ -406,7 +406,7 @@
 % \changes{v2.11.0}{2016/06/02}{Add new tools to produce an apparatus of manuscripts}
 % \changes{v2.12.0}{2016/06/16}{Fix bug with familiar footnote number in optional argument of \protect\cs{pstart} or \protect\cs{pend} in parallel typesetting}
 % \changes{v2.12.0}{2016/06/16}{Add \protect\cs{hidenumberingonleftpage} and \protect\cs{hidenumberingonrightpage}}
-% \changes{v2.12.0}{2016/06/16}{\protect\cs{preXnotes} become \protect\cs{Xprenotes} (naming convention)}
+% \changes{v2.12.0}{2016/06/16}{\protect\cs{preXnotes} becomes \protect\cs{Xprenotes} (naming convention)}
 % \changes{v2.12.0}{2016/06/16}{Add \protect\option{auxdir} option.}
 % \changes{v2.12.0}{2016/06/16}{Add \protect\cs{toendnotes} and related.}
 % \changes{v2.12.0}{2016/06/16}{Fix bug when using \protect\cs{chapter} in optional argument of \protect\cs{pstart} in parallel typesetting in combination with the \protect\option{noeledsec} option.}
@@ -415,6 +415,12 @@
 % \changes{v2.12.0}{2016/06/16}{More accurate message to control the position of \protect\cs{Xfootnote} and \protect\cs{applabel} in the \protect\LaTeX\ code}
 % \changes{v2.12.0}{2016/06/16}{Fix bug in critical and familiar footnotes when using uppercase letters with accent mark}
 % \changes{v2.12.0}{2016/06/16}{Make endnote compatible with \protect\cs{sameword} mechanism}
+% \changes{v2.13.0}{2016/06/18}{Version 2.13.0 never existed.}
+% \changes{v2.13.1}{2016/06/18}{In critical footnotes, the right side flag is printed only if requested explicitly with \protect\cs{Xlineflag} (bug added in v.~2.5.0).}
+% \changes{v2.13.2}{2016/06/24}{Fix bug added in v.~11.2 which could make parallel typesetting not work.}
+% \changes{v2.13.3}{2016/06/28}{Makes \protect\cs{Xendafterpagenumbe} affecting \protect\cs{SErefwithpage}}
+% \changes{v2.14.0}{2016/07/01}{Hyperref with the line number inside critical footnotes is correct when using \protect\cs{xxref}}
+% \changes{v2.14.0}{2016/07/01}{Some internal changes for new features of \protect\reledpar.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -2702,7 +2708,9 @@
 % The \protect\cs{xxref}\marg{lab1}\marg{lab2} command generates a reference to a sequence of
 % lines, for use in the second argument of \protect\cs{edtext}.
 % It takes two arguments, both of which are
-% labels: e.g., \verb"\xxref{mouse}{elephant}". It calls \protect\cs{linenum}
+% labels: e.g., \verb"\xxref{mouse}{elephant}". 
+%
+% It automatically calls \protect\cs{linenum}
 % (q.v., \reff{linenum} above) and sets the beginning page,
 % line and  subline numbers to those of the place where
 % \verb"\edlabel{mouse}" was placed, and the ending numbers to those where
@@ -3675,7 +3683,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/06/16 v2.12.0 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/07/01 v2.14.0 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4787,17 +4795,17 @@
        \else
           \def\@tempb{section}
           \ifx\@tempa\@tempb
-           \global\bypage@false
-           \global\bypstart@false
-           \unless\ifnocritical@%
-             \Xpstart[][false]%
-           \fi%
+            \global\bypage@false
+            \global\bypstart@false
+            \unless\ifnocritical@%
+              \Xpstart[][false]%
+            \fi%
 %    \end{macrocode}
 % In other case, it is an error.
 %    \begin{macrocode}
-	   \else
+	        \else
             \led@warn@BadLineation
-        \fi
+          \fi
        \fi
     \fi
   \fi}}
@@ -6260,10 +6268,24 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
 %    \end{macrocode}
-% Create a list which stores every second argument of  each \protect\cs{@sw}
+% And now, call \cs{@ref@reg@parsearg}, which can be also called by \cs{@ref@later}
+%    \begin{macrocode}
+     \@ref@reg@parse{#2}%
+%    \end{macrocode}
+% Decrease edtext level counter.
+%    \begin{macrocode}
+  \global\advance\@edtext@level by -1% 
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@ref@reg@parse}%
+% The \cs{@ref@reg@parsearg} command parses the second argument of a \cs{@ref} or the unique argument of \cs{@ref@later} written in the auxiliary fill.
+%
+% First, create a list which stores every second argument of each \protect\cs{@sw}
 % in this lemma, at this level.
 % Also set the boolean about the use of lemma in this edtext level to false.
 %    \begin{macrocode}
+\newcommand{\@ref@reg@parse}[1]{%
      \expandafter\list@create\expandafter{\csname sw@list@edtext@tmp@\the\@edtext@level\endcsname}%
      \providebool{lemmacommand@\the\@edtext@level}%
      \boolfalse{lemmacommand@\the\@edtext@level}%
@@ -6271,7 +6293,7 @@
 % Execute the second argument of \protect\cs{@ref} again,
 % to perform for real all the commands within it.
 %    \begin{macrocode}
-  #2%
+  #1%
 %    \end{macrocode}
 % Now, we store the list of \protect\cs{@sw} of this current \protect\cs{edtext} as an element of
 % the global list of list of \protect\cs{@sw} for a \protect\cs{edtext} depth.
@@ -6285,10 +6307,6 @@
     \global\cslet{sw@list@edtext@\the\@edtext@level}{\@tmp}%
   \fi%
 %    \end{macrocode}
-% Decrease edtext level counter.
-%    \begin{macrocode}
-  \global\advance\@edtext@level by -1% 
-%    \end{macrocode}
 %    \begin{macrocode}
 }
 
@@ -6296,7 +6314,21 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\ref@reg@later}
+% This macro is stored in the auxiliary file when using \cs{edtextlater}. 
+% It is used only to get the correct value for the \cs{sameword} tools.
+%    \begin{macrocode}
+\newcommand{\@ref@later}[1]{%
+  \global\advance\@edtext@level by \@ne%
+  \ifledRcol% 
+    \@ref@reg@parseR{#1}%
+  \else%
+    \@ref@reg@parse{#1}%
+  \fi%
+  \global\advance\@edtext@level by -\@ne%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Writing to the line-list file}
 %
 % We have now defined all the counters, lists, and commands involved in
@@ -6471,11 +6503,40 @@
     \fi%
   \fi}%
 
+\newcommand*{\flag@end}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi}%
+
+
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\flag@start@later}
+% \begin{macro}{\flag@end@later}
+% \protect\cs{flag@start@later} and \protect\cs{flag@end@later}: these send the\cs{@ref@later} to the line-list file
+% command to the line-list file
+%    \begin{macrocode}
+\newcommand*{\flag@start@later}{%
+  \ifledRcol%
+    \write\linenum@outR{\string\@ref@later[}%
+  \else%
+    \write\linenum@out{\string\@ref@later[}%
+  \fi%
+}%
+\newcommand{\flag@end@later}{%
+  \ifledRcol%
+    \write\linenum@outR{]}%
+  \else%
+    \write\linenum@out{]}%
+  \fi%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\startsub}
 % \begin{macro}{\endsub}
 % \changes{v1.15.0}{2015/01/12}{Restore subline feature (disabled by mistake in v1.8.0).}
@@ -7027,25 +7088,30 @@
       \global\advance\@edtext@level by -1%
       \global\@lemmacommand@false%
 %    \end{macrocode}
+% We also reset \cs{@beforeinsertofthisedtext}
+%    \begin{macrocode}
+      \global\let\@beforeinsertofthisedtext\relax%
+%    \end{macrocode}
 % If we are outside of a numbered paragraph,
-% we send error message and print the first argument.
+% we send an error message and print the first argument.
 %    \begin{macrocode}
   \else%
   \showlemma{#1} (\textbf{\textsc{Edtext outside numbered paragraph}})\led@err@edtextoutsidepstart%
   \fi%
 }%
 
-\newcommand*{\flag@end}{%
-  \ifledRcol%
-    \write\linenum@outR{]}%
-  \else%
-    \write\linenum@out{]}%
-  \fi}%
 
 %    \end{macrocode}
 % \end{macro}
 %
-%
+% 
+% \begin{macro}{\@beforeinsertofthisedtext}
+% \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
+% Its content is \cs{let} equal to \cs{relax} at the end of every \cs{edtext}.
+%    \begin{macrocode}
+\let\@beforeinsertofthisedtext\relax
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifnumberline}
 % The \protect\cs{ifnumberline} option can be set to FALSE to disable line numbering.
 %  \begin{macrocode}
@@ -7202,7 +7268,7 @@
 % The general mechanism is the following:
 % \begin{itemize}
 %    \item \textbf{At the first run}, each \protect\cs{sameword} command increments an \protect\package{etoolbox} counter the name of which contains the argument of the \protect\cs{sameword} commands.
-%    \item Then this counter, associated with the argument of \protect\cs{sameword} is stored,  with the \protect\cs{@sw} command, in the auxiliary file of the current \protect\package{eledmac} section (the \verb+.1+, \verb+.2+… file).
+%    \item Then this counter, associated with the argument of \protect\cs{sameword} is stored with the \protect\cs{@sw} command in the auxiliary file of the current \macpackage section (the \verb+.1+, \verb+.2+… file).
 %    \item \textbf{When this auxiliary file is read at the second run}, different operations are achieved:
 %	\begin{enumerate} 
 %       	\item  Get the rank of each \protect\cs{sameword} in a line (relative rank) from the rank of each \protect\cs{sameword} in all the numbered section (absolute rank):
@@ -9192,8 +9258,6 @@
 %    \begin{macrocode}
 \newcommand*{\Xarrangement@paragraph}[1]{%
   \csgdef{series@display#1}{paragraph}
-  \expandafter\newcount\csname #1prevpage@num\endcsname
-  \expandafter\newcount\csname #1prevpage@numR\endcsname%
   \expandafter\let\csname #1footstart\endcsname=\parafootstart
   \expandafter\let\csname v#1footnote\endcsname=\paravfootnote
   \expandafter\let\csname #1footfmt\endcsname=\parafootfmt
@@ -10185,7 +10249,7 @@
   }{}%
   \iftoggle{Xonlypstart@#2}{}{%
     \csuse{Xtxtbeforenumber@#2}%
-    \printlines#1||\ifledRcol@\@Rlineflag\fi}%
+    \printlines#1|\ifledRcol@\@Rlineflag\fi|}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11069,8 +11133,6 @@
 \newcommand*{\arrangementX@normal}[1]{%
   \csgdef{series@displayX#1}{normal}
   \expandafter\let\csname footstart#1\endcsname=\normalfootstartX
-  \expandafter\newcount\csname prevpage#1@num\endcsname%
-  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \@namedef{@footnotemark#1}{\normal@footnotemarkX{#1}}
   \@namedef{bodyfootmark#1}{\normalbodyfootmarkX{#1}}
   \expandafter\let\csname regvfootnote#1\endcsname=\normalvfootnoteX
@@ -11355,8 +11417,6 @@
 %    \begin{macrocode}
 \newcommand*{\arrangementX@paragraph}[1]{%
   \csgdef{series@displayX#1}{paragraph}%
-  \expandafter\newcount\csname prevpage#1@num\endcsname%
-  \expandafter\newcount\csname prevpage#1@numR\endcsname%
   \expandafter\let\csname footstart#1\endcsname=\parafootstartX
   \expandafter\let\csname regvfootnote#1\endcsname=\para@vfootnoteX
   \expandafter\let\csname footfmt#1\endcsname=\parafootfmtX
@@ -12504,6 +12564,7 @@
                       \noexpand\setcounter{stanzaR}{\the\c@stanzaR}%Save stanzaR counter for footnote
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \expandonce{\@beforeinsertofthisedtext}% Internal for now, no reason to make it public
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
@@ -12536,12 +12597,13 @@
                       \noexpand\Xnote@true%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
-                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
+                      \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to \sw@list@inedtext when the notes are expanded.
                       \ifl@dpairing%
                         \noexpand\setcounter{stanzaL}{\the\c@stanzaL}%Save stanzaR counter for footnote
                       \fi%
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
+                      \expandonce{\@beforeinsertofthisedtext}%Internal for now, no reason to make it public
                       \noexpand\csuse{v#1footnote}%
                          {#1}%
                          {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
@@ -12567,6 +12629,11 @@
           \fi%
    \ignorespaces%
           }
+%    \end{macrocode}
+% Create counter used to determine on which page the previous note was called.
+%    \begin{macrocode}
+      \expandafter\newcount\csname #1prevpage@num\endcsname%
+      \expandafter\newcount\csname #1prevpage@numR\endcsname%
 %    \end{macrocode}
 % We need to be able to modify \macpackage's footnote macros and restore their
 %    \begin{macrocode}
@@ -12670,14 +12737,19 @@
       }
 %    \end{macrocode}
 % Then define the counters.
-% The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by the user. This is this the one which is printed.
+% The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by the user. This is the one which is printed.
 % The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used for hyperlinks,  for using \package{hyperlink} package, and for getting the correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
 %    \begin{macrocode}
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
       \expandafter\newcount\csname footnote#1@reading\endcsname%
 %    \end{macrocode}
-% Do not forget to initialize series
+% Create counter used to determine on which page the previous note was called.
+%    \begin{macrocode}
+      \expandafter\newcount\csname prevpage#1@num\endcsname%
+      \expandafter\newcount\csname prevpage#1@numR\endcsname%
+%    \end{macrocode}
+% Do not forget to initialize the series
 %    \begin{macrocode}
      \arrangementX@normal{#1}%
   \fi
@@ -13224,7 +13296,7 @@
 \newhooktoggle@series{Xendtwolinesonlyinsamepage}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlinerangeseparator}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendbeforepagenumber}[apprefwithpage,SErefwithpage,SErefonlypage]
-\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpagem]
+\newhookcommand@series{Xendafterpagenumber}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixsingle}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
@@ -14056,6 +14128,8 @@
    \fi%
    \letcs{\@tempa}{the@@label#1}%
    \letcs{\@tempb}{the@@label#2}%
+   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@start{#1}}%
+   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@end{#2}}%
    \linenum{\@tempa|%
     \@tempb}}}%
 
