@@ -421,6 +421,7 @@
 % \changes{v2.13.3}{2016/06/28}{Makes \protect\cs{Xendafterpagenumbe} affecting \protect\cs{SErefwithpage}}
 % \changes{v2.14.0}{2016/07/01}{Hyperref with the line number inside critical footnotes is correct when using \protect\cs{xxref}}
 % \changes{v2.14.0}{2016/07/01}{Some internal changes for new features of \protect\reledpar.}
+% \changes{v2.14.1}{2016/07/04}{Fix bug when using \protect\cs{footnoteX} in the first argument of \protect\cs{edtext}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3683,7 +3684,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/07/01 v2.14.0 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/07/04 v2.14.1 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6856,7 +6857,7 @@
 % should be done only once. And we make
 % \protect\cs{edtext} itself, if it appears within its own
 % argument, do nothing but copy its first argument.
-%
+% 
 % Finally, we execute \protect\cs{morenoexpands}. The version of
 % \protect\cs{morenoexpands} defined here does nothing; but you may define
 % a version of your own when you need to add more expansion
@@ -6867,6 +6868,9 @@
 % macro adds any spaces to the text when it runs, extra space
 % will appear in the main text when \protect\cs{edtext} is used.
 %
+%
+% The \cs{new@series} command also adds, for the series \meta{X} \cs{let}\cs{footnote\meta{X}}\cs{@gobble} to the end of the \cs{no@expands} macro.
+% 
 % (A related problem, not addressed by these two macros,
 % is that of characters whose category code is changed by any
 % the macros used in the arguments to \protect\cs{edtext}. Since the
@@ -12748,6 +12752,10 @@
 %    \begin{macrocode}
       \expandafter\newcount\csname prevpage#1@num\endcsname%
       \expandafter\newcount\csname prevpage#1@numR\endcsname%
+%    \end{macrocode}
+% Add \cs{let}\cs{footnoteX}\cs{@gobble} to \cs{no@expands}.
+%    \begin{macrocode}
+      \expandafter\gappto\expandafter\no@expands\expandafter{\expandafter\let\csname footnote#1\endcsname\@gobble}%
 %    \end{macrocode}
 % Do not forget to initialize the series
 %    \begin{macrocode}
