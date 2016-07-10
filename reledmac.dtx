@@ -7940,7 +7940,9 @@
 %    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
-        \add@inserts\affixside@note%
+        \add@inserts%
+        \add@Xgroupbyline%
+        \affixside@note%
 %    \end{macrocode}
 % Print left notes.
 %    \begin{macrocode}
@@ -7991,7 +7993,9 @@
       \global\@firstlineofpagefalse%
     \fi%
     \insert@msdata%
-    \add@inserts\affixside@note%
+    \add@inserts%
+    \add@Xgroupbyline%
+    \affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
@@ -8671,6 +8675,37 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\add@Xgroupbyline}
+% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediatly in \cs{add@inserts}, but the content to be inserted are stored, to be inserted in one block
+% This insertion in when block is made by \cs{add@Xgroupbyline}.
+%    \begin{macrocode}
+\newcommand{\add@Xgroupbyline}{%
+  \unless\ifnocritical@%
+    \def\do##1{%Looping on the series
+      \def\do####1{%Looping on the ##1@forinserting command
+         \ifcsdef{##1@forinserting@####1}{%
+           \X@beforeinsertion{##1}%
+           \insert\csname ##1footins\endcsname{%
+             \X@atbegininsertion{##1}%
+             \Xledsetnormalparstuff{##1}%
+             \rule\z@\splittopskip%
+             \csuse{##1@forinserting@####1}%
+             \strut\par%
+           }%
+           \global\csundef{##1@forinserting@####1}%
+           }%
+           {}%
+         }%
+      \ifcsdef{##1@forinserting}{%
+        \dolistcsloop{##1@forinserting}%
+      }{}%
+      \global\csundef{##1@forinserting}%
+      }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Penalties}
 %
 % \begin{macro}{\add@penalties}
@@ -9075,10 +9110,25 @@
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
-  \insert@Xtxtbeforenotes{#1}%
-  \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname{%
-    \normalvfootnote@inserted{#1}{#2}%
+  \iftoggle{Xgroupbyline@#1}{%In the case we use \Xgroupbyline, the insertion is done later, in \add@Xgroupbyline.
+    \iftoggle{Xgroupbylineseparetwolines@#1}{%
+      \l@dparsefootspec#2%
+      \csgappto%
+        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+        {\normalvfootnote@inserted{#1}{#2}}%
+      \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    }{%
+      \csgappto%
+        {#1@forinserting@all}%
+        {\normalvfootnote@inserted{#1}{#2}}%
+      \listcsxadd{#1@forinserting}{all}%
+    }%
+  }{%In the case we don't use \Xgroupbyline, the insertion is made directly
+    \X@beforeinsertion{#1}%
+    \insert\csname #1footins\endcsname{%
+      \X@atbegininsertion{#1}%
+      \normalvfootnote@inserted{#1}{#2}%
+    }%
   }%
 }%
 %    \end{macrocode}
@@ -9088,8 +9138,7 @@
 % The \cs{normalvfootnote@inserted} macro is expanded to the content to be add to a \cs{insert} for normal critical footnote.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote@inserted}[2]{%
-\hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
-  \noindent\csuse{Xbhooknote@#1}%
+  \nottoggle{Xgroupbyline@#1}{\noindent}{}\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips
   \ifl@dpairing\ifl@dpaging\else%
@@ -9098,6 +9147,21 @@
   \setXnotespositionliketwocolumns@{#1}%
   \spaceskip=\z@skip \xspaceskip=\z@skip%
   \csname #1footfmt\endcsname #2{#1}%  
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\X@beforeinsertion}
+%    \begin{macrocode}
+\newcommand{\X@beforeinsertion}[1]{%
+  \insert@Xtxtbeforenotes{#1}%
+  \csuse{Xbeforeinserting@#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\X@atbegininsertion}
+%    \begin{macrocode}
+\newcommand{\X@atbegininsertion}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -9146,14 +9210,15 @@
 
 
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
-  \Xledsetnormalparstuff{#4}%
+  \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
-  \rule\z@\splittopskip%
+  \nottoggle{Xgroupbyline@#4}{\rule\z@\splittopskip}{}%
   {\printlinefootnote{#1}{#4}}%
   \print@lemma{#1}{#2}{#4}%
   \csuse{Xwrapcontent@#4}{#3}%
-  \strut\par}
+  \nottoggle{Xgroupbyline@#4}{\strut\par}{}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
