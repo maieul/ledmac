@@ -9070,8 +9070,18 @@
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \insert@Xtxtbeforenotes{#1}%
   \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup
-  \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
+  \insert\csname #1footins\endcsname{%
+    \normalvfootnote@inserted{#1}{#2}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalvfootnote@inserted}
+% The \cs{normalvfootnote@inserted} macro is expanded to the content to be add to a \cs{insert} for normal critical footnote.
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote@inserted}[2]{%
+\hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips
@@ -9079,29 +9089,38 @@
     \setXnoteswidthliketwocolumns@{#1}%
   \fi\fi%
   \setXnotespositionliketwocolumns@{#1}%
-  \spaceskip=\z@skip \xspaceskip=\z@skip
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \spaceskip=\z@skip \xspaceskip=\z@skip%
+  \csname #1footfmt\endcsname #2{#1}%  
+}%
 %    \end{macrocode}
 % \end{macro}
-%
+% And somewhat different versions of \cs{normalvfootnote} and \cs{normalvfootnote@inserted} for minipages.
 % \begin{macro}{\mpnormalvfootnote}
-% And a somewhat different version for minipages.
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{mpnormalvfootnote}}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
-  \global\setbox\@nameuse{mp#1footins}\vbox{%
-    \insert@Xtxtbeforenotes{#1}%
-    \unvbox\@nameuse{mp#1footins}
-    \noindent\csuse{Xbhooknote@#1}%
-    \csuse{Xnotefontsize@#1}%
-    \hsize\columnwidth
-    \@parboxrestore
-    \color@begingroup
-    \csname #1footfmt\endcsname #2{#1}\color@endgroup}}
+  \global\setbox\@nameuse{mp#1footins}%
+    \vbox{%
+      \mpnormalvfootnote@inserted{#1}{#2}%
+  }%
+}%
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\mpnormalvfootnote@inserted}
+%    \begin{macrocode}
+\newcommand{\mpnormalvfootnote@inserted}[2]{%
+    \insert@Xtxtbeforenotes{#1}%
+    \unvbox\@nameuse{mp#1footins}%
+    \noindent\csuse{Xbhooknote@#1}%
+    \csuse{Xnotefontsize@#1}%
+    \hsize\columnwidth%
+    \@parboxrestore%
+    \color@begingroup%
+    \csname #1footfmt\endcsname #2{#1}\color@endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\normalfootfmt}
 % \label{normalfootfmt}
 % \protect\cs{normalfootfmt} is a `normal' macro
@@ -9805,8 +9824,9 @@
 %
 % \begin{macro}{\threecolvfootnote}
 % \protect\cs{threecolvfootnote}
-% is the \protect\cs{vfootnote} command for three-column notes. The
-% call to \protect\cs{Xnotefontsize@\meta{s}} ensures that the
+% is the \protect\cs{vfootnote} command for three-column notes. 
+% However, most of the code is deported on \cs{threecolvfootnote@inserted}.
+% The call to \protect\cs{Xnotefontsize@\meta{s}} ensures that the
 % \protect\cs{splittopskip} and \protect\cs{splitmaxdepth} take their values
 % from the right \protect\cs{strutbox}: the one used in a footnotes.
 % Note especially the importance of temporarily reducing the
@@ -9821,15 +9841,23 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
   \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup%
+  \insert\csname #1footins\endcsname{%
+    \threecolvfootnote@inserted{#1}{#2}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\threecolvfootnote@inserted}%
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote@inserted}[2]{%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \csname #1footfmt\endcsname #2{#1}%
+}%
 %    \end{macrocode}
 % \end{macro}
-%
 %
 % \begin{macro}{\threecolfootfmt}
 % \protect\cs{threecolfootfmt}
@@ -9940,6 +9968,7 @@
 %
 % \begin{macro}{\twocolfootsetup}
 % \begin{macro}{\twocolvfootnote}
+% \begin{macro}{\twocolvfootnote@inserted}
 % \begin{macro}{\twocolfootfmt}
 % \begin{macro}{\twocolfootgroup}
 % Here is a series of macros which are very similar to their
@@ -9957,12 +9986,17 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
   \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup%
+  \insert\csname #1footins\endcsname{%
+    \twocolvfootnote@inserted{#1}{#2}%
+  }%
+}%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote@inserted}[2]{%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \csname #1footfmt\endcsname #2{#1}%
+}%
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolfootfmt}[4]{% 4th arg is optional, for backward compatibility
@@ -9991,6 +10025,7 @@
   \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
