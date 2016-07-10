@@ -2188,7 +2188,7 @@
 % \DescribeMacro{\hsizethreecolX}
 % \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
-% \subsection{Options for paragraphed footnotes}
+% \subsection{Options for paragraphed footnotes and notes grouped by line}\label{optionparagraphed}
 % \subsubsection{Mark separation of notes}
 % \DescribeMacro{\Xafternote} \DescribeMacro{\afternoteX}
 % You can add some horizontal space after a note by using \protect\cs{Xafternote}\oarg{s}\marg{l}  (for critical footnotes) or \protect\cs{afternoteX}\oarg{s}\marg{l} (for familiar footnotes). The default value is \verb|1em plus.4em minus.4em|.
@@ -2217,6 +2217,7 @@
 %
 % In many case, you would like to use it in combination with \cs{Xnumberonlyfirstinline} (\reff{Xnumberonlyfirstinline}).
 %
+% Note that \cs{Xafternote} and \cs{Xparafootsep} settings are used to determine space and content between footnotes (\reff{optionparagraphed}).
 % \DescribeMacro{\Xgroupbylineseparetwolines}
 % Suppose you have two notes on line~1, and when which overlaps lines~1 and~2. 
 % This last note while be printed, if you use \cs{Xgroupbyline}, in the same group as the previous one.
@@ -9113,15 +9114,48 @@
   \iftoggle{Xgroupbyline@#1}{%In the case we use \Xgroupbyline, the insertion is done later, in \add@Xgroupbyline.
     \iftoggle{Xgroupbylineseparetwolines@#1}{%
       \l@dparsefootspec#2%
-      \csgappto%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {\normalvfootnote@inserted{#1}{#2}}%
+      \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+      {%
+        \csgappto%
+          {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+          {%
+            \ifcsempty{Xsymlinenum@#1}%
+              {\csuse{Xparafootsep@#1}}%
+              {}%
+            \normalvfootnote@inserted{#1}{#2}%
+            \hskip\csuse{Xafternote@#1}\relax%
+          }%
+      }%
+      {%
+        \csdef%
+          {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+          {%
+            \normalvfootnote@inserted{#1}{#2}%
+            \hskip\csuse{Xafternote@#1}\relax%
+          }%
+      }%
       \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
     }{%
-      \csgappto%
-        {#1@forinserting@all}%
-        {\normalvfootnote@inserted{#1}{#2}}%
-      \listcsxadd{#1@forinserting}{all}%
+      \ifcsdef{#1@forinserting@all}{%
+        \csgappto%
+          {#1@forinserting@all}%
+          {%
+            \ifcsempty{Xsymlinenum@#1}%
+              {\csuse{Xparafootsep@#1}}%
+              {}%
+            \normalvfootnote@inserted{#1}{#2}%
+            \hskip\csuse{Xafternote@#1}\relax%
+          }%
+      }%
+      {%
+        \csdef%
+          {#1@forinserting@all}%
+          {%
+            \normalvfootnote@inserted{#1}{#2}%
+            \hskip\csuse{Xafternote@#1}\relax%
+          }%
+      }%
+      \listcsgadd{#1@forinserting}{all}%
     }%
   }{%In the case we don't use \Xgroupbyline, the insertion is made directly
     \X@beforeinsertion{#1}%
@@ -9619,7 +9653,7 @@
   \unskip            % remove \rightskip,
   \unskip            % remove \parfillskip,
   \unpenalty         % remove \penalty of 10000,
-  \hskip\csuse{Xafternote@#2}\relax}% but add the glue to go between the notes
+  \hskip\csuse{Xafternote@#2}\relax}% add the glue to go between the notes
 
 %    \end{macrocode}
 % \end{macro}
