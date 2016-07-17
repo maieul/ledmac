@@ -9112,51 +9112,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
   \iftoggle{Xgroupbyline@#1}{%In the case we use \Xgroupbyline, the insertion is done later, in \add@Xgroupbyline.
-    \iftoggle{Xgroupbylineseparetwolines@#1}{%
-      \l@dparsefootspec#2%
-      \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-      {%
-        \csgappto%
-          {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-          {%
-            \ifcsempty{Xsymlinenum@#1}%
-              {\csuse{Xparafootsep@#1}}%
-              {}%
-            \normalvfootnote@inserted{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-      }%
-      {%
-        \csdef%
-          {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-          {%
-            \normalvfootnote@inserted{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-      }%
-      \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-    }{%
-      \ifcsdef{#1@forinserting@all}{%
-        \csgappto%
-          {#1@forinserting@all}%
-          {%
-            \ifcsempty{Xsymlinenum@#1}%
-              {\csuse{Xparafootsep@#1}}%
-              {}%
-            \normalvfootnote@inserted{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-      }%
-      {%
-        \csdef%
-          {#1@forinserting@all}%
-          {%
-            \normalvfootnote@inserted{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-      }%
-      \listcsgadd{#1@forinserting}{all}%
-    }%
+    \prepare@Xgroupbyline{#1}{#2}%
   }{%In the case we don't use \Xgroupbyline, the insertion is made directly
     \X@beforeinsertion{#1}%
     \insert\csname #1footins\endcsname{%
@@ -10749,6 +10705,59 @@
     {\hfill}%Prevent underfull hbox
   \egroup%
   \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Footnote grouped by line}
+% \begin{macro}{\prepare@Xgroupbyline}
+% \cs{prepare@Xgroupbyline} is a macro called on on the \cs{\meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling directly the \cs{insert}.
+%    \begin{macrocode}  
+\newcommand{\prepare@Xgroupbyline}[2]{%
+  \iftoggle{Xgroupbylineseparetwolines@#1}{%
+    \l@dparsefootspec#2%
+    \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    {%
+      \csgappto%
+        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+        {%
+          \ifcsempty{Xsymlinenum@#1}%
+            {\csuse{Xparafootsep@#1}}%
+            {}%
+          \normalvfootnote@inserted{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    {%
+      \csdef%
+        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+        {%
+          \normalvfootnote@inserted{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+  }{%
+    \ifcsdef{#1@forinserting@all}{%
+      \csgappto%
+        {#1@forinserting@all}%
+        {%
+          \ifcsempty{Xsymlinenum@#1}%
+            {\csuse{Xparafootsep@#1}}%
+            {}%
+          \normalvfootnote@inserted{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    {%
+      \csdef%
+        {#1@forinserting@all}%
+        {%
+          \normalvfootnote@inserted{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    \listcsgadd{#1@forinserting}{all}%
+  }%
 }%
 %    \end{macrocode}
 % \end{macro}
