@@ -8692,6 +8692,9 @@
              \insert\csname ##1footins\endcsname%
            \fi%
            {%
+             \ifcsdef{Xhsize\csuse{series@display##1}@##1}%
+               {\hsize \csuse{Xhsize\csuse{series@display##1}@##1}}%
+               {}%
              \if@ledgroup%
                \unvbox\@nameuse{mp##1footins}%
              \fi%
@@ -9922,9 +9925,14 @@
 % of the note (including numbers, lemma and text).
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
-  \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname{%
-    \threecolvfootnote@inserted{#1}{#2}%
+  \iftoggle{Xgroupbyline@#1}{%
+    \prepare@Xgroupbyline{#1}{#2}{\threecolvfootnote@inserted}%
+  }%
+  {%
+    \X@beforeinsertion{#1}%
+    \insert\csname #1footins\endcsname{%
+      \threecolvfootnote@inserted{#1}{#2}%
+    }%
   }%
 }%
 %    \end{macrocode}
@@ -9950,7 +9958,9 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolfootfmt}[4]{% 
   \normal@pars%
-  \hsize \csuse{Xhsizethreecol@#4}%
+  \nottoggle{Xgroupbyline@#4}%
+    {\hsize \csuse{Xhsizethreecol@#4}}%
+    {}%
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
