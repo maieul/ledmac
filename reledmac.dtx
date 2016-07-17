@@ -8680,14 +8680,21 @@
 % \begin{macro}{\add@Xgroupbyline}
 % If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediatly in \cs{add@inserts}, but the content to be inserted are stored, to be inserted in one block
 % This insertion in when block is made by \cs{add@Xgroupbyline}.
-%    \begin{macrocode}
 \newcommand{\add@Xgroupbyline}{%
   \unless\ifnocritical@%
     \def\do##1{%Looping on the series
       \def\do####1{%Looping on the ##1@forinserting command
          \ifcsdef{##1@forinserting@####1}{%
            \X@beforeinsertion{##1}%
-           \insert\csname ##1footins\endcsname{%
+           \if@ledgroup%
+             \global\setbox\@nameuse{mp##1footins}=\vbox%
+           \else%
+             \insert\csname ##1footins\endcsname%
+           \fi%
+           {%
+             \if@ledgroup%
+               \unvbox\@nameuse{mp##1footins}%
+             \fi%
              \X@atbegininsertion{##1}%
              \Xledsetnormalparstuff{##1}%
              \rule\z@\splittopskip%
@@ -8706,6 +8713,8 @@
     \dolistloop{\@series}%
   \fi%
 }%
+
+
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Penalties}
@@ -9161,9 +9170,15 @@
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{mpnormalvfootnote}}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
-  \global\setbox\@nameuse{mp#1footins}%
-    \vbox{%
-      \mpnormalvfootnote@inserted{#1}{#2}%
+  \iftoggle{Xgroupbyline@#1}{%
+    \prepare@Xgroupbyline{#1}{#2}{\mpnormalvfootnote@inserted}%
+  }%
+  {%
+      \global\setbox\@nameuse{mp#1footins}%
+      \vbox{%
+        \unvbox\@nameuse{mp#1footins}%
+        \mpnormalvfootnote@inserted{#1}{#2}%
+    }%
   }%
 }%
 
@@ -9172,7 +9187,6 @@
 % \begin{macro}{\mpnormalvfootnote@inserted}
 %    \begin{macrocode}
 \newcommand{\mpnormalvfootnote@inserted}[2]{%
-    \unvbox\@nameuse{mp#1footins}%
     \noindent\csuse{Xbhooknote@#1}%
     \csuse{Xnotefontsize@#1}%
     \hsize\columnwidth%
