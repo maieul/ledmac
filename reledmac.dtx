@@ -423,6 +423,7 @@
 % \changes{v2.14.0}{2016/07/01}{Some internal changes for new features of \protect\reledpar.}
 % \changes{v2.14.1}{2016/07/04}{Fix bug when using \protect\cs{footnoteX} in the first argument of \protect\cs{edtext}.}
 % \changes{v2.15.0}{2016/07/10}{Add `byline` arrangement.}
+% \changes{v2.15.0}{2016/07/10}{Fix \protect\cs{Xtxtbeforenotes} in ledgroup.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -9171,7 +9172,6 @@
 % \begin{macro}{\mpnormalvfootnote@inserted}
 %    \begin{macrocode}
 \newcommand{\mpnormalvfootnote@inserted}[2]{%
-    \insert@Xtxtbeforenotes{#1}%
     \unvbox\@nameuse{mp#1footins}%
     \noindent\csuse{Xbhooknote@#1}%
     \csuse{Xnotefontsize@#1}%
@@ -15109,7 +15109,20 @@
 %    \begin{macrocode}
 \newcommand*{\l@dedbeginmini}{%
   \unless\ifnocritical@%
-    \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
+    \def\do##1{%
+      \ifcsstring{series@display##1}{paragraph}{}{%
+        \setbox\@nameuse{mp##1footins}=\vbox{%
+          \csuse{Xnotefontsize@##1}%
+          \ifcsdef{Xhsize\csuse{series@display##1}@##1}{%
+            \hsize\csuse{Xhsize\csuse{series@display##1}@##1}%
+          }{}%
+          \noindent\csuse{Xtxtbeforenotes@##1}%
+          \unvbox\@nameuse{mp##1footins}%
+          \@parboxrestore%
+        }%
+      }%
+      \csletcs{v##1footnote}{mpv##1footnote}%
+    }%
     \dolistloop{\@series}%
   \fi%
   }
