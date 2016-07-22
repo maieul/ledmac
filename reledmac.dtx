@@ -423,6 +423,8 @@
 % \changes{v2.14.0}{2016/07/01}{Some internal changes for new features of \protect\reledpar.}
 % \changes{v2.14.1}{2016/07/04}{Fix bug when using \protect\cs{footnoteX} in the first argument of \protect\cs{edtext}.}
 % \changes{v2.14.1a}{2016/07/14}{Fix problematic typos in the handbook.}
+% \changes{v2.15.0}{2016/07/10}{Add `byline` arrangement.}
+% \changes{v2.15.0}{2016/07/10}{Fix \protect\cs{Xtxtbeforenotes} in ledgroup.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1792,8 +1794,7 @@
 % The value of \meta{a} can be one of the following
 % \begin{itemize}
 % \item \verb+paragraph+ formats
-% all the footnotes of a series as a single paragraph. If you use this arrangement, you are strongly encouraged to read \reff{paragraphednotes:advanced}.
- 
+% all of the footnotes of a series as a single paragraph; if you use this arrangement, you are strongly encouraged to read \reff{paragraphednotes:advanced}. 
 % \item \verb+twocol+ formats them as separate paragraphs,
 % but in two columns;
 % \item \verb+threecol+, in three columns. 
@@ -1823,14 +1824,14 @@
 % value.  
 % \subsection{Control line number printing}
 % \subsubsection{Print line number only at first time}
-% \DescribeMacro{\Xnumberonlyfirstinline}
+% \DescribeMacro{\Xnumberonlyfirstinline}\label{Xnumberonlyfirstinline}.
 % \changes{v1.0.1}{2012/09/16}{Correction on \protect\cs{Xnumberonlyfirstinline} with lineation by pstart or by page.}
 % By default, the line number is printed in every note. If you want to print it only the first time for a given line number
 % (i.e., one time for line 1, one time for line 2, etc.), you can use \protect\cs{Xnumberonlyfirstinline}\oarg{s}. 
 %
 %
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{Xnumberonlyfirstintwolines}}
-% \DescribeMacro{\Xnumberonlyfirstintwolines}
+% \DescribeMacro{\Xnumberonlyfirstintwolines}\label{Xnumberonlyfirstintwolines}
 % Suppose you have a lemma on line~2 and a lemma between line~2 and line~3. 
 % With \protect\cs{Xnumberonlyfirstinline}, the second lemma is considered to be on the same line as the first lemma.
 % But if  you use both \protect\cs{Xnumberonlyfirstinline}\oarg{s} and \protect\cs{Xnumberonlyfirstintwolines}\oarg{s}, a distinction is made.
@@ -2248,7 +2249,7 @@
 % \DescribeMacro{\hsizethreecolX}
 % \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
-% \subsection{Options for paragraphed footnotes}
+% \subsection{Options for paragraphed footnotes and notes grouped by line}\label{optionparagraphed}
 % \subsubsection{Mark separation of notes}
 % \DescribeMacro{\Xafternote} \DescribeMacro{\afternoteX}
 % You can add some horizontal space after a note by using \protect\cs{Xafternote}\oarg{s}\marg{l}  (for critical footnotes) or \protect\cs{afternoteX}\oarg{s}\marg{l} (for familiar footnotes). The default value is \verb|1em plus.4em minus.4em|.
@@ -2269,6 +2270,21 @@
 % Text in paragraphed footnotes is justified, but you can use \protect\cs{raggedX}\oarg{s}\arg{L} if you want it to be ragged left, or \protect\cs{raggedX}\oarg{s}\arg{R} if you want it to be ragged right.
 %
 % \subsection{Options for block of notes}
+%
+% \subsubsection{Grouping notes by line}
+% \DescribeMacro{Xgroupbyline}
+% If you do not use \cs{Xarrangement}\arg{paragraph}, you may want to group all the critical footnotes related to the same line in the same paragraph.
+% In this case, use \cs{Xgroupbyline}\oarg{series}.
+%
+% In many cases, you might like to use it in combination with \cs{Xnumberonlyfirstinline} (\reff{Xnumberonlyfirstinline}).
+%
+% Note that the \cs{Xafternote} and \cs{Xparafootsep} settings are used to determine space and content between footnotes (\reff{optionparagraphed}).
+% \DescribeMacro{\Xgroupbylineseparetwolines}
+% Suppose you have two notes on line~1 which overlap lines~1 and~2. 
+% This last note will be printed, if you use \cs{Xgroupbyline} in the same group as the previous one.
+% In the case you want that note to be distinct, you must use both \cs{Xgroupbyline} and \cs{Xgroupbylineseparetwolines}\oarg{s}.
+% 
+% In many cases, you might like to use it in combination with \cs{Xnumberonlyfirstintwolines} (\reff{Xnumberonlyfirstintwolines})
 %
 % \subsubsection{Text before notes}
 % \changes{v1.1.0}{2012/09/12}{New options for block of notes.}
@@ -3744,7 +3760,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/07/14 v2.14.1a typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/07/10 v2.15.0 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6929,19 +6945,19 @@
 % will appear in the main text when \protect\cs{edtext} is used.
 %
 %
-% The \cs{new@series} command also adds, for the series \meta{X} \cs{let}\cs{footnote\meta{X}}\cs{@gobble} to the end of the \cs{no@expands} macro.
+% The \cs{new@series} command also adds \cs{let}\cs{footnote\meta{X}}\cs{@gobble} to the end of the \cs{no@expands} macro for the series \meta{X}.
 % 
 % (A related problem, not addressed by these two macros,
-% is that of characters whose category code is changed by any
+% is that of characters whose category code are changed by any of
 % the macros used in the arguments to \protect\cs{edtext}. Since the
 % category codes are set when the arguments are scanned, macros
 % that depend on changing them will not work. We have most often
 % encountered this with characters that are made `active' within
 % text in some, but not all, of the languages used within the document.
 % One way around the problem, if it takes this form,
-% is to ensure that those characters are \emph{always} active; within
+% is to ensure that those characters are \emph{always} active. Within
 % languages that make no special use of them, their associated
-% control sequences should simply return the proper character. A simpler solution is to avoid active character, using \LuaTeX\ or \XeLaTeX.)
+% control sequences should simply return the proper character. A simpler solution is to avoid active characters, using \LuaTeX\ or \XeLaTeX.)
 % \changes{v0.2.0}{2003/07/25}{Added \protect\cs{l@dtabnoexpands} to \protect\cs{no@expands}}
 % \changes{v0.2.1}{203/08/25}{Removed some \protect\cs{let}s from \protect\cs{no@expands}.
 %    These were in \edmac{} but Peter Wilson feels that they should not have been as they
@@ -7337,9 +7353,9 @@
 %	\begin{enumerate} 
 %       	\item  Get the rank of each \protect\cs{sameword} in a line (relative rank) from the rank of each \protect\cs{sameword} in all the numbered section (absolute rank):
 %		      \begin{itemize}
-%        		\item For each paired \protect\cs{sameword} argument  and absolute line number, a counter is defined. Its value corresponds to the number of times  \protect\cs{sameword}\marg{argument} is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \protect\cs{sameword}\marg{argument}.    
+%        		\item For each paired \protect\cs{sameword} argument and absolute line number, a counter is defined. Its value corresponds to the number of times \protect\cs{sameword}\marg{argument} is called from the beginning of  the lineation to the end of the current line. We also store the same data for the preceding absolute line number, if it does not have \protect\cs{sameword}\marg{argument}.    
 %        		\item  For each \protect\cs{sameword} having the same argument,  we subtract from its absolute rank the number stored for the paired \protect\cs{sameword} argument and previous absolute line number. Consequently, we obtain the relative rank.
-%			       \item See the following example which explain how for same \protect\cs{sameword} absolute ranks are transformed to relative rank.
+%			       \item See the following example which explains how, for same \protect\cs{sameword}, absolute ranks are transformed to relative ranks.
 %  \begin{verbatim}
 %  At line 1:
 %  absolute rank 1 becomes relative rank 1-0 = 1
@@ -7358,7 +7374,7 @@
 %	       \end{itemize}
 %        \item Create lists of lists of \protect\cs{sameword} by depth of \protect\cs{edtext}.
 % That is: create a list for \protect\cs{edtext}s of level~1, a list for \protect\cs{edtext}s of level~2, a list for \protect\cs{edtext}s of level~3 etc.
-% For each \protect\cs{edtext} in these lists, we store all the relative rank of \protect\cs{saweword} which are called as lemma information, that is 1) or called in the first argument of \protect\cs{sameword} 2) or called in the \protect\cs{lemma} macro of the second argument of \protect\cs{sameword} AND marked by the optional argument of \protect\cs{saweword} in first argument of \protect\cs{edtext}.
+% For each \protect\cs{edtext} in these lists, we store all of the relative ranks of \protect\cs{saweword} which are called as lemma information. That is: 1) either called in the first argument of \protect\cs{sameword}, or, 2) called in the \protect\cs{lemma} macro of the second argument of \protect\cs{sameword} AND marked by the optional argument of \protect\cs{saweword} in first argument of \protect\cs{edtext}.
 %
 % For example, suppose a line with nested \protect\cs{edtext}s which contains some 
 % word marked by \protect\cs{sameword} and having the following relative rank:\\
@@ -7396,20 +7412,20 @@
 %	        \item At each call of this \protect\cs{sameword@inedtext}, we step to the next element of the list associated to the note. Let it be $r$.
 %	      \item For the word marked by \protect\cs{sameword}, we calculate how many time it is called in its line. To do it:
 %           \begin{itemize}
-%            \item We get the absolute line number of the current \protect\cs{sameword}. This absolute line number was stored with list of relative rank for the current \protect\cs{edtext}. That means, in the previous example, that, if the absolute line number of \protect\cs{edtext} was 1, that critical notes (A) and (B) were not associated with  $\{1,2,2,3\}$ but with $\{(1,1),(2,1),(2,1),(3,1)\}$. Such method to know the absolute line number associated to a \protect\cs{sameword} is required because a \protect\cs{edtext} can overlap many lines, but \protect\cs{sameword} can't get it.
-%            \item We get the value associated, when reading the auxiliary file, to the pair composed by the current marked word and the current absolute line number. To this value, we subtract the value associated to the pair composed by the current marked word and the previous absolute line number. Let the result be $n$.
+%            \item We get the absolute line number of the current \protect\cs{sameword}. This absolute line number was stored with a list of relative ranks for the current \protect\cs{edtext}. That means, in the previous example, that if the absolute line number of \protect\cs{edtext} was 1, that critical notes (A) and (B) were not associated with  $\{1,2,2,3\}$ but with $\{(1,1),(2,1),(2,1),(3,1)\}$. Such a method of knowing the absolute line number associated to a \protect\cs{sameword} is required because a \protect\cs{edtext} can overlap many lines, but \protect\cs{sameword} can't get it.
+%            \item When reading the auxiliary file, we get the value associated to the pair composed by the current marked word and the current absolute line number. To this value, we subtract the value associated to the pair composed by the current marked word and the previous absolute line number. Let the result be $n$.
 %           \end{itemize}
-%        \item If $n >1 $, that means the current word appears more than once time in its line. In this case, we call \protect\cs{showwordrank} with the word as first argument and $r$ as second argument. If the word is called only once, we just print it.
+%        \item If $n >1 $, that means the current word appears more than once in its line. In this case, we call \protect\cs{showwordrank} with the word as the first argument and $r$ as the second argument. If the word is called only once, we just print it.
 %   \end{itemize}
 % \end{itemize} 
 % After theory, implementation.
 % \begin{macro}{\get@sw@txt}
-% As the argument of \protect\cs{sameword} can contain active character if we 
+% As the argument of \protect\cs{sameword} can contain an active character if we 
 % use \protect\package{inputenc} with \verb+utf8+ option instead of native UTF-8 engine, 
-% we store its detokenized content in a macro in order to allow dynamic name of macro with \protect\cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
+% we store its detokenized content in a macro in order to allow the dynamic name of macro with \protect\cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
 %
 % Because there is a bug with \protect\cs{detokenize} and \XeTeX\ when using non BMP characters\footnote{\url{http://sourceforge.net/p/xetex/bugs/108/}}, 
-% we detokenize only for not \XeTeX engines. In any case, in \XeTeX, a \protect\cs{csname} construction can contain UTF-8 characters without a problem, as UTF-8 characters are not managed with category code, but instead read directly as UTF-8 characters.
+% we detokenize only for non-\XeTeX engines. In any case, in \XeTeX a \protect\cs{csname} construction can contain UTF-8 characters without a problem, as UTF-8 characters are not managed with category codes, but instead read directly as UTF-8 characters.
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
   \ifxetex%
@@ -7986,7 +8002,9 @@
 %    \end{macrocode}
 % Restore marginal and footnotes.
 %    \begin{macrocode}
-        \add@inserts\affixside@note%
+        \add@inserts%
+        \add@Xgroupbyline%
+        \affixside@note%
 %    \end{macrocode}
 % Print left notes.
 %    \begin{macrocode}
@@ -8037,7 +8055,9 @@
       \global\@firstlineofpagefalse%
     \fi%
     \insert@msdata%
-    \add@inserts\affixside@note%
+    \add@inserts%
+    \add@Xgroupbyline%
+    \affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
@@ -8717,6 +8737,53 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\add@Xgroupbyline}
+% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, to be inserted in one block.
+% This insertion in one block is made by \cs{add@Xgroupbyline}.
+\newcommand{\add@Xgroupbyline}{%
+  \unless\ifnocritical@%
+    \def\do##1{%Looping on the series
+      \def\do####1{%Looping on the ##1@forinserting command
+         \ifcsdef{##1@forinserting@####1}{%
+           \X@beforeinsertion{##1}%
+           \if@ledgroup%
+             \global\setbox\@nameuse{mp##1footins}=\vbox%
+           \else%
+             \insert\csname ##1footins\endcsname%
+           \fi%
+           {%
+             \ifcsdef{Xhsize\csuse{series@display##1}@##1}%
+               {\hsize \csuse{Xhsize\csuse{series@display##1}@##1}}%
+               {}%
+             \if@ledgroup%
+               \unvbox\@nameuse{mp##1footins}%
+             \fi%
+             \X@atbegininsertion{##1}%
+             \ifcsstring{series@display##1}%
+               {%
+                  \Xledsetnormalparstuff{##1}%
+                  \rule\z@\splittopskip%
+               }%
+               {}%
+             \csuse{##1@forinserting@####1}%
+             \strut\par%
+           }%
+           \global\csundef{##1@forinserting@####1}%
+           }%
+           {}%
+         }%
+      \ifcsdef{##1@forinserting}{%
+        \dolistcsloop{##1@forinserting}%
+      }{}%
+      \global\csundef{##1@forinserting}%
+      }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+
+
+%    \end{macrocode}
+% \end{macro}
 % \subsection{Penalties}
 %
 % \begin{macro}{\add@penalties}
@@ -9115,46 +9182,89 @@
 % in \PlainTeX{}, in which each footnote
 % is a separate paragraph.
 %
-% \protect\cs{normalvfootnote} takes the series letter as \verb"#1",
+% \protect\cs{normalvfootnote} takes the series letter as \verb"#1" 
 % and the entire text of the footnote is \verb"#2". It does the
 % \protect\cs{insert} for this note, calling on the \protect\cs{footfmt} macro for
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
-  \insert@Xtxtbeforenotes{#1}%
-  \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup
-  \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
-  \noindent\csuse{Xbhooknote@#1}%
+  \iftoggle{Xgroupbyline@#1}{%In the case we use \Xgroupbyline, the insertion is done later, in \add@Xgroupbyline.
+    \prepare@Xgroupbyline{#1}{#2}{\normalvfootnote@inserted}%
+  }{%In the case we don't use \Xgroupbyline, the insertion is made directly
+    \X@beforeinsertion{#1}%
+    \insert\csname #1footins\endcsname{%
+      \X@atbegininsertion{#1}%
+      \normalvfootnote@inserted{#1}{#2}%
+    }%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\normalvfootnote@inserted}
+% The \cs{normalvfootnote@inserted} macro is expanded to the content to be add to a \cs{insert} for normal critical footnote.
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote@inserted}[2]{%
+  \nottoggle{Xgroupbyline@#1}{\noindent}{}\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips
   \ifl@dpairing\ifl@dpaging\else%
     \setXnoteswidthliketwocolumns@{#1}%
   \fi\fi%
   \setXnotespositionliketwocolumns@{#1}%
-  \spaceskip=\z@skip \xspaceskip=\z@skip
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \spaceskip=\z@skip \xspaceskip=\z@skip%
+  \csname #1footfmt\endcsname #2{#1}%  
+}%
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\X@beforeinsertion}
+%    \begin{macrocode}
+\newcommand{\X@beforeinsertion}[1]{%
+  \if@ledgroup\else%
+    \insert@Xtxtbeforenotes{#1}%
+  \fi%
+  \csuse{Xbeforeinserting@#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\X@atbegininsertion}
+%    \begin{macrocode}
+\newcommand{\X@atbegininsertion}[1]{%
+  \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
+}%
+%    \end{macrocode}
+% \end{macro}
+% And somewhat different versions of \cs{normalvfootnote} and \cs{normalvfootnote@inserted} for minipages.
 % \begin{macro}{\mpnormalvfootnote}
-% And a somewhat different version for minipages.
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{mpnormalvfootnote}}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
-  \global\setbox\@nameuse{mp#1footins}\vbox{%
-    \insert@Xtxtbeforenotes{#1}%
-    \unvbox\@nameuse{mp#1footins}
-    \noindent\csuse{Xbhooknote@#1}%
-    \csuse{Xnotefontsize@#1}%
-    \hsize\columnwidth
-    \@parboxrestore
-    \color@begingroup
-    \csname #1footfmt\endcsname #2{#1}\color@endgroup}}
+  \iftoggle{Xgroupbyline@#1}{%
+    \prepare@Xgroupbyline{#1}{#2}{\mpnormalvfootnote@inserted}%
+  }%
+  {%
+      \global\setbox\@nameuse{mp#1footins}%
+      \vbox{%
+        \unvbox\@nameuse{mp#1footins}%
+        \mpnormalvfootnote@inserted{#1}{#2}%
+    }%
+  }%
+}%
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\mpnormalvfootnote@inserted}
+%    \begin{macrocode}
+\newcommand{\mpnormalvfootnote@inserted}[2]{%
+    \noindent\csuse{Xbhooknote@#1}%
+    \csuse{Xnotefontsize@#1}%
+    \hsize\columnwidth%
+    \@parboxrestore%
+    \color@begingroup%
+    \csname #1footfmt\endcsname #2{#1}\color@endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\normalfootfmt}
 % \label{normalfootfmt}
 % \protect\cs{normalfootfmt} is a `normal' macro
@@ -9173,14 +9283,15 @@
 
 
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
-  \Xledsetnormalparstuff{#4}%
+  \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
-  \rule\z@\splittopskip%
+  \nottoggle{Xgroupbyline@#4}{\rule\z@\splittopskip}{}%
   {\printlinefootnote{#1}{#4}}%
   \print@lemma{#1}{#2}{#4}%
   \csuse{Xwrapcontent@#4}{#3}%
-  \strut\par}
+  \nottoggle{Xgroupbyline@#4}{\strut\par}{}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9581,7 +9692,7 @@
   \unskip            % remove \rightskip,
   \unskip            % remove \parfillskip,
   \unpenalty         % remove \penalty of 10000,
-  \hskip\csuse{Xafternote@#2}\relax}% but add the glue to go between the notes
+  \hskip\csuse{Xafternote@#2}\relax}% add the glue to go between the notes
 
 %    \end{macrocode}
 % \end{macro}
@@ -9858,14 +9969,15 @@
 %
 % \begin{macro}{\threecolvfootnote}
 % \protect\cs{threecolvfootnote}
-% is the \protect\cs{vfootnote} command for three-column notes. The
-% call to \protect\cs{Xnotefontsize@\meta{s}} ensures that the
+% This is the \protect\cs{vfootnote} command for three-column notes. 
+% However, most of the code is deported on \cs{threecolvfootnote@inserted}.
+% The call to \protect\cs{Xnotefontsize@\meta{s}} ensures that the
 % \protect\cs{splittopskip} and \protect\cs{splitmaxdepth} take their values
 % from the right \protect\cs{strutbox}: the one used in a footnotes.
 % Note especially the importance of temporarily reducing the
 % \protect\cs{hsize} to $0.3$ of its normal value.  This determines the
-% widths of the individual columns.  So if the normal \protect\cs{hsize}
-% is, say, 10\,cm, then each column will be $0.3\times10=3$\,cm
+% widths of the individual columns. So if the normal \protect\cs{hsize}
+% is (say) 10\,cm, then each column will be $0.3\times10=3$\,cm
 % wide, leaving a gap of 1\,cm spread equally between columns
 % (i.e., .5\,cm between each).
 %
@@ -9873,16 +9985,29 @@
 % of the note (including numbers, lemma and text).
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
-  \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup%
+  \iftoggle{Xgroupbyline@#1}{%
+    \prepare@Xgroupbyline{#1}{#2}{\threecolvfootnote@inserted}%
+  }%
+  {%
+    \X@beforeinsertion{#1}%
+    \insert\csname #1footins\endcsname{%
+      \threecolvfootnote@inserted{#1}{#2}%
+    }%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\threecolvfootnote@inserted}%
+%    \begin{macrocode}
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote@inserted}[2]{%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \csname #1footfmt\endcsname #2{#1}%
+}%
 %    \end{macrocode}
 % \end{macro}
-%
 %
 % \begin{macro}{\threecolfootfmt}
 % \protect\cs{threecolfootfmt}
@@ -9893,7 +10018,9 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolfootfmt}[4]{% 
   \normal@pars%
-  \hsize \csuse{Xhsizethreecol@#4}%
+  \nottoggle{Xgroupbyline@#4}%
+    {\hsize \csuse{Xhsizethreecol@#4}}%
+    {}%
   \nottoggle{Xparindent@#4}{\parindent=\z@}{}%
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
@@ -9901,13 +10028,15 @@
   \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
   \parindent=\@tempdima%
-  \strut{%
+  \strut%
   \hspace{\parindent}%
   \printlinefootnote{#1}{#4}%
-  }%
   \print@lemma{#1}{#2}{#4}%
   \csuse{Xwrapcontent@#4}{#3}%
-  \strut\par\allowbreak}
+  \nottoggle{Xgroupbyline@#4}%
+    {\strut\par\allowbreak}%
+    {}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9993,6 +10122,7 @@
 %
 % \begin{macro}{\twocolfootsetup}
 % \begin{macro}{\twocolvfootnote}
+% \begin{macro}{\twocolvfootnote@inserted}
 % \begin{macro}{\twocolfootfmt}
 % \begin{macro}{\twocolfootgroup}
 % Here is a series of macros which are very similar to their
@@ -10010,12 +10140,17 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
   \csuse{Xbeforeinserting@#1}%
-  \insert\csname #1footins\endcsname\bgroup%
+  \insert\csname #1footins\endcsname{%
+    \twocolvfootnote@inserted{#1}{#2}%
+  }%
+}%
+\notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote@inserted}[2]{%
   \hsize=\expandafter\dimexpr\csuse{Xwidth@#1}\relax%
   \noindent\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
   \footsplitskips%
-  \csname #1footfmt\endcsname #2{#1}\egroup}
+  \csname #1footfmt\endcsname #2{#1}%
+}%
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolfootfmt}[4]{% 4th arg is optional, for backward compatibility
@@ -10025,16 +10160,18 @@
   \tolerance=5000%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
- \@tempdima=\parindent%
+  \@tempdima=\parindent%
   \csuse{Xcolalign@#4}%
- \parindent=\@tempdima%
-  \strut{%
- \hspace{\parindent}%
- \printlinefootnote{#1}{#4}%
- }%
- \print@lemma{#1}{#2}{#4}%
- \csuse{Xwrapcontent@#4}{#3}%
- \strut\par\allowbreak}
+  \parindent=\@tempdima%
+  \strut%
+  \hspace{\parindent}%
+  \printlinefootnote{#1}{#4}%
+  \print@lemma{#1}{#2}{#4}%
+  \csuse{Xwrapcontent@#4}{#3}%
+  \nottoggle{Xgroupbyline@#4}%
+    {\strut\par\allowbreak}%
+    {}%
+}%
 %    \end{macrocode}
 %    \begin{macrocode}
 \newcommand*{\twocolfootgroup}[1]{%
@@ -10044,6 +10181,7 @@
   \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -10386,6 +10524,7 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\l@dparsefootspec}
 % \begin{macro}{\l@dp@rsefootspec}
 % \begin{macro}{\l@dparsedstartpage}
 % \begin{macro}{\l@dparsedstartline}
@@ -10393,12 +10532,18 @@
 % \begin{macro}{\l@dparsedendpage}
 % \begin{macro}{\l@dparsedendline}
 % \begin{macro}{\l@dparsedendsub}
-% \changes{v2.5.0}{2015/11/13}{\protect\cs{l@dparsefootspec} deleted, for it is not anymore used since \protect\eledmac release!}
-% \protect\cs{l@dp@rsefootspec} parses lines specification and defines macros which hold the numeric values.
+% \protect\cs{l@dparsefootspec}\marg{spec}\marg{lemma}\marg{text} parses a footnote
+% specification. \meta{lemma} and \meta{text} are the lemma and text
+% respectively. \meta{spec} is the line and page number and lemma font
+% specifier in \protect\cs{l@d@nums} style format. 
+% The real work is done 
+% by \protect\cs{l@dp@rsefootspec} which defines macros holding the numeric values.
+% In many cases, this last command is called directly.
 % Just a reminder of the arguments: \\
 % \verb?\printlines    #1      |  #2  |   #3    |    #4    |  #5  |  #6     |   #7?\\
 % \verb?\printlines start-page | line | subline | end-page | line | subline | font?flag 
 %    \begin{macrocode}
+\newcommand*{\l@dparsefootspec}[3]{\l@dp@rsefootspec#1|}
 \def\l@dp@rsefootspec#1|#2|#3|#4|#5|#6|#7|{%
   \gdef\l@dparsedstartpage{#1}%
   \gdef\l@dparsedstartline{#2}%
@@ -10418,6 +10563,7 @@
 \def\l@dparsedendsub{0}%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -10653,6 +10799,59 @@
     {\hfill}%Prevent underfull hbox
   \egroup%
   \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Footnote grouped by line}
+% \begin{macro}{\prepare@Xgroupbyline}
+% \cs{prepare@Xgroupbyline} is a macro called on on the \cs{\meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling directly the \cs{insert}.
+%    \begin{macrocode}  
+\newcommand{\prepare@Xgroupbyline}[3]{%
+  \iftoggle{Xgroupbylineseparetwolines@#1}{%
+    \l@dparsefootspec#2%
+    \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    {%
+      \csgappto%
+        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+        {%
+          \ifcsempty{Xsymlinenum@#1}%
+            {\csuse{Xparafootsep@#1}}%
+            {}%
+          #3{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    {%
+      \csdef%
+        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+        {%
+          #3{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+  }{%
+    \ifcsdef{#1@forinserting@all}{%
+      \csgappto%
+        {#1@forinserting@all}%
+        {%
+          \ifcsempty{Xsymlinenum@#1}%
+            {\csuse{Xparafootsep@#1}}%
+            {}%
+          #3{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    {%
+      \csdef%
+        {#1@forinserting@all}%
+        {%
+          #3{#1}{#2}%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+    }%
+    \listcsgadd{#1@forinserting}{all}%
+  }%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -12219,7 +12418,7 @@
 \newcommandx{\toendnotes}[2][1,usedefault]{%
   \ifboolexpr{bool{numbering} or bool{numberingR}}{%
     \def\do##1{%
-      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+      \expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
         {\unexpanded{#2}\@percentchar}%
     }%
     \ifstrempty{#1}%
@@ -12230,7 +12429,7 @@
 \WithSuffix\newcommandx\toendnotes*[2][1,usedefault]{%
   \ifboolexpr{bool{numbering} or bool{numberingR}}{%
     \def\do##1{%
-      \reledmac@warning{toto}\expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
+      \expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname%
         {#2\@percentchar}%
     }%
     \ifstrempty{#1}%
@@ -12543,6 +12742,8 @@
 
       \csgdef{Xboxsymlinenum@#1}{0pt}%
       \newtoggle{Xnumberonlyfirstinline@#1}%
+      \newtoggle{Xgroupbyline@#1}%
+      \newtoggle{Xgroupbylineseparetwolines@#1}%
       \newtoggle{Xnumberonlyfirstintwolines@#1}%
       \csgdef{Xtwolines@#1}{}%
       \csgdef{Xmorethantwolines@#1}{}%
@@ -13231,6 +13432,8 @@
   \newhookcommand@series@reload{Xafterrule}{critical}
   \newhooktoggle@series{Xnumberonlyfirstinline}
   \newhooktoggle@series{Xnumberonlyfirstintwolines}
+  \newhooktoggle@series{Xgroupbyline}%
+  \newhooktoggle@series{Xgroupbylineseparetwolines}%
   \newhooktoggle@series{Xnonumber}
   \newhooktoggle@series{Xpstart}
   \newhooktoggle@series{Xpstarteverytime}%
@@ -15000,7 +15203,9 @@
 %    \begin{macrocode}
 \newcommand*{\l@dedbeginmini}{%
   \unless\ifnocritical@%
-    \def\do##1{\csletcs{v##1footnote}{mpv##1footnote}}%
+    \def\do##1{%
+      \csletcs{v##1footnote}{mpv##1footnote}%
+    }%
     \dolistloop{\@series}%
   \fi%
   }
@@ -15022,6 +15227,17 @@
              \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}%
           \fi%
          \fi\fi%
+     \ifcsstring{series@display##1}{paragraph}{}{%
+        \setbox\@nameuse{mp##1footins}=\vbox{%
+          \csuse{Xnotefontsize@##1}%
+          \ifcsdef{Xhsize\csuse{series@display##1}@##1}{%
+            \hsize\csuse{Xhsize\csuse{series@display##1}@##1}%
+          }{}%
+          \noindent\csuse{Xtxtbeforenotes@##1}%
+          \unvbox\@nameuse{mp##1footins}%
+          \@parboxrestore%
+        }%
+      }%
          \csuse{mp##1footgroup}{##1}%
     \fi}%
     \dolistloop{\@series}%
