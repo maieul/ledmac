@@ -426,6 +426,7 @@
 % \changes{v2.15.0}{2016/07/22}{Add `byline` arrangement.}
 % \changes{v2.15.0}{2016/07/22}{Fix \protect\cs{Xtxtbeforenotes} in ledgroup.}
 % \changes{v2.15.1}{2016/09/07}{Fix \protect\cs{edindex} in tabular environments.}
+% \changes{v2.15.2}{2016/09/12}{Fix bug with \protect\package{fancyhdr} package 3.8 and later.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3762,7 +3763,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/09/07 v2.15.1 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/09/12 v2.15.2 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6483,6 +6484,7 @@
 %                           \protect\cs{line@list@stuff}}
 % \changes{v0.7.0}{2005/02/25}{Deleted \protect\cs{page@start} from \protect\cs{line@list@stuff}}
 % \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
+
 %    \begin{macrocode}
   \iffirst@linenum@out@
      \immediate\closeout\linenum@out%
@@ -13835,8 +13837,14 @@
 %    \end{macrocode}
 % \protect\ltxclass{memoir} has not been loaded, so patch \protect\cs{@makecol} and 
 % \protect\cs{@reinserts}.
+% If the \package{fancyhdr} package $<$ 3.8 has been loaded, we patch the \cs{latex@makecol} command, because this package redefines in the preamble the standard \cs{@makecol}, to call  \cs{latex@makecol} which have been \cs{let} to \cs{@makecol}. 
+% If this package is not loaded, we directly patch \cs{@makecol}. 
+% If the \package{fancyhdr} package $\geq$ 3.8, we also directly patch \cs{@makecol}, because \package{fancyhdr} does its own patch \cs{AtBeginDocument}.
 %    \begin{macrocode}
-  \@ifpackageloaded{fancyhdr}{%
+  \ifboolexpr{%
+    test{\@ifpackageloaded{fancyhdr}}%
+    and test {\ifdef{\latex@makecol}}%
+  }{%
     \patchcmd%
       {\latex@makecol}%
       {\xdef\@freelist{\@freelist\@midlist}}%
