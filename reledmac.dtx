@@ -4902,7 +4902,9 @@
 % $0$ for left, $1$ for right, $2$ for outer, and $3$ for inner.
 % \changes{v0.7.0}{2005/02/23}{Added \protect\cs{l@dgetline@margin}}
 %    \begin{macrocode}
-\newcount\line@margin
+\newcount\line@margin%
+\newcount\line@margin@columns%Only for parallel typesetting
+\line@margin@columns=\m@ne%
 
 \newcommand*{\linenummargin}[1]{{%
   \l@dgetline@margin{#1}%
@@ -8504,7 +8506,9 @@
                    \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
                 \fi
              \else
-                \@l@dtempcntb=\line@margin
+                \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columns}{\m@ne}}}%
+                  {\@l@dtempcntb=\line@margin@columns}%
+                  {\@l@dtempcntb=\line@margin}%
                 \ifnum\@l@dtempcntb>\@ne
                    \advance\@l@dtempcntb \page@num
                 \fi

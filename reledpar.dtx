@@ -1883,6 +1883,41 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\linenummarginColumns*}
+% \begin{macro}{\linenummarginColumns}
+% \begin{macro}{\linenummarginColumnsR}
+% The \cs{linenummarginColumns} macro override the definition of the line margin when typesetting in parallel columns.
+%    \begin{macrocode}
+
+\newcount\line@margin@columnsR%
+\line@margin@columnsR=\m@ne%
+
+\newcommand{\linenummarginColumns}[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columns=\@l@dtempcntb%
+  \fi%
+}%
+
+\WithSuffix\newcommand\linenummarginColumns*[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columns=\@l@dtempcntb%
+    \global\line@margin@columnsR=\@l@dtempcntb%
+  \fi%
+}%
+
+\newcommand{\linenummarginColumnsR}[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columnsR=\@l@dtempcntb%
+  \fi%
+}%
+
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Setting lineation start and step} 
 % \begin{macro}{\c@firstlinenumR}
 % \begin{macro}{\c@linenumincrementR}
@@ -4039,7 +4074,9 @@
           \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
         \fi
       \else
-        \@l@dtempcntb=\line@marginR
+        \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columnsR}%
+          {\@l@dtempcntb=\line@marginR}%
         \ifnum\@l@dtempcntb>\@ne
           \advance\@l@dtempcntb by\page@numR
         \fi
@@ -4085,7 +4122,9 @@
        \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
      \fi
     \else
-      \@l@dtempcntb=\line@margin
+     \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columns}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columns}%
+          {\@l@dtempcntb=\line@margin}%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@num
      \fi
@@ -4106,7 +4145,9 @@
        \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
      \fi
     \else
-      \@l@dtempcntb=\line@marginR
+     \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columnsR}%
+          {\@l@dtempcntb=\line@marginR}%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@numR
      \fi
