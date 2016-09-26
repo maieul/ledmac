@@ -13670,7 +13670,12 @@
     {%
     \IfStrEq{critical-familiar}{\@fnpos}%
         {\do@Xfeet\do@feetX}%
-        {\do@feet@custom@order}%
+        {%
+          \setbox\@outputbox \vbox{%
+            \unvbox\@outputbox%
+            \do@feet@custom@order{}{\@fnpos}%
+          }%
+        }%
     }%
 }%
 
@@ -13681,21 +13686,18 @@
 % In this case, people must define the order for all footnotes series.
 % If they don't, \LaTeX\ could make infinite run.
 %    \begin{macrocode}
-\newcommand{\do@feet@custom@order}{%
-  \setbox\@outputbox \vbox{%
-    \unvbox\@outputbox%
-    \def\do##1{%
-      \edef\@@notesseries{\@firstoftwo##1}%
-      \edef\@@notetype{\@secondoftwo##1}%
-      \ifdefstring{\@@notetype}{critical}%
-        {\append@Xnotes{\@@notesseries}}%
-        {\ifdefstring{\@@notetype}{familiar}%
-          {\append@notesX{\@@notesseries}}%
-          {}%
-        }%
-    }%
-    \expandafter\docsvlist\expandafter{\@fnpos}%
+\newcommand{\do@feet@custom@order}[2]{%
+  \def\do##1{%
+    \edef\@@notesseries{\@firstoftwo##1}%
+    \edef\@@notetype{\@secondoftwo##1}%
+    \ifdefstring{\@@notetype}{critical}%
+      {\csuse{#1append@Xnotes}{\@@notesseries}}%
+      {\ifdefstring{\@@notetype}{familiar}%
+        {\csuse{#1append@notesX}{\@@notesseries}}%
+        {}%
+      }%
   }%
+  \expandafter\docsvlist\expandafter{#2}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -15237,7 +15239,7 @@
         {%
             \IfStrEq{familiar-critical}{\@mpfnpos}%
                 {\l@dfamendmini\l@dedendmini}%
-                {\l@dedendmini\l@dfamendmini}%
+                {\do@feet@custom@order{mp@}{\@mpfnpos}}%
         }%
     }%
 %    \end{macrocode}
