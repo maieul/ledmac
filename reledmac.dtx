@@ -13666,23 +13666,23 @@
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
   \IfStrEq{familiar-critical}{\@fnpos}
-    {\do@feetX\Xdo@feet}%
+    {\do@feetX\do@Xfeet}%
     {%
     \IfStrEq{critical-familiar}{\@fnpos}%
-        {\Xdo@feet\do@feetX}%
-        {\do@feetX\Xdo@feet}%
+        {\do@Xfeet\do@feetX}%
+        {\do@feetX\do@Xfeet}%
     }%
 }%
 
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\Xdo@feet}
-% \protect\cs{Xdo@feet} is the code extending \protect\cs{@makecol} to cater for
+% \begin{macro}{\do@Xfeet}
+% \protect\cs{do@Xfeet} is the code extending \protect\cs{@makecol} to cater for
 % the extra critical feet. 
-% \changes{v0.4.1}{2004/03/06}{Changed \protect\cs{Xdo@feet} code for easier extensions}
+% \changes{v0.4.1}{2004/03/06}{Changed \protect\cs{do@Xfeet} code for easier extensions}
 %    \begin{macrocode}
-\newcommand*{\Xdo@feet}{%
+\newcommand*{\do@Xfeet}{%
   \setbox\@outputbox \vbox{%
     \unvbox\@outputbox
     \@opXfeet}}
@@ -13690,9 +13690,20 @@
 % \end{macro}
 %
 % \begin{macro}{\@opXfeet}
+% \begin{macro}{\append@Xnotes}
 % \begin{macro}{\print@Xnotes}
 % The extra critical feet to be added to the output.
-% \changes{v0.4.1}{2004/03/06}{Added \protect\cs{@opXfeet}}
+% \changes{v0.4.1}{2004/03/06}{Added \protect\cs{@opXfeet}}.
+% A macro which appends critical notes to the output's routine, also adding vertical space before notes
+%    \begin{macrocode}
+\newcommand{\append@Xnotes}[1]{%
+  \ifvoid\csuse{#1footins}\else%
+      \global\skip\csuse{#1footins}=\csuse{Xbeforenotes@#1}%
+      \global\advance\skip\csuse{#1footins} by\csuse{Xafterrule@#1}%
+      \print@Xnotes{#1}%
+   \fi%
+}%
+%    \end{macrocode}
 % The normal way to add one series,
 % \protect\cs{print@Xnotes}, is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
@@ -13709,16 +13720,13 @@
   \unless\ifnocritical@%
     \gdef\firstXseries@{}%
     \def\do##1{%
-      \ifvoid\csuse{##1footins}\else%
-          \global\skip\csuse{##1footins}=\csuse{Xbeforenotes@##1}%
-          \global\advance\skip\csuse{##1footins} by\csuse{Xafterrule@##1}%
-          \print@Xnotes{##1}%
-       \fi%
+      \append@Xnotes{##1}%
       }%
     \dolistloop{\@series}%
   \fi%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -13761,11 +13769,22 @@
 % \end{macro}
 %
 % \begin{macro}{\print@notesX}
+% \begin{macro}{\append@notesX}
 % \begin{macro}{\do@feetX}
 % \begin{macro}{\@doreinfeetX}
 % We have to add all the new kinds of familiar footnotes to the output
 % routine. 
-% The normal way to add one series.
+% A macro which appends the familiar footnotes of one series into the output routine, also adding vertical skip before notes.
+%    \begin{macrocode}
+\newcommand{\append@notesX}[1]{%
+  \ifvoid\csuse{footins#1}\else%
+      \global\skip\csuse{footins#1}=\csuse{beforenotesX@#1}%
+      \global\advance\skip\csuse{footins#1} by\csuse{afterruleX@#1}%          
+      \print@notesX{#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% The normal way to print one series of notes.
 % \protect\cs{print@Xnotes} is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@notesX[1]{%
@@ -13783,11 +13802,7 @@
     \setbox\@outputbox \vbox{%
       \unvbox\@outputbox%
       \def\do##1{%
-      \ifvoid\csuse{footins##1}\else%
-          \global\skip\csuse{footins##1}=\csuse{beforenotesX@##1}%
-          \global\advance\skip\csuse{footins##1} by\csuse{afterruleX@##1}%          
-          \print@notesX{##1}%
-      \fi%
+        \append@notesX{##1}%
       }%
       \dolistloop{\@series}}%
   \fi%
@@ -13810,6 +13825,7 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
 %
 % \subsection{Patching standard output's commands}
 % The \protect\ltxclass{memoir} class does not use the `standard' versions of
@@ -13819,11 +13835,12 @@
 % |\ifl@dmemoir| here.)
 % \changes{v0.2.1}{2003/09/13}{Major changes to insert code when memoir is loaded}
 % \changes{v2.0.0}{2015/07/19}{\protect\cs{@makecol}, \protect\cs{@reinserts} and \protect\cs{@doclearpage} are patched instead of begin redefined}
-% \changes{v2.0.0}{2015/07/19}{\protect\cs{doxtrafeeti} becomes \protect\cs{do@feetX};
-% \protect\cs{doxtrafeetii} becomes \protect\cs{Xdo@feet};
+% \changes{v2.0.0}{2015/07/19}{\protect\cs{doxtrafeeti} becomes \protect\cs{Xdo@feet};
+% \protect\cs{doxtrafeetii} becomes \protect\cs{do@Xfeet};
 % \protect\cs{@opxtrafeeti} becomes \protect\cs{@opfeetX};
 % \protect\cs{doreinxtrafeetii} becomes \protect\cs{X@doreinfeet};
 % \protect\cs{doreinxtrafeeti} becomes \protect\cs{@doreinfeetX}.}
+% \changes{v2.16.0}{2016/10/01}{\protect\cs{Xdo@feet} becomes \protect\cs{do@Xfeet}}
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
 %    \end{macrocode}
