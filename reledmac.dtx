@@ -431,6 +431,7 @@
 % \changes{v2.15.3}{2016/09/26}{Simplification of the code concerning sectioning command.}
 % \changes{v2.16.0}{2016/10/01}{Display warning message if using a too older versions of \protect\LaTeX.}
 % \changes{v2.16.0}{2016/10/01}{Deleting dead code.}
+% \changes{v2.16.0}{2016/10/01}{New options of \protect\cs{fnpos} and \protect\cs{mpfnpos} to set a customized alternance between familiar and critical footnotes.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1761,6 +1762,33 @@
 % \begin{verbatim}
 % \mpfnpos{familiar-critical}
 % \end{verbatim}
+%
+% You can also decide to alternate familiar and critical footnotes with your own order.
+% In this case, the second argument of \cs{fnpos} or \cs{mpfnpos} is a comma separated list of values.
+% Each values have the following form:\\
+% \meta{series}\meta{type}
+%
+% \meta{series} is a series letter (A,B,C etc.), while \meta{type} must be or \enquote{critical} or \enquote{familiar}.
+%
+% For example, suppose you want to print first the familiar footnotes of the \enquote{A} series, then all the series of critical footnotes, and finally all the series of familiar footnotes, except the \enquote{A} series.
+% In this case, use the following command:
+% \begin{verbatim}
+%\fnpos{%
+%  {A}{familiar},
+%  {A}{critical},%
+%  {B}{critical},%
+%  {C}{critical},%
+%  {D}{critical},%
+%  {E}{critical},%
+%  {B}{familiar},%
+%  {C}{familiar},%
+%  {D}{familiar},%
+%  {E}{familiar}%
+%}
+% \end{verbatim}
+% Note that you must define the position of all the series of footnotes you use.
+% If you don't do it, you will have infinite runs of \LaTeX.
+%
 % \section{Critical apparatus appearance}
 % \label{displayoptions}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
@@ -13666,23 +13694,47 @@
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
   \IfStrEq{familiar-critical}{\@fnpos}
-    {\do@feetX\Xdo@feet}%
+    {\do@feetX\do@Xfeet}%
     {%
     \IfStrEq{critical-familiar}{\@fnpos}%
-        {\Xdo@feet\do@feetX}%
-        {\do@feetX\Xdo@feet}%
+        {\do@Xfeet\do@feetX}%
+        {%
+          \setbox\@outputbox \vbox{%
+            \unvbox\@outputbox%
+            \do@feet@custom@order{}{\@fnpos}%
+          }%
+        }%
     }%
 }%
 
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\Xdo@feet}
-% \protect\cs{Xdo@feet} is the code extending \protect\cs{@makecol} to cater for
-% the extra critical feet. 
-% \changes{v0.4.1}{2004/03/06}{Changed \protect\cs{Xdo@feet} code for easier extensions}
+% \begin{macro}{\do@feet@custom@order}
+% \cs{do@feet@custom@order} is called when \cs{@fnpos} is nore `familiar-critical' nore `critical-familiar', that is when the order is more complex.
+% In this case, people must define the order for all footnotes series.
+% If they don't, \LaTeX\ could make infinite run.
 %    \begin{macrocode}
-\newcommand*{\Xdo@feet}{%
+\newcommand{\do@feet@custom@order}[2]{%
+  \def\do##1{%
+    \edef\@@notesseries{\@firstoftwo##1}%
+    \edef\@@notetype{\@secondoftwo##1}%
+    \ifdefstring{\@@notetype}{critical}%
+      {\csuse{#1append@Xnotes}{\@@notesseries}}%
+      {\ifdefstring{\@@notetype}{familiar}%
+        {\csuse{#1append@notesX}{\@@notesseries}}%
+        {}%
+      }%
+  }%
+  \expandafter\docsvlist\expandafter{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\do@Xfeet}
+% \protect\cs{do@Xfeet} is the code extending \protect\cs{@makecol} to cater for
+% the extra critical feet. 
+% \changes{v0.4.1}{2004/03/06}{Changed \protect\cs{do@Xfeet} code for easier extensions}
+%    \begin{macrocode}
+\newcommand*{\do@Xfeet}{%
   \setbox\@outputbox \vbox{%
     \unvbox\@outputbox
     \@opXfeet}}
@@ -13690,9 +13742,20 @@
 % \end{macro}
 %
 % \begin{macro}{\@opXfeet}
+% \begin{macro}{\append@Xnotes}
 % \begin{macro}{\print@Xnotes}
 % The extra critical feet to be added to the output.
-% \changes{v0.4.1}{2004/03/06}{Added \protect\cs{@opXfeet}}
+% \changes{v0.4.1}{2004/03/06}{Added \protect\cs{@opXfeet}}.
+% A macro which appends critical notes to the output's routine, also adding vertical space before notes
+%    \begin{macrocode}
+\newcommand{\append@Xnotes}[1]{%
+  \ifvoid\csuse{#1footins}\else%
+      \global\skip\csuse{#1footins}=\csuse{Xbeforenotes@#1}%
+      \global\advance\skip\csuse{#1footins} by\csuse{Xafterrule@#1}%
+      \print@Xnotes{#1}%
+   \fi%
+}%
+%    \end{macrocode}
 % The normal way to add one series,
 % \protect\cs{print@Xnotes}, is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
@@ -13709,16 +13772,13 @@
   \unless\ifnocritical@%
     \gdef\firstXseries@{}%
     \def\do##1{%
-      \ifvoid\csuse{##1footins}\else%
-          \global\skip\csuse{##1footins}=\csuse{Xbeforenotes@##1}%
-          \global\advance\skip\csuse{##1footins} by\csuse{Xafterrule@##1}%
-          \print@Xnotes{##1}%
-       \fi%
+      \append@Xnotes{##1}%
       }%
     \dolistloop{\@series}%
   \fi%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -13761,11 +13821,22 @@
 % \end{macro}
 %
 % \begin{macro}{\print@notesX}
+% \begin{macro}{\append@notesX}
 % \begin{macro}{\do@feetX}
 % \begin{macro}{\@doreinfeetX}
 % We have to add all the new kinds of familiar footnotes to the output
 % routine. 
-% The normal way to add one series.
+% A macro which appends the familiar footnotes of one series into the output routine, also adding vertical skip before notes.
+%    \begin{macrocode}
+\newcommand{\append@notesX}[1]{%
+  \ifvoid\csuse{footins#1}\else%
+      \global\skip\csuse{footins#1}=\csuse{beforenotesX@#1}%
+      \global\advance\skip\csuse{footins#1} by\csuse{afterruleX@#1}%          
+      \print@notesX{#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% The normal way to print one series of notes.
 % \protect\cs{print@Xnotes} is replaced by \parpackage when using \protect\cs{Pages}.
 %    \begin{macrocode}
 \newcommand\print@notesX[1]{%
@@ -13783,11 +13854,7 @@
     \setbox\@outputbox \vbox{%
       \unvbox\@outputbox%
       \def\do##1{%
-      \ifvoid\csuse{footins##1}\else%
-          \global\skip\csuse{footins##1}=\csuse{beforenotesX@##1}%
-          \global\advance\skip\csuse{footins##1} by\csuse{afterruleX@##1}%          
-          \print@notesX{##1}%
-      \fi%
+        \append@notesX{##1}%
       }%
       \dolistloop{\@series}}%
   \fi%
@@ -13810,8 +13877,9 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
 %
-% \subsection{Patching standard output of commands}
+% \subsection{Patching standard output's commands}
 % The \protect\ltxclass{memoir} class does not use the `standard' versions of
 % \protect\cs{@makecol} and \protect\cs{@reinserts}, due to its sidebar insert.
 % We had better add that code if \protect\ltxclass{memoir} is used. (It can
@@ -13819,11 +13887,12 @@
 % |\ifl@dmemoir| here.)
 % \changes{v0.2.1}{2003/09/13}{Major changes to insert code when memoir is loaded}
 % \changes{v2.0.0}{2015/07/19}{\protect\cs{@makecol}, \protect\cs{@reinserts} and \protect\cs{@doclearpage} are patched instead of begin redefined}
-% \changes{v2.0.0}{2015/07/19}{\protect\cs{doxtrafeeti} becomes \protect\cs{do@feetX};
-% \protect\cs{doxtrafeetii} becomes \protect\cs{Xdo@feet};
+% \changes{v2.0.0}{2015/07/19}{\protect\cs{doxtrafeeti} becomes \protect\cs{Xdo@feet};
+% \protect\cs{doxtrafeetii} becomes \protect\cs{do@Xfeet};
 % \protect\cs{@opxtrafeeti} becomes \protect\cs{@opfeetX};
 % \protect\cs{doreinxtrafeetii} becomes \protect\cs{X@doreinfeet};
 % \protect\cs{doreinxtrafeeti} becomes \protect\cs{@doreinfeetX}.}
+% \changes{v2.16.0}{2016/10/01}{\protect\cs{Xdo@feet} becomes \protect\cs{do@Xfeet}}
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
 %    \end{macrocode}
@@ -15198,7 +15267,7 @@
         {%
             \IfStrEq{familiar-critical}{\@mpfnpos}%
                 {\l@dfamendmini\l@dedendmini}%
-                {\l@dedendmini\l@dfamendmini}%
+                {\do@feet@custom@order{mp@}{\@mpfnpos}}%
         }%
     }%
 %    \end{macrocode}
@@ -15207,6 +15276,7 @@
 %
 % \begin{macro}{\l@dedbeginmini}
 % \begin{macro}{\l@dedendmini}
+% \begin{macro}{\mp@append@Xnotes}
 % These handle the initiation and closure of critical footnotes in a
 % minipage environment. 
 %    \begin{macrocode}
@@ -15228,37 +15298,44 @@
       \fi%
     \fi
     \def\do##1{%
-      \ifvoid\csuse{mp##1footins}\else%
-        \ifl@dpairing\ifparledgroup%
-          \ifledRcol%
-            \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}%
-          \else%
-             \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}%
-          \fi%
-         \fi\fi%
-     \ifcsstring{series@display##1}{paragraph}{}{%
-        \setbox\@nameuse{mp##1footins}=\vbox{%
-          \csuse{Xnotefontsize@##1}%
-          \ifcsdef{Xhsize\csuse{series@display##1}@##1}{%
-            \hsize\csuse{Xhsize\csuse{series@display##1}@##1}%
-          }{}%
-          \noindent\csuse{Xtxtbeforenotes@##1}%
-          \unvbox\@nameuse{mp##1footins}%
-          \@parboxrestore%
-        }%
-      }%
-         \csuse{mp##1footgroup}{##1}%
-    \fi}%
+      \mp@append@Xnotes{##1}%
+    }%
     \dolistloop{\@series}%
   \fi%
 }%
-
+\newcommand{\mp@append@Xnotes}[1]{%
+\ifvoid\csuse{mp#1footins}\else%
+  \ifl@dpairing%
+    \ifparledgroup%
+      \ifledRcol%
+        \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp#1footins}}%
+      \else%
+         \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp#1footins}}%
+      \fi%
+     \fi%
+   \fi%
+  \ifcsstring{series@display#1}{paragraph}{}{%
+    \setbox\@nameuse{mp#1footins}=\vbox{%
+      \csuse{Xnotefontsize@#1}%
+      \ifcsdef{Xhsize\csuse{series@display#1}@#1}{%
+        \hsize\csuse{Xhsize\csuse{series@display#1}@#1}%
+      }{}%
+      \noindent\csuse{Xtxtbeforenotes@#1}%
+      \unvbox\@nameuse{mp#1footins}%
+      \@parboxrestore%
+    }%
+  }%
+  \csuse{mp#1footgroup}{#1}%
+\fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\l@dfambeginmini}
 % \begin{macro}{\l@dfamendmini}
+% \begin{macro}{\mp@append@notesX}
 % These handle the initiation and closure of familiar footnotes in a
 % minipage environment. 
 %    \begin{macrocode}
@@ -15272,13 +15349,18 @@
 \newcommand*{\l@dfamendmini}{%
  \unless\ifnofamiliar@%
    \def\do##1{%
-     \ifvoid\csuse{mpfootins##1}\else%
-     \csuse{mpfootgroup##1}{##1}%
-   \fi}%
+     \mp@append@notesX{##1}%
+   }%
    \dolistloop{\@series}%
  \fi%
 }%
+\newcommand{\mp@append@notesX}[1]{%
+  \ifvoid\csuse{mpfootins#1}\else%
+     \csuse{mpfootgroup#1}{#1}%
+  \fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
