@@ -13670,13 +13670,35 @@
     {%
     \IfStrEq{critical-familiar}{\@fnpos}%
         {\do@Xfeet\do@feetX}%
-        {\do@feetX\do@Xfeet}%
+        {\do@feet@custom@order}%
     }%
 }%
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\do@feet@custom@order}
+% \cs{do@feet@custom@order} is called when \cs{@fnpos} is nore `familiar-critical' nore `critical-familiar', that is when the order is more complex.
+% In this case, people must define the order for all footnotes series.
+% If they don't, \LaTeX\ could make infinite run.
+%    \begin{macrocode}
+\newcommand{\do@feet@custom@order}{%
+  \setbox\@outputbox \vbox{%
+    \unvbox\@outputbox%
+    \def\do##1{%
+      \edef\@@notesseries{\@firstoftwo##1}%
+      \edef\@@notetype{\@secondoftwo##1}%
+      \ifdefstring{\@@notetype}{critical}%
+        {\append@Xnotes{\@@notesseries}}%
+        {\ifdefstring{\@@notetype}{familiar}%
+          {\append@notesX{\@@notesseries}}%
+          {}%
+        }%
+    }%
+    \expandafter\docsvlist\expandafter{\@fnpos}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\do@Xfeet}
 % \protect\cs{do@Xfeet} is the code extending \protect\cs{@makecol} to cater for
 % the extra critical feet. 
