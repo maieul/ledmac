@@ -427,6 +427,8 @@
 % \changes{v2.15.0}{2016/07/22}{Fix \protect\cs{Xtxtbeforenotes} in ledgroup.}
 % \changes{v2.15.1}{2016/09/07}{Fix \protect\cs{edindex} in tabular environments.}
 % \changes{v2.15.2}{2016/09/12}{Fix bug with \protect\package{fancyhdr} package 3.8 and later.}
+% \changes{v2.15.3}{2016/09/26}{Fix bug with \protect\package{section} in optional argument of \protect\cs{pstart} and empty line before \protect\cs{pend} (bug added in v2.8.2).}
+% \changes{v2.15.3}{2016/09/26}{Simplification of the code concerning sectioning command.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3759,7 +3761,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/09/12 v2.15.2 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/09/26 v2.15.3 typeset critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7697,10 +7699,12 @@
 \newcommandx*{\pstart}[1][1]{%
   \normal@pars%
   \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
+  \ifautopar%
+    \autopar%
+  \fi%
   \ifluatex%
     \edef\l@luatextextdir@L{\the\textdir}%
   \fi%
-  \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
     \beginnumbering%
@@ -7711,9 +7715,14 @@
   \fi%
   \list@clear{\inserts@list}%
   \global\let\next@insert=\empty%
-  \begingroup%
+  \begingroup\normal@pars%
   \global\advance \l@dnumpstartsL\@ne
   \global\setbox\raw@text=\vbox\bgroup%
+    \if@nobreak%
+      \if@afterindent\else%
+        \noindent%
+      \fi%
+    \fi%
     \ifautopar\else%
     \ifnumberpstart%
       \ifinstanza\else%
@@ -7801,10 +7810,7 @@
   \normal@pars%
   \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 %    \end{macrocode}
-% Restore standard nobreak setting and autopar setting. 
-% Normally, \cs{if@nobreak} is equal to true only immediately after a sectioning command (read latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false. 
-%    \begin{macrocode}
-  \@nobreakfalse%
+% Restore autopar setting. 
   \ifautopar%
     \autopar%
   \fi%
@@ -7905,7 +7911,7 @@
 % are in force. We will want to do this within a footnotes, for
 % example.
 %    \begin{macrocode}
-\newcommand*{\normal@pars}{\ifautopar\everypar{}\fi\let\par\endgraf}
+\newcommand*{\normal@pars}{\everypar{}\let\par\endgraf}
 
 %    \end{macrocode}
 % \end{macro}
