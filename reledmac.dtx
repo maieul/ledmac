@@ -15246,6 +15246,7 @@
 %
 % \begin{macro}{\l@dedbeginmini}
 % \begin{macro}{\l@dedendmini}
+% \begin{macro}{\mp@append@Xnotes}
 % These handle the initiation and closure of critical footnotes in a
 % minipage environment. 
 %    \begin{macrocode}
@@ -15267,37 +15268,44 @@
       \fi%
     \fi
     \def\do##1{%
-      \ifvoid\csuse{mp##1footins}\else%
-        \ifl@dpairing\ifparledgroup%
-          \ifledRcol%
-            \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp##1footins}}%
-          \else%
-             \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp##1footins}}%
-          \fi%
-         \fi\fi%
-     \ifcsstring{series@display##1}{paragraph}{}{%
-        \setbox\@nameuse{mp##1footins}=\vbox{%
-          \csuse{Xnotefontsize@##1}%
-          \ifcsdef{Xhsize\csuse{series@display##1}@##1}{%
-            \hsize\csuse{Xhsize\csuse{series@display##1}@##1}%
-          }{}%
-          \noindent\csuse{Xtxtbeforenotes@##1}%
-          \unvbox\@nameuse{mp##1footins}%
-          \@parboxrestore%
-        }%
-      }%
-         \csuse{mp##1footgroup}{##1}%
-    \fi}%
+      \mp@append@Xnotes{##1}%
+    }%
     \dolistloop{\@series}%
   \fi%
 }%
-
+\newcommand{\mp@append@Xnotes}[1]{%
+\ifvoid\csuse{mp#1footins}\else%
+  \ifl@dpairing%
+    \ifparledgroup%
+      \ifledRcol%
+        \dimgdef{\parledgroup@beforenotesR}{\parledgroup@beforenotesR+\skip\@nameuse{mp#1footins}}%
+      \else%
+         \dimgdef{\parledgroup@beforenotesL}{\parledgroup@beforenotesL+\skip\@nameuse{mp#1footins}}%
+      \fi%
+     \fi%
+   \fi%
+  \ifcsstring{series@display#1}{paragraph}{}{%
+    \setbox\@nameuse{mp#1footins}=\vbox{%
+      \csuse{Xnotefontsize@#1}%
+      \ifcsdef{Xhsize\csuse{series@display#1}@#1}{%
+        \hsize\csuse{Xhsize\csuse{series@display#1}@#1}%
+      }{}%
+      \noindent\csuse{Xtxtbeforenotes@#1}%
+      \unvbox\@nameuse{mp#1footins}%
+      \@parboxrestore%
+    }%
+  }%
+  \csuse{mp#1footgroup}{#1}%
+\fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\l@dfambeginmini}
 % \begin{macro}{\l@dfamendmini}
+% \begin{macro}{\mp@append@notesX}
 % These handle the initiation and closure of familiar footnotes in a
 % minipage environment. 
 %    \begin{macrocode}
@@ -15311,13 +15319,18 @@
 \newcommand*{\l@dfamendmini}{%
  \unless\ifnofamiliar@%
    \def\do##1{%
-     \ifvoid\csuse{mpfootins##1}\else%
-     \csuse{mpfootgroup##1}{##1}%
-   \fi}%
+     \mp@append@notesX{##1}%
+   }%
    \dolistloop{\@series}%
  \fi%
 }%
+\newcommand{\mp@append@notesX}[1]{%
+  \ifvoid\csuse{mpfootins#1}\else%
+     \csuse{mpfootgroup#1}{#1}%
+  \fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
