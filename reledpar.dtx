@@ -281,6 +281,7 @@
 % \changes{v2.13.0}{2016/07/22}{Compatibility with the new features of \protect\macpackage 2.15.0}
 % \changes{v2.13.1}{2016/09/26}{Simplification of the code concerning sectioning command}
 % \changes{v2.14.0}{2016/10/01}{New commands to have specific line margin for text in parallel columns}
+% \changes{v2.14.0}{2016/10/01}{Add \protect\cs{linenumberlistR}, equivalent to \cs{linenumberlist} for right side.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -945,6 +946,10 @@
 % \DescribeMacro{\lineation*} 
 
 % \protect\cs{lineation*} macro is the equivalent of \macpackage \protect\cs{lineation} macro for both sides.
+%
+% \Macpackage allows you to define a \cs{linenumberlist} to define explicitly (\reff{reledmac-linenumberlist}) in which line the line number will be printed.
+% In parallel typesetting, this command affect only left side.
+% For right side, you have to define \cs{linenumberlistR}.
 %
 % \DescribeMacro{\linenumberstyleR}
 % \DescribeMacro{\sublinenumberstyleR}
@@ -4053,6 +4058,7 @@
   \fi}
 
 
+\let\linenumberlistR\empty%
 \newcommand*{\affixline@numR}{%
 \ifledgroupnotesR@\else\ifnumberline
 \ifl@dskipnumber
@@ -4064,15 +4070,15 @@
     \ch@cksub@lockR
   \else
     \@l@dtempcntb=\line@numR
-    \ifx\linenumberlist\empty
+    \ifx\linenumberlistR\empty%
       \l@dcalcnum{\line@numR}{\c@firstlinenumR}{\c@linenumincrementR}%
     \else
       \@l@dtempcnta=\line@numR
-      \edef\rem@inder{,\linenumberlist,\number\line@numR,}%
+      \edef\rem@inderR{,\linenumberlistR,\number\line@numR,}%
         \edef\sc@n@list{\def\noexpand\sc@n@list
-        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
-      \sc@n@list\expandafter\sc@n@list\rem@inder|%
-        \ifx\rem@inder\empty\advance\@l@dtempcnta\@ne\fi
+        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inderR{####2}}}%
+      \sc@n@list\expandafter\sc@n@list\rem@inderR|%
+        \ifx\rem@inderR\empty\advance\@l@dtempcnta\@ne\fi%
      \fi
      \ch@ck@l@ckR
   \fi
