@@ -84,7 +84,8 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
-		- Click on the cloud, in the right side.
+		- Choose "Dowload zip" on the "Clone or download" menu, in the right side.
+		- Unzip the file
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).
 	- Look on file issueXXX.tex get a MWE of the new feature.
