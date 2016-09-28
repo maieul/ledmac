@@ -428,10 +428,10 @@
 % \changes{v2.15.1}{2016/09/07}{Fix \protect\cs{edindex} in tabular environments.}
 % \changes{v2.15.2}{2016/09/12}{Fix bug with \protect\package{fancyhdr} package 3.8 and later.}
 % \changes{v2.15.3}{2016/09/26}{Fix bug with \protect\cs{section} in optional argument of \protect\cs{pstart} and empty line before \protect\cs{pend} (bug added in v2.8.2).}
-% \changes{v2.15.3}{2016/09/26}{Simplification of the code concerning sectioning command.}
-% \changes{v2.16.0}{2016/10/01}{Display warning message if using a too older versions of \protect\LaTeX.}
+% \changes{v2.15.3}{2016/09/26}{Simplification of the sectioning command code.}
+% \changes{v2.16.0}{2016/10/01}{Display warning message if using a version of \protect\LaTeX that is too old.}
 % \changes{v2.16.0}{2016/10/01}{Deleting dead code.}
-% \changes{v2.16.0}{2016/10/01}{New options of \protect\cs{fnpos} and \protect\cs{mpfnpos} to set a customized alternance between familiar and critical footnotes.}
+% \changes{v2.16.0}{2016/10/01}{New options of \protect\cs{fnpos} and \protect\cs{mpfnpos} to set a customized alternative between familiar and critical footnotes.}
 % \changes{v2.16.0}{2016/10/01}{Compatibility with new features of \protect\reledpar}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xtxtbeforenotes} for notes in three or two columns}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xgroupbylines} for notes in two columns}
@@ -1769,12 +1769,12 @@
 %
 % You can also decide to alternate familiar and critical footnotes with your own order.
 % In this case, the second argument of \cs{fnpos} or \cs{mpfnpos} is a comma separated list of values.
-% Each values have the following form:\\
+% Each value has the following form:\\
 % \meta{series}\meta{type}
 %
-% \meta{series} is a series letter (A,B,C etc.), while \meta{type} must be or \enquote{critical} or \enquote{familiar}.
+% \meta{series} is a series letter (A,B,C etc.), while \meta{type} must be either \enquote{critical} or \enquote{familiar}.
 %
-% For example, suppose you want to print first the familiar footnotes of the \enquote{A} series, then all the series of critical footnotes, and finally all the series of familiar footnotes, except the \enquote{A} series.
+% For example, suppose you want to first print the familiar footnotes of the \enquote{A} series, then all the series of critical footnotes, and finally all the series of familiar footnotes, except the \enquote{A} series.
 % In this case, use the following command:
 % \begin{verbatim}
 %\fnpos{%
@@ -1791,7 +1791,7 @@
 %}
 % \end{verbatim}
 % Note that you must define the position of all the series of footnotes you use.
-% If you don't do it, you will have infinite runs of \LaTeX.
+% If you don't, you will have infinite runs of \LaTeX.
 %
 % \section{Critical apparatus appearance}
 % \label{displayoptions}
@@ -1986,9 +1986,9 @@
 % \subsubsection{Separator between page and line numbers}
 % \changes{v2.16.0}{2016/01/10}{Add \protect\cs{Xpagelinesep} hook.}
 % \DescribeMacro{\Xpagelinesep}
-% \cs{Xpagelinesep}\oarg{s}\marg{txt} changes the separator between page and line number in footnote.
+% \cs{Xpagelinesep}\oarg{s}\marg{txt} changes the separator between the page and line number in footnotes.
 %
-% By default, it use the value defined for \cs{Xsublinesep}.
+% By default, the value defined for \cs{Xsublinesep} is used.
 %
 % \subsubsection{Space around number}
 % \DescribeMacro{\Xbeforenumber}
@@ -3012,9 +3012,9 @@
 %    If two note commands for the same side are called in the same line, they will
 % be appended and separated by a comma.
 %
-% \textbf{The notes will appear only at the second \LaTeX\ run. If the note positions change in your \texttt{.tex} file, 
+% \textbf{The notes will appear only after the second \LaTeX\ run. If the note positions change in your \texttt{.tex} file, 
 % you need two runs to get the correction position in the output file.
-% You are strongly encouraged to use tools like \emph{latexmk}, to be sure to get the good number of runs.}
+% You are strongly encouraged to use tools like \emph{latexmk}, to be sure to get the correct number of runs.}
 % \subsection{Setting}
 %
 % \subsubsection{Width}
@@ -3802,7 +3802,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/10/10 v2.16.0 typeset critical editions]%
+\ProvidesPackage{reledmac}[2016/10/10 v2.16.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -3937,8 +3937,8 @@
 \RequirePackage{etoolbox}
 \@ifl@t@r\fmtversion{2015/10/01}
  {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
-   {\PackageWarning{reledmac}{You use a LaTeX version older than 2016/03/31 patch 3.%
-   \MessageBreak You are strongly encouraged to use a newer version}}%
+   {\PackageWarning{reledmac}{You using a LaTeX version older than 2016/03/31 patch 3.%
+   \MessageBreak You are strongly encouraged to use a newer version.}}%
    {}%
  }%
  {\RequirePackage{etex}%
@@ -13744,9 +13744,9 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\do@feet@custom@order}
-% \cs{do@feet@custom@order} is called when \cs{@fnpos} is nore `familiar-critical' nore `critical-familiar', that is when the order is more complex.
-% In this case, people must define the order for all footnotes series.
-% If they don't, \LaTeX\ could make infinite run.
+% \cs{do@feet@custom@order} is called when \cs{@fnpos} is neither `familiar-critical', nor `critical-familiar', that is, when the order is more complex.
+% In this case, people must define the order for all footnote series.
+% If they don't, \LaTeX\ could perform infinite runs.
 %    \begin{macrocode}
 \newcommand{\do@feet@custom@order}[2]{%
   \def\do##1{%
@@ -13764,8 +13764,8 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\do@Xfeet}
-% \protect\cs{do@Xfeet} is the code extending \protect\cs{@makecol} to cater for
-% the extra critical feet. 
+% \protect\cs{do@Xfeet} is the code extending \protect\cs{@makecol} to cater to
+% the extra critical feet % (do you mean "footers" or "footnotes"?). 
 % \changes{v0.4.1}{2004/03/06}{Changed \protect\cs{do@Xfeet} code for easier extensions}
 %    \begin{macrocode}
 \newcommand*{\do@Xfeet}{%
@@ -13860,7 +13860,7 @@
 % \begin{macro}{\@doreinfeetX}
 % We have to add all the new kinds of familiar footnotes to the output
 % routine. 
-% A macro which appends the familiar footnotes of one series into the output routine, also adding vertical skip before notes.
+% A macro which appends the familiar footnotes of one series onto the output routine, also adding vertical skip before notes.
 %    \begin{macrocode}
 \newcommand{\append@notesX}[1]{%
   \ifvoid\csuse{footins#1}\else%
@@ -13913,7 +13913,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsection{Patching standard output's commands}
+% \subsection{Patching output's standard commands}
 % The \protect\ltxclass{memoir} class does not use the `standard' versions of
 % \protect\cs{@makecol} and \protect\cs{@reinserts}, due to its sidebar insert.
 % We had better add that code if \protect\ltxclass{memoir} is used. (It can
@@ -13938,9 +13938,9 @@
 %    \end{macrocode}
 % \protect\ltxclass{memoir} has not been loaded, so patch \protect\cs{@makecol} and 
 % \protect\cs{@reinserts}.
-% If the \package{fancyhdr} package $<$ 3.8 has been loaded, we patch the \cs{latex@makecol} command, because this package redefines in the preamble the standard \cs{@makecol}, to call  \cs{latex@makecol} which have been \cs{let} to \cs{@makecol}. 
+% If the \package{fancyhdr} package $<$ version 3.8 has been loaded, we patch the \cs{latex@makecol} command, because this package redefines the standard \cs{@makecol} in the preamble, to call \cs{latex@makecol} which have been \cs{let} to \cs{@makecol}. 
 % If this package is not loaded, we directly patch \cs{@makecol}. 
-% If the \package{fancyhdr} package $\geq$ 3.8, we also directly patch \cs{@makecol}, because \package{fancyhdr} does its own patch \cs{AtBeginDocument}.
+% If the \package{fancyhdr} package $\geq$ version 3.8, we also directly patch \cs{@makecol}, because \package{fancyhdr} does its own patch \cs{AtBeginDocument}.
 %    \begin{macrocode}
   \ifboolexpr{%
     test{\@ifpackageloaded{fancyhdr}}%

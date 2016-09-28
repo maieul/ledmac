@@ -1,6 +1,6 @@
 # Tool created for bug #564
 # This bug was, in reality, a LaTeX bug and not a reledmac bug
-# This tools look on a .log file, and check if the counter linked to a `insert` is not assigned a twice
+# This tool looks in a .log file, and checks if the counter linked to an `insert` is not assigned twice
 log = open("issue564.log","r")
 data = {}
 import re
