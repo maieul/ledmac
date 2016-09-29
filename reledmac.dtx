@@ -4265,6 +4265,12 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@err@BadAction}
+%    \begin{macrocode}
+\newcommand*{\led@err@StanzaIndentNotDefined}{%
+  \reledmac@error{You have not defined indentation for the line of verse \number\stanza@count}{\@ehc}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@err@ManySidenotes}
 % \begin{macro}{\led@err@ManyLeftnotes}
 % \begin{macro}{\led@err@ManyRightnotes}
@@ -14044,6 +14050,7 @@
 % \protect\cs{doreinxtrafeetii} becomes \protect\cs{X@doreinfeet};
 % \protect\cs{doreinxtrafeeti} becomes \protect\cs{@doreinfeetX}.}
 % \changes{v2.16.0}{2016/10/01}{\protect\cs{Xdo@feet} becomes \protect\cs{do@Xfeet}}
+% \changes{v2.16.0}{2016/10/01}{More explicit error message when missing to define stanza indent.}
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
 %    \end{macrocode}
@@ -16462,12 +16469,20 @@
 %    \begin{macrocode}
 \newcommandx{\stanza@line}[1][1]{
     \ifnum\value{stanzaindentsrepetition}=0
-        \parindent=\csname sza@\number\stanza@count
-                 @\endcsname\stanzaindentbase
+        \ifcsdef{sza@\number\stanza@count @}%
+          {%
+          \parindent=\csname sza@\number\stanza@count  @\endcsname\stanzaindentbase%
+          }{%
+          \led@err@StanzaIndentNotDefined%
+          }%
     \else
-        \parindent=\csname sza@\number\stanza@modulo
-                 @\endcsname\stanzaindentbase
-        \managestanza@modulo
+        \ifcsdef{sza@\number\stanza@modulo @}{%
+          \parindent=\csname sza@\number\stanza@modulo @\endcsname\stanzaindentbase%
+          \managestanza@modulo%
+        }%
+        {%
+        \led@err@StanzaIndentNotDefined%
+        }%
     \fi
     \pstart[#1]\stanza@hang\ignorespaces}
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
