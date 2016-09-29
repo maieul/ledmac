@@ -440,6 +440,8 @@
 % \changes{v2.16.0}{2016/10/01}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
 % \changes{v2.16.0}{2016/10/01}{Fix potential bug when using \protect\cs{edindex} in critical footnotes.}
 % \changes{v2.16.0}{2016/10/01}{Add \protect\cs{Xendpagenumberonlyfirst}, \protect\cs{Xendpagenumberonlyfirstifsingle}, \protect\cs{Xendpagenumberonlyfirstintwo}, \protect\cs{Xendinplaceofpagenumber} and \protect\cs{Xendsympagenum} hooks.}
+% \changes{v2.16.0}{2016/10/01}{When \protect\cs{edindex} is called outside of a \protect\cs{beginnumbering}\protect\ldots\protect\cs{endnumbering} structure, it is automatically switched to \protect\cs{index}, with a warning message.}
+
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -4392,6 +4394,20 @@
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@endminipage}{%
   \reledmac@error{Fail to patch \string\endminipage\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@endminipage}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@makeindex}{%
+  \reledmac@error{Fail to patch \string\makeindex\space command.}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@warn@edinde@outsidenumbering}
+%    \begin{macrocode}
+\newcommand{\led@warn@edinde@outsidenumbering}{%
+  \reledmac@warning{\string\edindex\space called outside of \string\beginnumbering…\string\endnumbering. \MessageBreak Automatically switched to \string\index.}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -15952,11 +15968,22 @@
 % \protect\cs{edindex} to do nothing.
 %    \begin{macrocode}
 \pretocmd{\makeindex}{%
-  \def\edindex{\@bsphack
-  \doedindexlabel
-  \begingroup
-  \@sanitize
-  \@wredindex}}{}{}
+  \def\edindex{%
+    \ifboolexpr{bool{numbering} or bool{numberingR}}{%
+      \@bsphack%
+      \doedindexlabel%
+      \begingroup%
+      \@sanitize%
+      \@wredindex%
+    }%
+    {%
+      \led@warn@edinde@outsidenumbering%
+      \index%
+    }%
+  }%
+}%
+{}%
+{\led@error@fail@patch@makeindex}%
 \newcommand{\edindex}[1]{\@bsphack\@esphack}
 %    \end{macrocode}
 % \end{macro}
