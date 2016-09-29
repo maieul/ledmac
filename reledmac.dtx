@@ -435,6 +435,8 @@
 % \changes{v2.16.0}{2016/10/01}{Compatibility with new features of \protect\reledpar}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xtxtbeforenotes} for notes in three or two columns}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xgroupbylines} for notes in two columns}
+% \changes{v2.16.0}{2016/10/01}{Fix bug with `notenumber' option of \protect\Package{indextools} package when indexing texts in familiar footnotes.}
+% \changes{v2.16.0}{2016/10/01}{Add \protect\cs{Xendpagenumberonlyfirst}, \protect\cs{Xendpagenumberonlyfirstifsingle}, \protect\cs{Xendpagenumberonlyfirstintwo}, \protect\cs{Xendinplaceofpagenumber} and \protect\cs{Xendsympagenum} hooks.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1882,6 +1884,32 @@
 % \DescribeMacro{\Xendsymlinenum}
 % For endnotes, \cs{Xendnumberonlyfirstinline}; \cs{Xendnumberonlyfirstintwolines} and \cs{Xendsymlinenum} are the equivalents of
 % \\ \cs{Xnumberonlyfirstinline}; \cs{Xnumberonlyfirstintwolines} and \cs{Xsymlinenum}.
+%
+% \subsubsection{Print page number only at first time}
+% For endnotes, \reledmac provides tools to print the page number only the first time it is seen.
+% However, when a lemma spans over two pages, the line numbers are normally printed following this pattern: start page number - start line number - end page number - end line number.
+% Consequently, what is the `page number' is not obvious. So: 
+% \DescribeMacro{\Xendpagenumberonlyfirst} \cs{Xendpagenumberonlyfirst}\oarg{s} can be called to tell that the start page number of a lemma is not printed if it is equal to the end page number of the previous lemma.
+% You can use \emph{as complement} one (and only one) of the following commands:
+% \item \DescribeMacro{\Xendpagenumberonlyfirstifsingle}   \cs{Xendpagenumberonlyfirstifsingle}\oarg{s}:
+% the first page number of the lemma will not be printed only if the following conditions are true:
+% \begin{enumerate}
+%   \item The start page number of the lemma is equal to the end page number of the previous lemma.
+%   \item The end page number of the lemma is equal to the start page number of the lemma.
+% \end{enumerate}
+% In this case the end page number will always be printed if differing from the start page number.
+% \item \DescribeMacro{\Xendpagenumberonlyfirstintwo}  \cs{Xendpagenumberonlyfirstintwo}\oarg{s}: both the start page number and the end page number of a lemma are not printed if they are both equal  to respectively the start page number and the end page number of the previous lemma.
+%
+% \end{itemize}
+
+%  
+% In any case, you can use:
+% \begin{itemize}
+% \item \DescribeMacro{\Xendsympagenum} \cs{Xendsympagenum}\oarg{series}\marg{c} to tell to print \meta{c} when the page number is not printed.
+% \item \DescribeMacro{\Xendinplaceofpagenumber} \cs{Xendinplaceofpagenumber}\oarg{series}\marg{l} to tell to print a horizontal space of \meta{l} if no symbol is printed instead of page number.
+%
+% \end{itemize}
+%
 % \subsubsection{Arbitrary text before line number}
 % \DescribeMacro{\Xbeforenumber}
 % \cs{Xbeforenumber}\oarg{s}\marg{txt} allow to insert \meta{txt} before the line number, only when the line number is printed, so taking into accout \cs{Xnumberonlyfirstinline} and similar.
@@ -12528,6 +12556,8 @@
 \newcommand*{\doendnotes}[1]{%
   \l@dend@close{#1}%
    \begingroup
+      \csxdef{prevpagenum@#1}{}%
+      \csxdef{prevpagerange@#1}{}%
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
       \input\l@auxdir\jobname.#1end%
@@ -12543,6 +12573,8 @@
 %    \begin{macrocode}
 \newcommand*{\doendnotesbysection}[1]{%
  \l@dend@close{#1}%
+ \csxdef{prevpagenum@#1}{}%
+ \csxdef{prevpagerange@#1}{}%
  \global\expandafter\advance\csname #1end@bysection\endcsname by 1%
  \begingroup%
     \makeatletter%
@@ -12665,7 +12697,8 @@
 % \changes{v0.3.0}{2004/02/14}{Added \protect\cs{linenumr@p} and \protect\cs{sublinenumr@p}
 %              to \protect\cs{printendlines}}
 %    \begin{macrocode}
-\def\printendlines#1|#2|#3|#4|#5|#6|#7|#8|{\begingroup
+\def\printendlines#1|#2|#3|#4|#5|#6|#7|#8|{%
+  \begingroup
   \setprintendlines{#1}{#2}{#3}{#4}{#5}{#6}%
 %    \end{macrocode}
 % The only subtlety left here is when to print a period between
@@ -12674,36 +12707,69 @@
 % sub-line number (in which case we want only the dash) or after an
 % ending line number (in which case we need to insert a period).
 %
-% So, first, print the start lines.
+% So, first, start the start line box, if required.
 %    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xendboxstartlinenum@\@currentseries}\bgroup\hfill}%
-  \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
+%    \end{macrocode}
+% Then, print the start page-
+%    \begin{macrocode}
+  \ifboolexpr{%
+    (%  
+      test{\ifcsstring{prevpagenum@\@currentseries}{#1}}%
+        and not%
+      (togl{Xendpagenumberonlyfirstifsingle@\@currentseries} and bool{l@d@pnum})%
+    )%
+    or%
+    (%
+    test {\ifcsstring{prevpagerange@\@currentseries}{#1-#4}}%
+    )%
+  }%
+    {%
+    \ifcsempty{Xendsympagenum@\@currentseries}%
+      {\hspace{\csuse{Xendinplaceofpagenumber@\@currentseries}}}%
+      {\csuse{Xendsympagenum@\@currentseries}}%
+    }%
+    {%
+    \wrap@edcrossref{\@this@crossref@start}{\printnpnum{#1}}%
+    }%
+%    \end{macrocode}
+% Then, determine what must be printed before the start line.
+%    \begin{macrocode}
   \ifl@d@dash%
-   \ifl@d@pnum%
-    \csuse{Xendlineprefixsingle@\@currentseries}%
-   \else%
-    \ifcsempty{Xendlineprefixmore@\@currentseries}%
-      {\csuse{Xendlineprefixsingle@\@currentseries}}
-      {\csuse{Xendlineprefixmore@\@currentseries}}%
-   \fi%
+    \ifl@d@pnum%
+      \csuse{Xendlineprefixsingle@\@currentseries}%
+    \else%
+      \ifcsempty{Xendlineprefixmore@\@currentseries}%
+        {\csuse{Xendlineprefixsingle@\@currentseries}}%
+        {\csuse{Xendlineprefixmore@\@currentseries}}%
+    \fi%
   \else%
-   \csuse{Xendlineprefixsingle@\@currentseries}%
+    \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
+%    \end{macrocode}
+% The print the start line, following, if required, by the side flag and the start sub line.
+%    \begin{macrocode}
   \wrap@edcrossref{\@this@crossref@start}{\linenumrep{#2}}%
   \iftoggle{Xendlineflag@\@currentseries}{\ifledRcol@\@Rlineflag\fi}{}%
   \ifl@d@ssub%
     \csuse{Xendsublinesep@\@currentseries}% 
     \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi%
+%    \end{macrocode}
+% Close the box.
+%    \begin{macrocode}
   \egroup%
 %    \end{macrocode}
-% And now, print the dash + the end line number, or the line number range symbol.
+% Open the box for the end line.
 %    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\hbox to \csuse{Xendboxendlinenum@\@currentseries}\bgroup}%
+%    \end{macrocode}
+% Print the dash + the end line number, or the line number range symbol.
+%    \begin{macrocode}
   \ifl@d@Xtwolines%
     \ifl@d@Xmorethantwolines%
       \csuse{Xendmorethantwolines@\@currentseries}%
@@ -12718,9 +12784,23 @@
         \csuse{Xendlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
+%    \end{macrocode}
+% Print the end page number.
+%    \begin{macrocode}
     \ifl@d@pnum%
-     \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+     \ifcsstring{prevpagerange@\@currentseries}{#1-#4}%
+       {%
+       \ifcsempty{Xendsympagenum@\@currentseries}%
+         {\hspace{\csuse{Xendinplaceofpagenumber@\@currentseries}}}%
+         {\csuse{Xendsympagenum@\@currentseries}}%
+       }%
+       {%
+       \wrap@edcrossref{\@this@crossref@end}\printnpnum{#4}%
+       }%
     \fi%
+%    \end{macrocode}
+% Print the end line number, with if required the line prefix, and followed by the side flag and the subline number.
+%    \begin{macrocode}
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
       \wrap@edcrossref{\@this@crossref@end}{\linenumrep{#5}}%
@@ -12733,10 +12813,25 @@
       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
     \fi%
   \fi%
+%    \end{macrocode}
+% Close the end line box.
+%    \begin{macrocode}
   \ifdimequal{\csuse{Xendboxendlinenum@\@currentseries}}{0pt}%
     {}%
     {\hfill}%Prevent underfull hbox
   \egroup%
+%    \end{macrocode}
+% And, finally, save, if needed, the current page number for the Xendpagenumberonlyfirst hooks.
+%    \begin{macrocode}
+  \iftoggle{Xendpagenumberonlyfirst@\@currentseries}%
+    {\iftoggle{Xendpagenumberonlyfirstintwo@\@currentseries}%
+      {\csxdef{prevpagerange@\@currentseries}{#1-#4}}%
+      {\csxdef{prevpagenum@\@currentseries}{#4}}%
+    }%
+    {}%
+%    \end{macrocode}
+% Now, the end of \cs{printendlines} macro.
+%    \begin{macrocode}
   \endgroup%
 }%
 
@@ -13246,6 +13341,13 @@
       \newtoggle{Xendlineflag@#1}
      
       \csgdef{Xendlemmafont@#1}{}%
+      
+  \newtoggle{Xendpagenumberonlyfirst@#1}%
+  \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
+  \newtoggle{Xendpagenumberonlyfirstintwo@#1}%
+  \csgdef{Xendsympagenum@#1}{}%
+  \csgdef{Xendinplaceofpagenumber@#1}{0pt}%
+  
 %    \end{macrocode}
 % End of endnotes declaration
 %    \begin{macrocode}
@@ -13634,7 +13736,12 @@
   \newhookcommand@series{Xendahookinplaceofnumber}%
 
   \newhookcommand@series{Xendhangindent}%
-  
+
+ \newhooktoggle@series{Xendpagenumberonlyfirst}%
+ \newhooktoggle@series{Xendpagenumberonlyfirstifsingle}%
+ \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
+ \newhookcommand@series{Xendsympagenum}%
+ \newhookcommand@series{Xendinplaceofpagenumber}%
   
 \fi
 \newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
@@ -14601,17 +14708,32 @@
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
 
-\xdef\Xboxstartlinenum@appref{0pt}
-\xdef\Xboxstartlinenum@SEref{0pt}
+\gdef\Xboxstartlinenum@appref{0pt}
+\gdef\Xboxstartlinenum@SEref{0pt}
 
-\xdef\Xboxendlinenum@appref{0pt}
-\xdef\Xboxendlinenum@SEref{0pt}
+\gdef\Xboxendlinenum@appref{0pt}
+\gdef\Xboxendlinenum@SEref{0pt}
 
-\xdef\Xendboxstartlinenum@apprefwithpage{0pt}
-\xdef\Xendboxstartlinenum@SErefwithpage{0pt}
+\gdef\Xendboxstartlinenum@apprefwithpage{0pt}
+\gdef\Xendboxstartlinenum@SErefwithpage{0pt}
 
-\xdef\Xendboxendlinenum@apprefwithpage{0pt}
-\xdef\Xendboxendlinenum@SErefwithpage{0pt}
+\gdef\Xendboxendlinenum@apprefwithpage{0pt}
+\gdef\Xendboxendlinenum@SErefwithpage{0pt}
+
+\newtoggle{Xendpagenumberonlyfirst@apprefwithpage}
+\newtoggle{Xendpagenumberonlyfirst@SErefwithpage}
+
+\newtoggle{Xendpagenumberonlyfirstifsingle@apprefwithpage}
+\newtoggle{Xendpagenumberonlyfirstifsingle@SErefwithpage}
+
+\newtoggle{Xendpagenumberonlyfirstintwo@apprefwithpage}
+\newtoggle{Xendpagenumberonlyfirstintwo@SErefwithpage}
+
+\gdef\Xendsympagenum@apprefwithpage
+\gdef\Xendsympagenum@SErefwithpage
+
+\gdef\Xendinplaceofpagenumber@apprefwithpage
+\gdef\Xendinplaceofpagenumber@SErefwithpage
 
 %    \end{macrocode}
 % Now, declare the default values of \protect\cs{@apprefprefixsingle} and \protect\cs{@apprefprefixmore}, \cs{@SErefprefix}, \cs{@SErefprefixmore} and the commands which defines them.
@@ -15966,7 +16088,7 @@
     {%
     \renewcommand{\index}[2][\indtl@jobname]{%
       \orig@@index[##1]{%
-        ##2|innotenumber{\csuse{thefootnote#1}}%
+        ##2|innotenumber{\this@footnoteX@reading}%
         }%
       }%
     }%
