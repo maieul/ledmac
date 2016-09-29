@@ -11410,7 +11410,7 @@
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
-        \noexpand\@edindex@fornote@false%
+        \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
@@ -11427,7 +11427,7 @@
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
-        \noexpand\@edindex@fornote@false%
+        \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
@@ -13012,7 +13012,7 @@
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
-                      \noexpand\@edindex@fornote@false%
+                      \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \unexpanded{\undef\@this@crossref@start}%
                       \unexpanded{\undef\@this@crossref@end}%
                       \ifbool{indtl@innote}%
@@ -13055,7 +13055,7 @@
                       \unexpanded{\undef\@this@crossref@start}%
                       \unexpanded{\undef\@this@crossref@end}%
                       \noexpand\Xnote@false%
-                      \noexpand\@edindex@fornote@false%
+                      \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -15776,11 +15776,11 @@
 % \end{macro}
 %
 % \subsection{Code specific to \cs{edindex} in critical footnotes}
-% \begin{macro}{\if@edindex@fornote@true}
-% This boolean test is switching at the beginning of each critical note,
-% to allow index referring to this note.
+% \begin{macro}{\@edindex@fornote@}
+% This counter is increased at the beginning of every notes (footnote and and sidenotes), and decreased at the end of every notes.
+% If its value is greater than 0, that means we are inside a note.
 %    \begin{macrocode}
-\newif\if@edindex@fornote@
+\newcount\@edindex@fornote@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\prepare@edindex@fornote}
@@ -15791,7 +15791,7 @@
 %    \begin{macrocode}
 \newcommand{\prepare@edindex@fornote}[1]{%
     \l@dp@rsefootspec#1|%
-    \@edindex@fornote@true%
+    \advance\@edindex@fornote@\@ne%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -15909,7 +15909,7 @@
 %    \begin{macrocode}
 \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
   \ifl@imakeidx%
-    \if@edindex@fornote@%
+    \ifnum\@edindex@fornote@>\z@%
       \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
@@ -15919,7 +15919,7 @@
       \imki@wrindexentry{#1}{\@index@txt\@edindex@hyperref}{\thepageline}%
     \fi%
   \else%
-    \if@edindex@fornote@%
+    \ifnum\@edindex@fornote@>\z@%
       \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\protected@write\@indexfile{}%
