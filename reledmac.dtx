@@ -436,6 +436,9 @@
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xtxtbeforenotes} for notes in three or two columns}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with \protect\cs{Xgroupbylines} for notes in two columns}
 % \changes{v2.16.0}{2016/10/01}{Fix bug with `notenumber' option of \protect\Package{indextools} package when indexing texts in familiar footnotes.}
+% \changes{v2.16.0}{2016/10/01}{When indexing texts in familiar footnotes with \protect\cs{edtext}, referring to the line number where the footnote is called.}
+% \changes{v2.16.0}{2016/10/01}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
+% \changes{v2.16.0}{2016/10/01}{Fix potential bug when using \protect\cs{edindex} in critical footnotes.}
 % \changes{v2.16.0}{2016/10/01}{Add \protect\cs{Xendpagenumberonlyfirst}, \protect\cs{Xendpagenumberonlyfirstifsingle}, \protect\cs{Xendpagenumberonlyfirstintwo}, \protect\cs{Xendinplaceofpagenumber} and \protect\cs{Xendsympagenum} hooks.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -3106,6 +3109,8 @@
 %     \item Load \macpackage.
 %   \item Declare the index with the macro \cs{makeindex} of \package{imakeidx} and \package{indextools}.
 % \end{enumerate}
+%
+% Also note that using \cs{edtext} in familiar footnotes refer to the line the footnotes are called
 % \subsection{Referring to critical notes}
 % If you want to refer to a word inside an
 % \protect\cs{edtext}\marg{lemma}\marg{app} command, \protect\cs{edindex} should be defined inside
@@ -11402,9 +11407,11 @@
         {\footnotelang@poly[R]}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
+        \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
@@ -11417,9 +11424,11 @@
         {\footnotelang@poly}%
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
+        \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
         \noexpand\led@reinit@index@fornote%
+        \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
@@ -13004,6 +13013,7 @@
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
+                      \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \unexpanded{\undef\@this@crossref@start}%
                       \unexpanded{\undef\@this@crossref@end}%
                       \ifbool{indtl@innote}%
@@ -13046,6 +13056,7 @@
                       \unexpanded{\undef\@this@crossref@start}%
                       \unexpanded{\undef\@this@crossref@end}%
                       \noexpand\Xnote@false%
+                      \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -15348,6 +15359,7 @@
 % \changes{v1.4.1}{2012/11/16}{Remove spurious spaces.}
 %    \begin{macrocode}
 \newcommand*{\affixside@note}{%
+    \prepare@edindex@fornote{\the\page@num|\the\line@num|\the\subline@num|\the\page@num|\the\line@num|\the\subline@num|}%
     \def\sidenotecontent@{}%
     \numgdef{\itemcount@}{0}%
     \def\do##1{%
@@ -15394,6 +15406,7 @@
       \fi%
     \fi%
   \fi%
+  \advance\@edindex@fornote@\m@ne%
 }
 %    \end{macrocode}
 % \end{macro}%
@@ -15766,11 +15779,11 @@
 % \end{macro}
 %
 % \subsection{Code specific to \cs{edindex} in critical footnotes}
-% \begin{macro}{\if@edindex@fornote@true}
-% This boolean test is switching at the beginning of each critical note,
-% to allow index referring to this note.
+% \begin{macro}{\@edindex@fornote@}
+% This counter is increased at the beginning of every notes (footnote and and sidenotes), and decreased at the end of every notes.
+% If its value is greater than 0, that means we are inside a note.
 %    \begin{macrocode}
-\newif\if@edindex@fornote@
+\newcount\@edindex@fornote@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\prepare@edindex@fornote}
@@ -15781,7 +15794,7 @@
 %    \begin{macrocode}
 \newcommand{\prepare@edindex@fornote}[1]{%
     \l@dp@rsefootspec#1|%
-    \@edindex@fornote@true%
+    \advance\@edindex@fornote@\@ne%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -15899,7 +15912,7 @@
 %    \begin{macrocode}
 \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
   \ifl@imakeidx%
-    \if@edindex@fornote@%
+    \ifnum\@edindex@fornote@>\z@%
       \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
@@ -15909,7 +15922,7 @@
       \imki@wrindexentry{#1}{\@index@txt\@edindex@hyperref}{\thepageline}%
     \fi%
   \else%
-    \if@edindex@fornote@%
+    \ifnum\@edindex@fornote@>\z@%
       \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\protected@write\@indexfile{}%
