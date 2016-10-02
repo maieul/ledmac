@@ -284,6 +284,7 @@
 % \changes{v2.14.0}{2016/10/01}{Add \protect\cs{linenumberlistR}, equivalent to \cs{linenumberlist} for the right side.}
 % \changes{v2.14.0}{2016/10/01}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
 % \changes{v2.14.0}{2016/10/01}{More explicit error message when missing to define stanza indent.}
+% \changes{v2.14.0}{2016/10/01}{Error message when missing to define left / right side.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1432,7 +1433,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{\led@err@Pages@WithoutRightside}
+% \begin{macro}{\led@err@Pages@WithoutLeftside}
+% \begin{macro}{\led@err@Columns@WithoutRightside}
+% \begin{macro}{\led@err@Columns@WithoutLeftside}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@WithoutRightside}{%
+  \reledpar@error{\string\Pages\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+\newcommand*{\led@err@Pages@WithoutLeftside}{%
+  \reledpar@error{\string\Pages\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \newcommand*{\led@err@Columns@WithoutRightside}{%
+  \reledpar@error{\string\Columns\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+\newcommand*{\led@err@Columns@WithoutLeftside}{%
+  \reledpar@error{\string\Columns\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
 % \begin{macro}{\led@error@fail@patch@thepage}
 %    \begin{macrocode}
@@ -1535,6 +1553,26 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+% \begin{macro}{\ifcsboxvoid}
+% The \cs{ifcsboxvoid} is a complement to the \package{etoolbox} package. 
+% The first argument is a box name, the second is a the \meta{true} value, the third the \meta{false} value.
+% If the first argument refers to a not existing box, or if it refers to a void box, the \meta{true} value is returned. In other case, the \meta{false} is returned.
+%    \begin{macrocode}
+\newcommand*{\ifcsboxvoid}[1]{%
+  \ifcsname#1\endcsname%
+    \expandafter\ifvoid\csname #1\endcsname%
+      \expandafter\expandafter%
+      \expandafter\@firstoftwo%
+    \else%
+      \expandafter\expandafter%
+      \expandafter\@secondoftwo%
+    \fi%
+  \else%
+    \expandafter\@firstoftwo%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\newnamecount}
@@ -5209,9 +5247,14 @@
   \ifl@dpairing%
     \led@err@Columns@InsideEnv%
   \fi%
-  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
-    \led@err@Columns@WithoutEnv%
-  \else%
+    \ifboolexpr{test{\ifcsboxvoid{l@dRcolrawbox1}} or test{\ifcsboxvoid{l@dLcolrawbox1}}}{%
+    \ifcsboxvoid{l@dRcolrawbox1}{%
+        \ifcsboxvoid{l@dLcolrawbox1}%
+          {\led@err@Columns@WithoutEnv}%
+          {\led@err@Columns@WithoutRightside}%
+      }%
+      {\led@err@Columns@WithoutLeftside}%
+  }{%
   \global\l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -5339,7 +5382,8 @@
   \ignorespaces
     \global\instanzaLfalse%
     \global\instanzaRfalse%
-  \fi}
+  }%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -5656,9 +5700,14 @@
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
-  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
-    \led@err@Pages@WithoutEnv%
-  \else%
+  \ifboolexpr{test{\ifcsboxvoid{l@dRcolrawbox1}} or test{\ifcsboxvoid{l@dLcolrawbox1}}}{%
+    \ifcsboxvoid{l@dRcolrawbox1}{%
+        \ifcsboxvoid{l@dLcolrawbox1}%
+          {\led@err@Pages@WithoutEnv}%
+          {\led@err@Pages@WithoutRightside}%
+      }%
+      {\led@err@Pages@WithoutLeftside}%
+  }{%
   \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
@@ -5969,7 +6018,7 @@
 % Prevent final notes from overlapping the line number
 %    \begin{macrocode}
  \finish@Pages@notes%
-  \ignorespaces\fi}
+  \ignorespaces}}%
 
 
 %    \end{macrocode}
