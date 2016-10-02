@@ -279,7 +279,12 @@
 % \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{lineationR}.}
 % \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{AtBeginPairs}.}
 % \changes{v2.13.0}{2016/07/22}{Compatibility with the new features of \protect\macpackage 2.15.0}
-% \changes{v2.13.1}{2016/09/26}{Simplification of the code concerning sectioning command}
+% \changes{v2.13.1}{2016/09/26}{Simplification of the code concerning the sectioning command}
+% \changes{v2.14.0}{2016/10/03}{New commands to have specific line margins for text in parallel columns}
+% \changes{v2.14.0}{2016/10/03}{Add \protect\cs{linenumberlistR}, equivalent to \protect\cs{linenumberlist} for the right side.}
+% \changes{v2.14.0}{2016/10/03}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
+% \changes{v2.14.0}{2016/10/03}{More explicit error message when missing to define stanza indent.}
+% \changes{v2.14.0}{2016/10/03}{Error message when missing to define left / right side.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -945,6 +950,10 @@
 
 % \protect\cs{lineation*} macro is the equivalent of \macpackage \protect\cs{lineation} macro for both sides.
 %
+% \Macpackage allows you to define a \cs{linenumberlist} to explicitly define (\reff{reledmac-linenumberlist}) in which line the line number will be printed.
+% In parallel typesetting, this command affects only left side.
+% For right side, you have to define \cs{linenumberlistR}.
+%
 % \DescribeMacro{\linenumberstyleR}
 % \DescribeMacro{\sublinenumberstyleR}
 % \DescribeMacro{\linenumberstyle*}
@@ -958,6 +967,16 @@
 % \cs{linenummarginR}\marg{margin} sets the line margin for right side.
 % \cs{linenummargin*}\marg{margin} sets for both side.
 % \meta{margin} can be, as for \macpackage's \cs{linenummargin} one of these values: \verb+left+, \verb+right+, \verb+inner+, \verb+outer+.
+% 
+% \DescribeMacro{\linenummarginColumns}
+% \DescribeMacro{\linenummarginColumnsR}
+% \DescribeMacro{\linenummarginColumns*}
+% Suppose you typeset parallel texts both in parallel pages and in parallel columns. 
+% In this case, your setting of line margin in parallel pages could be different from your setting of line margin in parallel columns. 
+% For example, you could want to have line numbers on the right when your are in parallel pages, but when you are in parallel columns, to have them on the left for the left column and on the right for the right column.
+% 
+% In this case, you can use \cs{linenummarginColumns}, which overrides the default setting for the left column, \cs{linenummarginColumnsR} which overrides the default setting for the right column, and \cs{linenummarginColumns*}, which overrides the default for both left and right columns.
+%
 % \DescribeMacro{\setRlineflag}\label{Rlineflag}
 % A ``R''  is appended to the line numbers of the
 % right texts. 
@@ -1199,7 +1218,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/09/26 v2.13.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/10/03 v2.14.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1414,7 +1433,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{\led@err@Pages@WithoutRightside}
+% \begin{macro}{\led@err@Pages@WithoutLeftside}
+% \begin{macro}{\led@err@Columns@WithoutRightside}
+% \begin{macro}{\led@err@Columns@WithoutLeftside}
+%    \begin{macrocode}
+\newcommand*{\led@err@Pages@WithoutRightside}{%
+  \reledpar@error{\string\Pages\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+\newcommand*{\led@err@Pages@WithoutLeftside}{%
+  \reledpar@error{\string\Pages\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \newcommand*{\led@err@Columns@WithoutRightside}{%
+  \reledpar@error{\string\Columns\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+\newcommand*{\led@err@Columns@WithoutLeftside}{%
+  \reledpar@error{\string\Columns\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
 % \begin{macro}{\led@error@fail@patch@thepage}
 %    \begin{macrocode}
@@ -1517,6 +1553,26 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+% \begin{macro}{\ifcsboxvoid}
+% The \cs{ifcsboxvoid} is a complement to the \package{etoolbox} package. 
+% The first argument is a box name, the second is a the \meta{true} value, the third the \meta{false} value.
+% If the first argument refers to a not existing box, or if it refers to a void box, the \meta{true} value is returned. In other case, the \meta{false} is returned.
+%    \begin{macrocode}
+\newcommand*{\ifcsboxvoid}[1]{%
+  \ifcsname#1\endcsname%
+    \expandafter\ifvoid\csname #1\endcsname%
+      \expandafter\expandafter%
+      \expandafter\@firstoftwo%
+    \else%
+      \expandafter\expandafter%
+      \expandafter\@secondoftwo%
+    \fi%
+  \else%
+    \expandafter\@firstoftwo%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\newnamecount}
@@ -1881,6 +1937,41 @@
   \fi%
 }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\linenummarginColumns*}
+% \begin{macro}{\linenummarginColumns}
+% \begin{macro}{\linenummarginColumnsR}
+% The \cs{linenummarginColumns} macro overrides the definition of the line margin when typesetting in parallel columns.
+%    \begin{macrocode}
+
+\newcount\line@margin@columnsR%
+\line@margin@columnsR=\m@ne%
+
+\newcommand{\linenummarginColumns}[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columns=\@l@dtempcntb%
+  \fi%
+}%
+
+\WithSuffix\newcommand\linenummarginColumns*[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columns=\@l@dtempcntb%
+    \global\line@margin@columnsR=\@l@dtempcntb%
+  \fi%
+}%
+
+\newcommand{\linenummarginColumnsR}[1]{%
+  \l@dgetline@margin{#1}%
+  \ifnum\@l@dtempcntb>\m@ne%
+    \global\line@margin@columnsR=\@l@dtempcntb%
+  \fi%
+}%
+
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \subsection{Setting lineation start and step} 
@@ -4007,6 +4098,7 @@
   \fi}
 
 
+\let\linenumberlistR\empty%
 \newcommand*{\affixline@numR}{%
 \ifledgroupnotesR@\else\ifnumberline
 \ifl@dskipnumber
@@ -4018,15 +4110,15 @@
     \ch@cksub@lockR
   \else
     \@l@dtempcntb=\line@numR
-    \ifx\linenumberlist\empty
+    \ifx\linenumberlistR\empty%
       \l@dcalcnum{\line@numR}{\c@firstlinenumR}{\c@linenumincrementR}%
     \else
       \@l@dtempcnta=\line@numR
-      \edef\rem@inder{,\linenumberlist,\number\line@numR,}%
+      \edef\rem@inderR{,\linenumberlistR,\number\line@numR,}%
         \edef\sc@n@list{\def\noexpand\sc@n@list
-        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inder{####2}}}%
-      \sc@n@list\expandafter\sc@n@list\rem@inder|%
-        \ifx\rem@inder\empty\advance\@l@dtempcnta\@ne\fi
+        ####1,\number\@l@dtempcnta,####2|{\def\noexpand\rem@inderR{####2}}}%
+      \sc@n@list\expandafter\sc@n@list\rem@inderR|%
+        \ifx\rem@inderR\empty\advance\@l@dtempcnta\@ne\fi%
      \fi
      \ch@ck@l@ckR
   \fi
@@ -4039,7 +4131,9 @@
           \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
         \fi
       \else
-        \@l@dtempcntb=\line@marginR
+        \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columnsR}%
+          {\@l@dtempcntb=\line@marginR}%
         \ifnum\@l@dtempcntb>\@ne
           \advance\@l@dtempcntb by\page@numR
         \fi
@@ -4085,7 +4179,9 @@
        \gdef\l@drd@ta{\rlap{{\rightpstartnumL}}}%
      \fi
     \else
-      \@l@dtempcntb=\line@margin
+     \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columns}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columns}%
+          {\@l@dtempcntb=\line@margin}%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@num
      \fi
@@ -4106,7 +4202,9 @@
        \gdef\l@drd@ta{\rlap{{\rightpstartnumR}}}%
      \fi
     \else
-      \@l@dtempcntb=\line@marginR
+     \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
+          {\@l@dtempcntb=\line@margin@columnsR}%
+          {\@l@dtempcntb=\line@marginR}%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@numR
      \fi
@@ -4601,6 +4699,7 @@
 % \changes{v1.1.2}{2012/10/06}{Remove spurious space between line number and line content}
 %    \begin{macrocode}
 \newcommand*{\affixside@noteR}{%
+    \prepare@edindex@fornote{\the\page@numR|\the\line@numR|\the\subline@numR|\the\page@numR|\the\line@numR|\the\subline@numR|}%
     \def\sidenotecontent@{}%
     \numgdef{\itemcount@}{0}%
     \def\do##1{%
@@ -4644,6 +4743,7 @@
       \fi%
     \fi%
   \fi%
+  \advance\@edindex@fornote@\m@ne%
 }
 
 %    \end{macrocode}
@@ -4749,12 +4849,20 @@
 %    \begin{macrocode}
 \newcommand*{\@astanza@line}{%
   \ifnum\value{stanzaindentsrepetition}=0
-      \parindent=\csname sza@\number\stanza@count
-               @\endcsname\stanzaindentbase
+        \ifcsdef{sza@\number\stanza@count @}%
+          {%
+          \parindent=\csname sza@\number\stanza@count  @\endcsname\stanzaindentbase%
+          }{%
+          \led@err@StanzaIndentNotDefined%
+          }%
   \else
-      \parindent=\csname sza@\number\stanza@modulo
-               @\endcsname\stanzaindentbase
-      \managestanza@modulo
+        \ifcsdef{sza@\number\stanza@modulo @}{%
+          \parindent=\csname sza@\number\stanza@modulo @\endcsname\stanzaindentbase%
+          \managestanza@modulo%
+        }%
+        {%
+        \led@err@StanzaIndentNotDefined%
+        }%
   \fi
   \endgraf
   \stanza@hang%
@@ -5139,9 +5247,14 @@
   \ifl@dpairing%
     \led@err@Columns@InsideEnv%
   \fi%
-  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
-    \led@err@Columns@WithoutEnv%
-  \else%
+    \ifboolexpr{test{\ifcsboxvoid{l@dRcolrawbox1}} or test{\ifcsboxvoid{l@dLcolrawbox1}}}{%
+    \ifcsboxvoid{l@dRcolrawbox1}{%
+        \ifcsboxvoid{l@dLcolrawbox1}%
+          {\led@err@Columns@WithoutEnv}%
+          {\led@err@Columns@WithoutRightside}%
+      }%
+      {\led@err@Columns@WithoutLeftside}%
+  }{%
   \global\l@dprintingcolumnstrue%
   \eledsection@correcting@skip=-\baselineskip% Correction for sections' titles
   \ifnum\l@dnumpstartsL=\l@dnumpstartsR\else
@@ -5269,7 +5382,8 @@
   \ignorespaces
     \global\instanzaLfalse%
     \global\instanzaRfalse%
-  \fi}
+  }%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -5586,9 +5700,14 @@
   \ifl@dpairing%
     \led@err@Pages@InsideEnv%
   \fi%
-  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
-    \led@err@Pages@WithoutEnv%
-  \else%
+  \ifboolexpr{test{\ifcsboxvoid{l@dRcolrawbox1}} or test{\ifcsboxvoid{l@dLcolrawbox1}}}{%
+    \ifcsboxvoid{l@dRcolrawbox1}{%
+        \ifcsboxvoid{l@dLcolrawbox1}%
+          {\led@err@Pages@WithoutEnv}%
+          {\led@err@Pages@WithoutRightside}%
+      }%
+      {\led@err@Pages@WithoutLeftside}%
+  }{%
   \ifstrequal{#1}{mainmatter}{\Pages@mainmattertrue}{\Pages@mainmatterfalse}%
   \eledsection@correcting@skip=-2\baselineskip% line correcting for section titles.
   \parledgroup@notespacing@set@correction%
@@ -5899,7 +6018,7 @@
 % Prevent final notes from overlapping the line number
 %    \begin{macrocode}
  \finish@Pages@notes%
-  \ignorespaces\fi}
+  \ignorespaces}}%
 
 
 %    \end{macrocode}
