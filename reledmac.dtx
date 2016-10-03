@@ -441,7 +441,7 @@
 % \changes{v2.16.0}{2016/10/02}{Fix potential bug when using \protect\cs{edindex} in critical footnotes.}
 % \changes{v2.16.0}{2016/10/02}{Add \protect\cs{Xendpagenumberonlyfirst}, \protect\cs{Xendpagenumberonlyfirstifsingle}, \protect\cs{Xendpagenumberonlyfirstintwo}, \protect\cs{Xendinplaceofpagenumber} and \protect\cs{Xendsympagenum} hooks.}
 % \changes{v2.16.0}{2016/10/02}{When \protect\cs{edindex} is called outside of a \protect\cs{beginnumbering}\protect\ldots\protect\cs{endnumbering} structure, it is automatically switched to \protect\cs{index}, with a warning message.}
-
+% \changes{v2.16.1}{2016/10/04}{Fix bug with redefinition of the style of the footnote number (bug added in v2.12.0)}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3837,7 +3837,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/10/02 v2.16.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2016/10/04 v2.16.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -11118,7 +11118,7 @@
   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
     \global\advance\footnote@reading by \@ne%
     \get@thisfootnote%
-    \get@fnmark{\thisfootnote}%
+    \get@fnmark{\thisfootnote}{\thisc@footnote}%
     \ifcsdef{footnotereading\the\footnote@reading=typeset}%
       {\setcounter{\@mpfn}{\csuse{footnotereading\the\footnote@reading=typeset}}}%
       {\setcounter{\@mpfn}{\footnote@reading}}%
@@ -11132,8 +11132,10 @@
 \newcommand{\get@thisfootnote}{%
     \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
       \protected@xdef\thisfootnote{\the\footnote@reading}%
+      \protected@xdef\thisc@footnote{\the\footnote@reading}%
     }{%
-      \protected@xdef\thisfootnote{\the\c@footnote}%
+      \protected@xdef\thisc@footnote{\the\c@footnote}%
+      \protected@xdef\thisfootnote{\thefootnote}%
     }%
 }%
 
@@ -11145,7 +11147,7 @@
           \ifdefined\Hy@footnote@currentHref%
             \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
           \fi%
-          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}{\thisc@footnote}%
         }%
                          \to\inserts@listR
        \global\advance\insert@countR \@ne%
@@ -11154,7 +11156,7 @@
           \ifdefined\Hy@footnote@currentHref%
             \noexpand\def\noexpand\Hy@footnote@currentHref{\Hy@footnote@currentHref}%
           \fi%
-          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}%
+          \noexpand\vl@dbfnote{{\expandonce\@tag}}{\thisfootnote}{\thisc@footnote}%
        }%
                          \to\inserts@list
       \global\advance\insert@count \@ne%
@@ -11162,13 +11164,13 @@
   \ignorespaces%
 }%
 
-\newcommand{\get@fnmark}[1]{%
+\newcommand{\get@fnmark}[2]{%
   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote@typeset}%
       \setcounter{footnote}{\c@footnote@typeset}%
         \immediate\write\@mainaux{%
-          \csgdef{footnotereading#1=typeset}{\the\c@footnote@typeset}%
+          \csgdef{footnotereading#2=typeset}{\the\c@footnote@typeset}%
          }%
       \def\@thefnmark{\thefootnote}%
     }%
@@ -11177,8 +11179,8 @@
     }%  
 }%
 
-\newcommand{\vl@dbfnote}[2]{%
-  \get@fnmark{#2}%
+\newcommand{\vl@dbfnote}[3]{%
+  \get@fnmark{#2}{#3}%
   \@footnotetext{#1}%
 }%
 %    \end{macrocode}
@@ -11288,7 +11290,7 @@
 %    \begin{macrocode}
 \newcommand*{\mpnormalvfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
-  \get@fnmarkX{#1}{\thisfootnote}%
+  \get@fnmarkX{#1}{\thisfootnote}{\thisc@footnote}%
   \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}% 
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
@@ -11432,7 +11434,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\thisfootnote}{\thisc@footnote}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -11449,7 +11451,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\expandonce\thisfootnote}{\thisc@footnote}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -11467,8 +11469,10 @@
 \newcommand{\get@thisfootnoteX}[1]{%
     \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
       \protected@xdef\thisfootnote{\the\csname footnote#1@reading\endcsname}%
+      \protected@xdef\thisc@footnote{\the\csname footnote#1@reading\endcsname}%
     }{%
-      \protected@xdef\thisfootnote{\the\csname c@footnote#1\endcsname}%
+      \protected@xdef\thisfootnote{\csname thefootnote#1\endcsname}%
+      \protected@xdef\thisc@footnote{\the\csname c@footnote#1\endcsname}%
     }%
 }%
 %    \end{macrocode}
@@ -11477,8 +11481,8 @@
 % This command calls the correct footnote-inserting commands.
 % 
 %    \begin{macrocode}
-\newcommand{\vbfnoteX}[3]{%
-  \get@fnmarkX{#1}{#3}%
+\newcommand{\vbfnoteX}[4]{%
+  \get@fnmarkX{#1}{#3}{#4}%
   \@nameuse{regvfootnote#1}{#1}{#2}%
 }%
 
@@ -11488,14 +11492,14 @@
 % \begin{macro}{\get@fnmarkX}
 % This command gets the correct footnote number when typesetting parallel texts.
 %    \begin{macrocode}
-\newcommand{\get@fnmarkX}[2]{%
+\newcommand{\get@fnmarkX}[3]{%
   \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
     {%
       \stepcounter{footnote#1@typeset}%
       \setcounter{footnote#1}{\value{footnote#1@typeset}}%
       \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
         \immediate\write\@mainaux{%
-          \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
+          \csgdef{footnote#1reading#3=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
          }%
     }%
     {%
@@ -11514,7 +11518,7 @@
   \else
     \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \get@thisfootnoteX{#1}%
-    \get@fnmarkX{#1}{\expandonce\thisfootnote}%
+    \get@fnmarkX{#1}{\expandonce\thisfootnote}{\expandonce\thisc@footnote}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
 
@@ -11906,7 +11910,7 @@
   \egroup}
 \newcommand*{\mppara@vfootnoteX}[2]{%
   \get@thisfootnoteX{#1}%
-  \get@fnmarkX{#1}{\thisfootnote}%
+  \get@fnmarkX{#1}{\thisfootnote}{\thisc@footnote}%
   \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
