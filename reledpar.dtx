@@ -285,6 +285,8 @@
 % \changes{v2.14.0}{2016/10/02}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
 % \changes{v2.14.0}{2016/10/02}{More explicit error message when missing to define stanza indent.}
 % \changes{v2.14.0}{2016/10/02}{Error message when missing to define left / right side.}
+% \changes{v2.14.1}{2016/10/16}{Fix bug with vertical space before sectioning command in optional argument of \protect\cs{pstart} (bug added in v2.13.1).}
+% \changes{v2.14.1}{2016/10/16}{Fix bug when using \protect\cs{markboth} on \protect\cs{doinsidelineLhook} and \protect\cs{doinsidelineRhook}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1048,6 +1050,17 @@
 % selection for the side. The right side language is also
 % applied to the right side line numbers.
 %
+% \subsection{Executing code at each line}
+% \DescribeMacro{\dolineLhook}
+% \DescribeMacro{\dolineRhook}
+% \cs{dolineLhook} and \cs{dolineRhook} are the equivalent to the \macpackage \cs{dolinehook}, respectively for left and right side.
+%
+% \DescribeMacro{\doinsidelineLhook}
+% \DescribeMacro{\doinsidelineRhook}
+% \cs{doinsidelineLhook} and \cs{doinsidelineRhook} are the equivalent to the \macpackage \cs{doinsidelinehook}, respectively for left and right side.
+% 
+% About these two hooks, read \macpackage's handbook (\reff{reledmac-linehook}).
+%
 % \section{Verse}
 %
 % If you are typesetting verses with \macpackage you can use the \protect\cs{stanza}
@@ -1218,7 +1231,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/10/02 v2.14.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/10/16 v2.14.1 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3290,6 +3303,12 @@
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
 \newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
   \ifluatex%
     \xdef\l@luatextextdir@L{\the\textdir}%
     \xdef\l@luatexpardir@L{\the\pardir}%
@@ -3362,6 +3381,12 @@
 % 
 %    \begin{macrocode}
 \newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
   \ifluatex%
     \xdef\l@luatextextdir@R{\the\textdir}%
     \xdef\l@luatexpardir@R{\the\pardir}%
@@ -3643,8 +3668,8 @@
     \add@Xgroupbyline%
     \affixside@note%
     \l@dlsn@te%
+    \do@insidelineLhook%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
-            \do@insidelineLhook%
             \ifluatex%
               \textdir\l@luatextextdir@L%
             \fi%
@@ -3665,6 +3690,7 @@
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
     \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
@@ -3695,7 +3721,7 @@
 % \begin{macro}{\doinsidelineRhook}
 % \changes{v1.8.3}{2014/08/31}{Added \protect\cs{dolineLhook}, \protect\cs{dolineRhook}, \protect\cs{doinsidelineLhook} and \protect\cs{doinsidelineRhook}}
 % These high-level commands just redefine the low-level commands. 
-% They have to be used be user, without \protect\cs{makeatletter}.
+% They have to be used by user, without \protect\cs{makeatletter}.
 %    \begin{macrocode}
 \newcommand*{\dolineLhook}[1]{\gdef\do@lineLhook{#1}}%
 \newcommand*{\dolineRhook}[1]{\gdef\do@lineRhook{#1}}%
@@ -3819,8 +3845,8 @@
     \add@Xgroupbyline%
     \affixside@noteR%
     \l@dlsn@te%
+    \do@insidelineRhook%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
-       \do@insidelineRhook%
        \new@lineR%
        \inserthangingsymbolR%
        \ifluatex%
@@ -3836,6 +3862,7 @@
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%

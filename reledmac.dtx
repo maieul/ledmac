@@ -445,6 +445,7 @@
 % \changes{v2.16.2}{2016/10/07}{Error message if \protect\package{footmisc} is loaded after \protect\package{reledmac}.}
 % \changes{v2.16.2}{2016/10/07}{Fix bug introduced by v2.16.1 when using  not expandable control sequence, like \protect\cs{normalfont}, in the footnote number style.}
 % \changes{v2.16.3}{2016/10/12}{Fix bug with \protect\cs{SEref} (bug added in v2.7.0).}
+% \changes{v2.16.4}{2016/10/16}{Fix bug with vertical space before sectioning command in optional argument of \protect\cs{pstart} (bug added in v2.15.3).}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1148,12 +1149,12 @@
 % \DescribeMacro{\hidenumberingonleftpage}
 % \cs{hidenumberingonleftpage} is like \protect{hidenumbering}, but is applied only on left page. \cs{hidenumberingonrightpage} is applied on right page.
 % They can be useful  if the position of the line number is depending of the position of the page, but the position of marginal note is fixed.
-% \subsubsection{Execute code at each line}
+% \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
 % The argument passed to \protect\cs{dolinehook}\marg{arg} will be executed 
 % before slicing a new line in the paragraph.
-% The argument passed to \protect\cs{doinsidelinehook}\marg{arg} will be executed before printing a new line.
+% The argument passed to \protect\cs{doinsidelinehook}\marg{arg} will be executed before printing a new line, when the line number have already been fixed.
 % In many cases, the latter is more useful than the former.
 % The file \href{examples/2-line_numbers_in_header.tex}{examples/2-line\_numbers\_in\_header.tex} provides
 % an example for printing the first and last line numbers of a page in the header.
@@ -3840,7 +3841,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/10/12 v2.16.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2016/10/16 v2.16.4 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7811,6 +7812,7 @@
   \ifluatex%
     \edef\l@luatextextdir@L{\the\textdir}%
   \fi%
+  \@nobreaktrue%
   \ifnumbering \else%
     \led@err@PstartNotNumbered%
     \beginnumbering%
@@ -7916,8 +7918,10 @@
   \normal@pars%
   \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
 %    \end{macrocode}
-% Restore autopar setting. 
+% Restore standard nobreak setting and autopar setting. 
+% Normally, \cs{if@nobreak} is equal to true only immediately after a sectioning command (read latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false. 
 %    \begin{macrocode}
+  \@nobreakfalse%
   \ifautopar%
     \autopar%
   \fi%
