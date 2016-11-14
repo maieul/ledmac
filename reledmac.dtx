@@ -14371,6 +14371,7 @@
   \expandafter\ifx\csname the@label\csuse{XR@prefix}#5\endcsname \relax\else
     \led@warn@DuplicateLabel{\csuse{XR@prefix}#5}%
   \fi
+  \global\providetoggle{label@#5@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
   \expandafter\gdef\csname the@label\csuse{XR@prefix}#5\endcsname{#1|#2|#3|#4|\relax}%
   \ignorespaces}
 
@@ -14537,7 +14538,16 @@
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{xlineref} does not include anymore the side flag. Use \protect\cs{xflagref} to get it. Not that \protect\cs{edlineref} still contains the flag.}
 % If the specified label exists, \protect\cs{lineref} gives its line number.
 %    \begin{macrocode}
-\newcommand*{\edlineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{2}{#1}\xflagref{#1}}}%
+\newcommand*{\edlineref}[1]{%
+  \l@dref@undefined{#1}%
+  \wrap@edcrossref{#1}{%
+    \providetoggle{label@#1@ledRcol}%Required for the first run, when the label has not been yet parsed on the .aux file
+    \iftoggle{label@#1@ledRcol}%
+        {\linenumrepR{\l@dgetref@num{2}{#1}}}%
+        {\linenumrep{\l@dgetref@num{2}{#1}}}%
+    \xflagref{#1}%
+  }%
+}%
 \newcommand*{\xlineref}[1]{\l@dgetref@num{2}{#1}}%
 
 %    \end{macrocode}
@@ -14548,7 +14558,15 @@
 % \begin{macro}{\xsublineref}
 % If the specified label exists, \protect\cs{sublineref} gives its sub-line number.
 %    \begin{macrocode}
-\newcommand*{\sublineref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{3}{#1}}}
+\newcommand*{\sublineref}[1]{%
+  \l@dref@undefined{#1}%
+  \wrap@edcrossref{#1}{%
+    \providetoggle{label@#1@ledRcol}%Required for the first run, when the label has not been yet parsed on the .aux file
+    \iftoggle{label@#1@ledRcol}%
+      {\sublinenumrepR{\l@dgetref@num{3}{#1}}}%
+      {\sublinenumrep{\l@dgetref@num{3}{#1}}}%
+  }%
+}%
 \newcommand*{\xsublineref}[1]{\l@dgetref@num{3}{#1}}
 
 %    \end{macrocode}
