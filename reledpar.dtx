@@ -4172,7 +4172,13 @@
       \else
         \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
           {\@l@dtempcntb=\line@margin@columnsR}%
-          {\@l@dtempcntb=\line@marginR}%
+          {\@l@dtempcntb=\line@marginR%
+          \ifboolexpr{%
+             not bool {movecolumnspositiononrightpage}%
+             or test {\ifnumodd{\page@numR}}%
+            }{}%
+            {\advance\@l@dtempcntb by \@ne}%
+          }%
         \ifnum\@l@dtempcntb>\@ne
           \advance\@l@dtempcntb by\page@numR
         \fi
@@ -4243,7 +4249,13 @@
     \else
      \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
           {\@l@dtempcntb=\line@margin@columnsR}%
-          {\@l@dtempcntb=\line@marginR}%
+          {\@l@dtempcntb=\line@marginR%
+          \ifboolexpr{%
+             not bool {movecolumnspositiononrightpage}%
+             or test {\ifnumodd{\page@numR}}%
+            }{}%
+            {\advance\@l@dtempcntb by \@ne}%
+          }%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@numR
      \fi
@@ -5371,15 +5383,9 @@
                 {}%
           \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
-            \unhbox\l@dleftbox%
-            \ifhbox\@eledsectionL%
-               \usebox{\@eledsectionL}%
-            \fi%
+            \print@leftcolumn%
             \print@columnseparator%
-            \unhbox\l@drightbox%
-            \ifhbox\@eledsectionR%
-              \usebox{\@eledsectionR}%
-            \fi%
+            \print@rightcolumn%
             \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
           \checkraw@text
@@ -5448,6 +5454,64 @@
   \fi%
 }%
 %\end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@leftcolumn}
+% \begin{macro}{\print@rightcolumn}
+% \cs{print@leftcolumn} \cs{print@rightcolumn} print, a line of the left or right column, respectively. 
+% Normally, it is defined by the content of \env{Leftside} or \env{Rightside} environment. 
+% But if \cs{movecolumnspositiononrightpage} is set to TRUE, it depend also of the page number.
+%    \begin{macrocode}
+\newcommand{\print@leftcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \reledmac@warning{\the\page@num}%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+    {%
+       \unhbox\l@drightbox%
+       \ifhbox\@eledsectionR%
+         \usebox{\@eledsectionR}%
+       \fi%
+    }%
+}%
+
+
+\newcommand{\print@rightcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \unhbox\l@drightbox%
+      \ifhbox\@eledsectionR%
+        \usebox{\@eledsectionR}%
+      \fi%
+    }%
+    {%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\checkpb@columns}
 % \protect\cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \protect\cs{ledpb} or \protect\cs{lednopb}.
