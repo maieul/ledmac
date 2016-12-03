@@ -1314,6 +1314,7 @@
 % \begin{macro}{\ifmovecolumnspositiononrightpage}
 % The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for right page, we want the left column become a right column and the right column become the left column. 
 %    \begin{macrocode}
+\newif\ifmovecolumnspositiononrightpage%
 \DeclareOptionX{movecolumnspositiononrightpage}{%
  \movecolumnspositiononrightpagetrue%
 }%
@@ -1970,6 +1971,10 @@
     \global\line@margin=\@l@dtempcntb%
   \fi%
 }
+\ifmovecolumnspositiononrightpage%
+  \linenummargin{inner}%
+  \linenummarginR{outer}%
+\fi%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -4181,13 +4186,7 @@
       \else
         \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
           {\@l@dtempcntb=\line@margin@columnsR}%
-          {\@l@dtempcntb=\line@marginR%
-          \ifboolexpr{%
-             not bool {movecolumnspositiononrightpage}%
-             or test {\ifnumodd{\page@numR}}%
-            }{}%
-            {\advance\@l@dtempcntb by \@ne}%
-          }%
+          {\@l@dtempcntb=\line@marginR}%
         \ifnum\@l@dtempcntb>\@ne
           \advance\@l@dtempcntb by\page@numR
         \fi
@@ -4258,13 +4257,7 @@
     \else
      \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
           {\@l@dtempcntb=\line@margin@columnsR}%
-          {\@l@dtempcntb=\line@marginR%
-          \ifboolexpr{%
-             not bool {movecolumnspositiononrightpage}%
-             or test {\ifnumodd{\page@numR}}%
-            }{}%
-            {\advance\@l@dtempcntb by \@ne}%
-          }%
+          {\@l@dtempcntb=\line@marginR}%
      \ifnum\@l@dtempcntb>\@ne
        \advance\@l@dtempcntb \page@numR
      \fi
@@ -4747,6 +4740,11 @@
 }
 \newcount\sidenote@marginR
 \global\sidenote@margin=\@ne
+
+\ifmovecolumnspositiononrightpage%
+  \sidenotemargin{inner}%
+  \sidenotemarginR{outer}%
+\fi%
 
 %    \end{macrocode}
 % \end{macro}
