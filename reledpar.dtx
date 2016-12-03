@@ -290,6 +290,8 @@
 % \changes{v2.14.2}{2016/10/31}{Fix spurious space with \protect\cs{edtextlater}.}
 % \changes{v2.14.3}{2016/11/04}{Fix bug in \protect\cs{edtextnow}.}
 % \changes{v2.14.4}{2016/11/14}{Take account of \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
+% \changes{v2.15.0}{2016/12/01}{Add \protect\option{movecolumnspositiononrightpage} option.}
+% \changes{v2.15.0}{2016/12/01}{New macro \cs{sidenotemarginR}, fix default value to right.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -406,6 +408,8 @@
 %    \item [prevpgnotnumbered] enables that the page before facing pages (the one
 %       automatically inserted to start parallel pages on a left page) is not
 %       counted. This applies only if the page is empty.
+%    \item[movecolumnspositiononrightpage] make that, on the right page, the left column becomes the right column, and the left column becomes the right column.
+% It allows to have a text on the inner column, and the other on the outer column.
 % \end{description}
 % 
 %
@@ -569,7 +573,13 @@
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
+% \section{Keeping translation in the outside/inside column}
+% By default, \parpackage work with left and right columns.
+% However, it is possible to work with inner and outer column.
+% In this case, use the \option{movecolumnspositiononrightpage} when loading the package.
 %
+% The \env{Leftside} environment will correspond to the inner column, and the \env{Rightside} environment will correspond to the outer column.
+% 
 % \section{Facing pages}\label{pages}
 % \subsection{Basic usage}
 % \DescribeEnv{pages}
@@ -1121,6 +1131,9 @@
 % As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouterote}, \protect\cs{ledinnerrote}.
 % 
 % The \protect\cs{sidenotemargin} defines the margin of the sidenote for either left or right side, depending on the current environment.
+% 
+% The \cs{sidenotemarginR} defines the margin of the sidenote for right side.
+%
 % You can use \protect\cs{sidenotemargin*} to define it for both sides.
 % \section{Parallel ledgroups}
 % \subsection{General}
@@ -1234,7 +1247,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/11/14 v2.14.4 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/12/01 v2.15.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1298,6 +1311,16 @@
   \nomaxlinestrue%
   \nosyncpstartstrue%
   \apptocmd{\@par@this@sync@option}{nosync}{}{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Position option}
+% \begin{macro}{\ifmovecolumnspositiononrightpage}
+% The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for right page, we want the left column become a right column and the right column become the left column. 
+%    \begin{macrocode}
+\newif\ifmovecolumnspositiononrightpage%
+\DeclareOptionX{movecolumnspositiononrightpage}{%
+ \movecolumnspositiononrightpagetrue%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1952,6 +1975,10 @@
     \global\line@margin=\@l@dtempcntb%
   \fi%
 }
+\ifmovecolumnspositiononrightpage%
+  \linenummargin{inner}%
+  \linenummarginR{outer}%
+\fi%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -4706,6 +4733,7 @@
 % the text.
 % \begin{macro}{\sidenote@marginR}
 % \begin{macro}{\sidenotemargin*}
+% \begin{macro}{\sidenotemarginR}
 % \changes{v1.8.0}{2014/08/05}{\protect\cs{sidenotemargin} is now directly defined in \protect\package{eledmac} to be able to manage \protect\package{eledpar}.}
 % \changes{v1.8.0}{2014/08/05}{Add \protect\cs{sidenotemargin*}}
 % Specifies which margin sidenotes can be in.
@@ -4715,10 +4743,20 @@
   \global\sidenote@marginR=\@l@dtempcntb
   \global\sidenote@margin=\@l@dtempcntb
 }
+\newcommand{\sidenotemarginR}[1]{%
+  \l@dgetsidenote@margin{#1}%
+  \global\sidenote@marginR=\@l@dtempcntb%
+}%
 \newcount\sidenote@marginR
-\global\sidenote@margin=\@ne
+\global\sidenote@marginR=\@ne%
+
+\ifmovecolumnspositiononrightpage%
+  \sidenotemargin{inner}%
+  \sidenotemarginR{outer}%
+\fi%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -5362,15 +5400,9 @@
                 {}%
           \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
-            \unhbox\l@dleftbox%
-            \ifhbox\@eledsectionL%
-               \usebox{\@eledsectionL}%
-            \fi%
+            \print@leftcolumn%
             \print@columnseparator%
-            \unhbox\l@drightbox%
-            \ifhbox\@eledsectionR%
-              \usebox{\@eledsectionR}%
-            \fi%
+            \print@rightcolumn%
             \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
           \checkraw@text
@@ -5439,6 +5471,64 @@
   \fi%
 }%
 %\end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@leftcolumn}
+% \begin{macro}{\print@rightcolumn}
+% \cs{print@leftcolumn} \cs{print@rightcolumn} print, a line of the left or right column, respectively. 
+% Normally, it is defined by the content of \env{Leftside} or \env{Rightside} environment. 
+% But if \cs{movecolumnspositiononrightpage} is set to TRUE, it depend also of the page number.
+%    \begin{macrocode}
+\newcommand{\print@leftcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \reledmac@warning{\the\page@num}%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+    {%
+       \unhbox\l@drightbox%
+       \ifhbox\@eledsectionR%
+         \usebox{\@eledsectionR}%
+       \fi%
+    }%
+}%
+
+
+\newcommand{\print@rightcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \unhbox\l@drightbox%
+      \ifhbox\@eledsectionR%
+        \usebox{\@eledsectionR}%
+      \fi%
+    }%
+    {%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\checkpb@columns}
 % \protect\cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \protect\cs{ledpb} or \protect\cs{lednopb}.
