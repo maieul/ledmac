@@ -450,6 +450,7 @@
 % \changes{v2.16.6}{2016/11/14}{Take account of \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
 % \changes{v2.16.6}{2016/11/14}{Fix bug with the line number style in \protect\cs{doennotes} when referring to right side line in parallel typesetting.}
 % \changes{v.2.16.7}{2016/12/01}{Fix bug with \protect\cs{numberpstarttrue} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
+% \changes{v.2.16.7}{2016/12/01}{Fix bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -4704,6 +4705,8 @@
   \resetprevline@
   \resetprevpage@num
   \global\stopmsdata@inserted@true%
+  \global\let\@msdata@list\relax%
+  \global\csundef{@msdata@\add@msd@c @data}%
   }
 
 %    \end{macrocode}
@@ -16783,7 +16786,7 @@
 \numdef{\@msd@cR}{0}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\@msd@c}
+% \begin{macro}{\add@msd@}
 % \cs{add@msd@} is a counter incremented at each \cs{add@msddata}, that is at each time we prepare the insertion of manuscripts data footnote.
 %    \begin{macrocode}
 \numdef{\add@msd@c}{0}%
@@ -16806,14 +16809,14 @@
 %    \begin{macrocode}
 \newcommand{\@msd}[1]{%
   \unless\ifledRcol%
-    \numdef{\@msd@c}{\@msd@c+\@ne}%
+    \global\numdef{\@msd@c}{\@msd@c+\@ne}%
     \csgdef{@msdata@\@msd@c @data}{#1}%
     \csxdef{@msdata@\@msd@c @linenumber}{\the\line@num}%
     \csxdef{@msdata@\@msd@c @abslinenumber}{\the\absline@num}%
     \xright@appenditem{\the\absline@num}\to\actionlines@list%
     \xright@appenditem{-1010}\to\actions@list%
   \else%
-    \numdef{\@msd@cR}{\@msd@cR+\@ne}%
+    \global\numdef{\@msd@cR}{\@msd@cR+\@ne}%
     \csgdef{@msdata@\@msd@cR @dataR}{#1}%
     \csxdef{@msdata@\@msd@cR @linenumberR}{\the\line@numR}%
     \csxdef{@msdata@\@msd@cR @abslinenumberR}{\the\absline@numR}%
@@ -16823,7 +16826,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\@endmsd}
+% \begin{macro}{\@stopmsd}
 % Inserted in the auxiliary file by \cs{stopmsd}, the \cs{@stopmsd} macro will store in two commands the line number and the absolute line number on which it is called.
 %    \begin{macrocode}
 \newcommand{\@stopmsd}[0]{%
@@ -16846,7 +16849,7 @@
 % \begin{macro}{\add@msdata}
 % \cs{add@msdata} is executed on each line when action code $1010$ is seen.
 % It will not insert immediately the manuscript data footnote, as action code are executed before the line be typeset, and, consequently, could be on the previous page.
-% So it just store the manuscript data footnote to \cs{@msdata@list}.
+% So it just stores the manuscript data footnote to \cs{@msdata@list}.
 %    \begin{macrocode}
 \newcommand{\add@msdata}{%
   \bgroup%
