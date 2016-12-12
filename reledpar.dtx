@@ -280,16 +280,16 @@
 % \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{AtBeginPairs}.}
 % \changes{v2.13.0}{2016/07/22}{Compatibility with the new features of \protect\macpackage 2.15.0}
 % \changes{v2.13.1}{2016/09/26}{Simplification of the code concerning the sectioning command}
-% \changes{v2.14.0}{2016/10/02}{New commands to have specific line margins for text in parallel columns}
+% \changes{v2.14.0}{2016/10/02}{New commands to have specific line margins for text running in parallel columns}
 % \changes{v2.14.0}{2016/10/02}{Add \protect\cs{linenumberlistR}, equivalent to \protect\cs{linenumberlist} for the right side.}
 % \changes{v2.14.0}{2016/10/02}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
-% \changes{v2.14.0}{2016/10/02}{More explicit error message when missing to define stanza indent.}
-% \changes{v2.14.0}{2016/10/02}{Error message when missing to define left / right side.}
+% \changes{v2.14.0}{2016/10/02}{More explicit error message when the stanza indentation is not defined.}
+% \changes{v2.14.0}{2016/10/02}{Error message when left / right side are not defined.}
 % \changes{v2.14.1}{2016/10/16}{Fix bug with vertical space before sectioning command in optional argument of \protect\cs{pstart} (bug added in v2.13.1).}
 % \changes{v2.14.1}{2016/10/16}{Fix bug when using \protect\cs{markboth} on \protect\cs{doinsidelineLhook} and \protect\cs{doinsidelineRhook}.}
 % \changes{v2.14.2}{2016/10/31}{Fix spurious space with \protect\cs{edtextlater}.}
 % \changes{v2.14.3}{2016/11/04}{Fix bug in \protect\cs{edtextnow}.}
-% \changes{v2.14.4}{2016/11/14}{Take account of \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
+% \changes{v2.14.4}{2016/11/14}{Take into account \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
 % \changes{v2.15.0}{2016/12/01}{Add \protect\option{movecolumnspositiononrightpage} option.}
 % \changes{v2.15.0}{2016/12/01}{New macro \cs{sidenotemarginR}, fix default value to right.}
 % \changes{v.2.15.0}{2016/12/01}{Fix bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
@@ -411,8 +411,8 @@
 %    \item [prevpgnotnumbered] enables that the page before facing pages (the one
 %       automatically inserted to start parallel pages on a left page) is not
 %       counted. This applies only if the page is empty.
-%    \item[movecolumnspositiononrightpage] make that, on the right page, the left column becomes the right column, and the left column becomes the right column.
-% It allows to have a text on the inner column, and the other on the outer column.
+%    \item[movecolumnspositiononrightpage] make the left column on the right page become the right column, and the left column become the right column.
+% It allows to have a text running on the inner column, and an other one on the outer column.
 % \end{description}
 % 
 %
@@ -577,9 +577,9 @@
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
 % \section{Keeping translation in the outside/inside column}
-% By default, \parpackage work with left and right columns.
+% By default, \parpackage works with left and right columns.
 % However, it is possible to work with inner and outer column.
-% In this case, use the \option{movecolumnspositiononrightpage} when loading the package.
+% In this case, use the \option{movecolumnspositiononrightpage} at loading time of the package.
 %
 % The \env{Leftside} environment will correspond to the inner column, and the \env{Rightside} environment will correspond to the outer column.
 % 
@@ -1073,7 +1073,7 @@
 %
 % \DescribeMacro{\doinsidelineLhook}
 % \DescribeMacro{\doinsidelineRhook}
-% \cs{doinsidelineLhook} and \cs{doinsidelineRhook} are the equivalent to the \macpackage \cs{doinsidelinehook}, respectively for left and right side.
+% \cs{doinsidelineLhook} and \cs{doinsidelineRhook} are the equivalent to the \macpackage \cs{doinsidelinehook}, for the left and the right sides respectively.
 % 
 % About these two hooks, read \macpackage's handbook (\reff{reledmac-linehook}).
 %
@@ -1135,7 +1135,7 @@
 % 
 % The \protect\cs{sidenotemargin} defines the margin of the sidenote for either left or right side, depending on the current environment.
 % 
-% The \cs{sidenotemarginR} defines the margin of the sidenote for right side.
+% The \cs{sidenotemarginR} defines the margin of the sidenote for the right side.
 %
 % You can use \protect\cs{sidenotemargin*} to define it for both sides.
 % \section{Parallel ledgroups}
@@ -1319,7 +1319,7 @@
 % \end{macro}
 % \subsubsection{Position option}
 % \begin{macro}{\ifmovecolumnspositiononrightpage}
-% The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for right page, we want the left column become a right column and the right column become the left column. 
+% The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for a right page, we want the left column become a right column and the right column become a left column. 
 %    \begin{macrocode}
 \newif\ifmovecolumnspositiononrightpage%
 \DeclareOptionX{movecolumnspositiononrightpage}{%
@@ -1481,13 +1481,13 @@
 % \begin{macro}{\led@err@Columns@WithoutLeftside}
 %    \begin{macrocode}
 \newcommand*{\led@err@Pages@WithoutRightside}{%
-  \reledpar@error{\string\Pages\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Pages\space called without any preceding `Rightside` environment (or environment without content)}{\@ehc}}%
 \newcommand*{\led@err@Pages@WithoutLeftside}{%
-  \reledpar@error{\string\Pages\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Pages\space called without any preceding `Leftside` environment (or environment without content)}{\@ehc}}%
   \newcommand*{\led@err@Columns@WithoutRightside}{%
-  \reledpar@error{\string\Columns\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Columns\space called without any preceding `Rightside` environment (or environment without content)}{\@ehc}}%
 \newcommand*{\led@err@Columns@WithoutLeftside}{%
-  \reledpar@error{\string\Columns\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Columns\space called without any preceding `Leftside` environment (or environment without content)}{\@ehc}}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1597,9 +1597,9 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\ifcsboxvoid}
-% The \cs{ifcsboxvoid} is a complement to the \package{etoolbox} package. 
-% The first argument is a box name, the second is a the \meta{true} value, the third the \meta{false} value.
-% If the first argument refers to a not existing box, or if it refers to a void box, the \meta{true} value is returned. In other case, the \meta{false} is returned.
+% The \cs{ifcsboxvoid} command comes on top of the \package{etoolbox} package. 
+% The first argument is a box name, the second is the \meta{true} value, the third the \meta{false} value.
+% If the first argument refers to a non-existing box, or if it refers to a box that is void, the \meta{true} value is returned. otherwise, \meta{false} is returned.
 %    \begin{macrocode}
 \newcommand*{\ifcsboxvoid}[1]{%
   \ifcsname#1\endcsname%
@@ -5481,9 +5481,9 @@
 % \end{macro}
 % \begin{macro}{\print@leftcolumn}
 % \begin{macro}{\print@rightcolumn}
-% \cs{print@leftcolumn} \cs{print@rightcolumn} print, a line of the left or right column, respectively. 
-% Normally, it is defined by the content of \env{Leftside} or \env{Rightside} environment. 
-% But if \cs{movecolumnspositiononrightpage} is set to TRUE, it depend also of the page number.
+% \cs{print@leftcolumn} and \cs{print@rightcolumn} print the line number of the left or right column respectively. 
+% Normally, it is defined by the content of the \env{Leftside} or \env{Rightside} environments. 
+% But if \cs{movecolumnspositiononrightpage} is set to TRUE, it also depends on the page number.
 %    \begin{macrocode}
 \newcommand{\print@leftcolumn}{%
   \if\page@num>\page@numR%
