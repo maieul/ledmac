@@ -295,6 +295,7 @@
 % \changes{v.2.15.0}{2016/12/12}{Fix bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
 % \changes{v2.15.0}{2016/12/12}{Fix bug about space before sectioning commands after a pairs environment (bug added in v.~2.14.4).}
 % \changes{v2.15.0}{2016/12/12}{Fix bug with page break when using \protect\cs{columns} (bug added in v.~2.14.1).}
+% \changes{v2.15.0}{2016/12/12}{Compatibility with \cs{setmsdataposition}}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1250,7 +1251,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/12/12 v2.15.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2016/12/19 v2.16.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3657,9 +3658,15 @@
             \set@Xtxtbeforenotes%
             \global\@firstlineofpagefalse%
           \fi%
-          \insert@msdata%
-          \add@inserts%
-          \add@Xgroupbyline%
+          \ifdefstring{\ms@data@position}{msdata-regular}{%
+            \insert@msdata%
+            \add@inserts%
+            \add@Xgroupbyline%
+          }{%
+            \add@inserts%
+            \add@Xgroupbyline%
+            \insert@msdata%
+          }%
           \affixside@note%
         }%
         {\print@lineL}%
@@ -3701,9 +3708,15 @@
       \global\@firstlineofpagefalse%
     \fi%
     \insert@msdata%
-    \add@inserts%
-    \add@Xgroupbyline%
-    \affixside@note%
+    \ifdefstring{\ms@data@position}{msdata-regular}{%
+      \insert@msdata%
+      \add@inserts%
+      \add@Xgroupbyline%
+    }{%
+      \add@inserts%
+      \add@Xgroupbyline%
+      \insert@msdata%
+    }%  
     \l@dlsn@te%
     \do@insidelineLhook%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
@@ -3832,9 +3845,15 @@
            \set@Xtxtbeforenotes%
            \global\@firstlineofpageRfalse%
          \fi%
-         \insert@msdata%
-         \add@insertsR%
-         \add@Xgroupbyline%
+         \ifdefstring{\ms@data@position}{msdata-regular}{%
+            \insert@msdata%
+            \add@insertsR%
+            \add@Xgroupbyline%
+         }{%
+            \add@insertsR%
+            \add@Xgroupbyline%
+            \insert@msdata%
+         }%
          \affixside@noteR%
        }%
        {\print@lineR}%
@@ -3877,9 +3896,15 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpageRfalse%
     \fi%
-    \insert@msdata%
-    \add@insertsR%
-    \add@Xgroupbyline%
+    \ifdefstring{\ms@data@position}{msdata-regular}{%
+      \insert@msdata%
+      \add@insertsR%
+      \add@Xgroupbyline%
+    }{%
+      \add@insertsR%
+      \add@Xgroupbyline%
+      \insert@msdata%
+    }%
     \affixside@noteR%
     \l@dlsn@te%
     \do@insidelineRhook%

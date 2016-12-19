@@ -453,6 +453,7 @@
 % \changes{v2.16.7}{2016/12/12}{Fix bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
 % \changes{v2.16.8}{2016/12/16}{Fix bug with \protect\cs{edindex} in footnote in parallel typesetting}
 % \changes{v2.17.0}{2016/12/19}{Add \protect\cs{edglsadd} command.}
+% \changes{v2.17.0}{2016/12/19}{Add \protect\cs{setmsdataposition} setting.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -1699,6 +1700,12 @@
 % By default, it is \enquote{Ms.}.
 % You can change it using \cs{setmsdatalabel}\marg{txt}.
 %
+% \DescribeMacro{\setmsdataposition}
+% If you tel that the manuscript apparatus will be on the same level of critical footnotes than other apparatus, for each line, reledmac will first insert manuscript apparatus, then other footnotes.
+% You can change it using:\\
+% \cs{msdataposition}\arg{regular-msdata}\\
+% And restore the default behavior using
+% \cs{msdataposition}\arg{msdata-regular}
 % \subsection{Familiar notes} \label{sec:desc:familiar}
 % 
 %
@@ -8122,14 +8129,20 @@
           \global\@firstlineofpagefalse%
         \fi%
 %    \end{macrocode}
-% Insert footnotes made of manuscripts data.
+% Insert footnotes made of manuscripts data and critical footnotes.
 %    \begin{macrocode}
-        \insert@msdata%
+        \ifdefstring{\ms@data@position}{msdata-regular}{%
+          \insert@msdata%
+          \add@inserts%
+          \add@Xgroupbyline%
+        }{%
+          \add@inserts%
+          \add@Xgroupbyline%
+          \insert@msdata%
+        }%
 %    \end{macrocode}
-% Restore marginal and footnotes.
+% Insert marginal notes.
 %    \begin{macrocode}
-        \add@inserts%
-        \add@Xgroupbyline%
         \affixside@note%
 %    \end{macrocode}
 % Print left notes.
@@ -8180,9 +8193,15 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpagefalse%
     \fi%
-    \insert@msdata%
-    \add@inserts%
-    \add@Xgroupbyline%
+    \ifdefstring{\ms@data@position}{msdata-regular}{%
+      \insert@msdata%
+      \add@inserts%
+      \add@Xgroupbyline%
+    }{%
+      \add@inserts%
+      \add@Xgroupbyline%
+      \insert@msdata%
+    }%
     \affixside@note%
     \numdef{\temp@}{\l@dnumpstartsL-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
@@ -16783,6 +16802,15 @@
   \gdef\@msdata@series{#1}%
 }%
 \def\@msdata@series{A}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\setmsdataposition}
+% The label for the manuscripts data.
+%    \begin{macrocode}
+\def\ms@data@position{msdata-regular}%
+\newcommand{\setmsdataposition}[1]{%
+  \gdef\ms@data@position{#1}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setmsdatalabel}
