@@ -1,2 +1,1 @@
-$pdflatex = "xelatex --shell-escape %S";
-$pdf_mode = "1";
+$pdf_mode = "5";
