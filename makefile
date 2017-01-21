@@ -26,7 +26,7 @@ README: README.md
 	pandoc README.md -o README
 
 %.sty: %.ins %.dtx
-	rm -f $*.sty $*tex
+	rm -f $*.sty 
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx
