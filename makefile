@@ -17,9 +17,10 @@ all: reledmac.sty reledmac.pdf  reledpar.sty reledpar.pdf migration.pdf dist
 doc: *.pdf
 
 migration.pdf: migration.dtx
-	xelatex $<
-	xelatex $<
-	xelatex $<
+	xelatex -no-pdf $<
+	xelatex -no-pdf $<
+	xelatex -no-pdf $<
+	xdvipdfmx migration.xdv
 
 README: README.md
 	pandoc README.md -o README
@@ -29,14 +30,14 @@ README: README.md
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx
-	@xelatex $*.dtx
+	@xelatex -no-pdf $*.dtx
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
-	@xelatex $*.dtx
+	@xelatex -no-pdf $*.dtx
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
-	@xelatex $*.dtx
-
+	@xelatex -no-pdf $*.dtx
+	@xdvipdfmx $*.xdv
 
 dist: $(PACKAGE) examples
 	rm -rf reledmac
@@ -59,4 +60,4 @@ dist: $(PACKAGE) examples
 
 clean:
 	$(MAKE) -C examples clean
-	@$(RM) *.aux *.log *.out *.toc *tex *.pdf reledmac.sty reledpar.sty  *ind *ilg  *lof *idx *glo *gls ../reledmac.zip
+	@$(RM) *xdv *.aux *.log *.out *.toc *tex *.pdf reledmac.sty reledpar.sty  *ind *ilg  *lof *idx *glo *gls ../reledmac.zip
