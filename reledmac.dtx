@@ -454,6 +454,7 @@
 % \changes{v2.16.8}{2016/12/16}{Fix bug with \protect\cs{edindex} in footnote in parallel typesetting}
 % \changes{v2.17.0}{2016/12/23}{Add \protect\cs{edglsadd} command.}
 % \changes{v2.17.0}{2016/12/23}{Add \protect\cs{setmsdataposition} setting.}
+% \changes{v2.17.1}{2017/01/22}{Fix spurious space in paragraphed footnotes when using \protect\LuaLaTeX without using Right-To-Left text.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3856,7 +3857,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2016/12/23 v2.17.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/01/22 v2.17.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -12127,7 +12128,8 @@
 %    \begin{macrocode} 
 \newcommand*{\ledsetnormalparstuff@common}{%
   \ifluatex%
-     \textdir\footnote@luatextextdir%
+   \ifdefstring{\footnote@luatextextdir}{TLT}{}%
+   	{\textdir\footnote@luatextextdir}%
    \pardir\footnote@luatexpardir%
   \fi%
   \csuse{\csuse{footnote@dir}}%
