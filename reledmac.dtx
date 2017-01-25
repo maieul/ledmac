@@ -455,7 +455,7 @@
 % \changes{v2.17.0}{2016/12/23}{Add \protect\cs{edglsadd} command.}
 % \changes{v2.17.0}{2016/12/23}{Add \protect\cs{setmsdataposition} setting.}
 % \changes{v2.17.1}{2017/01/22}{Fix spurious space in paragraphed footnotes when using \protect\LuaLaTeX without using Right-To-Left text.}
-% \changes{v2.18.1}{2017/01/25}{Change log message when numbered files don't still exist, in order to improve compatibility with \protect\emph{latexmk}.}
+% \changes{v2.17.2}{2017/01/25}{Change log message when numbered files don't still exist, in order to improve compatibility with \protect\emph{latexmk}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3858,7 +3858,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/01/22 v2.17.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/01/25 v2.17.2 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4164,9 +4164,9 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\led@warn@NoLineFile}
+% \begin{macro}{\led@warn@NoFile}
 %    \begin{macrocode}
-\newcommand*{\led@warn@NoLineFile}[1]{%
+\newcommand*{\led@warn@NoFile}[1]{%
   \reledmac@warning{File `#1' not found}}
 %    \end{macrocode}
 % \end{macro}
@@ -4695,7 +4695,12 @@
   \fi
   \gdef\eled@sections@@{}%
   \if@noeled@sec\else%
-    \makeatletter\InputIfFileExists{\l@auxdir\jobname.eledsec\the\section@num}{}{}\makeatother%
+    \makeatletter%
+    \InputIfFileExists%
+      {\l@auxdir\jobname.eledsec\the\section@num}%
+      {}%
+      {\led@warn@NoFile{\l@auxdir\jobname.eledsec\the\section@num}}%
+    \makeatother%
     \immediate\openout\eled@sectioning@out=\l@auxdir\jobname.eledsec\the\section@num\relax%
   \fi%
 }
@@ -5770,7 +5775,7 @@
     \begingroup
       \catcode`\[=1 \catcode`\]=2
       \makeatletter \catcode`\^^M=9}{%
-    \led@warn@NoLineFile{\l@auxdir#1}%
+    \led@warn@NoFile{\l@auxdir#1}%
     \global\noteschanged@true
     \begingroup}%
 }
