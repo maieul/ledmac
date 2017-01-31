@@ -456,6 +456,7 @@
 % \changes{v2.17.0}{2016/12/23}{Add \protect\cs{setmsdataposition} setting.}
 % \changes{v2.17.1}{2017/01/22}{Fix spurious space in paragraphed footnotes when using \protect\LuaLaTeX without using Right-To-Left text.}
 % \changes{v2.17.2}{2017/01/25}{Change log message when numbered files don't still exist, in order to improve compatibility with \protect\emph{latexmk}.}
+% \changes{v2.17.3}{2017/01/31}{Fix bug with \cs{doendnotesbysection}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3858,7 +3859,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/01/25 v2.17.2 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/01/31 v2.17.3 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4471,11 +4472,11 @@
 % Here, we define some commands which gobble their arguments.
 % \begin{macro}{\@gobblethree}
 % \begin{macro}{\@gobblefour}
-% \begin{macro}{\@gobblefive}
+% \begin{macro}{\@gobbleseven}
 %    \begin{macrocode}
 \providecommand*{\@gobblethree}[3]{}
 \providecommand*{\@gobblefour}[4]{}
-\providecommand*{\@gobblefive}[5]{}
+\providecommand*{\@gobbleseven}[7]{}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -12660,7 +12661,7 @@
     \def\l@d@section##1{%
       \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
         {\cslet{#1end}{\endprint}}%
-        {\cslet{#1end}{\@gobblefive}}%
+        {\cslet{#1end}{\@gobbleseven}}%
     }%
     \input\l@auxdir\jobname.#1end%
     \global\Xendinsertsep@false%
@@ -13375,11 +13376,11 @@
 % When we process this file, we want to pick out the notes of one
 % series and ignore all the rest. To do that, we equate the \verb"end"
 % command for the series we want to \protect\cs{endprint}, and leave the
-% rest equated to \protect\cs{@gobblefive}, which just skips over its five
+% rest equated to \protect\cs{@gobbleseven}, which just skips over its seven
 % arguments.
 %    \begin{macrocode}
 
-      \global\cslet{#1end}{\@gobblefive}
+      \global\cslet{#1end}{\@gobbleseven}
 %    \end{macrocode}
 % We need to store the number of times \protect\cs{doendnotesbysection} is called for one series.
 %    \begin{macrocode}
