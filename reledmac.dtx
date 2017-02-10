@@ -457,6 +457,7 @@
 % \changes{v2.17.1}{2017/01/22}{Fix spurious space in paragraphed footnotes when using \protect\LuaLaTeX without using Right-To-Left text.}
 % \changes{v2.17.2}{2017/01/25}{Change log message when numbered files don't still exist, in order to improve compatibility with \protect\emph{latexmk}.}
 % \changes{v2.17.3}{2017/01/31}{Fix bug with \protect\cs{doendnotesbysection} and \protect\cs{doendnotes}.}
+% \changes{v2.17.4}{2017/02/10}{Fix bug with \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -2968,10 +2969,10 @@
 %  \setapprefprefixmore{lines~}
 % \end{verbatim}
 %
-% Note that if you have not used \protect\cs{setapprefprefixmore} is empty, argument of \protect\cs{setapprefprefixsingle} will used in any case.
+% Note that if you do not use \protect\cs{setapprefprefixmore}, argument of \protect\cs{setapprefprefixsingle} will be used in any case.
 %
 %
-% \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{setSErefprefixmore} 
+% \DescribeMacro{\setSErefprefixsingle}\DescribeMacro{\setSErefprefixmore} 
 % \cs{setSErefprefixsingle} and \cs{setSErefprefixmore} are similar for \cs{SEref} command.
 %
 % \DescribeMacro{\setSErefonlypageprefixsingle}
@@ -3859,7 +3860,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/01/31 v2.17.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/02/10 v2.17.4 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -14887,7 +14888,9 @@
 %    \end{macrocode}
 % And not \cs{setSErefonlypageprefixsingle} and \cs{setSErefonlypageprefixmore}. 
 %    \begin{macrocode}
-\let\setSErefonlypageprefixsingle\XendbeforepagenumberSErefonlypage%
+\newcommand{\setSErefonlypageprefixsingle}[1]{%
+  \gdef\SErefonlypage@prefixsingle{#1}%
+}%
 \newcommand{\setSErefonlypageprefixmore}[1]{%
   \gdef\SErefonlypage@prefixmore{#1}%
 }%
@@ -14973,6 +14976,9 @@
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}% 
    {\ifnumequal{\xpageref{#2:end}}{\xpageref{#2:start}}%
        {%
+       \ifcsvoid{#3onlypage@prefixsingle}%
+         {}%
+         {\csletcs{Xendbeforepagenumber@#3onlypage}{#3onlypage@prefixsingle}}%
        \printnpnum{%
          \wrap@edcrossref{#2:start}{\xpageref{#2:start}}%
          }%
