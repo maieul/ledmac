@@ -280,11 +280,25 @@
 % \changes{v2.12.0}{2016/07/01}{Fix bug with \protect\cs{AtBeginPairs}.}
 % \changes{v2.13.0}{2016/07/22}{Compatibility with the new features of \protect\macpackage 2.15.0}
 % \changes{v2.13.1}{2016/09/26}{Simplification of the code concerning the sectioning command}
-% \changes{v2.14.0}{2016/10/02}{New commands to have specific line margins for text in parallel columns}
+% \changes{v2.14.0}{2016/10/02}{New commands to have specific line margins for text running in parallel columns}
 % \changes{v2.14.0}{2016/10/02}{Add \protect\cs{linenumberlistR}, equivalent to \protect\cs{linenumberlist} for the right side.}
 % \changes{v2.14.0}{2016/10/02}{When indexing texts in sidenotes with \protect\cs{edtext}, referring to the line number where the sidenote is called.}
-% \changes{v2.14.0}{2016/10/02}{More explicit error message when missing to define stanza indent.}
-% \changes{v2.14.0}{2016/10/02}{Error message when missing to define left / right side.}
+% \changes{v2.14.0}{2016/10/02}{More explicit error message when the stanza indentation is not defined.}
+% \changes{v2.14.0}{2016/10/02}{Error message when left / right side are not defined.}
+% \changes{v2.14.1}{2016/10/16}{Fix bug with vertical space before sectioning command in optional argument of \protect\cs{pstart} (bug added in v2.13.1).}
+% \changes{v2.14.1}{2016/10/16}{Fix bug when using \protect\cs{markboth} on \protect\cs{doinsidelineLhook} and \protect\cs{doinsidelineRhook}.}
+% \changes{v2.14.2}{2016/10/31}{Fix spurious space with \protect\cs{edtextlater}.}
+% \changes{v2.14.3}{2016/11/04}{Fix bug in \protect\cs{edtextnow}.}
+% \changes{v2.14.4}{2016/11/14}{Take into account \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
+% \changes{v2.15.0}{2016/12/12}{Add \protect\option{movecolumnspositiononrightpage} option.}
+% \changes{v2.15.0}{2016/12/12}{New macro \protect\cs{sidenotemarginR}, fix default value to right.}
+% \changes{v.2.15.0}{2016/12/12}{Fix bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
+% \changes{v2.15.0}{2016/12/12}{Fix bug about space before sectioning commands after a pairs environment (bug added in v.~2.14.4).}
+% \changes{v2.15.0}{2016/12/12}{Fix bug with page break when using \protect\cs{columns} (bug added in v.~2.14.1).}
+% \changes{v2.16.0}{2016/12/23}{Compatibility with \protect\cs{setmsdataposition}}
+% \changes{v2.16.1}{2017/01/03}{Restore sidenotes on left side, deleted by mistake on v2.16.0}
+% \changes{v2.16.2}{2017/01/25}{Change log message when numbered files don't still exist, in order to improve compatibility with \protect\emph{latexmk}.}
+% \changes{v2.16.3}{2017/02/10}{Fix bug when setting \protect\cs{aftercolumnseparator}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -401,6 +415,8 @@
 %    \item [prevpgnotnumbered] enables that the page before facing pages (the one
 %       automatically inserted to start parallel pages on a left page) is not
 %       counted. This applies only if the page is empty.
+%    \item[movecolumnspositiononrightpage] make the left column on the right page become the right column, and the left column become the right column.
+% It allows to have a text running on the inner column, and an other one on the outer column.
 % \end{description}
 % 
 %
@@ -564,7 +580,13 @@
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
+% \section{Keeping translation in the outside/inside column}
+% By default, \parpackage works with left and right columns.
+% However, it is possible to work with inner and outer column.
+% In this case, use the \option{movecolumnspositiononrightpage} at loading time of the package.
 %
+% The \env{Leftside} environment will correspond to the inner column, and the \env{Rightside} environment will correspond to the outer column.
+% 
 % \section{Facing pages}\label{pages}
 % \subsection{Basic usage}
 % \DescribeEnv{pages}
@@ -1048,6 +1070,17 @@
 % selection for the side. The right side language is also
 % applied to the right side line numbers.
 %
+% \subsection{Executing code at each line}
+% \DescribeMacro{\dolineLhook}
+% \DescribeMacro{\dolineRhook}
+% \cs{dolineLhook} and \cs{dolineRhook} are the equivalent to the \macpackage \cs{dolinehook}, respectively for left and right side.
+%
+% \DescribeMacro{\doinsidelineLhook}
+% \DescribeMacro{\doinsidelineRhook}
+% \cs{doinsidelineLhook} and \cs{doinsidelineRhook} are the equivalent to the \macpackage \cs{doinsidelinehook}, for the left and the right sides respectively.
+% 
+% About these two hooks, read \macpackage's handbook (\reff{reledmac-linehook}).
+%
 % \section{Verse}
 %
 % If you are typesetting verses with \macpackage you can use the \protect\cs{stanza}
@@ -1069,8 +1102,8 @@
 % To use \env{astanza}, simply replace \cs{stanza} by \cs{begin}\arg{astanza} and
 % add \cs{end}\arg{astanza} after the ending \expandafter\cs\expandafter{\&}.
 %
-% The difference between \env{astanza} and \cs{stanza} is, that the letter syncs
-% verse by verse, while the enviornment syncs stanza by stanza.
+% The difference between \env{astanza} and \cs{stanza} is, that the latter syncs
+% verse by verse, while the environment syncs stanza by stanza.
 %
 %    If you get an error message along the lines of `Missing number, 
 % treated as zero \protect\cs{sza@0@}' it is because you have forgotten to use
@@ -1105,6 +1138,9 @@
 % As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouterote}, \protect\cs{ledinnerrote}.
 % 
 % The \protect\cs{sidenotemargin} defines the margin of the sidenote for either left or right side, depending on the current environment.
+% 
+% The \cs{sidenotemarginR} defines the margin of the sidenote for the right side.
+%
 % You can use \protect\cs{sidenotemargin*} to define it for both sides.
 % \section{Parallel ledgroups}
 % \subsection{General}
@@ -1218,7 +1254,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2016/10/02 v2.14.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/02/10 v2.16.3 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1282,6 +1318,16 @@
   \nomaxlinestrue%
   \nosyncpstartstrue%
   \apptocmd{\@par@this@sync@option}{nosync}{}{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \subsubsection{Position option}
+% \begin{macro}{\ifmovecolumnspositiononrightpage}
+% The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for a right page, we want the left column become a right column and the right column become a left column. 
+%    \begin{macrocode}
+\newif\ifmovecolumnspositiononrightpage%
+\DeclareOptionX{movecolumnspositiononrightpage}{%
+ \movecolumnspositiononrightpagetrue%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1439,13 +1485,13 @@
 % \begin{macro}{\led@err@Columns@WithoutLeftside}
 %    \begin{macrocode}
 \newcommand*{\led@err@Pages@WithoutRightside}{%
-  \reledpar@error{\string\Pages\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Pages\space called without any preceding `Rightside` environment (or environment without content)}{\@ehc}}%
 \newcommand*{\led@err@Pages@WithoutLeftside}{%
-  \reledpar@error{\string\Pages\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Pages\space called without any preceding `Leftside` environment (or environment without content)}{\@ehc}}%
   \newcommand*{\led@err@Columns@WithoutRightside}{%
-  \reledpar@error{\string\Columns\space called without previous `Rightside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Columns\space called without any preceding `Rightside` environment (or environment without content)}{\@ehc}}%
 \newcommand*{\led@err@Columns@WithoutLeftside}{%
-  \reledpar@error{\string\Columns\space called without previous `Leftside` environment (or environment without content)}{\@ehc}}%
+  \reledpar@error{\string\Columns\space called without any preceding `Leftside` environment (or environment without content)}{\@ehc}}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1555,9 +1601,9 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\ifcsboxvoid}
-% The \cs{ifcsboxvoid} is a complement to the \package{etoolbox} package. 
-% The first argument is a box name, the second is a the \meta{true} value, the third the \meta{false} value.
-% If the first argument refers to a not existing box, or if it refers to a void box, the \meta{true} value is returned. In other case, the \meta{false} is returned.
+% The \cs{ifcsboxvoid} command comes on top of the \package{etoolbox} package. 
+% The first argument is a box name, the second is the \meta{true} value, the third the \meta{false} value.
+% If the first argument refers to a non-existing box, or if it refers to a box that is void, the \meta{true} value is returned. otherwise, \meta{false} is returned.
 %    \begin{macrocode}
 \newcommand*{\ifcsboxvoid}[1]{%
   \ifcsname#1\endcsname%
@@ -1646,6 +1692,8 @@
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
   \global\stopmsdata@inserted@true%
+  \global\let\@msdata@list\relax%
+  \global\csundef{@msdata@\add@msd@cR @dataR}%
   \set@continuousnumberingforR%
   \message{Section \the\section@numR R }%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
@@ -1655,7 +1703,12 @@
   \initnumbering@sectcountR
   \gdef\eled@sectionsR@@{}%
   \if@noeled@sec\else%
-    \makeatletter\InputIfFileExists{\jobname.eledsec\the\section@numR R}{}{}\makeatother%
+    \makeatletter%
+    	\InputIfFileExists%
+			{\l@auxdir\jobname.eledsec\the\section@numR R}%
+    	{}%
+			{\led@warn@NoFile{\l@auxdir\jobname.eledsec\the\section@numR R}}%
+	  \makeatother%
     \immediate\openout\eled@sectioningR@out=\l@auxdir\jobname.eledsec\the\section@numR R\relax%
   \fi%
 }
@@ -1936,6 +1989,10 @@
     \global\line@margin=\@l@dtempcntb%
   \fi%
 }
+\ifmovecolumnspositiononrightpage%
+  \linenummargin{inner}%
+  \linenummarginR{outer}%
+\fi%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -3290,6 +3347,12 @@
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
 \newcommandx*{\pstartL}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
   \ifluatex%
     \xdef\l@luatextextdir@L{\the\textdir}%
     \xdef\l@luatexpardir@L{\the\pardir}%
@@ -3362,6 +3425,12 @@
 % 
 %    \begin{macrocode}
 \newcommandx*{\pstartR}[1][1]{%
+  \if@nobreak%
+    \let\@oldnobreak\@nobreaktrue%
+  \else%
+    \let\@oldnobreak\@nobreakfalse%
+  \fi%
+    \@nobreaktrue%
   \ifluatex%
     \xdef\l@luatextextdir@R{\the\textdir}%
     \xdef\l@luatexpardir@R{\the\pardir}%
@@ -3438,6 +3507,7 @@
 %    \begin{macrocode}
   \endgroup%
   \ignorespaces%
+  \@oldnobreak%
   \dump@pstartL@pc%
   \ifnumberpstart%
     \addtocounter{pstartL}{1}%
@@ -3470,6 +3540,7 @@
   \global\par@lineR=0%
   \endgroup%
   \ignorespaces%
+  \@oldnobreak%
   \dump@pstartR@pc%  
   \ifnumberpstart%
     \addtocounter{pstartR}{1}%
@@ -3595,9 +3666,15 @@
             \set@Xtxtbeforenotes%
             \global\@firstlineofpagefalse%
           \fi%
-          \insert@msdata%
-          \add@inserts%
-          \add@Xgroupbyline%
+          \ifdefstring{\ms@data@position}{msdata-regular}{%
+            \insert@msdata%
+            \add@inserts%
+            \add@Xgroupbyline%
+          }{%
+            \add@inserts%
+            \add@Xgroupbyline%
+            \insert@msdata%
+          }%
           \affixside@note%
         }%
         {\print@lineL}%
@@ -3638,13 +3715,19 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpagefalse%
     \fi%
-    \insert@msdata%
-    \add@inserts%
-    \add@Xgroupbyline%
-    \affixside@note%
+    \ifdefstring{\ms@data@position}{msdata-regular}{%
+      \insert@msdata%
+      \add@inserts%
+      \add@Xgroupbyline%
+    }{%
+      \add@inserts%
+      \add@Xgroupbyline%
+      \insert@msdata%
+    }%
+    \affixside@note%  
     \l@dlsn@te%
+    \do@insidelineLhook%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
-            \do@insidelineLhook%
             \ifluatex%
               \textdir\l@luatextextdir@L%
             \fi%
@@ -3665,6 +3748,7 @@
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
     \numdef{\temp@}{\l@dpscL-1}%
+    \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
@@ -3695,7 +3779,7 @@
 % \begin{macro}{\doinsidelineRhook}
 % \changes{v1.8.3}{2014/08/31}{Added \protect\cs{dolineLhook}, \protect\cs{dolineRhook}, \protect\cs{doinsidelineLhook} and \protect\cs{doinsidelineRhook}}
 % These high-level commands just redefine the low-level commands. 
-% They have to be used be user, without \protect\cs{makeatletter}.
+% They have to be used by user, without \protect\cs{makeatletter}.
 %    \begin{macrocode}
 \newcommand*{\dolineLhook}[1]{\gdef\do@lineLhook{#1}}%
 \newcommand*{\dolineRhook}[1]{\gdef\do@lineRhook{#1}}%
@@ -3769,9 +3853,15 @@
            \set@Xtxtbeforenotes%
            \global\@firstlineofpageRfalse%
          \fi%
-         \insert@msdata%
-         \add@insertsR%
-         \add@Xgroupbyline%
+         \ifdefstring{\ms@data@position}{msdata-regular}{%
+            \insert@msdata%
+            \add@insertsR%
+            \add@Xgroupbyline%
+         }{%
+            \add@insertsR%
+            \add@Xgroupbyline%
+            \insert@msdata%
+         }%
          \affixside@noteR%
        }%
        {\print@lineR}%
@@ -3814,13 +3904,19 @@
       \set@Xtxtbeforenotes%
       \global\@firstlineofpageRfalse%
     \fi%
-    \insert@msdata%
-    \add@insertsR%
-    \add@Xgroupbyline%
+    \ifdefstring{\ms@data@position}{msdata-regular}{%
+      \insert@msdata%
+      \add@insertsR%
+      \add@Xgroupbyline%
+    }{%
+      \add@insertsR%
+      \add@Xgroupbyline%
+      \insert@msdata%
+    }%
     \affixside@noteR%
     \l@dlsn@te%
+    \do@insidelineRhook%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
-       \do@insidelineRhook%
        \new@lineR%
        \inserthangingsymbolR%
        \ifluatex%
@@ -3828,7 +3924,8 @@
        \fi%
        \l@dunhbox@line{\one@lineR}}\ledrlfill\l@drd@ta%
      \l@drsn@te%
-  }}
+    }%
+}
 
 \def\print@eledsectionR{%
     \addtocounter{pstartR}{-1}%
@@ -3836,6 +3933,7 @@
     \ifdefstring{\@eledsectnotoc}{R}{\ledsectnotoc}{}%
     \ifdefstring{\@eledsectmark}{R}{}{\ledsectnomark}%
     \numdef{\temp@}{\l@dpscR-1}%
+    \xifinlist{\temp@}{\eled@sectionsR@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
       \ifluatex%
@@ -4558,8 +4656,8 @@
       {%
       \unexpanded{%
         \lemma{\no@expands #1}%
-        \xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
       }%
+        \noexpand\xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
       \noexpand\linenum{||||||\edfont@info}%
       \unexpanded{\def\sw@inthisedtext}{\expandonce{\sw@inthisedtext}}%
 %    \end{macrocode}
@@ -4591,7 +4689,7 @@
            \write\linenum@out{\string\@lemma}%
          \fi%
     }%
-    \renewcommand{\do}[1]{\expandafter\renewcommandx\csname ##1footnote\endcsname[2][1,usedefault]{}}%
+    \renewcommand{\do}[1]{\expandafter\renewcommandx\csname ##1footnote\endcsname[2][1,usedefault]{}\unskip}%\unskip because of a spurious space in \newcommandx
     \dolistloop{\@series}%
     #2%
   \egroup%
@@ -4646,6 +4744,8 @@
     \led@warn@DuplicateLabel{\csuse{XR@prefix}#5}%
   \fi
   \expandafter\gdef\csname the@label\csuse{XR@prefix}#5\endcsname{#1|#2|#3|#4|\@Rlineflag}%
+  \global\providetoggle{label@#5@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
+  \global\toggletrue{label@#5@ledRcol}%
   \ignorespaces}
 \AtBeginDocument{%
   \def\l@dmake@labelsR#1|#2|#3|#4|#5{}%
@@ -4674,6 +4774,7 @@
 % the text.
 % \begin{macro}{\sidenote@marginR}
 % \begin{macro}{\sidenotemargin*}
+% \begin{macro}{\sidenotemarginR}
 % \changes{v1.8.0}{2014/08/05}{\protect\cs{sidenotemargin} is now directly defined in \protect\package{eledmac} to be able to manage \protect\package{eledpar}.}
 % \changes{v1.8.0}{2014/08/05}{Add \protect\cs{sidenotemargin*}}
 % Specifies which margin sidenotes can be in.
@@ -4683,10 +4784,20 @@
   \global\sidenote@marginR=\@l@dtempcntb
   \global\sidenote@margin=\@l@dtempcntb
 }
+\newcommand{\sidenotemarginR}[1]{%
+  \l@dgetsidenote@margin{#1}%
+  \global\sidenote@marginR=\@l@dtempcntb%
+}%
 \newcount\sidenote@marginR
-\global\sidenote@margin=\@ne
+\global\sidenote@marginR=\@ne%
+
+\ifmovecolumnspositiononrightpage%
+  \sidenotemargin{inner}%
+  \sidenotemarginR{outer}%
+\fi%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -5330,15 +5441,9 @@
                 {}%
           \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
-            \unhbox\l@dleftbox%
-            \ifhbox\@eledsectionL%
-               \usebox{\@eledsectionL}%
-            \fi%
+            \print@leftcolumn%
             \print@columnseparator%
-            \unhbox\l@drightbox%
-            \ifhbox\@eledsectionR%
-              \usebox{\@eledsectionR}%
-            \fi%
+            \print@rightcolumn%
             \ifdefstring{\columns@position}{R}{}{\hfill}%
           }%
           \checkraw@text
@@ -5403,10 +5508,67 @@
   \ifdim\aftercolumnseparator<0pt%
     \hfill%
   \else%
-    \hspace{\beforecolumnseparator}%
+    \hspace{\aftercolumnseparator}%
   \fi%
 }%
 %\end{macrocode}
+% \end{macro}
+% \begin{macro}{\print@leftcolumn}
+% \begin{macro}{\print@rightcolumn}
+% \cs{print@leftcolumn} and \cs{print@rightcolumn} print the line number of the left or right column respectively. 
+% Normally, it is defined by the content of the \env{Leftside} or \env{Rightside} environments. 
+% But if \cs{movecolumnspositiononrightpage} is set to TRUE, it also depends on the page number.
+%    \begin{macrocode}
+\newcommand{\print@leftcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+    {%
+       \unhbox\l@drightbox%
+       \ifhbox\@eledsectionR%
+         \usebox{\@eledsectionR}%
+       \fi%
+    }%
+}%
+
+
+\newcommand{\print@rightcolumn}{%
+  \if\page@num>\page@numR%
+    \@l@dtempcntb=\page@num%
+  \else%
+    \@l@dtempcntb=\page@numR%
+  \fi%
+  \ifboolexpr{%
+     not bool {movecolumnspositiononrightpage}%
+     or test {\ifnumodd{\@l@dtempcntb}}%
+    }%
+    {%
+      \unhbox\l@drightbox%
+      \ifhbox\@eledsectionR%
+        \usebox{\@eledsectionR}%
+      \fi%
+    }%
+    {%
+      \unhbox\l@dleftbox%
+      \ifhbox\@eledsectionL%
+         \usebox{\@eledsectionL}%
+      \fi%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\checkpb@columns}
 % \protect\cs{checkpb@columns} prevent or make pagebreaking in columns, depending of the use of \protect\cs{ledpb} or \protect\cs{lednopb}.

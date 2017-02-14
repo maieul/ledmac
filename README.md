@@ -78,13 +78,14 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 
 - Go to the [issues page](https://github.com/maieul/ledmac/issues).
 - Open *one issue for each problem*, even if problems are similar.
+- You can write or in English, or better, in French if it is your native language.
 - Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.
 - Once the problem has a possible solution, Maïeul Rouquette will ask you to test the new branch:
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
-		- Choose "Dowload zip" on the "Clone or download" menu, in the right side.
+		- Choose "Download zip" in the "Clone or download" menu, on the right side.
 		- Unzip the file
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).
