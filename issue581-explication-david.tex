@@ -1,0 +1,22 @@
+%https://tex.stackexchange.com/a/333373/7712
+%The problem is the tex--xet bidirectional model that xetex inherited from etex. right to left directionality isn't built in to the system at a low level the way it is in the model luatex inherited from omega, it is essentially a simple pass that reverses nodes (just) in horizontal boxes.
+
+%So in vertical mode (the file open and the first \write in your example, it's OK but the line of the paragraph with the later writes and the file close, the nodes are reversed, and so the file close happens first, which means the \write are writing to a closed file so just appear on the terminal and log.
+
+%One possible scheme would be
+
+\documentclass{article}
+\usepackage{bidi}
+\def\foo#1{\ifvmode#1\else\vadjust{#1}\fi}
+\begin{document}
+\showoutput
+\RTL
+\foo{\newwrite\toto}
+\openout\toto=\jobname.sty
+\foo{\write\toto{1}}ssss
+\foo{\write\toto{2}}ssss
+\foo{\write\toto{3}}ssss
+\foo{\closeout\toto}
+
+s
+\end{document}
