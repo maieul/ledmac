@@ -9440,9 +9440,8 @@
 % followed by a square bracket, the lemma, and the note text.
 % 
 %    \begin{macrocode}
-
-
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
+  \storelineinfo{#1}{#4}%
   \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
@@ -9869,6 +9868,7 @@
 % text of the footnote, and the fourth is the series (optional, for backward compatibility).
 %    \begin{macrocode}
 \newcommand*{\parafootfmt}[4]{%
+  \storelineinfo{#1}{#4}%
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
@@ -10505,6 +10505,23 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{Line number printing}
+% \begin{macro}{\storelineinfo}
+% The \cs{storelineinfo} macro is used to store some datas about line number of the current critical footnote, datas which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
+%
+% \#1 footnote specification for the current footnote ; 
+% \#2 footnote series.
+%    \begin{macrocode}
+\newcommand{\storelineinfo}[2]{%
+   \l@dp@rsefootspec#1|%
+   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
+       }%
+       {%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
+       }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlinefootnote}
 % The \protect\cs{printlinefootnote} macro is called in each \protect\cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
@@ -10513,13 +10530,6 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \l@dp@rsefootspec#1|%
-   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
-       }%
-       {%
-       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
-       }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
    }%
