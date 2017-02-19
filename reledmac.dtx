@@ -6728,6 +6728,49 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\flag@start@RTL}
+% \begin{macro}{\flag@end@RTL}
+% With \XeLaTeX, there is a problem when using RTL: the writing of command in the numbered auxiliary files (\verb+.1+, \verb+.2+ etc) is reversed when the first argument of \cs{edtext} is typset in one line, but is NOT reversed when this first argument is typset in two lines or more.\footnote{This problem is linked to the way \XeTeX\ manages right-to-left typsetting. David Carlisle explains it on \url{http://tex.stackexchange.com/a/333373/7712} and provides a potential solution, using \cs{vadjust}. However, in real test case, this add spurious vertical space in reledmac. That is why we use the solution explained below.}
+% 
+% To turn over this problem, we use crossref mechanism. At the first run, we put label, but we do not write any \cs{@ref} command. When the value of the label can be tested, that is after three runs, we do this thing:
+% \begin{itemize}
+%  \item If the first argument of \cs{edtext} is typeset on only one line, we first call \cs{flag@end}, at the point we normally call \cs{flag@start}, at the beginning of the content of the first argument,  and we call \cs{flag@end} at the point we normally call \cs{flag@start}, at the end of the content of the first argument.
+%  \item If the first argument of \cs{edtext} is typeset on only two lines, we use the normal order.
+% \end{itemize}
+% This system compensate the problem of order when writing in auxiliary files.
+%
+% The \cs{flag@start@RTL} and \cs{flag@end@RTL} macro put the label, do the test and call the right commands.
+%    \begin{macrocode}
+\newcommand{\flag@start@RTL}{%
+  \edlabel{edtext:start:\csuse{thisedtext@\the\@edtext@level}}%
+  \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+    {000}%
+    {}%
+    {%
+    \ifnumequal%
+      {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+      {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+      {\flag@end}%
+      {\flag@start}%
+  }%
+}%
+
+\newcommand{\flag@end@RTL}{%
+  \edlabel{edtext:end:\csuse{thisedtext@\the\@edtext@level}}%
+  \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+      {000}%
+      {}%
+      {%
+      \ifnumequal%
+        {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+        {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+        {\flag@start}%
+        {\flag@end}%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\flag@start@later}
 % \begin{macro}{\flag@end@later}
 % \protect\cs{flag@start@later} and \protect\cs{flag@end@later}: these send the\cs{@ref@later} to the line-list file
@@ -7166,9 +7209,12 @@
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
-% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded.
+% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded, and also to work with \cs{edtext} on right-to-left ypesetting with \XeLaTeX.
+% 
+% We store the value for the current level in a global macro. So we have one macro by level of \cs{edtext}. That is required, because \cs{edtext} can contain \cs{edtext}.
 %    \begin{macrocode}
       \stepcounter{edtext}%
+      \csxdef{thisedtext@\the\@edtext@level}{\theedtext}%
 %    \end{macrocode}
 % By default, we do not use \protect\cs{lemma}
 %    \begin{macrocode}
@@ -7239,7 +7285,7 @@
 % With \XeLaTeX, you must track whether the language reads left to right (English) or right to left (Arabic). \reledmac defines an \cs{if@RTL} boolean test is not already defined.
 %    \begin{macrocode}
         \if@RTL%
-          \flag@end%
+          \flag@start@RTL%
         \else%
           \flag@start%
         \fi%
@@ -7267,7 +7313,6 @@
       \endgroup%
       \ifdef{\hypertarget}%
         {%
-        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%We need one macro by level, as #1 can contain new \edtext
         \Hy@raisedlink@left{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
         \showlemma{#1}%
         \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
@@ -7290,7 +7335,7 @@
         \global\let\x@lemma=\relax%
       \fi%
       \if@RTL%
-        \flag@start%
+        \flag@end@RTL%
       \else%
         \flag@end%
       \fi%
