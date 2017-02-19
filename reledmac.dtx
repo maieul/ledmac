@@ -459,6 +459,7 @@
 % \changes{v2.17.3}{2017/01/31}{Fix bug with \protect\cs{doendnotesbysection} and \protect\cs{doendnotes}.}
 % \changes{v2.17.4}{2017/02/10}{Fix bug with \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}.}
 % \changes{v2.17.5}{2017/02/12}{Fix bug with \protect\cs{pstartref} when refering to the left side of a parallel typesetting.}
+% \changes{v2.17.6}{2017/02/20}{Fix bug when using both \protect\cs{Xnumberonlyfirstintwolines} or \protect\cs{Xnumberonlyfirstinline} and \protect\cs{Xparafootsep} and \protect\cs{Xsymlinenum}.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3163,12 +3164,16 @@
 % renew |\pagelinesep| to get a different separator.
 % 
 % |-| is the default
-% separator used by the \textsc{MakeIndex} program.
+% separator used by the \textsc{MakeIndex} program. 
 % 
-% Consequently, if you want to use an other \protect\cs{pagelinesep}, you have to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
+% You can reconfigure, for example to get a comma:
+% \begin{verbatim}
+% \renewcommand{\pagelinesep}{:}
+% \end{verbatim}
+% 
+% However, you must also to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
 % \begin{verbatim}
 % page_compositor ":"
-% delim_r ":"
 % \end{verbatim}
 %
 % Read the \textsc{MakeIndex} program's handbook about the \verb+.ist+ file. 
@@ -3768,7 +3773,7 @@
 % you must load this package \emph{before} the \macpackage package.
 % 
 
-% \subsubsection{Parallel typesetting}\label{eledpar}
+% \subsection{Parallel typesetting}\label{eledpar}
 %
 %
 % Peter Wilson has developed the \ledpar package
@@ -3861,7 +3866,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/02/12 v2.17.5 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/02/20 v2.17.6 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9487,9 +9492,8 @@
 % followed by a square bracket, the lemma, and the note text.
 % 
 %    \begin{macrocode}
-
-
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
+  \Xstorelineinfo{#1}{#4}%
   \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
@@ -9916,6 +9920,7 @@
 % text of the footnote, and the fourth is the series (optional, for backward compatibility).
 %    \begin{macrocode}
 \newcommand*{\parafootfmt}[4]{%
+  \Xstorelineinfo{#1}{#4}%
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
@@ -10022,22 +10027,22 @@
 \newcommand{\Xinsertparafootsep}[1]{%
    \ifledRcol@%
      \ifnumequal{\csuse{#1prevpage@numR}}{\page@numR}%
-          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
-        {\ifnumequal{\csuse{prevline#1}}{\line@numR}%
-           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
-           {\csuse{Xparafootsep@#1}}%
-        }%
-        {\csuse{Xparafootsep@#1}}%
+        {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+          {\ifcsequal{prevline#1}{lineinfo@}%
+             {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+             {\csuse{Xparafootsep@#1}}%
+          }%
+          {\csuse{Xparafootsep@#1}}%
      }%
      {}%
      \global\csname #1prevpage@numR\endcsname=\page@numR%
    \else%
      \ifnumequal{\csuse{#1prevpage@num}}{\page@num}%
-          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
-        {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
-           {\csuse{Xparafootsep@#1}}%
-        }%
+        {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+          {\ifcsequal{prevline#1}{lineinfo@}%
+             {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+             {\csuse{Xparafootsep@#1}}%
+          }%
         {\csuse{Xparafootsep@#1}}%
      }%
      {}%
@@ -10552,6 +10557,23 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{Line number printing}
+% \begin{macro}{\Xstorelineinfo}
+% The \cs{Xstorelineinfo} macro is used to store some datas about line number of the current critical footnote, datas which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
+%
+% \#1 footnote specification for the current footnote ; 
+% \#2 footnote series.
+%    \begin{macrocode}
+\newcommand{\Xstorelineinfo}[2]{%
+   \l@dp@rsefootspec#1|%
+   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
+       }%
+       {%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
+       }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlinefootnote}
 % The \protect\cs{printlinefootnote} macro is called in each \protect\cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
@@ -10560,13 +10582,6 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \l@dp@rsefootspec#1|%
-   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
-       }%
-       {%
-       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
-       }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
    }%
@@ -12566,10 +12581,10 @@
 \newcommand{\printlineendnote}[2]{%
   \l@dp@rsefootspec#1|%
   \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
        }%
        {%
-       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
        }%
   \ifboolexpr{%
     togl {nonum@}%
