@@ -14350,7 +14350,7 @@
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
     \ifXnote@%
      \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1}}%
       \ifdef{\hypertarget}%
         {\Hy@raisedlink{\hypertarget{#1}{}}}%
         {}%
@@ -14379,13 +14379,13 @@
     \ifXnote@%
        \ifl@dpairing%pstart or pstartL?
          \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartL|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
         \else%
           \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
@@ -14431,19 +14431,23 @@
 %    \begin{macrocode}
 \newcounter{line}%
 \newcounter{subline}%
+\newcounter{absline}%
 \newcommand{\advancelabel@refs}{%
     \setcounter{line}{\expandafter\labelrefsparseline\label@refs}%
     \stepcounter{line}%
+    \setcounter{absline}{\expandafter\labelrefsparseabsline\label@refs}%
+    \stepcounter{absline}%
     \ifsublines@%
         \setcounter{subline}{\expandafter\labelrefsparsesubline\label@refs}%
         \stepcounter{subline}{1}%
-        \def\label@refs{\theline|\thesubline}%
+        \def\label@refs{\theline|\thesubline|\theabsline}%
     \else%
-        \def\label@refs{\theline|0}%
+        \def\label@refs{\theline|0|\theabsline}%
     \fi%
 }
-\def\labelrefsparseline#1|#2{#1}
-\def\labelrefsparsesubline#1|#2{#2}
+\def\labelrefsparseline#1|#2|#3{#1}%
+\def\labelrefsparsesubline#1|#2|#3{#2}%
+\def\labelrefsparseabsline#1|#2|#3{#3}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -14458,16 +14462,18 @@
 % The initial use of \protect\cs{newcommand} is to catch if \protect\cs{l@dmake@labels}
 % has been previously defined (by a class or package).
 %
-% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ pstart number, \verb+#5+ label.
+% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ pstart number, \verb+#6+ label.
 %
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4|#5{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#5\endcsname \relax\else
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#5}%
+\def\l@dmake@labels#1|#2|#3|#4|#5|#6{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+    \relax%
+  \else%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
   \fi
-  \global\providetoggle{label@#5@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#5\endcsname{#1|#2|#3|#4|\relax}%
+  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
+  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -14479,15 +14485,16 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4|#5{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5|#6{}%
 }
 
 %    \end{macrocode}
 %
 % \begin{macro}{\@lab}
 % The \protect\cs{@lab} command, which appears in the \protect\cs{linenum@out} file,
-% appends the current values of page, line and sub-line to the
-% \protect\cs{labelref@list}. These values are defined by the earlier
+% appends the current values of page, line, sub-line, and absolute line to the
+% \protect\cs{labelref@list}. 
+% These values are defined by the earlier
 % \protect\cs{@page}, \protect\cs{@nl}, and the \protect\cs{sub@on} and \protect\cs{sub@off} commands
 % appearing in the \protect\cs{linenum@out} file.
 %
@@ -14505,11 +14512,11 @@
 \newcommand*{\@lab}{%
   \ifledRcol
     \xright@appenditem{\linenumr@p{\line@numR}|%
-      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi}%
+      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|\the\absline@numR}%
       \to\labelref@listR
   \else
     \xright@appenditem{\linenumr@p{\line@num}|%
-      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi}%
+      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|\the\absline@num}%
       \to\labelref@list
   \fi}
 %    \end{macrocode}
@@ -14541,29 +14548,29 @@
 %    \begin{macrocode}
       \ifledRcol%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1:start}}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1:start}}%
         \ifdef{\hypertarget}%
           {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
           {}%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
       \else%
         \ifl@dpairing%pstart or pstartL?
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartL|{#1:start}}%
+            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1:start}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
             {}%
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartL|{#1:end}}%
+            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstartL|{#1:end}}%
          \else%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1:start}}%
+              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1:start}}%
             \ifdef{\hypertarget}%
               {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
               {}%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
+              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstart|{#1:end}}%
          \fi%
       \fi%
 %    \end{macrocode}
@@ -14678,12 +14685,19 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\xabslineref}
+% If the specified label exists, \cs{xabslineref} give its absolute line number.
+% That is used, normally, uniquely by some \reledmac\ internal macros.
+%    \begin{macrocode}
+\newcommand*{\xabslineref}[1]{\l@dgetref@num{4}{#1}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\pstarteref}
 % \begin{macro}{\xpstartref}
 % If the specified label exists, \protect\cs{pstartref} gives its pstart number.
 %    \begin{macrocode}
-\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{4}{#1}}}
-\newcommand*{\xpstartref}[1]{\l@dgetref@num{4}{#1}}
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{5}{#1}}}%
+\newcommand*{\xpstartref}[1]{\l@dgetref@num{5}{#1}}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -14691,7 +14705,7 @@
 % \begin{macro}{\xflagref}
 % \cs{xflagref} finds the side flag of any ref defined with \cs{edlabel}.
 %    \begin{macrocode}
-\newcommand*{\xflagref}[1]{\l@dgetref@num{5}{#1}}
+\newcommand*{\xflagref}[1]{\l@dgetref@num{6}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % The next three macros are used by the referencing commands above,
@@ -14740,18 +14754,19 @@
 % which extracts the appropriate number from its first arguments.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, 3 or 4) which defines which of the earlier fiver numbers to
+% 2, 3, 4 or 5) which defines which of the earlier six numbers to
 % pick out. (It was earlier given as the first argument of
 % \protect\cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4|#5|#6{%
-  \ifcase #6%
+\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7{%
+  \ifcase #7%
   \or #1%
   \or #2%
   \or #3%
   \or #4%
   \or #5%
+  \or #6%
   \fi}
 %    \end{macrocode}
 % \end{macro}
