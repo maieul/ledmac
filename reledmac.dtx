@@ -459,6 +459,8 @@
 % \changes{v2.17.3}{2017/01/31}{Fix bug with \protect\cs{doendnotesbysection} and \protect\cs{doendnotes}.}
 % \changes{v2.17.4}{2017/02/10}{Fix bug with \protect\cs{setSErefonlypageprefixsingle} and \protect\cs{setSErefonlypageprefixmore}.}
 % \changes{v2.17.5}{2017/02/12}{Fix bug with \protect\cs{pstartref} when refering to the left side of a parallel typesetting.}
+% \changes{v2.18.0}{2017/02/22}{Fix bug when using both \protect\cs{Xnumberonlyfirstintwolines} or \protect\cs{Xnumberonlyfirstinline} and \protect\cs{Xparafootsep} and \protect\cs{Xsymlinenum}.}
+% \changes{v2.18.0}{2017/02/22}{Fix bug when using a \protect\cs{edtext} in two lines or more in right-to-left typesetting with \protect\XeLateX.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -695,12 +697,13 @@
 % Please add your own edition made with (r)(e)ledmac.
 %
 % If you write book or article about (r)(e)ledmac, please add it on the collaborative bibliography on \url{https://www.zotero.org/groups/articles_and_books_about_reledmac/items}.
-% \section{How the package works}\label{howto}
+% \section{How the package works --- the problem of the number of runs}\label{howto}
 % The \macpackage package is a three-pass package like \LaTeX\ itself. 
 % Although your textual apparatus and line
 % numbers will be printed on the first run, it takes two more
 % passes through \LaTeX\ to be sure that everything is correctly
-% placed. If you make any subsequent changes altering the number
+% placed, and one more if you typeset right-to-left text with \XeLaTeX. 
+% If you make any subsequent changes altering the number
 % of lines or notes, the input file may similarly
 % require three passes to get everything to the right place.
 % \Macpackage will tell you that you need to make more runs when it detects changes,
@@ -708,9 +711,10 @@
 % problems with a line or two misnumbered at the top of a page, try
 % running \LaTeX\ once or twice more.
 %
+% \textbf{However, the best way to be sure that one has made the right number of runs 
+% is to use some of \LaTeX's run scripts like \emph{latexmk}}.
+%
 % \section{Compatibility warning}
-% However, the best way to be sure that one has made the right number of runs 
-% is to use some of \LaTeX's run scripts like \emph{latexmk}.
 %
 % If you use other classes than \cs{article} or \cs{book}, or modify the layout with \package{geometry}, some settings should be made to have correct height for the blocks of notes.
 %
@@ -3164,12 +3168,16 @@
 % renew |\pagelinesep| to get a different separator.
 % 
 % |-| is the default
-% separator used by the \textsc{MakeIndex} program.
+% separator used by the \textsc{MakeIndex} program. 
 % 
-% Consequently, if you want to use an other \protect\cs{pagelinesep}, you have to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
+% You can reconfigure, for example to get a comma:
+% \begin{verbatim}
+% \renewcommand{\pagelinesep}{:}
+% \end{verbatim}
+% 
+% However, you must also to configure your \verb+.ist+ index style file. For example if you use \verb+:+ as separator\footnote{For further detail, you can read \url{http://tex.stackexchange.com/a/32783/7712}.}.
 % \begin{verbatim}
 % page_compositor ":"
-% delim_r ":"
 % \end{verbatim}
 %
 % Read the \textsc{MakeIndex} program's handbook about the \verb+.ist+ file. 
@@ -3769,7 +3777,7 @@
 % you must load this package \emph{before} the \macpackage package.
 % 
 
-% \subsubsection{Parallel typesetting}\label{eledpar}
+% \subsection{Parallel typesetting}\label{eledpar}
 %
 %
 % Peter Wilson has developed the \ledpar package
@@ -3862,7 +3870,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/02/12 v2.17.5 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/02/22 v2.18.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6592,7 +6600,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them. 
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{5}%
+\newcommand{\this@line@list@version}{6}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -6727,6 +6735,49 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\flag@start@RTL}
+% \begin{macro}{\flag@end@RTL}
+% With \XeLaTeX, there is a problem when using RTL: the writing of command in the numbered auxiliary files (\verb+.1+, \verb+.2+ etc) is reversed when the first argument of \cs{edtext} is typset in one line, but is NOT reversed when this first argument is typset in two lines or more.\footnote{This problem is linked to the way \XeTeX\ manages right-to-left typsetting. David Carlisle explains it on \url{http://tex.stackexchange.com/a/333373/7712} and provides a potential solution, using \cs{vadjust}. However, in real test case, this add spurious vertical space in reledmac. That is why we use the solution explained below.}
+% 
+% To turn over this problem, we use crossref mechanism. At the first run, we put label, but we do not write any \cs{@ref} command. When the value of the label can be tested, that is after three runs, we do this thing:
+% \begin{itemize}
+%  \item If the first argument of \cs{edtext} is typeset on only one line, we first call \cs{flag@end}, at the point we normally call \cs{flag@start}, at the beginning of the content of the first argument,  and we call \cs{flag@end} at the point we normally call \cs{flag@start}, at the end of the content of the first argument.
+%  \item If the first argument of \cs{edtext} is typeset on only two lines, we use the normal order.
+% \end{itemize}
+% This system compensate the problem of order when writing in auxiliary files.
+%
+% The \cs{flag@start@RTL} and \cs{flag@end@RTL} macro put the label, do the test and call the right commands.
+%    \begin{macrocode}
+\newcommand{\flag@start@RTL}{%
+  \edlabel{edtext:start:\csuse{thisedtext@\the\@edtext@level}}%
+  \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+    {000}%
+    {}%
+    {%
+    \ifnumequal%
+      {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+      {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+      {\flag@end}%
+      {\flag@start}%
+  }%
+}%
+
+\newcommand{\flag@end@RTL}{%
+  \edlabel{edtext:end:\csuse{thisedtext@\the\@edtext@level}}%
+  \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+      {000}%
+      {}%
+      {%
+      \ifnumequal%
+        {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+        {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+        {\flag@start}%
+        {\flag@end}%
+    }%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\flag@start@later}
@@ -7167,9 +7218,12 @@
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
-% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded.
+% We also increase the \verb+edtext+ \LaTeX\ counter to insert hypertarget if the \package{hyperref} package is loaded, and also to work with \cs{edtext} on right-to-left ypesetting with \XeLaTeX.
+% 
+% We store the value for the current level in a global macro. So we have one macro by level of \cs{edtext}. That is required, because \cs{edtext} can contain \cs{edtext}.
 %    \begin{macrocode}
       \stepcounter{edtext}%
+      \csxdef{thisedtext@\the\@edtext@level}{\theedtext}%
 %    \end{macrocode}
 % By default, we do not use \protect\cs{lemma}
 %    \begin{macrocode}
@@ -7237,12 +7291,13 @@
         \ignorespaces #2\relax%
         \@edtext@secondarg@false%
 %    \end{macrocode}
-% With \protect\package{polyglossia}, you must track whether the language reads left to right (English) or right to left (Arabic).
+% With \XeLaTeX, you must track whether the language reads left to right (English) or right to left (Arabic). \reledmac defines an \cs{if@RTL} boolean test is not already defined.
 %    \begin{macrocode}
-        \@ifundefined{xpg@main@language}{%if not polyglossia
-           \flag@start}%
-           {\if@RTL\flag@end\else\flag@start\fi%
-           }%
+        \if@RTL%
+          \flag@start@RTL%
+        \else%
+          \flag@start%
+        \fi%
 %    \end{macrocode}
 % We write in the numbered file wether the current \protect\cs{edtext} has a \protect\cs{lemma} in the the second argument.
 %    \begin{macrocode}
@@ -7267,7 +7322,6 @@
       \endgroup%
       \ifdef{\hypertarget}%
         {%
-        \csedef{thisedtext@\the\@edtext@level}{\theedtext}%We need one macro by level, as #1 can contain new \edtext
         \Hy@raisedlink@left{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:start}{}}%
         \showlemma{#1}%
         \Hy@raisedlink{\hypertarget{\csuse{thisedtext@\the\@edtext@level}:end}{}}%
@@ -7289,10 +7343,11 @@
         \x@lemma%
         \global\let\x@lemma=\relax%
       \fi%
-      \@ifundefined{xpg@main@language}{%if not polyglossia
-           \flag@end}%
-           {\if@RTL\flag@start\else\flag@end\fi% With polyglossia, you must track whether the language reads left to right (English) or right to left (Arabic).
-           }%
+      \if@RTL%
+        \flag@end@RTL%
+      \else%
+        \flag@end%
+      \fi%
 %    \end{macrocode}
 % We switch some flags to false.
 % \begin{itemize}
@@ -9441,9 +9496,8 @@
 % followed by a square bracket, the lemma, and the note text.
 % 
 %    \begin{macrocode}
-
-
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
+  \Xstorelineinfo{#1}{#4}%
   \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \hangindent=\csuse{Xhangindent@#4}%
   \everypar{\hangindent=\csuse{Xhangindent@#4}}%
@@ -9870,6 +9924,7 @@
 % text of the footnote, and the fourth is the series (optional, for backward compatibility).
 %    \begin{macrocode}
 \newcommand*{\parafootfmt}[4]{%
+  \Xstorelineinfo{#1}{#4}%
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
   \printlinefootnote{#1}{#4}%
@@ -9976,22 +10031,22 @@
 \newcommand{\Xinsertparafootsep}[1]{%
    \ifledRcol@%
      \ifnumequal{\csuse{#1prevpage@numR}}{\page@numR}%
-          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
-        {\ifnumequal{\csuse{prevline#1}}{\line@numR}%
-           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
-           {\csuse{Xparafootsep@#1}}%
-        }%
-        {\csuse{Xparafootsep@#1}}%
+        {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+          {\ifcsequal{prevline#1}{lineinfo@}%
+             {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+             {\csuse{Xparafootsep@#1}}%
+          }%
+          {\csuse{Xparafootsep@#1}}%
      }%
      {}%
      \global\csname #1prevpage@numR\endcsname=\page@numR%
    \else%
      \ifnumequal{\csuse{#1prevpage@num}}{\page@num}%
-          {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
-        {\ifnumequal{\csuse{prevline#1}}{\line@num}%
-           {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
-           {\csuse{Xparafootsep@#1}}%
-        }%
+        {\ifcsdef{prevline#1}% Be sur \prevline#1 exists.
+          {\ifcsequal{prevline#1}{lineinfo@}%
+             {\ifcsempty{Xsymlinenum@#1}{\csuse{Xparafootsep@#1}}{}}%
+             {\csuse{Xparafootsep@#1}}%
+          }%
         {\csuse{Xparafootsep@#1}}%
      }%
      {}%
@@ -10506,6 +10561,23 @@
 %    \end{macrocode}
 % \end{macro}
 % \subsubsection{Line number printing}
+% \begin{macro}{\Xstorelineinfo}
+% The \cs{Xstorelineinfo} macro is used to store some datas about line number of the current critical footnote, datas which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
+%
+% \#1 footnote specification for the current footnote ; 
+% \#2 footnote series.
+%    \begin{macrocode}
+\newcommand{\Xstorelineinfo}[2]{%
+   \l@dp@rsefootspec#1|%
+   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
+       }%
+       {%
+       \xdef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
+       }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlinefootnote}
 % The \protect\cs{printlinefootnote} macro is called in each \protect\cs{<type>footfmt} command. 
 % It controls whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
@@ -10514,13 +10586,6 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
-   \l@dp@rsefootspec#1|%
-   \iftoggle{Xnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendline - \l@dparsedendsub}%
-       }%
-       {%
-       \edef\lineinfo@{\l@dparsedstartline - \l@dparsedstartsub}%
-       }%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}% 
    }%
@@ -12520,10 +12585,10 @@
 \newcommand{\printlineendnote}[2]{%
   \l@dp@rsefootspec#1|%
   \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
-       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
        }%
        {%
-       \edef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
        }%
   \ifboolexpr{%
     togl {nonum@}%
@@ -14293,10 +14358,10 @@
 %
 %
 % \begin{macro}{\zz@@@}
-% A convenience macro to zero two labeling counters in one go.
+% A convenience macro to zero three labeling counters in one go.
 % \changes{v0.2.1}{2003/08/26}{Minor change to \protect\cs{zz@@@}}
 %    \begin{macrocode}
-\newcommand*{\zz@@@}{000|000} % set two counters to zero in one go
+\newcommand*{\zz@@@}{000|000|000}% Set three counters to zero in one go
 
 %    \end{macrocode}
 % \end{macro}
@@ -14335,7 +14400,7 @@
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
     \ifXnote@%
      \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1}}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1}}%
       \ifdef{\hypertarget}%
         {\Hy@raisedlink{\hypertarget{#1}{}}}%
         {}%
@@ -14364,13 +14429,13 @@
     \ifXnote@%
        \ifl@dpairing%pstart or pstartL?
          \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartL|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
         \else%
           \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
@@ -14416,19 +14481,23 @@
 %    \begin{macrocode}
 \newcounter{line}%
 \newcounter{subline}%
+\newcounter{absline}%
 \newcommand{\advancelabel@refs}{%
     \setcounter{line}{\expandafter\labelrefsparseline\label@refs}%
     \stepcounter{line}%
+    \setcounter{absline}{\expandafter\labelrefsparseabsline\label@refs}%
+    \stepcounter{absline}%
     \ifsublines@%
         \setcounter{subline}{\expandafter\labelrefsparsesubline\label@refs}%
         \stepcounter{subline}{1}%
-        \def\label@refs{\theline|\thesubline}%
+        \def\label@refs{\theline|\thesubline|\theabsline}%
     \else%
-        \def\label@refs{\theline|0}%
+        \def\label@refs{\theline|0|\theabsline}%
     \fi%
 }
-\def\labelrefsparseline#1|#2{#1}
-\def\labelrefsparsesubline#1|#2{#2}
+\def\labelrefsparseline#1|#2|#3{#1}%
+\def\labelrefsparsesubline#1|#2|#3{#2}%
+\def\labelrefsparseabsline#1|#2|#3{#3}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -14443,16 +14512,18 @@
 % The initial use of \protect\cs{newcommand} is to catch if \protect\cs{l@dmake@labels}
 % has been previously defined (by a class or package).
 %
-% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ pstart number, \verb+#5+ label.
+% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ pstart number, \verb+#6+ label.
 %
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4|#5{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#5\endcsname \relax\else
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#5}%
+\def\l@dmake@labels#1|#2|#3|#4|#5|#6{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+    \relax%
+  \else%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
   \fi
-  \global\providetoggle{label@#5@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#5\endcsname{#1|#2|#3|#4|\relax}%
+  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
+  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -14464,15 +14535,16 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4|#5{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5|#6{}%
 }
 
 %    \end{macrocode}
 %
 % \begin{macro}{\@lab}
 % The \protect\cs{@lab} command, which appears in the \protect\cs{linenum@out} file,
-% appends the current values of page, line and sub-line to the
-% \protect\cs{labelref@list}. These values are defined by the earlier
+% appends the current values of page, line, sub-line, and absolute line to the
+% \protect\cs{labelref@list}. 
+% These values are defined by the earlier
 % \protect\cs{@page}, \protect\cs{@nl}, and the \protect\cs{sub@on} and \protect\cs{sub@off} commands
 % appearing in the \protect\cs{linenum@out} file.
 %
@@ -14490,11 +14562,11 @@
 \newcommand*{\@lab}{%
   \ifledRcol
     \xright@appenditem{\linenumr@p{\line@numR}|%
-      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi}%
+      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|\the\absline@numR}%
       \to\labelref@listR
   \else
     \xright@appenditem{\linenumr@p{\line@num}|%
-      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi}%
+      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|\the\absline@num}%
       \to\labelref@list
   \fi}
 %    \end{macrocode}
@@ -14526,29 +14598,29 @@
 %    \begin{macrocode}
       \ifledRcol%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartR|{#1:start}}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1:start}}%
         \ifdef{\hypertarget}%
           {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
           {}%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
       \else%
         \ifl@dpairing%pstart or pstartL?
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstartL|{#1:start}}%
+            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1:start}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
             {}%
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstartL|{#1:end}}%
+            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstartL|{#1:end}}%
          \else%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub|\the\c@pstart|{#1:start}}%
+              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1:start}}%
             \ifdef{\hypertarget}%
               {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
               {}%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub|\the\c@pstart|{#1:end}}%
+              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstart|{#1:end}}%
          \fi%
       \fi%
 %    \end{macrocode}
@@ -14663,12 +14735,19 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\xabslineref}
+% If the specified label exists, \cs{xabslineref} give its absolute line number.
+% That is used, normally, uniquely by some \reledmac\ internal macros.
+%    \begin{macrocode}
+\newcommand*{\xabslineref}[1]{\l@dgetref@num{4}{#1}}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\pstarteref}
 % \begin{macro}{\xpstartref}
 % If the specified label exists, \protect\cs{pstartref} gives its pstart number.
 %    \begin{macrocode}
-\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{4}{#1}}}
-\newcommand*{\xpstartref}[1]{\l@dgetref@num{4}{#1}}
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{5}{#1}}}%
+\newcommand*{\xpstartref}[1]{\l@dgetref@num{5}{#1}}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -14676,7 +14755,7 @@
 % \begin{macro}{\xflagref}
 % \cs{xflagref} finds the side flag of any ref defined with \cs{edlabel}.
 %    \begin{macrocode}
-\newcommand*{\xflagref}[1]{\l@dgetref@num{5}{#1}}
+\newcommand*{\xflagref}[1]{\l@dgetref@num{6}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % The next three macros are used by the referencing commands above,
@@ -14725,18 +14804,19 @@
 % which extracts the appropriate number from its first arguments.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, 3 or 4) which defines which of the earlier fiver numbers to
+% 2, 3, 4 or 5) which defines which of the earlier six numbers to
 % pick out. (It was earlier given as the first argument of
 % \protect\cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4|#5|#6{%
-  \ifcase #6%
+\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7{%
+  \ifcase #7%
   \or #1%
   \or #2%
   \or #3%
   \or #4%
   \or #5%
+  \or #6%
   \fi}
 %    \end{macrocode}
 % \end{macro}
