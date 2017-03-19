@@ -461,6 +461,7 @@
 % \changes{v2.17.5}{2017/02/12}{Fix bug with \protect\cs{pstartref} when refering to the left side in parallel typesetting.}
 % \changes{v2.18.0}{2017/02/22}{Fix bug when using both \protect\cs{Xnumberonlyfirstintwolines} or \protect\cs{Xnumberonlyfirstinline} and \protect\cs{Xparafootsep} and \protect\cs{Xsymlinenum}.}
 % \changes{v2.18.0}{2017/02/22}{Fix bug when using a \protect\cs{edtext} in two lines or more in right-to-left typesetting with \protect\XeLaTeX.}
+% \changes{v2.18.1}{2017/03/20}{Fix bug when using \protect\cs{msdata} with \protect\LuaLaTeX or with \protect\package{hyperref} package.}
 % \title{\Macpackage \\
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -3880,7 +3881,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/02/23 v2.18.0a typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/03/20 v2.18.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -16880,8 +16881,12 @@
 % \section{Apparatus of Manuscripts}
 % \subsection{User level macro}
 % \begin{macro}{\msdata}
-% The user level \cs{msdata} command only writes the manuscripts data in numbered auxiliary file.
+% \begin{macro}{\msdata@c}
+% \begin{macro}{\msdata@cR}
+% The user level \cs{msdata} command only writes the manuscripts data in numbered auxiliary file. There is two associated etoolbox counter.
 %    \begin{macrocode}
+\def\msdata@c{}%
+\def\msdata@cR{}%
 \newcommand{\msdata}[1]{%
   \leavevmode%
   \unless\ifstopmsdata@inserted@%
@@ -16890,16 +16895,26 @@
   \fi%
   \global\stopmsdata@inserted@false%
   \unless\ifledRcol%
+    \numgdef{\msdata@c}{\msdata@c+1}%
+    \ifdef{\hypertarget}{%
+      \edlabel{\msdata@c:start:msdata}%
+    }{}%
     \protected@write\linenum@out{}{%
       \string\@msd{#1}%
     }%
   \else%
+    \numgdef{\msdata@cR}{\msdata@cR+1}%
+    \ifdef{\hypertarget}{%
+      \edlabel{\msdata@cR:start:msdata}%
+    }{}%
     \protected@write\linenum@outR{}{%
       \string\@msd{#1}%
     }%
   \fi%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\stopmsdata}
 % The user level \cs{stopmsdata} command only writes information about the end of manuscripts data in numbered auxiliary file.
@@ -16910,10 +16925,16 @@
     \protected@write\linenum@out{}{%
       \string\@stopmsd%
     }%
+    \ifdef{\hypertarget}{%
+      \edlabel{\msdata@c:end:msdata}%
+    }{}%
   \else%
     \protected@write\linenum@outR{}{%
       \string\@stopmsd%
     }%
+   \ifdef{\hypertarget}{%
+     \edlabel{\msdata@cR:end:msdata}%
+   }{}%
   \fi%
   \global\stopmsdata@inserted@true%
 }%
@@ -17065,6 +17086,12 @@
           \fi%
           \listxadd{\@msdata@list}{%
             \@msd@options@iffullpage%
+            \ifluatex%
+              \csxdef{footnote@luatextextdir}{\the\textdir}%
+              \csxdef{footnote@luatexpardir}{\the\pardir}%
+            \fi%
+    				\csdef{@this@crossref@start}{\add@msd@c:start:msdata}%
+   					\csdef{@this@crossref@end}{\add@msd@c:end:msdata}%
             \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
             \reset@msd@options@iffullpage%
          }%
@@ -17104,6 +17131,12 @@
           \fi%
           \listxadd{\@msdata@list}{%
             \@msd@options@iffullpage%
+            \ifluatex%
+              \csxdef{footnote@luatextextdir}{\the\textdir}%
+              \csxdef{footnote@luatexpardir}{\the\pardir}%
+            \fi%
+    				\csdef{@this@crossref@start}{\add@msd@cR:start:msdata}%
+   					\csdef{@this@crossref@end}{\add@msd@cR:end:msdata}%
             \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
             \reset@msd@options@iffullpage%
          }%
@@ -17159,6 +17192,12 @@
          {}%
          \listxadd{\@msdata@list}{%
           \@msd@options@iffullpage%
+          \ifluatex%
+            \csxdef{footnote@luatextextdir}{\the\textdir}%
+            \csxdef{footnote@luatexpardir}{\the\pardir}%
+          \fi%
+    		  \csdef{@this@crossref@start}{\add@msd@c:start:msdata}%
+   				\csdef{@this@crossref@end}{\add@msd@c:end:msdata}%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
           \reset@msd@options@iffullpage%
         }%
@@ -17197,6 +17236,12 @@
          {}%
          \listxadd{\@msdata@list}{%
            \@msd@options@iffullpage%
+           \ifluatex%
+             \csxdef{footnote@luatextextdir}{\the\textdir}%
+             \csxdef{footnote@luatexpardir}{\the\pardir}%
+           \fi%
+    		  \csdef{@this@crossref@start}{\add@msd@cR:start:msdata}%
+   				\csdef{@this@crossref@end}{\add@msd@cR:end:msdata}%
            \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
            \reset@msd@options@iffullpage%
         }%
