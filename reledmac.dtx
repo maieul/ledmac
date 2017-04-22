@@ -7881,6 +7881,7 @@
 %
 % \begin{macro}{\pstart}
 % \begin{macro}{\AtEveryPstart}
+% \begin{macro}{\AtStartEveryPstart}
 % \changes{v1.6.1}{2013/10/27}{Spurious space in \protect\cs{pstart}.}
 % \changes{v1.12.0}{2014/08/05}{New optional argument for \protect\cs{pstart}, to execute code before it.}
 % \begin{macro}{\numberpstarttrue}
@@ -7901,6 +7902,13 @@
 % them to survive past the end of the paragraph.
 % \changes{v1.13.1}{2014/09/25}{Add \protect\cs{l@dzeropenalties} in \protect\cs{pstart}}
 %    \begin{macrocode}
+
+\newcommand{\AtStartEveryPstart}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\@at@start@every@pstart{}}%
+    {\gdef\@at@start@every@pstart{#1}}%
+}%
+\def\@at@start@every@pstart{}%
 
 \newcommand{\AtEveryPstart}[1]{%
   \ifstrempty{#1}%
@@ -7971,9 +7979,11 @@
        {\p@pstart\thepstart}
   \fi%
   \l@dzeropenalties%
+  \@at@start@every@pstart%
   \ignorespaces%because not automatically ignored if an optional argument is used (classical TeX behavior for space after commands)
   }
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -8005,6 +8015,7 @@
 % we keep doing this until there are not any more lines left.
 %    \begin{macrocode}
   \l@dzeropenalties%
+  \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
@@ -8069,6 +8080,8 @@
 % \begin{macro}{\at@every@pend}
 %    \begin{macrocode}
 
+
+
 \newcommand{\AtEveryPend}[1]{%
   \ifstrempty{#1}%
     {\xdef\at@every@pend{}}%
@@ -8085,6 +8098,17 @@
 %  \end{macro}
 %  \end{macro}
 %
+% \begin{macro}{\AtEndEveryPend}
+% Here a macro to insert automatically any content of an of end of \cs{pend}, in numbered lines.
+%    \begin{macrocode}
+\newcommand{\AtEndEveryPend}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\@at@end@every@pend{}}%
+    {\gdef\@at@end@every@pend{#1}}%
+}%
+\def\@at@end@every@pend{}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\l@dzeropenalties}
 % A macro to zero penalties for \protect\cs{pend} or \protect\cs{pstart}.
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{l@dzeropenalties}}
