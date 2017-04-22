@@ -7920,9 +7920,17 @@
 \numberpstartfalse
 \newif\iflabelpstart
 \labelpstartfalse
-\newcommandx*{\pstart}[1][1]{%
+\newcommandx*{\pstart}[2][1,2,usedefault]{%
   \normal@pars%
-  \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
+    {\at@every@pstart}%
+    {%
+    \ifstrempty{#1}{}{\noindent#1}%
+    \ifstrempty{#2}{}{#2}%
+    }%
   \ifautopar%
     \autopar%
   \fi%
@@ -7979,7 +7987,7 @@
 % \protect\cs{pend} must be used to end a numbered paragraph.
 %
 %    \begin{macrocode}
-\newcommandx*{\pend}[1][1]{\ifnumbering \else%
+\newcommandx*{\pend}[2][1,2,usedefault]{\ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \global\l@dskipversenumberfalse%
@@ -8031,10 +8039,18 @@
   \fi%
   \addtocounter{pstart}{1}%
 %    \end{macrocode}
-% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
+% Print the optional arguments of \protect\cs{pend} or the content printed after every \protect\cs{pend}
 %    \begin{macrocode}
   \normal@pars%
-  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
+    {\at@every@pend}%
+    {%
+    \ifstrempty{#1}{}{\noindent#1}%
+    \ifstrempty{#2}{}{#2}%
+    }%
 %    \end{macrocode}
 % Restore standard \enquote{nobreak} and \enquote{autopar} settings. 
 % Normally, \cs{if@nobreak} is true only immediately after a sectioning command (see latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false.
@@ -16779,7 +16795,7 @@
 % the user may initiate these penalties to indicate good and bad
 % places in the stanza for page breaking.
 %    \begin{macrocode}
-\newcommandx{\stanza@line}[1][1]{
+\newcommandx{\stanza@line}[2][1,2,usedefault]{%
     \ifnum\value{stanzaindentsrepetition}=0
         \ifcsdef{sza@\number\stanza@count @}%
           {%
@@ -16796,7 +16812,8 @@
         \led@err@StanzaIndentNotDefined%
         }%
     \fi
-    \pstart[#1]\stanza@hang\ignorespaces}
+    \pstart[#1][#2]\stanza@hang\ignorespaces%
+}%
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
             \hangindent\expandafter
             \noexpand\csname sza@0@\endcsname\stanzaindentbase
@@ -16837,7 +16854,7 @@
 %
 %
 %    \begin{macrocode}
-\xdef\@startstanza[#1]{%
+\xdef\@startstanza[#1][#2]{%
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
@@ -16852,28 +16869,39 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
-   \noexpand\stanza@line[#1]%
+   \noexpand\stanza@line[#1][#2]%
    \noexpand\@insertstanzanumber%
    \let\par\relax\ignorespaces%No paragraph in verses
 }
 
-\newcommandx{\stanza}[1][1,usedefault]{%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
-    {\@startstanza[\at@every@stanza]}%
-    {\@startstanza[#1]}%
+\newcommandx{\stanza}[2][1,2,usedefault]{%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+    {\@startstanza[][\at@every@stanza]}%
+    {\@startstanza[#1][#2]}%
 }%
 
-\newcommandx{\@stopstanza}[1][1,usedefault]{%
+\newcommandx{\@stopstanza}[2][1,2,usedefault]{%
   \unskip%
   \endlock%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
-      {\pend[\at@every@stop@stanza]}%
-      {\pend[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stop@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+      {\pend[][\at@every@stop@stanza]}%
+      {\pend[#1][#2]}%
   \endgroup%
   \instanzafalse%
 }
 
 \newcommand{\AtEveryStopStanza}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{\noindent#1}}%
+}%
+\WithSuffix\newcommand\AtEveryStopStanza*[1]{%
   \ifstrempty{#1}%
     {\xdef\at@every@stop@stanza{}}%
     {\gdef\at@every@stop@stanza{#1}}%
@@ -16883,15 +16911,20 @@
 \newcommand{\AtEveryStanza}[1]{%
   \ifstrempty{#1}%
     {\xdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{\noindent#1}}%
+}%
+\WithSuffix\newcommand\AtEveryStanza*[1]{%
+  \ifstrempty{#1}%
+    {\xdef\at@every@stanza{}}%
     {\gdef\at@every@stanza{#1}}%
 }%
-\def\at@every@stanza{}%
 
 
-\newcommandx*{\newverse}[2][1,2,usedefault]{%
+
+\newcommandx*{\newverse}[4][1,2,3,4,usedefault]{%
   \unskip%
-  \endlock\pend[#1]\sza@penalty\global%
-  \advance\stanza@count\@ne\stanza@line[#2]%
+  \endlock\pend[#1][#3]\sza@penalty\global%
+  \advance\stanza@count\@ne\stanza@line[#2][#4]%
   }
 
 %    \end{macrocode}

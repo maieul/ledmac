@@ -3217,8 +3217,7 @@
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
+  \pretocmd{\@startstanza}{\global\instanzaLtrue}{}{}%
 }{
   \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname%
     \led@error@missing@numbering{Leftside}%
@@ -3270,8 +3269,7 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
+  \pretocmd{\@startstanza}{\global\instanzaRtrue}{}{}%
 }{%
   \ledRcolfalse
  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
@@ -3354,7 +3352,7 @@
 \newcounter{pstartR}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommandx*{\pstartL}[1][1]{%
+\newcommandx*{\pstartL}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3420,6 +3418,9 @@
   \ifstrempty{#1}%
     {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
     {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
+  \ifstrempty{#2}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
+    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{#2}}%
    \at@every@pstart@call%
 %    \end{macrocode}
 % Gobble following space (automatically done if there is no optional argument)
@@ -3432,7 +3433,7 @@
 % The same for right side.
 % 
 %    \begin{macrocode}
-\newcommandx*{\pstartR}[1][1]{%
+\newcommandx*{\pstartR}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3479,6 +3480,9 @@
    \ifstrempty{#1}%
      {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
      {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
+   \ifstrempty{#2}%
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
+     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{#2}}%
    \at@every@pstart@call%
    \ignorespaces%
   }
@@ -3495,7 +3499,7 @@
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendL}[1][1]{%
+\newcommandx*{\pendL}[2][1,2,usedefault]{%
   \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
@@ -3527,7 +3531,10 @@
   \ifstrempty{#1}%
     {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
     {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
-  }
+  \ifstrempty{#2}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
+    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#2}}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3537,7 +3544,7 @@
 % The version of \protect\cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendR}[1][1]{%
+\newcommandx*{\pendR}[2][1,2,usedefault]{%
   \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
@@ -3557,6 +3564,9 @@
   \ifstrempty{#1}%
     {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
     {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
+  \ifstrempty{#2}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
+    {\csgdef{after@pendR@\the\l@dnumpstartsR}{#2}}%
 }
 
 %    \end{macrocode}
