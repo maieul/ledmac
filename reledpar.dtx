@@ -302,6 +302,7 @@
 % \changes{v2.17.0}{2017/02/22}{Change code for compatibility with \protect\reledmac 2.18.0}
 % \changes{v2.17.1}{2017/03/26}{Fix bug with \protect\option{prevpgstyle} option when not using \protect\option{prevpgnotnumbered}.}
 % \changes{v2.17.3}{2017/04/20}{Fix bug when using multiple sidenotes on the same line, on right side.}
+% \changes{v2.17.4}{2017/04/28}{Fix bugs with sublines in parallel typesetting.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1257,7 +1258,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/04/20 v2.17.3 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/04/28 v2.17.4 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1694,7 +1695,7 @@
   \global\line@numR \z@
   \global\@lockR \z@
   \global\sub@lockR \z@
-  \global\sublines@false
+  \global\sublines@Rfalse
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
   \global\stopmsdata@inserted@true%
@@ -2096,8 +2097,8 @@
   \setcounter{linenumincrement}{#1}%
 }
 \WithSuffix\newcommand\firstsublinenum*[1]{%
-  \setcounter{subfirstlinenumR}{#1}%
-  \setcounter{subfirstlinenum}{#1}%
+  \setcounter{firstsublinenumR}{#1}%
+  \setcounter{firstsublinenum}{#1}%
 }
 \WithSuffix\newcommand\sublinenumincrement*[1]{%
   \setcounter{sublinenumincrementR}{#1}%
@@ -2215,8 +2216,8 @@
   \l@dlinenumR}
 \newcommand*{\l@dlinenumR}{%
   \numlabfont\linenumrepR{\line@numR}\@Rlineflag%
-  \ifsublines@
-    \ifnum\subline@num>\z@
+  \ifsublines@R
+    \ifnum\subline@numR>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
     \fi
   \fi}
@@ -2235,6 +2236,7 @@
 % \begin{macro}{\line@numR}
 % \begin{macro}{\subline@numR}
 % \begin{macro}{\absline@numR}
+% \begin{macro}{\ifsublines@R}
 % The count \protect\cs{line@numR} stores the line number that is used in
 % the right text's marginal line numbering and in notes. 
 % The count \protect\cs{subline@numR} stores
@@ -2244,12 +2246,15 @@
 % of the right text section: that is, the number we have actually printed, 
 % no matter what numbers we attached to them. 
 %
+% The boolean \cs{ifsublines@R} is set to true when we start subline on rightside.
 %    \begin{macrocode}
 \newcount\line@numR
 \newcount\subline@numR
 \newcount\absline@numR
+\newif\ifsublines@R%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -2378,9 +2383,9 @@
   \fi
   \ifx\sub@change\relax \else
     \ifnum\sub@change>\z@
-      \sublines@true
+      \sublines@Rtrue
     \else
-      \sublines@false
+      \sublines@Rfalse
     \fi
     \sub@action
     \let\sub@change\relax
@@ -2397,7 +2402,7 @@
   \or\or
     \sub@lockR \z@
   \fi
-  \ifsublines@
+  \ifsublines@R
     \ifnum\sub@lockR<\tw@
       \advance\subline@numR \@ne
     \fi
@@ -2491,7 +2496,7 @@
 
 \newcommand*{\do@lockonR}{%
   \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-  \ifsublines@
+  \ifsublines@R
     \xright@appenditem{-1005}\to\actions@listR
     \ifnum\sub@lockR=\z@
       \sub@lockR \@ne
@@ -2528,7 +2533,7 @@
 
 \newcommand{\do@lockoffR}{%
   \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-  \ifsublines@
+  \ifsublines@R
     \xright@appenditem{-1006}\to\actions@listR
     \ifnum\sub@lockR=\tw@
       \sub@lockR \thr@@
@@ -2622,9 +2627,9 @@
 %    \begin{macrocode}
     \xright@appenditem%
       {\the\page@numR|\the\line@numR|%
-       \ifsublines@ \the\subline@numR \else 0\fi|%
+       \ifsublines@R \the\subline@numR \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
-       \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
+       \ifsublines@R \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
@@ -3980,7 +3985,7 @@
   \do@ballastR
   \ifledgroupnotesR@\else
         \ifnumberline
-          \ifsublines@
+          \ifsublines@R
             \ifnum\sub@lockR<\tw@
               \global\advance\subline@numR \@ne
            \fi
@@ -4056,9 +4061,9 @@
 \newcommand*{\do@actions@fixedcodeR}{%
   \ifcase\@l@dtempcnta% 
   \or%                     % 1001 = starting sublineation
-    \global\sublines@true
+    \global\sublines@Rtrue
   \or%                     % 1002 = ending sublineation
-    \global\sublines@false
+    \global\sublines@Rfalse
   \or%                     % 1003 = starting locking number
     \global\@lockR=\@ne
   \or%                     % 1004 = ending locking number
@@ -4104,7 +4109,7 @@
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
         \advance\@l@dtempcnta by -5001\relax
-        \ifsublines@
+        \ifsublines@R
           \global\subline@numR=\@l@dtempcnta
         \else
           \global\line@numR=\@l@dtempcnta
@@ -4210,10 +4215,10 @@
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
-  \ifsublines@
+  \ifsublines@R
     \@l@dtempcntb=\subline@numR
     \l@dcalcnum{\subline@numR}{\c@firstsublinenumR}{\c@sublinenumincrementR}%
-    \ch@cksub@lockR
+    \ch@cksub@l@ckR
   \else
     \@l@dtempcntb=\line@numR
     \ifx\linenumberlistR\empty%
