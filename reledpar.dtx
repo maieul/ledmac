@@ -303,6 +303,7 @@
 % \changes{v2.17.1}{2017/03/26}{Fix bug with \protect\option{prevpgstyle} option when not using \protect\option{prevpgnotnumbered}.}
 % \changes{v2.17.3}{2017/04/20}{Fix bug when using multiple sidenotes on the same line, on right side.}
 % \changes{v2.17.4}{2017/04/28}{Fix bugs with sublines in parallel typesetting.}
+% \changes{v2.18.0}{2017/05/05}{Compatibility with v2.20.0 of \protect\reledmac.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -584,6 +585,23 @@
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
+% \subsection{Note about \cs{AtEveryPstart*} and \cs{AtEveryPend*}}
+% The content of \cs{AtEveryPstart} / \cs{AtEveryPend} (without star) is added before every \cs{pstart} / after every \cs{pend}, respecting left / right side.
+%
+% The content of \cs{AtEveryPstart*} / \cs{AtEveryPend*} (with star) is added before every \cs{pstart} / after every \cs{pend}, but there is no distinction between left and right side.
+% 
+% However, as this content is also added when we typeset pages in parallel, \reledmac must add it one time for both left and right pstart.
+% So if you use it to add vertical spacing, it will be problematic in parallel columns, as you will have two time the vertical spacing.
+% A solution is to add test inside to make distinction between columns parallel typesetting / page parallel typesetting.
+% \begin{verbatim}
+%\AtEveryPstart*{%
+%\ifl@dprintingcolumns
+%  \vspace{0.125\baselineskip}
+%\else
+%  \vspace{0.25\baselineskip}
+%\fi
+%}
+% \end{verbatim}
 % \section{Keeping translation in the outside/inside column}
 % By default, \parpackage works with left and right columns.
 % However, it is possible to work with inner and outer column.
@@ -1258,7 +1276,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/04/28 v2.17.4 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/05/05 v2.18.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3222,8 +3240,8 @@
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
+  \let\old@startstanza\@startstanza%
+  \def\@startstanza[##1][##2]{\global\instanzaLtrue\old@startstanza[##1][##2]}%
 }{
   \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname%
     \led@error@missing@numbering{Leftside}%
@@ -3275,8 +3293,8 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
+  \let\old@startstanza\@startstanza%
+  \def\@startstanza[##1][##2]{\global\instanzaRtrue\old@startstanza[##1][##2]}%
 }{%
   \ledRcolfalse
  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
@@ -3359,7 +3377,7 @@
 \newcounter{pstartR}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommandx*{\pstartL}[1][1]{%
+\newcommandx*{\pstartL}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3415,6 +3433,7 @@
         \fi%
        \fi%
       \fi%
+  \@at@start@every@pstart%
   \hsize=\Lcolwidth%
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
@@ -3422,9 +3441,33 @@
 %    \end{macrocode}
 % Dump the optional arguments
 %    \begin{macrocode}
+  \providetoggle{before@pstartL@\the\l@dnumpstartsL @par}%
   \ifstrempty{#1}%
-    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
-    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
+    }%
+    {%
+      \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
+    }%
+    {%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{#2}%
+      \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+    }%
    \at@every@pstart@call%
 %    \end{macrocode}
 % Gobble following space (automatically done if there is no optional argument)
@@ -3437,7 +3480,7 @@
 % The same for right side.
 % 
 %    \begin{macrocode}
-\newcommandx*{\pstartR}[1][1]{%
+\newcommandx*{\pstartR}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3477,13 +3520,38 @@
          \fi%
         \fi%
        \fi%
+  \@at@start@every@pstart%
   \hsize=\Rcolwidth%
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
-   \ifstrempty{#1}%
-     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
-     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
+  \providetoggle{before@pstartR@\the\l@dnumpstartsR @par}%
+  \ifstrempty{#1}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
+    }%
+    {%
+      \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
+    }%
+    {%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{#2}%
+      \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+    }%
    \at@every@pstart@call%
    \ignorespaces%
   }
@@ -3500,7 +3568,7 @@
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendL}[1][1]{%
+\newcommandx*{\pendL}[2][1,2,usedefault]{%
   \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
@@ -3513,6 +3581,7 @@
 % be no large interline penalties to prevent us from slicing the
 % paragraph into pieces.  
 %    \begin{macrocode}
+  \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
@@ -3529,10 +3598,34 @@
 %    \end{macrocode}
 % Dump content of the optional argument.
 %    \begin{macrocode}
+  \providetoggle{after@pendL@\the\l@dnumpstartsL @par}%
   \ifstrempty{#1}%
-    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
-    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
-  }
+    {%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
+    }%
+    {%
+      \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
+    }%
+    {%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{#2}%
+      \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+    }%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3542,13 +3635,14 @@
 % The version of \protect\cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendR}[1][1]{%
+\newcommandx*{\pendR}[2][1,2,usedefault]{%
   \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
     \led@err@PendNoPstart%
   \fi%
+  \@at@end@every@pend%
   \endgraf\global\num@linesR=\prevgraf\egroup%
   \global\par@lineR=0%
   \endgroup%
@@ -3559,9 +3653,32 @@
     \addtocounter{pstartR}{1}%
   \fi%  
   \parledgroup@beforenotes@save{R}%
+  \providetoggle{after@pendR@\the\l@dnumpstartsR @par}%
   \ifstrempty{#1}%
-    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
-    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
+    {% 
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
+    {% 
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}%
+      \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+      \fi%
+    }%
+    {%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{#2}%
+      \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+    }%
 }
 
 %    \end{macrocode}
@@ -4929,7 +5046,7 @@
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}[1][]{%
+\newenvironment{astanza}[2][1,2,usedefault]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
@@ -4947,9 +5064,12 @@
     \global\advance\stanza@count\@ne
     \@astanza@line}%
   \def\&{\@stopastanza}%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
-    {\pstart[\at@every@stanza]}%
-    {\pstart[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+    {\pstart[][\at@every@stanza]\at@start@every@stanza}%
+    {\pstart[#1][#2]\at@start@every@stanza}%
   \@astanza@line
   \let\par\relax\ignorespaces%No paragraph in verses
 }{}
@@ -4961,11 +5081,15 @@
 % This command is called by \verb+\&+ in \env{astanza} environment. 
 % It allows optional arguments. 
 %    \begin{macrocode}
-\newcommandx{\@stopastanza}[1][1,usedefault]{%
+\newcommandx{\@stopastanza}[2][1,2,usedefault]{%
   \endlock\mbox{}%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
-      {\pend[\at@every@stop@stanza]}%
-      {\pend[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stop@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}%
+    }%
+      {\before@every@stop@stanza\pend[][\at@every@stop@stanza]}%
+      {\before@every@stop@stanza\pend[#1][#2]}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -5798,6 +5922,10 @@
     and test {\ifdefempty{\at@every@pstart}}}%
        {}%
        {%
+       \ifboolexpr{not togl{before@pstartR@\the\l@dpscR @par} and not togl{before@pstartL@\the\l@dpscL @par}}{%
+         \csuse{before@pstartL@\the\l@dpscL}%
+         \csuse{before@pstartR@\the\l@dpscR}%
+       }{%     
          \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
            \par\parbox[t][][t]{\Lcolwidth}{%
@@ -5809,7 +5937,8 @@
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
-         }%
+         }%  
+        }%
        }%
     \global\csundef{before@pstartL@\the\l@dpscL}%
     \global\csundef{before@pstartR@\the\l@dpscR}%
@@ -5821,6 +5950,10 @@
     and test {\ifdefempty{\at@every@pend}}}%
        {}%
        {%
+       \ifboolexpr{not togl{after@pendR@\the\l@dpscR @par} and not togl{after@pendL@\the\l@dpscL @par}}{%
+         \csuse{after@pendL@\the\l@dpscL}%
+         \csuse{after@pendR@\the\l@dpscR}%
+       }{% 
          \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
            \parbox[t][][t]{\Lcolwidth}{%
@@ -5833,6 +5966,7 @@
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
          }%
+        }%
        }%
     \global\csundef{after@pendL@\the\l@dpscL}%
     \global\csundef{after@pendR@\the\l@dpscR}%

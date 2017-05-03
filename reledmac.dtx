@@ -465,9 +465,13 @@
 % \changes{v2.19.0}{2017/04/14}{Add better compatibility with \protect\package{csquotes} package when using familiar footnotes.}
 % \changes{v2.19.0}{2017/04/14}{Add \protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} commands.}
 % \title{\Macpackage \\
-% \changes{v2.19.0}{2017/04/14}{Fix bug with paragraph indent after sectioning command.} 
 % \changes{v2.19.0}{2017/04/14}{Fix bug when using familiar footnotes in \protect\cs{eledsection} and related.}
-% \changes{v2.19.0}{2017/04/14}{Rest font specification at the beginning of amiliar footnotes.}
+% \changes{v2.19.0}{2017/04/14}{Reset font specification at the beginning of amiliar footnotes.}
+% \changes{v2.19.0}{2017/04/14}{Fix bug with paragraph indent after sectioning command.}
+% \changes{v2.20.0}{2017/05/05}{Add starred version of \protect\cs{AtEveryPstart}, \protect\cs{AtEveryPend}, \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
+% \changes{v2.20.0}{2017/05/05}{Add \protect\cs{AtStartEveryStanza},  \protect\cs{BeforeEveryStopStanza},  \protect\cs{AtEndEveryPend},  \protect\cs{AtStartEveryPstart}.} 
+% \changes{v2.20.0}{2017/05/05}{Add second optional argument of \protect\cs{pstart}, \protect\cs{pend} and \protect\cs{stanza}.} 
+% \changes{v2.20.0}{2017/05/05}{Add third and fourth optional argument of \protect\cs{newverse}.} 
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -898,6 +902,16 @@
 % \changes{v1.12.0}{2014/08/05}{Optional arguments for \protect\cs{pstart} and \protect\cs{pend}.}
 % Both \protect\cs{pstart} and \protect\cs{pend} can take a optional argument in brackets. 
 % Its content will be printed before the beginning of \protect\cs{pstart} / after the end of  \protect\cs{pend} instead of the argument of \protect\cs{AtEveryPstart} / \protect\cs{AtEveryPend}.
+%
+% Not that a \cs{noindent} will be automatically added before this argument, and, consequently, a \cs{parskip} will be inserted.
+% You can use a second optional argument, in bracket, to not have this \cs{noindent}.
+% \begin{verbatim}
+% \pstart[foo] % A \noindent will be inserted before foo.
+% \pstart[][foo]% No \noindent before foo.
+% \end{verbatim}
+%
+% The second optional argument of \cs{pstart} / \cs{pend} replace the argument of \cs{AtEveryPstart*} / \cs{AtEveryPend*}.
+%
 % If you need to start a \protect\cs{pstart} with brackets, or to add brackets after a \protect\cs{pend}, just add a \protect\cs{relax} between \protect\cs{pstart}\,\ldots\,\protect\cs{pend} and the brackets.
 %
 % This feature is also useful when typesetting verses (see \reff{verse}) or \parpackage\ (see \reff{eledpar}).
@@ -909,7 +923,18 @@
 % \label{AtEveryPstart} \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
 % You can use both \protect\cs{AtEveryPstart} and \protect\cs{AtEveryPend}.
 % Their arguments will be printed before every \protect\cs{pstart} begins / after  every \protect\cs{pend} ends.
+% 
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryPstart} and \protect\cs{AtEveryPend} to no insert the \cs{noindent}. 
 %
+% \Describe{\AtStartEveryPstart}\Describe{\AtEndEveryPend}
+%  The argument of \cs{AtStartEveryPstart} / \cs{AtEndEveryPend} will be inserted at the beginning  / the end of every \cs{pstart} / \cs{pend}, in the same paragraph. For example, if you want that each \cs{pstart} start by a star, you can use:
+% \begin{verbatim}
+% \AtStartEveryPstart{*} 
+% \end{verbatim}
+% Instead of manually do
+% \begin{verbatim}
+% \pstart * Real pstart content.\pend 
+% \end{verbatim}
 % \subsubsection{Numbering paragraphs (\protect\cs{pstart})}
 % \changes{v0.12.0}{2011/10/01}{Possibility to number \protect\cs{pstart}.}
 % It is possible to insert a number at every \protect\cs{pstart} command; you must use the \DescribeMacro{\numberpstarttrue}\protect\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\protect\cs{numberpstartfalse}. 
@@ -2705,16 +2730,29 @@
 % \subsection{Content before/after verses}\label{contentverse}
 % It is possible to add content, like a subtitle or a spacing, before or after verse:
 % \begin{itemize}
-%   \item The \protect\cs{stanza} command can take an optional argument (in brackets). Its content will be printed before the stanza. 
+%   \item The \protect\cs{stanza} command can take an optional argument (in brackets). Its content will be printed before the stanza. A \cs{noindent} is inserted before this content of first optional argument.
+% If you don't want this \cs{noindent}, you can use second optional argument (in brackets, too):
+% \begin{verbatim}
+% \stanza[foo] % \noindent is inserted before foo.
+% \stanza[][foo] % There is no \noindent inserted before foo.
+% \end{verbatim}
 %
-% Use \cs{AtEveryStanza}\marg{arg} to automatically add content at the begining of stanza.
-%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse. 
+% \item \DescribeMacro{\AtEveryStanza} Use \cs{AtEveryStanza}\marg{arg} to automatically add content before the stanza (not in the same paragraph).
 %
-%  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verses (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verses (including the first one). 
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStanza} to avoid this \cs{noindent}.
+%  \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the beginning of stanza (in the same paragraph). 
+%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
+% 
+% A \cs{noindent} is automatically inserted before the contents of these optional arguments.
+% 
+% Use third and fourth optional argument to not add these \cs{noindent} (to add content respectively after the current verse / before the next verse).
+% \item  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verses (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verses (including the first one). 
 %   \item \verb+\&+ can take an optional argument (in brackets). Its content will be printed after the stanza.
 % 
-% Use \cs{AtEveryStopStanza} to automatically add content at the end of stanzas.
+% \item \DescribeMacro{\AtEveryStopStanza} Use \cs{AtEveryStopStanza} to automatically add content after the end of stanzas (not in the same paragraph).
 %
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStopStanza}  to avoid this \cs{noindent}.
+% \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the end of stanza (in the same paragraph). 
 % \end{itemize}
 %
 % 
@@ -7883,6 +7921,7 @@
 %
 % \begin{macro}{\pstart}
 % \begin{macro}{\AtEveryPstart}
+% \begin{macro}{\AtStartEveryPstart}
 % \changes{v1.6.1}{2013/10/27}{Spurious space in \protect\cs{pstart}.}
 % \changes{v1.12.0}{2014/08/05}{New optional argument for \protect\cs{pstart}, to execute code before it.}
 % \begin{macro}{\numberpstarttrue}
@@ -7890,6 +7929,7 @@
 % \begin{macro}{\labelpstarttrue}
 % \begin{macro}{\labelpstartfalse}
 % \begin{macro}{\thepstart}
+% \begin{macro}{\ifat@every@pstart@star@}
 % \protect\cs{pstart} starts the paragraph by
 % clearing the \protect\cs{inserts@list} list and other
 % relevant variables, and then arranges for the
@@ -7904,12 +7944,27 @@
 % \changes{v1.13.1}{2014/09/25}{Add \protect\cs{l@dzeropenalties} in \protect\cs{pstart}}
 %    \begin{macrocode}
 
+\newcommand{\AtStartEveryPstart}[1]{%
+  \ifstrempty{#1}%
+    {\gdef\@at@start@every@pstart{}}%
+    {\gdef\@at@start@every@pstart{#1}}%
+}%
+\def\@at@start@every@pstart{}%
+
+\newif\ifat@every@pstart@star@%
 \newcommand{\AtEveryPstart}[1]{%
   \ifstrempty{#1}%
-    {\xdef\at@every@pstart{}}%
+    {\gdef\at@every@pstart{}}%
     {\gdef\at@every@pstart{\noindent#1}}%
+ \global\at@every@pstart@star@false%
 }%
-\xdef\at@every@pstart{}%
+\WithSuffix\newcommand\AtEveryPstart*[1]{%
+  \ifstrempty{#1}%
+    {\gdef\at@every@pstart{}}%
+    {\gdef\at@every@pstart{#1}}%
+  \global\at@every@pstart@star@true%
+}%
+\def\at@every@pstart{}%
 
 \newcounter{pstart}
 \renewcommand{\thepstart}{{\bfseries\@arabic\c@pstart}. }
@@ -7917,9 +7972,17 @@
 \numberpstartfalse
 \newif\iflabelpstart
 \labelpstartfalse
-\newcommandx*{\pstart}[1][1]{%
+\newcommandx*{\pstart}[2][1,2,usedefault]{%
   \normal@pars%
-  \ifstrempty{#1}{\at@every@pstart}{\noindent#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
+    {\at@every@pstart}%
+    {%
+    \ifstrempty{#1}{}{\noindent#1}%
+    \ifstrempty{#2}{}{#2}%
+    }%
   \ifautopar%
     \autopar%
   \fi%
@@ -7960,9 +8023,12 @@
        {\p@pstart\thepstart}
   \fi%
   \l@dzeropenalties%
+  \@at@start@every@pstart%
   \ignorespaces%because not automatically ignored if an optional argument is used (classical TeX behavior for space after commands)
   }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7976,7 +8042,7 @@
 % \protect\cs{pend} must be used to end a numbered paragraph.
 %
 %    \begin{macrocode}
-\newcommandx*{\pend}[1][1]{\ifnumbering \else%
+\newcommandx*{\pend}[2][1,2,usedefault]{\ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
   \global\l@dskipversenumberfalse%
@@ -7994,6 +8060,7 @@
 % we keep doing this until there are not any more lines left.
 %    \begin{macrocode}
   \l@dzeropenalties%
+  \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
@@ -8028,10 +8095,18 @@
   \fi%
   \addtocounter{pstart}{1}%
 %    \end{macrocode}
-% Print the optional argument of \protect\cs{pend} or the content printed after every \protect\cs{pend}
+% Print the optional arguments of \protect\cs{pend} or the content printed after every \protect\cs{pend}
 %    \begin{macrocode}
   \normal@pars%
-  \ifstrempty{#1}{\at@every@pend}{\noindent#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
+    {\at@every@pend}%
+    {%
+    \ifstrempty{#1}{}{\noindent#1}%
+    \ifstrempty{#2}{}{#2}%
+    }%
 %    \end{macrocode}
 % Restore standard \enquote{nobreak} and \enquote{autopar} settings. 
 % Normally, \cs{if@nobreak} is true only immediately after a sectioning command (see latex.ltx file). As a \cs{pstart}…\cs{pend} structure can't contain any sectioning command, we set \cs{if@nobreak} to false.
@@ -8048,19 +8123,41 @@
 %
 % \begin{macro}{\AtEveryPend}
 % \begin{macro}{\at@every@pend}
+% \begin{macro}{\ifat@every@pend@star@}
 %    \begin{macrocode}
 
+
+\newif\ifat@every@pend@star@%
 \newcommand{\AtEveryPend}[1]{%
   \ifstrempty{#1}%
-    {\xdef\at@every@pend{}}%
+    {\gdef\at@every@pend{}}%
     {\gdef\at@every@pend{\noindent#1}}%
+  \global\at@every@pend@star@false%
+}%
+\WithSuffix\newcommand\AtEveryPend*[1]{%
+  \ifstrempty{#1}%
+    {\gdef\at@every@pend{}}%
+    {\gdef\at@every@pend{#1}}%
+  \global\at@every@pend@star@true%
 }%
 \xdef\at@every@pend{}%
 
 %    \end{macrocode}
 %  \end{macro}
 %  \end{macro}
+% \end{macro}
 %
+% \begin{macro}{\AtEndEveryPend}
+% Here a macro to insert automatically any content of an of end of \cs{pend}, in numbered lines.
+%    \begin{macrocode}
+\newcommand{\AtEndEveryPend}[1]{%
+  \ifstrempty{#1}%
+    {\xdef\@at@end@every@pend{}}%
+    {\gdef\@at@end@every@pend{#1}}%
+}%
+\def\@at@end@every@pend{}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\l@dzeropenalties}
 % A macro to zero penalties for \protect\cs{pend} or \protect\cs{pstart}.
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{l@dzeropenalties}}
@@ -16772,7 +16869,7 @@
 % the user may initiate these penalties to indicate good and bad
 % places in the stanza for page breaking.
 %    \begin{macrocode}
-\newcommandx{\stanza@line}[1][1]{
+\newcommandx{\stanza@line}[2][1,2,usedefault]{%
     \ifnum\value{stanzaindentsrepetition}=0
         \ifcsdef{sza@\number\stanza@count @}%
           {%
@@ -16789,7 +16886,8 @@
         \led@err@StanzaIndentNotDefined%
         }%
     \fi
-    \pstart[#1]\stanza@hang\ignorespaces}
+    \pstart[#1][#2]\stanza@hang\ignorespaces%
+}%
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
             \hangindent\expandafter
             \noexpand\csname sza@0@\endcsname\stanzaindentbase
@@ -16811,6 +16909,8 @@
 % \begin{macro}{\@stopstanza}
 % \begin{macro}{\AtEveryStopStanza}
 % \begin{macro}{\AtEveryStanza}
+% \begin{macro}{\AtStartEveryStanza}
+% \begin{macro}{\BeforeEveryStopStanza}
 % \begin{macro}{\newverse}
 % \changes{v1.6.0}{2013/10/09}{Add \protect\cs{falseverse} macro.}
 % Now we have the components of the \protect\cs{stanza} macro,
@@ -16830,7 +16930,7 @@
 %
 %
 %    \begin{macrocode}
-\xdef\@startstanza[#1]{%
+\xdef\@startstanza[#1][#2]{%
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
@@ -16845,49 +16945,81 @@
          \noexpand\newverse[][]}%
    \def\noexpand\&{\noexpand\@stopstanza}%
    \noexpand\@advancestanzanumber%
-   \noexpand\stanza@line[#1]%
+   \noexpand\stanza@line[#1][#2]%
    \noexpand\@insertstanzanumber%
    \let\par\relax\ignorespaces%No paragraph in verses
 }
 
-\newcommandx{\stanza}[1][1,usedefault]{%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
-    {\@startstanza[\at@every@stanza]}%
-    {\@startstanza[#1]}%
+\newcommandx{\stanza}[2][1,2,usedefault]{%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+    {\@startstanza[][\at@every@stanza]\at@start@every@stanza}%
+    {\@startstanza[#1][#2]\at@start@every@stanza}%
 }%
 
-\newcommandx{\@stopstanza}[1][1,usedefault]{%
+\newcommandx{\@stopstanza}[2][1,2,usedefault]{%
   \unskip%
   \endlock%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
-      {\pend[\at@every@stop@stanza]}%
-      {\pend[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stop@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+      {\before@every@stop@stanza\pend[][\at@every@stop@stanza]}%
+      {\before@every@stop@stanza\pend[#1][#2]}%
   \endgroup%
   \instanzafalse%
 }
 
 \newcommand{\AtEveryStopStanza}[1]{%
   \ifstrempty{#1}%
-    {\xdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{}}%
+    {\gdef\at@every@stop@stanza{\noindent#1}}%
+}%
+\WithSuffix\newcommand\AtEveryStopStanza*[1]{%
+  \ifstrempty{#1}%
+    {\gdef\at@every@stop@stanza{}}%
     {\gdef\at@every@stop@stanza{#1}}%
 }%
 \def\at@every@stop@stanza{}%
 
 \newcommand{\AtEveryStanza}[1]{%
   \ifstrempty{#1}%
-    {\xdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{}}%
+    {\gdef\at@every@stanza{\noindent#1}}%
+}%
+\WithSuffix\newcommand\AtEveryStanza*[1]{%
+  \ifstrempty{#1}%
+    {\gdef\at@every@stanza{}}%
     {\gdef\at@every@stanza{#1}}%
 }%
-\def\at@every@stanza{}%
 
 
-\newcommandx*{\newverse}[2][1,2,usedefault]{%
+
+\newcommand{\AtStartEveryStanza}[1]{%
+  \ifstrempty{#1}%
+    {\gdef\at@start@every@stanza{}}%
+    {\gdef\at@start@every@stanza{#1}}%
+}%
+\def\at@start@every@stanza{}%
+
+\newcommand{\BeforeEveryStopStanza}[1]{%
+  \ifstrempty{#1}%
+    {\gdef\before@every@stop@stanza{}}%
+    {\gdef\before@every@stop@stanza{#1}}%
+}%
+\def\before@every@stop@stanza{}%
+
+\newcommandx*{\newverse}[4][1,2,3,4,usedefault]{%
   \unskip%
-  \endlock\pend[#1]\sza@penalty\global%
-  \advance\stanza@count\@ne\stanza@line[#2]%
+  \endlock\pend[#1][#3]\sza@penalty\global%
+  \advance\stanza@count\@ne\stanza@line[#2][#4]%
   }
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
