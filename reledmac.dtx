@@ -465,7 +465,11 @@
 % \changes{v2.19.0}{2017/04/14}{Add better compatibility with \protect\package{csquotes} package when using familiar footnotes.}
 % \changes{v2.19.0}{2017/04/14}{Add \protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} commands.}
 % \title{\Macpackage \\
-% \changes{v2.19.0}{2017/04/14}{Fix bug with paragraph indent after sectioning command.} 
+% \changes{v2.19.0}{2017/04/14}{Fix bug with paragraph indent after sectioning command.}
+% \changes{v2.20.0}{2017/05/05}{Add starred version of \protect\cs{AtEveryPstart}, \protect\cs{AtEveryPend}, \protect\cs{AtEveryStanza} and \protect\cs{AtEveryStopStanza}.}
+% \changes{v2.20.0}{2017/05/05}{Add \protect\cs{AtStartEveryStanza},  \protect\cs{BeforeEveryStopStanza},  \protect\cs{AtEndEveryPend},  \protect\cs{AtStartEveryPstart}.} 
+% \changes{v2.20.0}{2017/05/05}{Add second optional argument of \protect\cs{pstart}, \protect\cs{pend} and \protect\cs{stanza}.} 
+% \changes{v2.20.0}{2017/05/05}{Add third and fourth optional argument of \protect\cs{newverse}.} 
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -896,6 +900,16 @@
 % \changes{v1.12.0}{2014/08/05}{Optional arguments for \protect\cs{pstart} and \protect\cs{pend}.}
 % Both \protect\cs{pstart} and \protect\cs{pend} can take a optional argument in brackets. 
 % Its content will be printed before the beginning of \protect\cs{pstart} / after the end of  \protect\cs{pend} instead of the argument of \protect\cs{AtEveryPstart} / \protect\cs{AtEveryPend}.
+%
+% Not that a \cs{noindent} will be automatically added before this argument, and, consequently, a \cs{parskip} will be inserted.
+% You can use a second optional argument, in bracket, to not have this \cs{noindent}.
+% \begin{verbatim}
+% \pstart[foo] % A \noindent will be inserted before foo.
+% \pstart[][foo]% No \noindent before foo.
+% \end{verbatim}
+%
+% The second optional argument of \cs{pstart} / \cs{pend} replace the argument of \cs{AtEveryPstart*} / \cs{AtEveryPend*}.
+%
 % If you need to start a \protect\cs{pstart} with brackets, or to add brackets after a \protect\cs{pend}, just add a \protect\cs{relax} between \protect\cs{pstart}\,\ldots\,\protect\cs{pend} and the brackets.
 %
 % This feature is also useful when typesetting verses (see \reff{verse}) or \parpackage\ (see \reff{eledpar}).
@@ -907,7 +921,18 @@
 % \label{AtEveryPstart} \DescribeMacro{\AtEveryPstart}\DescribeMacro{\AtEveryPend}
 % You can use both \protect\cs{AtEveryPstart} and \protect\cs{AtEveryPend}.
 % Their arguments will be printed before every \protect\cs{pstart} begins / after  every \protect\cs{pend} ends.
+% 
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryPstart} and \protect\cs{AtEveryPend} to no insert the \cs{noindent}. 
 %
+% \Describe{\AtStartEveryPstart}\Describe{\AtEndEveryPend}
+%  The argument of \cs{AtStartEveryPstart} / \cs{AtEndEveryPend} will be inserted at the beginning  / the end of every \cs{pstart} / \cs{pend}, in the same paragraph. For example, if you want that each \cs{pstart} start by a star, you can use:
+% \begin{verbatim}
+% \AtStartEveryPstart{*} 
+% \end{verbatim}
+% Instead of manually do
+% \begin{verbatim}
+% \pstart * Real pstart content.\pend 
+% \end{verbatim}
 % \subsubsection{Numbering paragraphs (\protect\cs{pstart})}
 % \changes{v0.12.0}{2011/10/01}{Possibility to number \protect\cs{pstart}.}
 % It is possible to insert a number at every \protect\cs{pstart} command; you must use the \DescribeMacro{\numberpstarttrue}\protect\cs{numberpstarttrue} command to have it. You can stop the numbering with \DescribeMacro{\numberpstartfalse}\protect\cs{numberpstartfalse}. 
@@ -2703,16 +2728,29 @@
 % \subsection{Content before/after verses}\label{contentverse}
 % It is possible to add content, like a subtitle or a spacing, before or after verse:
 % \begin{itemize}
-%   \item The \protect\cs{stanza} command can take an optional argument (in brackets). Its content will be printed before the stanza. 
+%   \item The \protect\cs{stanza} command can take an optional argument (in brackets). Its content will be printed before the stanza. A \cs{noindent} is inserted before this content of first optional argument.
+% If you don't want this \cs{noindent}, you can use second optional argument (in brackets, too):
+% \begin{verbatim}
+% \stanza[foo] % \noindent is inserted before foo.
+% \stanza[][foo] % There is no \noindent inserted before foo.
+% \end{verbatim}
 %
-% Use \cs{AtEveryStanza}\marg{arg} to automatically add content at the begining of stanza.
-%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse. 
+% \item \DescribeMacro{\AtEveryStanza} Use \cs{AtEveryStanza}\marg{arg} to automatically add content before the stanza (not in the same paragraph).
 %
-%  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verses (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verses (including the first one). 
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStanza} to avoid this \cs{noindent}.
+%  \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the beginning of stanza (in the same paragraph). 
+%   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
+% 
+% A \cs{noindent} is automatically inserted before the contents of these optional arguments.
+% 
+% Use third and fourth optional argument to not add these \cs{noindent} (to add content respectively after the current verse / before the next verse).
+% \item  Use \cs{AtEveryPend}\marg{arg} to automatically add content after verses (including the final one) and \cs{AtEveryPstart}\marg{arg} to automatically add content before verses (including the first one). 
 %   \item \verb+\&+ can take an optional argument (in brackets). Its content will be printed after the stanza.
 % 
-% Use \cs{AtEveryStopStanza} to automatically add content at the end of stanzas.
+% \item \DescribeMacro{\AtEveryStopStanza} Use \cs{AtEveryStopStanza} to automatically add content after the end of stanzas (not in the same paragraph).
 %
+% Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStopStanza}  to avoid this \cs{noindent}.
+% \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the end of stanza (in the same paragraph). 
 % \end{itemize}
 %
 % 

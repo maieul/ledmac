@@ -302,6 +302,8 @@
 % \changes{v2.17.0}{2017/02/22}{Change code for compatibility with \protect\reledmac 2.18.0}
 % \changes{v2.17.1}{2017/03/26}{Fix bug with \protect\option{prevpgstyle} option when not using \protect\option{prevpgnotnumbered}.}
 % \changes{v2.17.3}{2017/04/20}{Fix bug when using multiple sidenotes on the same line, on right side.}
+% \changes{v2.17.4}{2017/04/28}{Fix bugs with sublines in parallel typesetting.}
+% \changes{v2.18.0}{2017/05/05}{Compatibility with v2.20.0 of \protect\reledmac.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -583,6 +585,23 @@
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
+% \subsection{Note about \cs{AtEveryPstart*} and \cs{AtEveryPend*}}
+% The content of \cs{AtEveryPstart} / \cs{AtEveryPend} (without star) is added before every \cs{pstart} / after every \cs{pend}, respecting left / right side.
+%
+% The content of \cs{AtEveryPstart*} / \cs{AtEveryPend*} (with star) is added before every \cs{pstart} / after every \cs{pend}, but there is no distinction between left and right side.
+% 
+% However, as this content is also added when we typeset pages in parallel, \reledmac must add it one time for both left and right pstart.
+% So if you use it to add vertical spacing, it will be problematic in parallel columns, as you will have two time the vertical spacing.
+% A solution is to add test inside to make distinction between columns parallel typesetting / page parallel typesetting.
+% \begin{verbatim}
+%\AtEveryPstart*{%
+%\ifl@dprintingcolumns
+%  \vspace{0.125\baselineskip}
+%\else
+%  \vspace{0.25\baselineskip}
+%\fi
+%}
+% \end{verbatim}
 % \section{Keeping translation in the outside/inside column}
 % By default, \parpackage works with left and right columns.
 % However, it is possible to work with inner and outer column.
@@ -1257,7 +1276,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/04/20 v2.17.3 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/05/05 v2.18.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
