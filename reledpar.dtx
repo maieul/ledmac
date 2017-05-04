@@ -300,6 +300,10 @@
 % \changes{v2.16.2}{2017/01/25}{Change log message when numbered files still don't exist, in order to improve compatibility with \protect\emph{latexmk}.}
 % \changes{v2.16.3}{2017/02/10}{Fix bug when setting \protect\cs{aftercolumnseparator}.}
 % \changes{v2.17.0}{2017/02/22}{Change code for compatibility with \protect\reledmac 2.18.0}
+% \changes{v2.17.1}{2017/03/26}{Fix bug with \protect\option{prevpgstyle} option when not using \protect\option{prevpgnotnumbered}.}
+% \changes{v2.17.3}{2017/04/20}{Fix bug when using multiple sidenotes on the same line, on right side.}
+% \changes{v2.17.4}{2017/04/28}{Fix bugs with sublines in parallel typesetting.}
+% \changes{v2.18.0}{2017/05/04}{Compatibility with v2.20.0 of \protect\reledmac.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -563,8 +567,8 @@
 % \end{itemize}
 % You can redefine \protect\cs{beforecolumnseparator} and \protect\cs{aftercolumnseparator} length to define spaces before or after the column separator, instead of letting \parpackage calculate them automatically. 
 % \begin{verbatim}
-% \setlength{\beforecolumseparator}{length}
-% \setlength{\aftercolumseparator}{length}
+% \setlength{\beforecolumnseparator}{length}
+% \setlength{\aftercolumnseparator}{length}
 % \end{verbatim}
 % If you want to revert to the previous behavior, just set with a negative value. 
 % \subsubsection{Mixing two columns and one column texts}
@@ -581,6 +585,23 @@
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
 %
+% \subsection{Note about \cs{AtEveryPstart*} and \cs{AtEveryPend*}}
+% The content of \cs{AtEveryPstart} / \cs{AtEveryPend} (without star) is added before every \cs{pstart} / after every \cs{pend}, respecting the left / right side.
+%
+% The content of \cs{AtEveryPstart*} / \cs{AtEveryPend*} (with star) is added before every \cs{pstart} / after every \cs{pend}, but there is no distinction between left and right sides.
+% 
+% However, as this content is also added when we typeset pages in parallel, \reledmac must add it once for left  \cs{pstart} and once for right \cs{pstart}.
+% So if you use it to add vertical spacing, it will be problematic in parallel columns, as you will have two times the vertical spacing,  vertical spacing will be twice as large as expected.
+% A solution is to add a test inside to make distinction between columns parallel typesetting / page parallel typesetting.
+% \begin{verbatim}
+%\AtEveryPstart*{%
+%\ifl@dprintingcolumns
+%  \vspace{0.125\baselineskip}
+%\else
+%  \vspace{0.25\baselineskip}
+%\fi
+%}
+% \end{verbatim}
 % \section{Keeping translation in the outside/inside column}
 % By default, \parpackage works with left and right columns.
 % However, it is possible to work with inner and outer column.
@@ -807,7 +828,7 @@
 % 
 % Notice that these options just tell you \LaTeX\ to not continue long notes on the other side. 
 % It is not designed to allow you to call footnotes on one side but print them on the other side.
-% \subsubsection{Familiar notes called in the right side, but to be printed in the left side}
+% \subsubsection{Familiar notes called on the right side, but to be printed on the left side}\label{reledpar-nomk}
 % \DescribeMacro{\footnoteXnomk}
 % \DescribeMacro{\footnoteXmk}
 % As often happens, the left side has less room for text.
@@ -1136,7 +1157,7 @@
 % When using \cs{stanzanumtrue} (\reff{reledmac-numbering-stanza}) in parallel typesetting, \verb+stanza+ counter is replaced by \verb+stanzaL+ counter in left side and by \verb+stanzaR+ counter in right side. Consequently, you can redefine \cs{thestanzaL} and \cs{thestanzaR} to change their aspect.
 %
 % \section{Side notes}
-% As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouterote}, \protect\cs{ledinnerrote}.
+% As in \macpackage, you must use one of the following commands to add side notes: \protect\cs{ledsidenote}, \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledouternote}, \protect\cs{ledinnernote}.
 % 
 % The \protect\cs{sidenotemargin} defines the margin of the sidenote for either left or right side, depending on the current environment.
 % 
@@ -1255,7 +1276,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/02/22 v2.17.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/05/04 v2.18.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1392,11 +1413,14 @@
 % \begin{macro}{\Lcolwidth}
 % \begin{macro}{\Rcolwidth}
 % The widths of the left and right parallel columns (or pages).
+% The suffixed versions are not manipulated directly by user, but we use them to be certain to have the same coldwitdh in the \env{pages} environment and in the \cs{Pages} command. 
 %    \begin{macrocode}
 \newdimen\Lcolwidth
   \Lcolwidth=0.45\textwidth
 \newdimen\Rcolwidth
   \Rcolwidth=0.45\textwidth
+\newdimen\Lcolwidth@pages
+\newdimen\Rcolwidth@pages
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -1689,7 +1713,7 @@
   \global\line@numR \z@
   \global\@lockR \z@
   \global\sub@lockR \z@
-  \global\sublines@false
+  \global\sublines@Rfalse
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
   \global\stopmsdata@inserted@true%
@@ -2091,8 +2115,8 @@
   \setcounter{linenumincrement}{#1}%
 }
 \WithSuffix\newcommand\firstsublinenum*[1]{%
-  \setcounter{subfirstlinenumR}{#1}%
-  \setcounter{subfirstlinenum}{#1}%
+  \setcounter{firstsublinenumR}{#1}%
+  \setcounter{firstsublinenum}{#1}%
 }
 \WithSuffix\newcommand\sublinenumincrement*[1]{%
   \setcounter{sublinenumincrementR}{#1}%
@@ -2210,8 +2234,8 @@
   \l@dlinenumR}
 \newcommand*{\l@dlinenumR}{%
   \numlabfont\linenumrepR{\line@numR}\@Rlineflag%
-  \ifsublines@
-    \ifnum\subline@num>\z@
+  \ifsublines@R
+    \ifnum\subline@numR>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
     \fi
   \fi}
@@ -2230,6 +2254,7 @@
 % \begin{macro}{\line@numR}
 % \begin{macro}{\subline@numR}
 % \begin{macro}{\absline@numR}
+% \begin{macro}{\ifsublines@R}
 % The count \protect\cs{line@numR} stores the line number that is used in
 % the right text's marginal line numbering and in notes. 
 % The count \protect\cs{subline@numR} stores
@@ -2239,12 +2264,15 @@
 % of the right text section: that is, the number we have actually printed, 
 % no matter what numbers we attached to them. 
 %
+% The boolean \cs{ifsublines@R} is set to true when we start subline on rightside.
 %    \begin{macrocode}
 \newcount\line@numR
 \newcount\subline@numR
 \newcount\absline@numR
+\newif\ifsublines@R%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -2373,9 +2401,9 @@
   \fi
   \ifx\sub@change\relax \else
     \ifnum\sub@change>\z@
-      \sublines@true
+      \sublines@Rtrue
     \else
-      \sublines@false
+      \sublines@Rfalse
     \fi
     \sub@action
     \let\sub@change\relax
@@ -2392,7 +2420,7 @@
   \or\or
     \sub@lockR \z@
   \fi
-  \ifsublines@
+  \ifsublines@R
     \ifnum\sub@lockR<\tw@
       \advance\subline@numR \@ne
     \fi
@@ -2486,7 +2514,7 @@
 
 \newcommand*{\do@lockonR}{%
   \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-  \ifsublines@
+  \ifsublines@R
     \xright@appenditem{-1005}\to\actions@listR
     \ifnum\sub@lockR=\z@
       \sub@lockR \@ne
@@ -2523,7 +2551,7 @@
 
 \newcommand{\do@lockoffR}{%
   \xright@appenditem{\the\absline@numR}\to\actionlines@listR
-  \ifsublines@
+  \ifsublines@R
     \xright@appenditem{-1006}\to\actions@listR
     \ifnum\sub@lockR=\tw@
       \sub@lockR \thr@@
@@ -2617,9 +2645,9 @@
 %    \begin{macrocode}
     \xright@appenditem%
       {\the\page@numR|\the\line@numR|%
-       \ifsublines@ \the\subline@numR \else 0\fi|%
+       \ifsublines@R \the\subline@numR \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
-       \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@listR
+       \ifsublines@R \the\endsubline@num \else 0\fi}\to\line@listR
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
@@ -3174,6 +3202,8 @@
 }{%
   \l@dpairingfalse
   \l@dpagingfalse
+  \global\setlength{\Lcolwidth@pages}{\Lcolwidth}%
+  \global\setlength{\Rcolwidth@pages}{\Rcolwidth}%
 }
 
 %    \end{macrocode}
@@ -3210,8 +3240,8 @@
   \let\pend\pendL
   \let\memorydump\memorydumpL
   \Leftsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaLtrue\old@startstanza[##1]}
+  \let\old@startstanza\@startstanza%
+  \def\@startstanza[##1][##2]{\global\instanzaLtrue\old@startstanza[##1][##2]}%
 }{
   \expandafter\ifvoid\csname l@dLcolrawbox1\endcsname%
     \led@error@missing@numbering{Leftside}%
@@ -3263,8 +3293,8 @@
   \let\lednopb\lednopbR
   \let\lineation\lineationR
   \Rightsidehook
-  \let\old@startstanza\@startstanza
-  \def\@startstanza[##1]{\global\instanzaRtrue\old@startstanza[##1]}
+  \let\old@startstanza\@startstanza%
+  \def\@startstanza[##1][##2]{\global\instanzaRtrue\old@startstanza[##1][##2]}%
 }{%
   \ledRcolfalse
  \expandafter\ifvoid\csname l@dRcolrawbox1\endcsname%
@@ -3347,7 +3377,7 @@
 \newcounter{pstartR}
 \renewcommand{\thepstartR}{{\bfseries\@arabic\c@pstartR}. }
 
-\newcommandx*{\pstartL}[1][1]{%
+\newcommandx*{\pstartL}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3403,6 +3433,7 @@
         \fi%
        \fi%
       \fi%
+  \@at@start@every@pstart%
   \hsize=\Lcolwidth%
   \numberedpar@true%
   \iflabelpstart\protected@edef\@currentlabel%
@@ -3410,9 +3441,33 @@
 %    \end{macrocode}
 % Dump the optional arguments
 %    \begin{macrocode}
+  \providetoggle{before@pstartL@\the\l@dnumpstartsL @par}%
   \ifstrempty{#1}%
-    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}}%
-    {\csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
+    }%
+    {%
+      \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
+    }%
+    {%
+      \csgdef{before@pstartL@\the\l@dnumpstartsL}{#2}%
+      \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+    }%
    \at@every@pstart@call%
 %    \end{macrocode}
 % Gobble following space (automatically done if there is no optional argument)
@@ -3425,7 +3480,7 @@
 % The same for right side.
 % 
 %    \begin{macrocode}
-\newcommandx*{\pstartR}[1][1]{%
+\newcommandx*{\pstartR}[2][1,2,usedefault]{%
   \if@nobreak%
     \let\@oldnobreak\@nobreaktrue%
   \else%
@@ -3465,13 +3520,38 @@
          \fi%
         \fi%
        \fi%
+  \@at@start@every@pstart%
   \hsize=\Rcolwidth%
   \numberedpar@true%
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
-   \ifstrempty{#1}%
-     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}}%
-     {\csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}}%
+  \providetoggle{before@pstartR@\the\l@dnumpstartsR @par}%
+  \ifstrempty{#1}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
+    }%
+    {%
+      \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pstart@star@%
+        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
+    }%
+    {%
+      \csgdef{before@pstartR@\the\l@dnumpstartsR}{#2}%
+      \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+    }%
    \at@every@pstart@call%
    \ignorespaces%
   }
@@ -3488,7 +3568,7 @@
 % that knows about left parallel texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendL}[1][1]{%
+\newcommandx*{\pendL}[2][1,2,usedefault]{%
   \ifnumbering \else%
     \led@err@PendNotNumbered%
   \fi%
@@ -3501,6 +3581,7 @@
 % be no large interline penalties to prevent us from slicing the
 % paragraph into pieces.  
 %    \begin{macrocode}
+  \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
@@ -3517,10 +3598,34 @@
 %    \end{macrocode}
 % Dump content of the optional argument.
 %    \begin{macrocode}
+  \providetoggle{after@pendL@\the\l@dnumpstartsL @par}%
   \ifstrempty{#1}%
-    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}}%
-    {\csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}}%
-  }
+    {%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
+    }%
+    {%
+      \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+      \else%
+        \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
+      \fi%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
+    }%
+    {%
+      \csgdef{after@pendL@\the\l@dnumpstartsL}{#2}%
+      \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+    }%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3530,13 +3635,14 @@
 % The version of \protect\cs{pend} needed for right texts.
 %
 %    \begin{macrocode}
-\newcommandx*{\pendR}[1][1]{%
+\newcommandx*{\pendR}[2][1,2,usedefault]{%
   \ifnumberingR \else%
     \led@err@PendNotNumbered%
   \fi%
   \ifnumberedpar@ \else%
     \led@err@PendNoPstart%
   \fi%
+  \@at@end@every@pend%
   \endgraf\global\num@linesR=\prevgraf\egroup%
   \global\par@lineR=0%
   \endgroup%
@@ -3547,9 +3653,32 @@
     \addtocounter{pstartR}{1}%
   \fi%  
   \parledgroup@beforenotes@save{R}%
+  \providetoggle{after@pendR@\the\l@dnumpstartsR @par}%
   \ifstrempty{#1}%
-    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
-    {\csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}}%
+    {% 
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+      \fi%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
+    {% 
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}%
+      \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+    }%
+  \ifstrempty{#2}%
+    {%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}%
+      \ifat@every@pend@star@%
+        \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+      \else%
+        \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
+      \fi%
+    }%
+    {%
+      \csgdef{after@pendR@\the\l@dnumpstartsR}{#2}%
+      \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+    }%
 }
 
 %    \end{macrocode}
@@ -3973,7 +4102,7 @@
   \do@ballastR
   \ifledgroupnotesR@\else
         \ifnumberline
-          \ifsublines@
+          \ifsublines@R
             \ifnum\sub@lockR<\tw@
               \global\advance\subline@numR \@ne
            \fi
@@ -4049,9 +4178,9 @@
 \newcommand*{\do@actions@fixedcodeR}{%
   \ifcase\@l@dtempcnta% 
   \or%                     % 1001 = starting sublineation
-    \global\sublines@true
+    \global\sublines@Rtrue
   \or%                     % 1002 = ending sublineation
-    \global\sublines@false
+    \global\sublines@Rfalse
   \or%                     % 1003 = starting locking number
     \global\@lockR=\@ne
   \or%                     % 1004 = ending locking number
@@ -4097,7 +4226,7 @@
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
         \@l@dtempcnta=-\next@actionR
         \advance\@l@dtempcnta by -5001\relax
-        \ifsublines@
+        \ifsublines@R
           \global\subline@numR=\@l@dtempcnta
         \else
           \global\line@numR=\@l@dtempcnta
@@ -4203,10 +4332,10 @@
 \ifl@dskipnumber
   \global\l@dskipnumberfalse
 \else
-  \ifsublines@
+  \ifsublines@R
     \@l@dtempcntb=\subline@numR
     \l@dcalcnum{\subline@numR}{\c@firstsublinenumR}{\c@sublinenumincrementR}%
-    \ch@cksub@lockR
+    \ch@cksub@l@ckR
   \else
     \@l@dtempcntb=\line@numR
     \ifx\linenumberlistR\empty%
@@ -4820,7 +4949,7 @@
         \ifnumequal{\itemcount@}{0}%
             {%
             \appto\sidenotecontent@{##1}}% Not print not separator before the 1st note
-            {\appto\sidenotecontent@{\sidenotesep ##1}%
+            {\appto\sidenotecontent@{\@sidenotesep ##1}%
             }%
             \numgdef{\itemcount@}{\itemcount@+1}%
     }%
@@ -4917,7 +5046,7 @@
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}[1][]{%
+\newenvironment{astanza}[2][1,2,usedefault]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
@@ -4935,9 +5064,12 @@
     \global\advance\stanza@count\@ne
     \@astanza@line}%
   \def\&{\@stopastanza}%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stanza}} and test{\ifstrempty{#1}}}%
-    {\pstart[\at@every@stanza]}%
-    {\pstart[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}}%
+    {\pstart[][\at@every@stanza]\at@start@every@stanza}%
+    {\pstart[#1][#2]\at@start@every@stanza}%
   \@astanza@line
   \let\par\relax\ignorespaces%No paragraph in verses
 }{}
@@ -4949,11 +5081,15 @@
 % This command is called by \verb+\&+ in \env{astanza} environment. 
 % It allows optional arguments. 
 %    \begin{macrocode}
-\newcommandx{\@stopastanza}[1][1,usedefault]{%
+\newcommandx{\@stopastanza}[2][1,2,usedefault]{%
   \endlock\mbox{}%
-  \ifboolexpr{not test{\ifdefvoid{\at@every@stop@stanza}} and test{\ifstrempty{#1}}}%
-      {\pend[\at@every@stop@stanza]}%
-      {\pend[#1]}%
+  \ifboolexpr{%
+    not test{\ifdefvoid{\at@every@stop@stanza}}%
+    and test{\ifstrempty{#1}}%
+    and test{\ifstrempty{#2}}%
+    }%
+      {\before@every@stop@stanza\pend[][\at@every@stop@stanza]}%
+      {\before@every@stop@stanza\pend[#1][#2]}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -5786,6 +5922,10 @@
     and test {\ifdefempty{\at@every@pstart}}}%
        {}%
        {%
+       \ifboolexpr{not togl{before@pstartR@\the\l@dpscR @par} and not togl{before@pstartL@\the\l@dpscL @par}}{%
+         \csuse{before@pstartL@\the\l@dpscL}%
+         \csuse{before@pstartR@\the\l@dpscR}%
+       }{%     
          \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
            \par\parbox[t][][t]{\Lcolwidth}{%
@@ -5797,7 +5937,8 @@
              \csuse{before@pstartR@\the\l@dpscR}%
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
-         }%
+         }%  
+        }%
        }%
     \global\csundef{before@pstartL@\the\l@dpscL}%
     \global\csundef{before@pstartR@\the\l@dpscR}%
@@ -5809,6 +5950,10 @@
     and test {\ifdefempty{\at@every@pend}}}%
        {}%
        {%
+       \ifboolexpr{not togl{after@pendR@\the\l@dpscR @par} and not togl{after@pendL@\the\l@dpscL @par}}{%
+         \csuse{after@pendL@\the\l@dpscL}%
+         \csuse{after@pendR@\the\l@dpscR}%
+       }{% 
          \hb@xt@ \hsize{%
            \ifdefstring{\columns@position}{L}{}{\hfill }%
            \parbox[t][][t]{\Lcolwidth}{%
@@ -5821,6 +5966,7 @@
            }%
            \ifdefstring{\columns@position}{R}{}{\hfill}%
          }%
+        }%
        }%
     \global\csundef{after@pendL@\the\l@dpscL}%
     \global\csundef{after@pendR@\the\l@dpscR}%
@@ -5891,9 +6037,10 @@
 % As \protect\cs{Pages} must be called outside of the pages environment, we have to redefine the \protect\cs{Lcolwidth} and \protect\cs{Rcolwidth} lengths, to prevent false overfull hboxes.
 % \changes{v1.13.0}{2015/03/06}{Prevent false overfull hboxes when using \protect\cs{Pages} outside of pages environment.}
 % \changes{v2.3.0}{2015/09/05}{Fix bug when calling \protect\cs{Columns} after a \protect\cs{Pages} (bug added in v1.13.0).}
+% \changes{v2.17.2}{2017/04/06}{Fix bug when changing \protect\cs{Lcolwitdth} and \protect\cs{Rcolwitdth} in \protect\env{pages} environment.}
 %    \begin{macrocode}
-    \setlength{\Lcolwidth}{\textwidth}%
-    \setlength{\Rcolwidth}{\textwidth}%
+    \setlength{\Lcolwidth}{\Lcolwidth@pages}%
+    \setlength{\Rcolwidth}{\Rcolwidth@pages}%
 %    \end{macrocode}
 %    \begin{macrocode}
     \l@dzeropenalties%
@@ -6260,8 +6407,8 @@
   \ifodd\c@page%
     \ifprevpgnotnumbered%
       \addtocounter{par@page}{-1}%
-      \ifdef{\prevpgstyle}{\thispagestyle{\prevpgstyle}}{}%
     \fi%
+    \ifdef{\prevpgstyle}{\thispagestyle{\prevpgstyle}}{}%
     \hbox{}\clearpage%
   \fi%
 }%
