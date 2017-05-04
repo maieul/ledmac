@@ -13,8 +13,8 @@ directory_files = os.listdir(".")
 
 def export_png(filename,basename):
     ''' Export a png to pdf'''
-        print ("Export " + filename + " to png")
-        os.system ("convert -density 800 " + file_name + " export/" + basename + ".png")
+    print ("Export " + filename + " to png")
+    os.system ("convert -density 800 " + file_name + " export/" + basename + ".png")
 
 
 def create_repository_export():
