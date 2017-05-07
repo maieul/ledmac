@@ -43,7 +43,7 @@ def diff_png(basename):
 def export_png(filename,basename):
     ''' Export a png to pdf'''
     print ("Export " + filename + " to png")
-    os.system ("convert -density 800 " + filename + " export/" + basename + ".png")
+    os.system ("convert -density 400 " + filename + " export/" + basename + ".png")
 
 
 def create_repository(rep):
