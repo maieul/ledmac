@@ -16297,9 +16297,23 @@
 % Write the index information to the \file{idx} file.
 %    \begin{macrocode}
 \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
+  \begingroup%
+    \let\emph\@firstofone%
+    \let\textbf\@firstofone%
+    \let\textit\@firstofone%
+    \let\textmd\@firstofone%
+    \let\textnormal\@firstofone%
+    \let\textrm\@firstofone%
+    \let\textsc\@firstofone%
+    \let\textsf\@firstofone%
+    \let\textsl\@firstofone%
+    \let\texttt\@firstofone%
+    \let\textup\@firstofone%
+    \xdef\@tmp{#2}%To be used in IfSubStr instead of #2 directly. Avoid some expansion bugs (for example with \edindex{textsc{something}})
+  \endgroup%
   \ifl@imakeidx%
     \ifnum\@edindex@fornote@>\z@%
-      \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+      \IfSubStr[1]{\@tmp}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|)\@ledinnote@command}{\theendpageline}%
@@ -16309,7 +16323,7 @@
     \fi%
   \else%
     \ifnum\@edindex@fornote@>\z@%
-      \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+      \IfSubStr[1]{\@tmp}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\protected@write\@indexfile{}%
 	{\string\indexentry{\@index@txt|(\@ledinnote@command}{\thestartpageline}
