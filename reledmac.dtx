@@ -472,6 +472,9 @@
 % \changes{v2.20.0}{2017/05/04}{Add \protect\cs{AtStartEveryStanza},  \protect\cs{BeforeEveryStopStanza},  \protect\cs{AtEndEveryPend},  \protect\cs{AtStartEveryPstart}.} 
 % \changes{v2.20.0}{2017/05/04}{Add second optional argument of \protect\cs{pstart}, \protect\cs{pend} and \protect\cs{stanza}.} 
 % \changes{v2.20.0}{2017/05/04}{Add third and fourth optional argument of \protect\cs{newverse}.} 
+% \changes{v2.21.0}{2017/06/04}{Fix bug when using formatting command in the argument of \protect\cs{edindex} inside \protect\cs{edtext}.} 
+% \changes{v2.21.0}{2017/06/04}{Now, as explained in the handbook, an \protect\cs{edindex} inside \cs{edtext} index only for main text, and not for critical footnotes.} 
+% \changes{v2.21.0}{2017/06/04}{Add the possibility of nested \protect\cs{sameword}.} 
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1673,6 +1676,59 @@
 % \endnumbering
 % \egend
 %
+% \subsubsection{Sameword for a group of words}
+% Sometime, a group of words, and not only a single word, occurs multiple times.
+% In this case, you have two solutions.
+%
+% First, you can consider only individual words, and not groups of word.
+% See this example:
+% \begin{verbatim}
+%\sameword{per} \sameword{causam} 
+%tamen scire
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}} 
+%est
+%\edtext{\sameword{per} \sameword{causam}}{\Bfootnote{causam rei B}} 
+%cognoscere
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}}
+% \end{verbatim}
+% \begin{ledgroup}
+% \beginnumbering
+% \pstart
+%\sameword{per} \sameword{causam} 
+%tamen scire
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}} 
+%est
+%\edtext{\sameword{per} \sameword{causam}}{\Bfootnote{causam rei B}} 
+%cognoscere
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}}
+% \pend
+% \endnumbering
+% \end{ledgroup}
+% Here, there no ambiguity about which \enquote{per causam} we speak.
+%
+% However, we may consider that as \enquote{per causam} is the lemma of the second note, there should be only one number for the whole lemma.
+% In this case we can mark all the \enquote{per causam} groups. 
+% But as \enquote{causam} is also called as lemma in note~1 and ~3, we need to use nested \cs{sameword}.
+% Consequently, we need to use \cs{lemma} for the \cs{edtext} linked to \enquote{per causam}, as we don't want to have number for individual word.
+%
+% \begin{verbatim}
+%\sameword{per \sameword{causam}} tamen scire
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}} est
+%\edtext{\sameword[1]{per \sameword{causam}}}{\lemma{\sameword{per causam}}\Bfootnote{causam rei B}} cognoscere
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}}
+% \end{verbatim}
+% \begin{ledgroup}
+%\beginnumbering
+%\pstart
+%\sameword{per \sameword{causam}} tamen scire
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}} est
+%\edtext{\sameword[1]{per \sameword{causam}}}%
+% {\lemma{\sameword{per causam}}\Bfootnote{causam rei B}} 
+% cognoscere
+%\edtext{\sameword{causam}}{\Bfootnote{fnote}}
+%\pend
+%\endnumbering
+% \end{ledgroup}
 % \subsubsection{Customizing}
 % \DescribeMacro{\showwordrank}You can redefine the \protect\cs{showwordrank} macro to change the way the number is printed. The default value is
 % \begin{verbatim}
@@ -3941,7 +3997,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/05/04 v2.20.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/06/04 v2.21.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7231,6 +7287,7 @@
   \let\setline=\@gobble \let\advanceline=\@gobble
   \let\sameword\sameword@inedtext%
   \let\edtext=\dummy@edtext
+  \let\edindex\dummy@edindex%
   \l@dtabnoexpands
   \morenoexpands}
 \let\morenoexpands=\relax
@@ -7691,11 +7748,14 @@
 % we detokenize only for non-\XeTeX engines. In any case, in \XeTeX a \protect\cs{csname} construction can contain UTF-8 characters without a problem, as UTF-8 characters are not managed with category codes, but instead read directly as UTF-8 characters.
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
-  \ifxetex%
-    \xdef\sw@txt{#1}%
-  \else%
-    \expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}%
-  \fi%
+  \begingroup%
+    \let\sameword\@firstofone%Allow to have nested \sameword
+    \ifxetex%
+      \xdef\sw@txt{#1}%
+    \else%
+      \expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}%
+    \fi%
+  \endgroup%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -16294,12 +16354,27 @@
 % \changes{v1.12.0}{2014/08/05}{Use correctly default index when \protect\package{imakeidx} is loaded.}
 % \changes{v1.14.0}{2014/10/27}{Let eledmac take advantage of imakeidx even when memoir class is used}
 % \begin{macro}{\@wredindex}
+% \begin{macro}{\dummy@edindex}
 % Write the index information to the \file{idx} file.
 %    \begin{macrocode}
 \newcommandx{\@wredindex}[2][1=\expandonce\jobname,usedefault]{%#1 = the index name, #2 = the text
+  \begingroup%
+    \let\emph\@firstofone%
+    \let\textbf\@firstofone%
+    \let\textit\@firstofone%
+    \let\textmd\@firstofone%
+    \let\textnormal\@firstofone%
+    \let\textrm\@firstofone%
+    \let\textsc\@firstofone%
+    \let\textsf\@firstofone%
+    \let\textsl\@firstofone%
+    \let\texttt\@firstofone%
+    \let\textup\@firstofone%
+    \xdef\@tmp{#2}%To be used in IfSubStr instead of #2 directly. Avoid some expansion bugs (for example with \edindex{textsc{something}})
+  \endgroup%
   \ifl@imakeidx%
     \ifnum\@edindex@fornote@>\z@%
-      \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+      \IfSubStr[1]{\@tmp}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|(\@ledinnote@command}{\thestartpageline}%
       \expandafter\imki@wrindexentry{#1}{\@index@txt|)\@ledinnote@command}{\theendpageline}%
@@ -16309,7 +16384,7 @@
     \fi%
   \else%
     \ifnum\@edindex@fornote@>\z@%
-      \IfSubStr[1]{#2}{|}{\get@index@command#2+}{\get@index@command#2|+}%
+      \IfSubStr[1]{\@tmp}{|}{\get@index@command#2+}{\get@index@command#2|+}%
       \get@edindex@ledinnote@command%
       \expandafter\protected@write\@indexfile{}%
 	{\string\indexentry{\@index@txt|(\@ledinnote@command}{\thestartpageline}
@@ -16348,10 +16423,11 @@
 {}%
 {\led@error@fail@patch@makeindex}%
 \newcommand{\edindex}[1]{\@bsphack\@esphack}
+\newcommandx{\dummy@edindex}[2][1=\expandonce\jobname,usedefault]{}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
+% \end{macro}
 % \subsection{Hyperlink}
 % \begin{macro}{\hyperlinkformat}
 % \protect\cs{hyperlinkformat} command is to be used to have both a internal hyperlink and a format, when indexing.
