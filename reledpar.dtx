@@ -943,6 +943,11 @@
 % It is possible to insert a number at every \protect\cs{pstart} command. 
 % You must use the \DescribeMacro{\numberpstarttrue}\protect\cs{numberpstarttrue} command to have it.
 % You can stop the numbering with \DescribeMacro{\numberpstartfalse}\protect\cs{numberpstartfalse}. 
+% 
+% You can modify the number by changing the values of the \verb+pstartL+ and \verb+pstartR+ counters (for left and right side, respectivly). For example:
+% \begin{verbatim}
+% \setcounter{pstartL}{0}% To reset the counter of pstart for Left side. 
+% \end{verbatim}
 % You can redefine the commands \DescribeMacro{\thepstartL}\protect\cs{thepstartL} and \DescribeMacro{\thepstartR}\protect\cs{thepstartR} to change style. 
 % The numbering restarts on each \protect\cs{beginnumbering}.
 % 
@@ -3442,7 +3447,10 @@
 % Dump the optional arguments
 %    \begin{macrocode}
   \providetoggle{before@pstartL@\the\l@dnumpstartsL @par}%
-  \ifstrempty{#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+    }%
     {%
       \ifat@every@pstart@star@%
         \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
@@ -3452,21 +3460,15 @@
       \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
     }%
     {%
-      \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
-      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}%
-    }%
-  \ifstrempty{#2}%
-    {%
-      \ifat@every@pstart@star@%
-        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
-      \else%
+      \ifstrempty{#1}{}{%
         \global\toggletrue{before@pstartL@\the\l@dnumpstartsL @par}%
-      \fi%
-      \csgdef{before@pstartL@\the\l@dnumpstartsL}{\at@every@pstart}%
-    }%
-    {%
-      \csgdef{before@pstartL@\the\l@dnumpstartsL}{#2}%
-      \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+        \csgdef{before@pstartL@\the\l@dnumpstartsL}{\noindent#1}%
+        }%
+      \ifstrempty{#2}{}%
+        {%
+        \csgdef{before@pstartL@\the\l@dnumpstartsL}{#2}%
+        \global\togglefalse{before@pstartL@\the\l@dnumpstartsL @par}%
+        }%
     }%
    \at@every@pstart@call%
 %    \end{macrocode}
@@ -3526,7 +3528,10 @@
    \iflabelpstart\protected@edef\@currentlabel%
        {\p@pstartR\thepstartR}\fi%
   \providetoggle{before@pstartR@\the\l@dnumpstartsR @par}%
-  \ifstrempty{#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+    }%
     {%
       \ifat@every@pstart@star@%
         \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
@@ -3536,21 +3541,15 @@
       \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
     }%
     {%
-      \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
-      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}%
-    }%
-  \ifstrempty{#2}%
-    {%
-      \ifat@every@pstart@star@%
-        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
-      \else%
+      \ifstrempty{#1}{}{%
         \global\toggletrue{before@pstartR@\the\l@dnumpstartsR @par}%
-      \fi%
-      \csgdef{before@pstartR@\the\l@dnumpstartsR}{\at@every@pstart}%
-    }%
-    {%
-      \csgdef{before@pstartR@\the\l@dnumpstartsR}{#2}%
-      \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+        \csgdef{before@pstartR@\the\l@dnumpstartsR}{\noindent#1}%
+      }%
+      \ifstrempty{#2}{}%
+      {%
+        \csgdef{before@pstartR@\the\l@dnumpstartsR}{#2}%
+        \global\togglefalse{before@pstartR@\the\l@dnumpstartsR @par}%
+      }%
     }%
    \at@every@pstart@call%
    \ignorespaces%
@@ -3599,7 +3598,10 @@
 % Dump content of the optional argument.
 %    \begin{macrocode}
   \providetoggle{after@pendL@\the\l@dnumpstartsL @par}%
-  \ifstrempty{#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
     {%
       \ifat@every@pend@star@%
         \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
@@ -3609,21 +3611,15 @@
       \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
     }%
     {%
-      \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
-      \csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}%
-    }%
-  \ifstrempty{#2}%
-    {%
-      \ifat@every@pend@star@%
-        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
-      \else%
+      \ifstrempty{#1}{}{%
         \global\toggletrue{after@pendL@\the\l@dnumpstartsL @par}%
-      \fi%
-      \csgdef{after@pendL@\the\l@dnumpstartsL}{\at@every@pend}%
-    }%
-    {%
-      \csgdef{after@pendL@\the\l@dnumpstartsL}{#2}%
-      \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+        \csgdef{after@pendL@\the\l@dnumpstartsL}{\noindent#1}%
+      }%
+      \ifstrempty{#2}{}%
+      {%
+        \csgdef{after@pendL@\the\l@dnumpstartsL}{#2}%
+        \global\togglefalse{after@pendL@\the\l@dnumpstartsL @par}%
+      }%
     }%
 }%
 %    \end{macrocode}
@@ -3654,7 +3650,10 @@
   \fi%  
   \parledgroup@beforenotes@save{R}%
   \providetoggle{after@pendR@\the\l@dnumpstartsR @par}%
-  \ifstrempty{#1}%
+  \ifboolexpr{%
+    test {\ifstrempty{#1}}%
+    and test {\ifstrempty{#2}}%
+  }%
     {% 
       \ifat@every@pend@star@%
         \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
@@ -3663,21 +3662,14 @@
       \fi%
       \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}}%
     {% 
-      \csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}%
-      \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
-    }%
-  \ifstrempty{#2}%
-    {%
-      \csgdef{after@pendR@\the\l@dnumpstartsR}{\at@every@pend}%
-      \ifat@every@pend@star@%
-        \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
-      \else%
+      \ifstrempty{#1}{}{%
+        \csgdef{after@pendR@\the\l@dnumpstartsR}{\noindent#1}%
         \global\toggletrue{after@pendR@\the\l@dnumpstartsR @par}%
-      \fi%
-    }%
-    {%
-      \csgdef{after@pendR@\the\l@dnumpstartsR}{#2}%
-      \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+      }%
+      \ifstrempty{#2}{}{%
+          \csgdef{after@pendR@\the\l@dnumpstartsR}{#2}%
+          \global\togglefalse{after@pendR@\the\l@dnumpstartsR @par}%
+        }%
     }%
 }
 

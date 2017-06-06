@@ -4,6 +4,7 @@ SRC= $(wildcard *.tex)
 OBJ= $(SRC:.tex=.pdf)
 
 all:$(OBJ)
+	python3 check-example.py
 
 
 %.pdf: %.tex
