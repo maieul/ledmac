@@ -478,6 +478,7 @@
 % \changes{v2.22.0}{2017/06/08}{Fix bug added in v2.16.0  when using \cs{Xtxtbeforenotes} with paragraphed or normal footnotes.}
 % \changes{v2.22.0}{2017/06/08}{Fix bug with three and two columns critical footnotes, broken in v.~2.17.6.} 
 % \changes{v2.22.0}{2017/06/08}{Add \protect\cs{txtbeforenotesX} hook.} 
+% \changes{v2.22.0}{2017/06/08}{Add \protect\cs{txtbeforenotesonlyonceX} and \protect\cs{Xtxtbeforenotesonlyonce} hooks.} 
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2504,6 +2505,9 @@
 % \DescribeMacro{\txtbeforenotesX}
 % You can add text before familiar footnotes with \protect\cs{txtbeforenotesX}\oarg{s}\marg{text}.
 %
+% \DescribeMacro{\Xtxtbeforenotesonlyonce}
+% \DescribeMacro{\txtbeforenotesonlyonceX} By default, such texts are inserted at the beginning of the groups of notes on each pages.
+% You can use \cs{Xtxtbeforenotesonlyonce} (for critical footnotes) and \cs{txtbeforenotesonlyonceX} (for familiar footnotes) to insert them only the first time notes are typeset. 
 % \subsubsection{Code before notes}
 %\DescribeMacro{\Xbhookgroup}
 %\DescribeMacro{\bhookgroupX}
@@ -9301,7 +9305,9 @@
 \newcommand{\set@Xtxtbeforenotes}{%
   \unless\ifnocritical@%
     \def\do##1{%
-      \global\togglefalse{Xtxtbeforesnotes@##1@typeset}%
+      \nottoggle{Xtxtbeforenotesonlyonce@##1}{%
+        \global\togglefalse{Xtxtbeforesnotes@##1@typeset}%
+      }{}%
     }%
     \dolistloop{\@series}%
   \fi%
@@ -9314,7 +9320,9 @@
 \newcommand{\set@txtbeforenotesX}{%
   \unless\ifnocritical@%
     \def\do##1{%
-      \global\togglefalse{txtbeforesnotesX@##1@typeset}%
+      \nottoggle{txtbeforenotesonlyonceX@##1}{%
+        \global\togglefalse{txtbeforesnotesX@##1@typeset}%
+      }{}%
     }%
     \dolistloop{\@series}%
   \fi%
@@ -13370,6 +13378,7 @@
       
       \csgdef{Xtxtbeforenotes@#1}{}
       \newtoggle{Xtxtbeforesnotes@#1@typeset}%Not directly used by user, but internal
+      \newtoggle{Xtxtbeforenotesonlyonce@#1}%
 
       \csgdef{Xmaxhnotes@#1}{0.8\vsize}
       \newtoggle{Xnoteswidthliketwocolumns@#1}%
@@ -13540,6 +13549,7 @@
       \csgdef{widthX@#1}{\hsize}%
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
+      \newtoggle{txtbeforenotesonlyonceX@#1}%
 % End of for familiar footnotes.
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
@@ -14060,6 +14070,7 @@
   \newhookcommand@series{Xafterlemmaseparator}
   \newhookcommand@series{Xinplaceoflemmaseparator}
   \newhookcommand@series{Xtxtbeforenotes}
+  \newhooktoggle@series{Xtxtbeforenotesonlyonce}%
   \newhookcommand@series@reload{Xafterrule}{critical}
   \newhooktoggle@series{Xnumberonlyfirstinline}
   \newhooktoggle@series{Xnumberonlyfirstintwolines}
@@ -14132,6 +14143,7 @@
   \newhookcommand@series{afternoteX}
   \newhookcommand@series{parafootsepX}
   \newhookcommand@series{txtbeforenotesX}%
+  \newhooktoggle@series{txtbeforenotesonlyonceX}%
   \newhookcommand@series@reload{widthX}{familiar}%
   \ifundef{\hsizeX}%
     {%
