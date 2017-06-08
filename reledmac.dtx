@@ -8385,6 +8385,7 @@
 %    \begin{macrocode}
         \if@firstlineofpage%
           \set@Xtxtbeforenotes%
+          \set@txtbeforenotesX%
           \global\@firstlineofpagefalse%
         \fi%
 %    \end{macrocode}
@@ -8450,6 +8451,7 @@
 \def\print@eledsection{%
     \if@firstlineofpage%
       \set@Xtxtbeforenotes%
+      \set@txtbeforenotesX%
       \global\@firstlineofpagefalse%
     \fi%
     \ifdefstring{\ms@data@position}{msdata-regular}{%
@@ -9303,10 +9305,26 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\set@txtbeforenotesX}
+% The \cs{set@txtbeforenotesX} does the same for the \cs{textbeforenotesX}.
+%    \begin{macrocode}
+\newcommand{\set@txtbeforenotesX}{%
+  \unless\ifnocritical@%
+    \def\do##1{%
+      \global\togglefalse{txtbeforesnotesX@##1@typeset}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\insert@Xtxtbeforenotes}
-% \cs{insert@Xtxtbeforenotes}\marg{series}, called when inserting a note, will insert the text before the note if it is not already inserted.
+% \begin{macro}{\insert@txtbeforenotesX}
+% \cs{insert@Xtxtbeforenotes}\marg{series}, called when inserting a familiar footnote, will insert the text before the note if it is not already inserted.
 % For paragraphed footnotes, it will insert it as a component of the first footnote.
 % For other types of footnotes, it will insert it as a regular footnote.
+% 
+% \cs{insert@txtbeforenotesX} is the same for familiar footnotes.
 %    \begin{macrocode}
 \newcommand{\insert@Xtxtbeforenotes}[1]{%
   \nottoggle{Xtxtbeforesnotes@#1@typeset}{%
@@ -9327,7 +9345,31 @@
   }%
   {}%
 }%
+
+
+\newcommand{\insert@txtbeforenotesX}[1]{%
+  \nottoggle{txtbeforesnotesX@#1@typeset}{%
+    \global\toggletrue{txtbeforesnotesX@#1@typeset}%
+    \ifcsvoid{txtbeforenotesX@#1}{}{%
+      \ifcsstring{series@displayX#1}{paragraph}%
+        {\noindent\csuse{txtbeforenotesX@#1}}%
+        {\expandafter\insert\csname footins#1\endcsname%
+          \bgroup%
+            \noindent%
+            \ifcsdef{\csuse{series@displayX#1}@begin@insert}{%
+              \csuse{\csuse{series@displayX#1}@begin@insert}{#1}%
+            }{}%
+            \strut\csuse{notefontsizeX@#1}\csuse{txtbeforenotesX@#1}%
+          \egroup%
+        }%
+    }%
+  }%
+  {}%
+}%
+
+
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Critical footnotes}
 % \label{footnotes}
@@ -9635,6 +9677,16 @@
     \insert@Xtxtbeforenotes{#1}%
   \fi%
   \csuse{Xbeforeinserting@#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\beforeinsertion@X}
+%    \begin{macrocode}
+\newcommand{\beforeinsertion@X}[1]{%
+  \if@ledgroup\else%
+    \insert@txtbeforenotesX{#1}%
+  \fi%
+  \csuse{beforeinsertingX@#1}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11578,7 +11630,7 @@
 % \meta{text}.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnoteX}[2]{%
-  \csuse{beforeinsertingX@#1}%
+  \beforeinsertion@X{#1}%
   \insert\@nameuse{footins#1}\bgroup
     \reset@font%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
@@ -11921,7 +11973,7 @@
 % \protect\cs{twocolvfootnoteX}\marg{series}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
-  \csuse{beforeinsertingX@#1}%
+  \beforeinsertion@X{#1}%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -12046,7 +12098,7 @@
 % \protect\cs{threecolvfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
-  \csuse{beforeinsertingX@#1}%
+  \beforeinsertion@X{#1}%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -12209,6 +12261,7 @@
     \footsplitskips
     \setbox0=\vbox{\hsize=\maxdimen%
       \let\bidi@RTL@everypar\@empty%
+      \insert@txtbeforenotesX{#1}%
       \noindent\csuse{bhooknoteX@#1}%
       \@nameuse{footfmt#1}{#1}{#2}}%
     \setbox0=\hbox{\unvxhX{0}{#1}}%
@@ -13315,6 +13368,9 @@
       \csgdef{Xtxtbeforenotes@#1}{}
       \newtoggle{Xtxtbeforesnotes@#1@typeset}%Not directly used by user, but internal
 
+      \csgdef{txtbeforenotesX@#1}{}%
+      \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
+
       \csgdef{Xmaxhnotes@#1}{0.8\vsize}
       \newtoggle{Xnoteswidthliketwocolumns@#1}%
       \csgdef{Xparafootsep@#1}{}%
@@ -14002,6 +14058,7 @@
   \newhookcommand@series{Xafterlemmaseparator}
   \newhookcommand@series{Xinplaceoflemmaseparator}
   \newhookcommand@series{Xtxtbeforenotes}
+  \newhookcommand@series{txtbeforenotesX}%
   \newhookcommand@series@reload{Xafterrule}{critical}
   \newhooktoggle@series{Xnumberonlyfirstinline}
   \newhooktoggle@series{Xnumberonlyfirstintwolines}
@@ -15977,7 +16034,18 @@
 }%
 \newcommand{\mp@append@notesX}[1]{%
   \ifvoid\csuse{mpfootins#1}\else%
-     \csuse{mpfootgroup#1}{#1}%
+    \ifcsstring{series@displayX#1}{paragraph}{}{%
+      \setbox\@nameuse{mpfootins#1}=\vbox{%
+        \csuse{notefontsizeX@#1}%
+        \ifcsdef{hsize\csuse{series@display#1}X@#1}{%
+          \hsize\csuse{hsize\csuse{series@display#1}X@#1}%
+        }{}%
+        \noindent\csuse{txtbeforenotesX@#1}%
+        \unvbox\@nameuse{mpfootins#1}%
+        \@parboxrestore%
+      }%
+    }%
+    \csuse{mpfootgroup#1}{#1}%
   \fi%
 }%
 %    \end{macrocode}
