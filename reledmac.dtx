@@ -5461,6 +5461,7 @@
       \sublinenumrep{\subline@num}%
     \fi
   \fi%
+  \csuse{annot@\the\absline@num}%
   \egroup%
 }%
 
@@ -6609,6 +6610,7 @@
     \let\@lab=\relax
     \let\@lemma=\relax%
     \let\@sw\@gobblethree%
+    \let\@annot\@gobble%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
@@ -7298,6 +7300,7 @@
   \let\edtext=\dummy@edtext
   \let\edindex\dummy@edindex%
   \l@dtabnoexpands
+  \let\linenumannotation=\@gobble%
   \morenoexpands}
 \let\morenoexpands=\relax
 
@@ -8766,6 +8769,36 @@
   \fi}
 
 
+%    \end{macrocode}
+% \end{macro}
+% \section{Line number annotation}
+% The \cs{linenumannotation} allows users  to add manual annotation in to line number, for example to let know the line numbers in an older edition.
+%
+% That implies the annotations be added:
+% \begin{itemize}
+%  \item In marginal line numbers. This feature is implemented by associating annotations with the absolute line numbers when reading the auxiliary numbered files (\verb+.1+, \verb+.2+ etc.).
+%  \item In critical footnotes. This feature is implemented by associating start / end line number annotations to each \cs{edtext}, when reading the auxiliary numbered files.
+% \item To crossref commands which refers to line numbers (to be completed when I will have solved this issue). 
+% \end{itemize}
+% \begin{macro}{\linenumannotation}
+% First, the user levels command, which only writes an command in the numbered files, storying the annotation.
+%    \begin{macrocode}
+\newcommand{\linenumannotation}[1]{%
+  \write\linenum@out{\string\@annot[#1]}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\@annot}
+% Then, the numbered files commands, which:
+% \begin{itemize}
+%  \item Associate the annotation to the absolute lines number.
+%  \item Store the current annotation in a macro, which will be used by the \cs{@ref@reg} macro, which manages all thing related to \cs{edtext} in numbered files.
+% \end{itemize}
+%    \begin{macrocode}
+\newcommand{\@annot}[1]{%
+  \csgappto{annot@\the\absline@num}{#1}%
+  \gdef\current@annot{#1}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Line number printing}
