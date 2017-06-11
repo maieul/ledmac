@@ -5581,6 +5581,7 @@
 % \begin{macro}{\insertlines@list}
 % \begin{macro}{\actionlines@list}
 % \begin{macro}{\actions@list}
+% \begin{macro}{\annot@list}
 % Now we can define the list macros that will be created from the
 % line-list file.  We will maintain the following lists:
 % \begin{itemize}\addtolength{\itemsep}{-1ex}
@@ -5697,7 +5698,9 @@
 % from the absolute line numbers with reference to the other
 % action codes and the settings they invoke; it does not require an
 % entry in the action-code list for every line.
-%
+% \item \cs{annot@list} stores line number annotations for the start and the end lines of each  \cs{edtext}, as \cs{line@list} does for line numbers.
+% We don't store that in the same list as line numbers as \cs{printlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
+% \end{itemize}
 % Here are the commands to create these lists:
 %
 %    \begin{macrocode}
@@ -5705,10 +5708,10 @@
 \list@create{\insertlines@list}
 \list@create{\actionlines@list}
 \list@create{\actions@list}
-
+\list@create{\annot@list}%
 %    \end{macrocode}
 %
-% \end{itemize}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6028,6 +6031,7 @@
   \fi%
 }
 \newcommand*{\@nl@reg}{%
+  \reset@current@annot%
   \ifx\l@dchset@num\relax \else
     \advance\absline@num \@ne
     \set@line@action
@@ -6610,11 +6614,12 @@
     \let\@lab=\relax
     \let\@lemma=\relax%
     \let\@sw\@gobblethree%
-    \let\@annot\@gobble%
+    \let\store@annot@to@absline\@gobble%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
     \global\endsubline@num=\subline@num
+    \global\let\endcurrent@annot=\current@annot%
   \endgroup
 %    \end{macrocode}
 %
@@ -6626,6 +6631,8 @@
        \ifsublines@ \the\subline@num \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
+    \xright@appenditem%
+      {\current@annot|\endcurrent@annot}\to\annot@list%
 %    \end{macrocode}
 % And now, call \cs{@ref@reg@parsearg}, which can be also called by \cs{@ref@later}
 %    \begin{macrocode}
@@ -7566,6 +7573,13 @@
       \xdef\l@d@nums{\@tempb|\edfont@info}%
       \global\let\@tempb=\undefined
     \fi
+    \ifx\annot@list\empty%
+      \xdef\l@current@annot{|}%
+    \else%
+      \gl@p\annot@list\to\@tempb%
+      \xdef\l@current@annot{\@tempb}%
+      \global\let\@tempb=\undefined%
+    \fi%
   \fi}
 
 %    \end{macrocode}
@@ -8784,20 +8798,51 @@
 % First, the user levels command, which only writes an command in the numbered files, storying the annotation.
 %    \begin{macrocode}
 \newcommand{\linenumannotation}[1]{%
+  \leavevmode%In case it start a \pstart, ensure the \@annot is written after \@nl
   \write\linenum@out{\string\@annot[#1]}%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\@annot}
-% Then, the numbered files commands, which:
+% \begin{macro}{\store@annot@to@absline}
+% Then, the numbered files command \cs{@annot}, which:
 % \begin{itemize}
 %  \item Associate the annotation to the absolute lines number.
-%  \item Store the current annotation in a macro, which will be used by the \cs{@ref@reg} macro, which manages all thing related to \cs{edtext} in numbered files.
+%  \item Store the current annotation in a macro, which will be used by the \cs{@ref@reg} macro, which manages all thing related to \cs{edtext} in numbered files. As we don't want to store it multiple time if we have nested \cs{edtext}, we use a auxiliary macro, \cs{store@annot@to@absline}, which is let to \cs{@gobble} when we parse nested \cs{edtext} in numbered auxiliary files.
 % \end{itemize}
 %    \begin{macrocode}
 \newcommand{\@annot}[1]{%
+  \store@annot@to@absline{#1}%
+  \def\current@annot{#1}%
+}%
+\newcommand{\store@annot@to@absline}[1]{%
   \csgappto{annot@\the\absline@num}{#1}%
-  \gdef\current@annot{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\current@annot}
+% By default, there is not annotation to a line number, so we store a empty \cs{current@annot}
+%    \begin{macrocode}
+\let\current@annot=\empty%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\reset@current@annot}
+% \cs{reset@current@annot} is called at each \cs{@nl} in numbered auxiliary files.
+% It reset the annotation of line number at each line.
+%    \begin{macrocode}
+\newcommand{\reset@current@annot}{%
+  \let\current@annot\empty%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parse@annot}
+% In the \cs{annot@list} list, each individual \cs{edtext} is associated with a starting and an ending line number annotation, which is stored this way: \verb+start annotation|end annotation+
+% The \cs{parse@annot} read the format and define two global macros.
+%    \begin{macrocode}
+\def\parse@annot#1|#2|{%
+  \gdef\annot@start{#1}%
+  \gdef\annot@end{#2}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11347,7 +11392,7 @@
 % \end{macro}
 % \subsubsection{Footnote grouped by line}
 % \begin{macro}{\prepare@Xgroupbyline}
-% \cs{prepare@Xgroupbyline} is a macro called on on the \cs{\meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling directly the \cs{insert}.
+% \cs{prepare@Xgroupbyline} is a macro called on on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling directly the \cs{insert}.
 %    \begin{macrocode}  
 \newcommand{\prepare@Xgroupbyline}[3]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
@@ -13515,6 +13560,7 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}%Internal for now, no reason to make it public
+                      \noexpand\parse@annot\l@current@annot|%
                       \noexpand\csuse{v#1footnote}%
                          {#1}%
                          {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
