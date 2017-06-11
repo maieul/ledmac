@@ -11083,6 +11083,7 @@
 %
 % Maïeul Rouquette has added \protect\cs{ifl@d@Xtwolines} and \protect\cs{ifl@d@Xmorethantwolines}
 % to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
+% Is also defines \cs{@annot@start@print} and \cs{@annot@start@end} which defines annotation associated to the start line numbers and end linenumbers in critical footnotes.
 % \begin{macro}{\ifl@d@pnum}
 % \begin{macro}{\ifl@d@ssub}
 % \begin{macro}{\ifl@d@elin}
@@ -11090,6 +11091,8 @@
 % \begin{macro}{\ifl@d@dash}
 % \begin{macro}{\ifl@d@Xtwolines}
 % \begin{macro}{\ifl@d@Xmorethantwolines}
+% \begin{macro}{\@annot@start@print}
+% \begin{macro}{\@annot@start@end}
 %    \begin{macrocode}
 \newif\ifl@d@pnum 
 \newif\ifl@d@ssub 
@@ -11098,7 +11101,11 @@
 \newif\ifl@d@dash
 \newif\ifl@d@Xtwolines%
 \newif\ifl@d@Xmorethantwolines%
+\let\@annot@start@print\relax%
+\let\@annot@end@print\relax%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -11165,6 +11172,8 @@
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{setprintlines} for use by \protect\cs{printlines}}
 %    \begin{macrocode}
 \newcommand*{\setprintlines}[6]{%
+  \let\@annot@start@print\relax%
+  \let\@annot@end@print\relax%
   \l@d@pnumfalse \l@d@dashfalse 
 %    \end{macrocode}
 % We print the page numbers only if\/: 1)~we are doing
@@ -11181,18 +11190,47 @@
 %
 % We print the ending line number if\/: (1)~we are printing the ending
 % page number, or (2)~it is different from the starting line number.
+% If one of these condition is true, we also print the annotation linked to the ending line number annotations.
 %    \begin{macrocode}
   \ifl@d@pnum 
     \l@d@elintrue 
+    \def\@annot@end@print{\annot@end}%
   \else 
     \l@d@elinfalse 
   \fi
   \ifnum#2=#5 \else
       \l@d@elintrue
       \l@d@dashtrue
+      \def\@annot@end@print{\annot@end}%
   \fi
 %    \end{macrocode}
 %
+% We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print ending line number.
+% Otherwise, it is only the starting annotation.
+%    \begin{macrocode}
+  \ifl@d@elin%
+    \def\@annot@start@print{\annot@start}%
+  \else%
+    \ifx\annot@start\annot@end%
+      \def\@annot@start@print{\annot@start}%
+    \else%
+      \ifx\@annot@end@print\relax%
+        \def\@annot@start@print{%
+          \annot@start%
+          \ifdefined\linerangesep@%
+            \linerangesep@%
+          \else%
+            \csuse{Xlinerangeseparator@\@currentseries}%
+          \fi%
+          \annot@end%
+        }%
+       \else%
+         \let\@annot@start@print\@annot@end@print%
+         \let\@annot@end@print\relax%
+      \fi%
+    \fi%
+  \fi%
+%    \end{macrocode}
 % We print the starting sub-line if it is nonzero.
 %    \begin{macrocode}
   \l@d@ssubfalse
@@ -11341,6 +11379,7 @@
     \csuse{Xsublinesep@\@currentseries}%
     \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
+  \@annot@start@print%
   \egroup%
 %    \end{macrocode}
 % Then print the dash + end line number, or the range symbol.
@@ -11380,7 +11419,8 @@
          \csuse{Xsublinesep@\@currentseries}%
        \fi%
        \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
-     \fi%
+    \fi%
+    \@annot@end@print%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
     {}%
