@@ -14937,18 +14937,18 @@
 % The initial use of \protect\cs{newcommand} is to catch if \protect\cs{l@dmake@labels}
 % has been previously defined (by a class or package).
 %
-% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ pstart number, \verb+#6+ label.
+% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ line number annotation, \verb+#6+ pstart number, \verb+#7+ label.
 %
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4|#5|#6{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+\def\l@dmake@labels#1|#2|#3|#4|#5|#6|#7{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#7\endcsname%
     \relax%
   \else%
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#7}%
   \fi
-  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\relax}%
+  \global\providetoggle{label@#7@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
+  \expandafter\gdef\csname the@label\csuse{XR@prefix}#7\endcsname{#1|#2|#3|#4|#5|#6|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -14960,7 +14960,7 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4|#5|#6{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5|#6|#7{}%
 }
 
 %    \end{macrocode}
@@ -14990,8 +14990,12 @@
       \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|\the\absline@numR}%
       \to\labelref@listR
   \else
-    \xright@appenditem{\linenumr@p{\line@num}|%
-      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|\the\absline@num}%
+    \xright@appenditem{%
+      \linenumr@p{\line@num}|%
+      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|%
+      \the\absline@num|%
+      \current@annot%
+      }%
       \to\labelref@list
   \fi}
 %    \end{macrocode}
@@ -15180,7 +15184,7 @@
 % \begin{macro}{\xflagref}
 % \cs{xflagref} finds the side flag of any ref defined with \cs{edlabel}.
 %    \begin{macrocode}
-\newcommand*{\xflagref}[1]{\l@dgetref@num{6}{#1}}%
+\newcommand*{\xflagref}[1]{\l@dgetref@num{7}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % The next three macros are used by the referencing commands above,
@@ -15229,19 +15233,20 @@
 % which extracts the appropriate number from its first arguments.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, 3, 4 or 5) which defines which of the earlier six numbers to
+% 2, 3, 4, 5, 6) which defines which of the earlier sept numbers to
 % pick out. (It was earlier given as the first argument of
 % \protect\cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7{%
-  \ifcase #7%
+\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7|#8{%
+  \ifcase #8%
   \or #1%
   \or #2%
   \or #3%
   \or #4%
   \or #5%
   \or #6%
+  \or #7%
   \fi}
 %    \end{macrocode}
 % \end{macro}
