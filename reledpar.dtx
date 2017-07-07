@@ -306,6 +306,7 @@
 % \changes{v2.18.0}{2017/05/04}{Compatibility with v2.20.0 of \protect\reledmac.}
 % \changes{v2.19.0}{2017/06/08}{Compatibility with v2.22.0 of \protect\reledmac.}
 % \changes{v2.19.1}{2017/06/15}{Fix bug with \protect\cs{edtext} in sectioning command with shiftedpstarts mode.}
+% \changes{v2.19.2}{2017/07/07}{\protect\options{continuousnumberingwithcolumns} works also for pstart number.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1283,7 +1284,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/06/15 v2.19.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/07/07 v2.19.2 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1726,11 +1727,15 @@
   \global\stopmsdata@inserted@true%
   \global\let\@msdata@list\relax%
   \global\csundef{@msdata@\add@msd@cR @dataR}%
+  \ifcontinuousnumberingwithcolumns%
+    \addtocounter{pstartR}{1}%
+  \else%
+    \setcounter{pstartR}{1}%
+  \fi%
   \set@continuousnumberingforR%
   \message{Section \the\section@numR R }%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
   \l@dend@stuff
-  \setcounter{pstartR}{1}
   \begingroup
   \initnumbering@sectcountR
   \gdef\eled@sectionsR@@{}%
@@ -1949,7 +1954,7 @@
 % \end{macro}
 %
 % \begin{macro}{\set@continuousnumberingforR}
-% \cs{set@continuousnumberingforR} set the right line numbers at a \cs{beginnumberingR} or a \cs{resumenumberingR} in order to have continuous numbering with single column text. 
+% \cs{set@continuousnumberingforR} set the right line numbers and pstart counter at a \cs{beginnumberingR} or a \cs{resumenumberingR} in order to have continuous numbering with single column text. 
 %    \begin{macrocode}
 \newcommand{\set@continuousnumberingforR}{%
   \ifcontinuousnumberingwithcolumns%
@@ -3595,6 +3600,9 @@
   \ifnumberpstart%
     \addtocounter{pstartL}{1}%
   \fi
+  \ifcontinuousnumberingwithcolumns%
+    \addtocounter{pstart}{1}%
+  \fi%
   \parledgroup@beforenotes@save{L}%
 %    \end{macrocode}
 % Dump content of the optional argument.

@@ -479,6 +479,8 @@
 % \changes{v2.22.0}{2017/06/08}{Fix bug with three and two columns critical footnotes, broken in v.~2.17.6.} 
 % \changes{v2.22.0}{2017/06/08}{Add \protect\cs{txtbeforenotesX} hook.} 
 % \changes{v2.22.0}{2017/06/08}{Add \protect\cs{txtbeforenotesonlyonceX} and \protect\cs{Xtxtbeforenotesonlyonce} hooks.} 
+% \changes{v2.22.1}{2017/07/07}{Compatibility with new version of \protect\reledpar.}
+% \changes{v2.22.1}{2017/07/07}{Fix bug with some commands inside \protect\cs{sameword}.} 
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4018,7 +4020,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/06/08 v2.22.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/07/07 v2.22.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4968,16 +4970,7 @@
           \csuse{setpositionliketwocolumns@\columns@position}%
         \fi%
      \fi%
-     \ifcontinuousnumberingwithcolumns%
-       \ifdefined\line@numR%
-         \ifnum\line@numR>\line@num% 
-           \expandafter\setlinenum\expandafter{\the\line@numR}%
-         \fi% 
-         \ifnum\last@page@numR>\last@page@num%
-           \global\last@page@num=\last@page@numR%
-         \fi%
-       \fi%
-     \fi%
+     \set@continuousnumberingforL%
   \else
     \led@err@NumberingShouldHaveStarted
     \endnumbering
@@ -4987,6 +4980,28 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \end{macro}
+% \begin{macro}{\set@continuousnumberingforL}
+% \cs{set@continuousnumberingforl} set the left line numbers and pstart counter at a \cs{beginnumbering} or a \cs{resumenumbering} in order to have continuous numbering with single column text. 
+%    \begin{macrocode}
+\newcommand{\set@continuousnumberingforL}{%
+ \ifcontinuousnumberingwithcolumns%
+   \ifdefined\line@numR%
+     \ifnum\line@numR>\line@num% 
+       \expandafter\setlinenum\expandafter{\the\line@numR}%
+     \fi% 
+     \ifnum\last@page@numR>\last@page@num%
+       \global\last@page@num=\last@page@numR%
+     \fi%
+   \fi%
+   \ifl@dpairing%
+     \unless\ifl@dpaging%
+       \global\c@pstartL=\c@pstart%
+     \fi%
+   \fi%
+ \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 %
 % \section{List macros}
@@ -7770,7 +7785,17 @@
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
   \begingroup%
+%.   \end{macrocode}
+% Allow some macros inside \sameword
+%.   \begin{macrocode}
     \let\sameword\@firstofone%Allow to have nested \sameword
+    \let\emph\@firstofone%
+    \let\textit\@firstofone%
+    \let\textbf\@firstofone%
+    \let\textsc\@firstofone%
+    \let\framebox\@firstofone%
+%    \end{macrocode}
+%.   \begin{macrocode}   
     \ifxetex%
       \xdef\sw@txt{#1}%
     \else%
@@ -8177,6 +8202,10 @@
      \global\pstartnumtrue%
   \fi%
   \addtocounter{pstart}{1}%
+  \ifcontinuousnumberingwithcolumns%
+    \addtocounter{pstartL}{1}%
+    \addtocounter{pstartR}{1}%
+  \fi%
 %    \end{macrocode}
 % Print the optional arguments of \protect\cs{pend} or the content printed after every \protect\cs{pend}
 %    \begin{macrocode}
