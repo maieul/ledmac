@@ -6774,8 +6774,11 @@
 %    \begin{macrocode}
 \newcommand*{\line@list@stuff}[1]{%
 %    \end{macrocode}
-%
-% First, use the commands of the previous section to interpret the
+% First, define a toggle set to true when we are not in the first run.
+  \global\newtoggle{notfirstrun@#1}%
+%    \begin{macrocode}
+%    \end{macrocode}
+% Use the commands of the previous section to interpret the
 % line-list file from the last run.
 %    \begin{macrocode}
   \read@linelist{#1}%
@@ -6795,6 +6798,7 @@
      \global\first@linenum@out@false%
      \immediate\openout\linenum@out=\l@auxdir#1\relax%
      \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \immediate\write\linenum@out{\string\global\string\toggletrue{notfirstrun@#1}}%
      \ifl@dpaging%
        \immediate\write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -6810,6 +6814,7 @@
      \closeout\linenum@out%
      \openout\linenum@out=\l@auxdir#1\relax%
      \write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \write\linenum@out{\string\toggletrue{notfirstrun@#1}}%
      \ifl@dpaging%
        \write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -9305,14 +9310,21 @@
 % of the paragraph. We can hope that is not
 % too far from the proper location, to which they will move on the next
 % run.
+% First the first run, we don't flush the notes, 
+% as that means all the notes will be added at the end of numbered section,
+% and so, very far of the expected position
 %    \begin{macrocode}
 \newcommand*{\flush@notes}{%
-  \@xloop
-    \ifx\inserts@list\empty \else
-      \gl@p\inserts@list\to\@insert
-      \@insert
-      \global\let\@insert=\undefined
-  \repeat}
+  \iftoggle{notfirstrun@\jobname.\extensionchars\the\section@num}{%
+    \@xloop%
+      \ifx\inserts@list\empty \else%
+        \gl@p\inserts@list\to\@insert%
+        \@insert%
+        \global\let\@insert=\undefined%
+    \repeat%
+  }{}%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}

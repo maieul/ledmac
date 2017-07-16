@@ -2804,12 +2804,14 @@
 % \changes{v1.10.1}{2015/01/16}{Revert modification of 1.4.2, which makes bugs with numbering. Leave vertical mode to solve spurious space before minipage.}
 %    \begin{macrocode}
 \newcommand*{\line@list@stuffR}[1]{%
+  \global\newtoggle{notfirstrun@#1}%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
+     \immediate\write\linenum@outR{\string\global\string\toggletrue{notfirstrun@#1}}%    
      \ifl@dpaging%
        \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -2819,6 +2821,7 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
+     \write\linenum@outR{\string\global\string\toggletrue{notfirstrun@#1}}%
   \fi}
 
 %    \end{macrocode}
@@ -4581,12 +4584,16 @@
 % and sent on to the vertical list.
 %    \begin{macrocode}
 \newcommand*{\flush@notesR}{%
-  \@xloop
-    \ifx\inserts@listR\empty \else
-      \gl@p\inserts@listR\to\@insertR
-      \@insertR
-      \global\let\@insertR=\undefined
-  \repeat}
+  \iftoggle{notfirstrun@\jobname.\extensionchars\the\section@numR R}{%
+    \@xloop%
+      \ifx\inserts@listR\empty \else%
+        \gl@p\inserts@listR\to\@insertR%
+        \@insertR%
+        \global\let\@insertR=\undefined%
+    \repeat%
+   }{}%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}
