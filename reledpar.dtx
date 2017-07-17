@@ -307,6 +307,8 @@
 % \changes{v2.19.0}{2017/06/08}{Compatibility with v2.22.0 of \protect\reledmac.}
 % \changes{v2.19.1}{2017/06/15}{Fix bug with \protect\cs{edtext} in sectioning command with shiftedpstarts mode.}
 % \changes{v2.19.2}{2017/07/07}{\protect\option{continuousnumberingwithcolumns} works also for pstart number.}
+% \changes{v2.19.3}{2017/07/17}{Fix a bug with \protect\option{nopbinverse} when using consecutive \cs{Pages}.}
+% \changes{v2.19.3}{2017/07/17}{Do not print footnotes at the first run.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -2804,12 +2806,14 @@
 % \changes{v1.10.1}{2015/01/16}{Revert modification of 1.4.2, which makes bugs with numbering. Leave vertical mode to solve spurious space before minipage.}
 %    \begin{macrocode}
 \newcommand*{\line@list@stuffR}[1]{%
+  \global\newtoggle{notfirstrun@#1}%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
+     \immediate\write\linenum@outR{\string\global\string\toggletrue{notfirstrun@#1}}%    
      \ifl@dpaging%
        \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -2819,6 +2823,7 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
+     \protected@write\linenum@outR{}{\string\global\string\toggletrue{notfirstrun@#1}}%
   \fi}
 
 %    \end{macrocode}
@@ -4581,12 +4586,16 @@
 % and sent on to the vertical list.
 %    \begin{macrocode}
 \newcommand*{\flush@notesR}{%
-  \@xloop
-    \ifx\inserts@listR\empty \else
-      \gl@p\inserts@listR\to\@insertR
-      \@insertR
-      \global\let\@insertR=\undefined
-  \repeat}
+  \iftoggle{notfirstrun@\jobname.\extensionchars\the\section@numR R}{%
+    \@xloop%
+      \ifx\inserts@listR\empty \else%
+        \gl@p\inserts@listR\to\@insertR%
+        \@insertR%
+        \global\let\@insertR=\undefined%
+    \repeat%
+   }{}%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -5715,16 +5724,16 @@
     \IfStrEq{\led@pb@setting}{before}{
     \numdef{\next@absline}{\the\absline@num+1}%
     \numdef{\next@abslineR}{\the\absline@numR+1}%
-  \xifinlistcs{\next@absline}{l@prev@pb}{\@pbtrue}{}%
-  \xifinlistcs{\next@abslineR}{l@prev@pbR}{\@pbtrue}{}
-  \xifinlistcs{\next@absline}{l@prev@nopb}{\@nopbtrue}{}%
-  \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\@nopbtrue}{}
+  \xifinlist{\next@absline}{\l@prev@pb}{\@pbtrue}{}%
+  \xifinlist{\next@abslineR}{\l@prev@pbR}{\@pbtrue}{}
+  \xifinlist{\next@absline}{\l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlist{\next@abslineR}{\l@prev@nopbR}{\@nopbtrue}{}
   }{}
     \IfStrEq{\led@pb@setting}{after}{
-  \xifinlistcs{\the\absline@num}{l@prev@pb}{\@pbtrue}{}%
-  \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\@pbtrue}{}
-  \xifinlistcs{\the\absline@num}{l@prev@nopb}{\@nopbtrue}{}%
-  \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\@nopbtrue}{}
+  \xifinlist{\the\absline@num}{\l@prev@pb}{\@pbtrue}{}%
+  \xifinlist{\the\absline@numR}{\l@prev@pbR}{\@pbtrue}{}
+  \xifinlist{\the\absline@num}{\l@prev@nopb}{\@nopbtrue}{}%
+  \xifinlist{\the\absline@numR}{\l@prev@nopbR}{\@nopbtrue}{}
   }{}
 \if@nopb\nopagebreak[4]\enlargethispage{\baselineskip}\fi
 \if@pb\pagebreak[4]\fi
@@ -6639,25 +6648,25 @@
 %    \begin{macrocode}
 \newcommand{\checkpbL}{
    \IfStrEq{\led@pb@setting}{after}{
-     \xifinlistcs{\the\absline@num}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
-     \xifinlistcs{\the\absline@num}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     \xifinlist{\the\absline@num}{\l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlist{\the\absline@num}{\l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
    }{}
    \IfStrEq{\led@pb@setting}{before}{
      \numdef{\next@absline}{\the\absline@num+1}
-     \xifinlistcs{\next@absline}{l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
-     \xifinlistcs{\next@absline}{l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     \xifinlist{\next@absline}{\l@prev@pb}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlist{\next@absline}{\l@prev@nopb}{\l@dpagefullfalse\l@dsamepagetrue}{}
    }{}
 }
 
 \newcommand{\checkpbR}{
    \IfStrEq{\led@pb@setting}{after}{
-     \xifinlistcs{\the\absline@numR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
-     \xifinlistcs{\the\absline@numR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     \xifinlist{\the\absline@numR}{\l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlist{\the\absline@numR}{\l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
      }{}
    \IfStrEq{\led@pb@setting}{before}{
      \numdef{\next@abslineR}{\the\absline@numR+1}
-     \xifinlistcs{\next@abslineR}{l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
-     \xifinlistcs{\next@abslineR}{l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
+     \xifinlist{\next@abslineR}{\l@prev@pbR}{\l@dpagefulltrue\l@dsamepagefalse}{}
+     \xifinlist{\next@abslineR}{\l@prev@nopbR}{\l@dpagefullfalse\l@dsamepagetrue}{}
    }{}
 }
 %    \end{macrocode}
@@ -6668,27 +6677,35 @@
 % \protect\cs{checkverseL} and \protect\cs{checkverseR} are called after each line is printed.
 % They prevent page break inside line of verse.
 %    \begin{macrocode}
-\newcommand{\checkverseL}{
-\ifinstanzaL
-  \iflednopbinverse
-    \ifinserthangingsymbol
-      \numgdef{\prev@abslineverse}{\the\absline@num-1}
-      \IfStrEq{\led@pb@setting}{after}{\lednopbnum{\prev@abslineverse}}{}
-      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesL<3\ledpbnum{\prev@abslineverse}\fi}{}
-    \fi
-  \fi
-\fi
+\newcommand{\checkverseL}{%
+\ifinstanzaL%
+  \iflednopbinverse%
+    \ifinserthangingsymbol%
+      \numgdef{\prev@abslineverse}{\the\absline@num-1}%
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnum{\prev@abslineverse}}{}%
+      \IfStrEq{\led@pb@setting}{before}{%
+        \ifnum\numpagelinesL<3%
+          \ledpbnum{\prev@abslineverse}%
+        \fi%
+      }{}%
+    \fi%
+  \fi%
+\fi%
 }
-\newcommand{\checkverseR}{
-\ifinstanzaR
-  \iflednopbinverse
-    \ifinserthangingsymbolR
-      \numgdef{\prev@abslineverse}{\the\absline@numR-1}
-      \IfStrEq{\led@pb@setting}{after}{\lednopbnumR{\prev@abslineverse}}{}
-      \IfStrEq{\led@pb@setting}{before}{\ifnum\numpagelinesR<3\ledpbnumR{\prev@abslineverse}\fi}{}
-    \fi
-  \fi
-\fi
+\newcommand{\checkverseR}{%
+\ifinstanzaR%
+  \iflednopbinverse%
+    \ifinserthangingsymbolR%
+      \numgdef{\prev@abslineverse}{\the\absline@numR-1}%
+      \IfStrEq{\led@pb@setting}{after}{\lednopbnumR{\prev@abslineverse}}{}%
+      \IfStrEq{\led@pb@setting}{before}{%
+        \ifnum\numpagelinesR<3%
+          \ledpbnumR{\prev@abslineverse}%
+        \fi%
+      }{}%
+    \fi%
+  \fi%
+\fi%
 }
 %    \end{macrocode}
 % \end{macro}

@@ -481,6 +481,7 @@
 % \changes{v2.22.0}{2017/06/08}{Add \protect\cs{txtbeforenotesonlyonceX} and \protect\cs{Xtxtbeforenotesonlyonce} hooks.} 
 % \changes{v2.22.1}{2017/07/07}{Compatibility with new version of \protect\reledpar.}
 % \changes{v2.22.1}{2017/07/07}{Fix bug with some commands inside \protect\cs{sameword}.} 
+% \changes{v2.22.2}{2017/07/17}{Do not print footnotes at the first run.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -6774,8 +6775,11 @@
 %    \begin{macrocode}
 \newcommand*{\line@list@stuff}[1]{%
 %    \end{macrocode}
-%
-% First, use the commands of the previous section to interpret the
+% First, define a toggle set to true when we are not in the first run.
+  \global\newtoggle{notfirstrun@#1}%
+%    \begin{macrocode}
+%    \end{macrocode}
+% Use the commands of the previous section to interpret the
 % line-list file from the last run.
 %    \begin{macrocode}
   \read@linelist{#1}%
@@ -6788,13 +6792,13 @@
 %                           \protect\cs{line@list@stuff}}
 % \changes{v0.7.0}{2005/02/25}{Deleted \protect\cs{page@start} from \protect\cs{line@list@stuff}}
 % \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
-
 %    \begin{macrocode}
   \iffirst@linenum@out@
      \immediate\closeout\linenum@out%
      \global\first@linenum@out@false%
      \immediate\openout\linenum@out=\l@auxdir#1\relax%
      \immediate\write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \immediate\write\linenum@out{\string\global\string\toggletrue{notfirstrun@#1}}%
      \ifl@dpaging%
        \immediate\write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -6810,6 +6814,7 @@
      \closeout\linenum@out%
      \openout\linenum@out=\l@auxdir#1\relax%
      \write\linenum@out{\string\line@list@version{\this@line@list@version}}%
+     \protected@write\linenum@out{}{\string\global\string\toggletrue{notfirstrun@#1}}%
      \ifl@dpaging%
        \write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -9305,14 +9310,21 @@
 % of the paragraph. We can hope that is not
 % too far from the proper location, to which they will move on the next
 % run.
+% First the first run, we don't flush the notes, 
+% as that means all the notes will be added at the end of numbered section,
+% and so, very far of the expected position
 %    \begin{macrocode}
 \newcommand*{\flush@notes}{%
-  \@xloop
-    \ifx\inserts@list\empty \else
-      \gl@p\inserts@list\to\@insert
-      \@insert
-      \global\let\@insert=\undefined
-  \repeat}
+  \iftoggle{notfirstrun@\jobname.\extensionchars\the\section@num}{%
+    \@xloop%
+      \ifx\inserts@list\empty \else%
+        \gl@p\inserts@list\to\@insert%
+        \@insert%
+        \global\let\@insert=\undefined%
+    \repeat%
+  }{}%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}
