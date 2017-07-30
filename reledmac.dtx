@@ -13489,8 +13489,15 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}% Internal for now, no reason to make it public
-                      \noexpand\csuse{v#1footnote}{#1}%
-                       {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \unless\if@ledgroup%
+                        \noexpand\csuse{v#1footnote}%
+                           {#1}%
+                           {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \else%
+                        \noexpand\csuse{mpv#1footnote}%
+                           {#1}%
+                           {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \fi%
                       \noexpand\Xnote@false% 
                       \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \unexpanded{\undef\@this@crossref@start}%
@@ -13529,9 +13536,15 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}%Internal for now, no reason to make it public
-                      \noexpand\csuse{v#1footnote}%
-                         {#1}%
-                         {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \unless\if@ledgroup%
+                        \noexpand\csuse{v#1footnote}%
+                           {#1}%
+                           {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \else%
+                        \noexpand\csuse{mpv#1footnote}%
+                           {#1}%
+                           {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
+                      \fi%
                       \unexpanded{\undef\@this@crossref@start}%
                       \unexpanded{\undef\@this@crossref@end}%
                       \noexpand\Xnote@false%
@@ -13547,7 +13560,11 @@
                     \footnoteoptions@{L}{##1}{false}%
                 \fi
             \else
-                \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                \unless\if@ledgroup%
+                  \csuse{v#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                \else%
+                  \csuse{mpv#1footnote}{#1}{{0|0|0|0|0|0|0}{}{##1}}%
+                \fi%
             \fi%
             \endgroup%
           \else%
@@ -16005,7 +16022,7 @@
 %                           and all their supporting code}
 %    \begin{macrocode}
 \ifnoledgroup@\else%
-\newcommand*{\l@dfeetbeginmini}{\@ledgrouptrue\l@dedbeginmini\l@dfambeginmini}
+\newcommand*{\l@dfeetbeginmini}{\@ledgrouptrue\l@dfambeginmini}
 \newcommand*{\l@dfeetendmini}{%
     \IfStrEq{critical-familiar}{\@mpfnpos}%
         {\l@dedendmini\l@dfamendmini}%
@@ -16019,20 +16036,11 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\l@dedbeginmini}
 % \begin{macro}{\l@dedendmini}
 % \begin{macro}{\mp@append@Xnotes}
 % These handle the initiation and closure of critical footnotes in a
 % minipage environment. 
 %    \begin{macrocode}
-\newcommand*{\l@dedbeginmini}{%
-  \unless\ifnocritical@%
-    \def\do##1{%
-      \csletcs{v##1footnote}{mpv##1footnote}%
-    }%
-    \dolistloop{\@series}%
-  \fi%
-  }
 \newcommand*{\l@dedendmini}{%
   \unless\ifnocritical@%
     \ifl@dpairing%
@@ -16074,7 +16082,6 @@
 \fi%
 }%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 %
