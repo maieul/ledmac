@@ -4163,10 +4163,12 @@
 % \end{macro}
 % \subsection{Loading packages}
 % Loading package \protect\package{xargs} to declare commands with optional arguments. 
+% Loading package \package{xparse} to declare fully expandable command with optional argument. Ideally, we should use only \package{xparse} and not \package{xargs}. For historical reasons, we use both.
 % \protect\package{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \protect\cs{csname} etc.).  
 % Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
 %  \begin{macrocode}
 \RequirePackage{xargs}
+\RequirePackage{xparse}%
 \RequirePackage{etoolbox}
 \@ifl@t@r\fmtversion{2015/10/01}
  {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
@@ -7805,16 +7807,8 @@
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
   \begingroup%
+    \swnoexpands%
 %.   \end{macrocode}
-% Allow some macros inside \sameword
-%.   \begin{macrocode}
-    \let\sameword\@firstofone%Allow to have nested \sameword
-    \let\emph\@firstofone%
-    \let\textit\@firstofone%
-    \let\textbf\@firstofone%
-    \let\textsc\@firstofone%
-    \let\framebox\@firstofone%
-%    \end{macrocode}
 % Using case sensibility option. 
 %    \begin{macrocode}
     \ifsw@caseinsensitive%
@@ -7831,6 +7825,33 @@
       \@tmpa{\expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}}%
     \fi%
   \endgroup%
+}%
+%    \end{macrocode}
+% \end{macro}
+% Allow some macros inside \cs{sameword}.
+% We use \cs{RenewExpandableDocumentCommand} to get expandable command with optional argument.
+% Cf. \url{https://tex.stackexchange.com/a/384783/7712}.
+% \begin{macro}{\sw@noexpand}
+%    \begin{macrocode}
+\newcommand{\swnoexpands}{%
+    \let\sameword\@firstofone%Allow to have nested \sameword
+    \let\emph\@firstofone%
+    \let\textit\@firstofone%
+    \let\textbf\@firstofone%
+    \let\textsc\@firstofone%
+    \let\framebox\@firstofone%
+    \RenewExpandableDocumentCommand{\edindex}{om}{}%
+    \ifdefined\index%
+      \RenewExpandableDocumentCommand{\index}{om}{}%
+    \fi%
+    \let\selectlanguage\@gobble%
+    \let\foreignlanguage\@secondoftwo%
+    \ifdefined\xpg@loaded%
+      \renewcommand\do[1]{%
+        \expandafter\RenewExpandableDocumentCommand\expandafter{\csname text##1\endcsname}{om}{####2}%
+      }%
+      \expandafter\docsvlist\expandafter{\xpg@loaded}%
+    \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
