@@ -4953,6 +4953,7 @@
 %
 % \begin{macro}{\pausenumbering}
 % \begin{macro}{\resumenumbering}
+% \begin{macro}{\ifresumenumbering@start}
 % The \protect\cs{pausenumbering} macro is just the same as
 % \protect\cs{endnumbering}, but with the \protect\cs{ifnumbering} flag set to \verb"true", to
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
@@ -4968,14 +4969,18 @@
 % without resetting the various counters. Note that no check is made
 % by \protect\cs{resumenumbering} to ensure that \protect\cs{pausenumbering} was actually
 % invoked.
+% The boolean \cs{ifresumenumbering@start} is set to true. That allow as to avoid to reset line number at the first line if the lineation is by page. 
+% This boolean is set to false after the first action. 
 % \changes{v0.7.0}{2005/02/24}{Changed \protect\cs{resumenumbering} for eledpar}
 % \changes{v1.12.5}{2014/08/31}{Debug \protect\cs{resumenumbering}}
 %    \begin{macrocode}
+\newif\ifresumenumbering@start%
 \newcommand*{\resumenumbering}{%
   \ifnumbering
      \ifautopar@pause\autopar\fi
      \global\pst@rtedLtrue
      \global\advance\section@num \@ne
+     \global\resumenumbering@starttrue%
      \led@mess@SectionContinued{\the\section@num}%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
@@ -4996,6 +5001,7 @@
 
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\set@continuousnumberingforL}
@@ -8729,10 +8735,14 @@
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
-       \global\@firstlineofpagetrue%
+       \unless\ifresumenumbering@start%
+         \global\@firstlineofpagetrue%
+       \fi%
        \ifbypage@
-         \global\line@num=\z@ \global\subline@num=\z@
-         \resetprevline@
+         \unless\ifresumenumbering@start%
+           \global\line@num=\z@ \global\subline@num=\z@%
+           \resetprevline@%
+         \fi%
        \fi
        \add@msdata@firstlineofpage%
 %    \end{macrocode}
@@ -8786,6 +8796,7 @@
 % Make the recursive call, if necessary.
 %
 %    \begin{macrocode}
+\global\resumenumbering@startfalse%
 \do@actions@next}
 
 %    \end{macrocode}

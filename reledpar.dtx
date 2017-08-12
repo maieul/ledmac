@@ -1846,16 +1846,19 @@
 %
 % \begin{macro}{\pausenumberingR}
 % \begin{macro}{\resumenumberingR}
+% \begin{macro}{\ifresumenumberingR@start}
 % These are the right text equivalents of \protect\cs{pausenumbering} and
 % \protect\cs{resumenumbering}.
 % \changes{v1.8.3}{2014/08/31}{Debug \protect\cs{resumenumberingR}}
 %    \begin{macrocode}
 \newcommand*{\pausenumberingR}{%
   \endnumberingR\global\numberingRtrue}
+\newif\ifresumenumberingR@start%
 \newcommand*{\resumenumberingR}{%
   \ifnumberingR
      \global\pst@rtedRtrue
      \global\advance\section@numR \@ne
+     \global\resumenumberingR@starttrue%
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
@@ -1869,6 +1872,7 @@
   \fi}
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -4221,10 +4225,15 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
-      \@firstlineofpageRtrue%
+      \unless\ifresumenumberingR@start%
+        \@firstlineofpageRtrue%
+      \fi%
       \global\page@numR=\next@actionR
       \ifbypage@R
-        \global\line@numR \z@  \global\subline@numR \z@
+        \unless\ifresumenumberingR@start%
+          \global\line@numR \z@%  
+          \global\subline@numR \z@%
+        \fi%
       \fi
       \add@msdata@firstlineofpage%
     \else
@@ -4250,6 +4259,7 @@
       \global\let\do@actions@nextR=\do@actionsR
     \fi
   \fi
+  \global\resumenumberingR@startfalse%
   \do@actions@nextR}
 
 %    \end{macrocode}
