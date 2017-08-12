@@ -18,7 +18,7 @@ all:$(OBJ)
 	xelatex 2-glossaries
 
 3-reledpar_pages_different_languages_lualatex.pdf: 3-reledpar_pages_different_languages_lualatex.tex
-	lualatex $<
+	latexmk --lualatex $<
 
 clean:
 	@$(RM) *pdf *toc *.1* *.2* *.3* *.eledsec* *.log *.fdb_latexmk *.aux *.end *.ilg *.ind *.idx *.out *.synctex.gz *.synctex.gz\(busy\)

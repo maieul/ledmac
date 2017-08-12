@@ -309,6 +309,8 @@
 % \changes{v2.19.2}{2017/07/07}{\protect\option{continuousnumberingwithcolumns} works also for pstart number.}
 % \changes{v2.19.3}{2017/07/17}{Fix a bug with \protect\option{nopbinverse} when using consecutive \protect\cs{Pages}.}
 % \changes{v2.19.3}{2017/07/17}{Do not print footnotes at the first run.}
+% \changes{v2.19.4}{2017/07/31}{Optimisation of the code to not print footnotes at the first run.}
+% \changes{v2.19.5}{2017/08/10}{Fix bug added in \protect\environment{astanza} in v.~2.18.0}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1286,7 +1288,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/07/07 v2.19.2 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/08/10 v2.19.5 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1726,6 +1728,7 @@
   \global\sublines@Rfalse
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
+  \global\last@page@numR=-10000%
   \global\stopmsdata@inserted@true%
   \global\let\@msdata@list\relax%
   \global\csundef{@msdata@\add@msd@cR @dataR}%
@@ -1843,16 +1846,26 @@
 %
 % \begin{macro}{\pausenumberingR}
 % \begin{macro}{\resumenumberingR}
+% \begin{macro}{\ifresumenumberingR@start}
+% \begin{macro}{\pausenumbering@page@numR}
 % These are the right text equivalents of \protect\cs{pausenumbering} and
 % \protect\cs{resumenumbering}.
 % \changes{v1.8.3}{2014/08/31}{Debug \protect\cs{resumenumberingR}}
 %    \begin{macrocode}
+\newcount\pausenumbering@page@numR%
 \newcommand*{\pausenumberingR}{%
+  \ifx\next@page@numR\relax%
+    \global\pausenumbering@page@numR=0%
+  \else%
+    \global\pausenumbering@page@numR=\next@page@numR%
+  \fi%
   \endnumberingR\global\numberingRtrue}
+\newif\ifresumenumberingR@start%
 \newcommand*{\resumenumberingR}{%
   \ifnumberingR
      \global\pst@rtedRtrue
      \global\advance\section@numR \@ne
+     \global\resumenumberingR@starttrue%
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
@@ -1866,6 +1879,8 @@
   \fi}
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -2807,13 +2822,15 @@
 %    \begin{macrocode}
 \newcommand*{\line@list@stuffR}[1]{%
   \global\newtoggle{notfirstrun@#1}%
+  \IfFileExists{\l@auxdir#1}%
+    {\global\toggletrue{notfirstrun@#1}}%
+    {\global\togglefalse{notfirstrun@#1}}%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
-     \immediate\write\linenum@outR{\string\global\string\toggletrue{notfirstrun@#1}}%    
      \ifl@dpaging%
        \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -2823,7 +2840,6 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
-     \protected@write\linenum@outR{}{\string\global\string\toggletrue{notfirstrun@#1}}%
   \fi}
 
 %    \end{macrocode}
@@ -4217,11 +4233,17 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
-      \@firstlineofpageRtrue%
+      \unless\ifresumenumberingR@start%
+        \@firstlineofpageRtrue%
+      \fi%
       \global\page@numR=\next@actionR
       \ifbypage@R
-        \global\line@numR \z@  \global\subline@numR \z@
+        \unless\ifresumenumberingR@start%
+          \global\line@numR \z@%  
+          \global\subline@numR \z@%
+        \fi%
       \fi
+      \global\resumenumberingR@startfalse%
       \add@msdata@firstlineofpage%
     \else
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
@@ -5051,7 +5073,7 @@
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}[2][1,2,usedefault]{%
+\newenvironmentx{astanza}[2][1,2,usedefault]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
