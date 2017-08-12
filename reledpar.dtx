@@ -309,6 +309,8 @@
 % \changes{v2.19.2}{2017/07/07}{\protect\option{continuousnumberingwithcolumns} works also for pstart number.}
 % \changes{v2.19.3}{2017/07/17}{Fix a bug with \protect\option{nopbinverse} when using consecutive \protect\cs{Pages}.}
 % \changes{v2.19.3}{2017/07/17}{Do not print footnotes at the first run.}
+% \changes{v2.19.4}{2017/07/31}{Optimisation of the code to not print footnotes at the first run.}
+% \changes{v2.19.5}{2017/08/10}{Fix bug added in \protect\environment{astanza} in v.~2.18.0}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1286,7 +1288,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/07/07 v2.19.2 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/08/10 v2.19.5 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2808,13 +2810,15 @@
 %    \begin{macrocode}
 \newcommand*{\line@list@stuffR}[1]{%
   \global\newtoggle{notfirstrun@#1}%
+  \IfFileExists{\l@auxdir#1}%
+    {\global\toggletrue{notfirstrun@#1}}%
+    {\global\togglefalse{notfirstrun@#1}}%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
      \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
-     \immediate\write\linenum@outR{\string\global\string\toggletrue{notfirstrun@#1}}%    
      \ifl@dpaging%
        \immediate\write\linenum@outR{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
@@ -2824,7 +2828,6 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
-     \protected@write\linenum@outR{}{\string\global\string\toggletrue{notfirstrun@#1}}%
   \fi}
 
 %    \end{macrocode}
@@ -5052,7 +5055,7 @@
 % its stanza-like contents as a single chunk.
 %
 %    \begin{macrocode}
-\newenvironment{astanza}[2][1,2,usedefault]{%
+\newenvironmentx{astanza}[2][1,2,usedefault]{%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \ifnum\usenamecount{sza@0@}=\z@
