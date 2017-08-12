@@ -4954,13 +4954,17 @@
 % \begin{macro}{\pausenumbering}
 % \begin{macro}{\resumenumbering}
 % \begin{macro}{\ifresumenumbering@start}
+% \begin{macro}{\pausenumbering@page@num}
 % The \protect\cs{pausenumbering} macro is just the same as
 % \protect\cs{endnumbering}, but with the \protect\cs{ifnumbering} flag set to \verb"true", to
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
 % to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
 % behind these macros.}
+% The \cs{pausenumbering@page@num} counter store the \cs{page@num} when the \cs{pause@numbering} is called. 
 %    \begin{macrocode}
+\newcount\pausenumbering@page@num%
 \newcommand{\pausenumbering}{%
+  \global\pausenumbering@page@num=\page@num%
   \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
 %    \end{macrocode}
@@ -5001,6 +5005,7 @@
 
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -8735,6 +8740,12 @@
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
+       \ifresumenumbering@start%
+         \setbox0=\hbox{}%Required to get the correct page number, when the \resumenumbering is just after a \newpage
+         \ifnum\pausenumbering@page@num<\page@num%
+           \global\resumenumbering@startfalse%
+         \fi%
+       \fi%
        \unless\ifresumenumbering@start%
          \global\@firstlineofpagetrue%
        \fi%
