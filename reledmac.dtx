@@ -4895,6 +4895,11 @@
   \global\sublines@false
   \global\let\next@page@num=\relax
   \global\let\sub@change=\relax
+  \global\last@page@num=-10000%
+  \ifdefined\line@numR%
+    \line@numR=\z@%
+    \last@page@numR=\z@%
+  \fi%
   \resetprevline@
   \resetprevpage@num
   \global\stopmsdata@inserted@true%
@@ -4913,6 +4918,7 @@
 % to the right place.
 % \changes{v0.7.0}{2005/02/24}{Changed \protect\cs{endnumbering} for eledpar}
 % \changes{v1.12.5}{2014/08/31}{Allow to mix parallel columns and normal text when using \protect\cs{pausenumbering}}
+% We define it using \cs{def} and not \cs{newcommand} because \LaTeX does not allow to define command which name start by \csquotes{end} except if we are currently creating a environment, which is not the case here. 
 %    \begin{macrocode}
 \def\endnumbering{%
   \ifnumbering
@@ -4951,13 +4957,22 @@
 %
 % \begin{macro}{\pausenumbering}
 % \begin{macro}{\resumenumbering}
+% \begin{macro}{\ifresumenumbering@start}
+% \begin{macro}{\pausenumbering@page@num}
 % The \protect\cs{pausenumbering} macro is just the same as
 % \protect\cs{endnumbering}, but with the \protect\cs{ifnumbering} flag set to \verb"true", to
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
 % to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
 % behind these macros.}
+% The \cs{pausenumbering@page@num} counter store the \cs{next@page@num} when the \cs{pause@numbering} is called. 
 %    \begin{macrocode}
+\newcount\pausenumbering@page@num%
 \newcommand{\pausenumbering}{%
+  \ifx\next@page@num\relax%
+    \global\pausenumbering@page@num=0%
+  \else%
+    \global\pausenumbering@page@num=\next@page@num%
+  \fi%
   \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
 %    \end{macrocode}
@@ -4966,14 +4981,18 @@
 % without resetting the various counters. Note that no check is made
 % by \protect\cs{resumenumbering} to ensure that \protect\cs{pausenumbering} was actually
 % invoked.
+% The boolean \cs{ifresumenumbering@start} is set to true. That allow as to avoid to reset line number at the first line if the lineation is by page. 
+% This boolean is set to false after the first action. 
 % \changes{v0.7.0}{2005/02/24}{Changed \protect\cs{resumenumbering} for eledpar}
 % \changes{v1.12.5}{2014/08/31}{Debug \protect\cs{resumenumbering}}
 %    \begin{macrocode}
+\newif\ifresumenumbering@start%
 \newcommand*{\resumenumbering}{%
   \ifnumbering
      \ifautopar@pause\autopar\fi
      \global\pst@rtedLtrue
      \global\advance\section@num \@ne
+     \global\resumenumbering@starttrue%
      \led@mess@SectionContinued{\the\section@num}%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \l@dend@stuff
@@ -4994,6 +5013,8 @@
 
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\set@continuousnumberingforL}
@@ -5893,12 +5914,6 @@
 %
 %    \begin{macrocode}
   \get@linelistfile{#1}%
-  \ifcontinuousnumberingwithcolumns
-       \global\page@numR=\page@numR\relax
-       \global\last@page@numR=\last@page@numR\relax
-       \global\page@num=\page@num\relax
-       \global\last@page@num=\last@page@num\relax
-  \fi
   \@stopmsd%Security if last \endms{} is forgotten
   \unless\ifledRcol%Get the last line of the last page
     \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
@@ -6149,9 +6164,9 @@
       \ifbypage@R
         \line@numR \z@ \subline@numR \z@
       \fi
-      \page@numR=#1\relax
-      \last@page@numR=#1\relax
-      \def\next@page@numR{#1}%
+      \global\page@numR=#1%
+      \global\last@page@numR=#1%
+      \global\def\next@page@numR{#1}%
     \fi
   \else
     \ifnum #1=\last@page@num
@@ -6161,9 +6176,9 @@
       \ifbypage@
         \line@num \z@ \subline@num \z@
       \fi
-      \page@num=#1\relax
-      \last@page@num=#1\relax
-      \def\next@page@num{#1}%
+      \global\page@num=#1%
+      \global\last@page@num=#1%
+      \global\def\next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
   \fi}
@@ -8733,11 +8748,22 @@
 %    \begin{macrocode}
     \ifnum\next@action>-1001
        \global\page@num=\next@action
-       \global\@firstlineofpagetrue%
+       \ifresumenumbering@start%
+         \setbox0=\hbox{}%Required to get the correct page number, when the \resumenumbering is just after a \newpage
+         \ifnum\pausenumbering@page@num<\page@num%
+           \global\resumenumbering@startfalse%
+         \fi%
+       \fi%
+       \unless\ifresumenumbering@start%
+         \global\@firstlineofpagetrue%
+       \fi%
        \ifbypage@
-         \global\line@num=\z@ \global\subline@num=\z@
-         \resetprevline@
+         \unless\ifresumenumbering@start%
+           \global\line@num=\z@ \global\subline@num=\z@%
+           \resetprevline@%
+         \fi%
        \fi
+       \global\resumenumbering@startfalse%
        \add@msdata@firstlineofpage%
 %    \end{macrocode}
 %
