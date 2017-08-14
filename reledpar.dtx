@@ -1379,13 +1379,22 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Position option}
+% \subsubsection{Position options}
 % \begin{macro}{\ifmovecolumnspositiononrightpage}
 % The \cs{ifmovecolumnspositiononrightpage} boolean is set to true if, for a right page, we want the left column become a right column and the right column become a left column. 
 %    \begin{macrocode}
 \newif\ifmovecolumnspositiononrightpage%
 \DeclareOptionX{movecolumnspositiononrightpage}{%
  \movecolumnspositiononrightpagetrue%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{if@sidenotesmarginpage}
+% With the \option{sidenotesmarginpage}, a left sidenote called in a right column will be printed at the left of the page, and a right sidenote called in a left column will be printed at the right of the page.
+%    \begin{macrocode}
+\newif\if@sidenotesmarginpage%
+\DeclareOptionX{sidenotesmarginpage}{%
+ \@sidenotesmarginpartrue%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -5015,7 +5024,182 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\@morespace@rightnote@leftcolumn}
+% \begin{macro}{\@morespace@leftnote@rightcolumn}
+% \begin{macro}{\get@sidenote@morespace@columns}
+% If we are typesetting parallel columns, we may want a left sidenote called on the right column be put on the left of the page and not on the left of the column, 
+% and a right sidenote called on the left column be put on the right of the page and not on right of the column. We store as an option in the \cs{if@sidenotesmarginpage} boolean.
+%
+% To do it, we need to add spaces, respectively defined on \cs{@morespace@leftnote@rightcolumn} and \cs{@morespace@rightnote@leftcolumn}. These two length depend of many parameters:
+% \begin{itemize}
+%   \item Columns width;
+%   \item columns position;
+%   \item columns separator;
+%   \item space between columns and columns separator, which can be fixed by user or automatically calculated by \parpackage.
+% \end{itemize}
+% The \cs{get@sidenote@morespace@columns} calculate there two length. 
+%    \begin{macrocode}
+\newdimen\@morespace@leftnote@rightcolumn%
+\newdimen\@morespace@rightnote@leftcolumn%
 
+
+
+\newcommand{\get@sidenote@morespace@columns}{%
+%    \end{macrocode}
+% The calculations are made only if \cs{if@sidenotesmarginpage} is TRUE.
+%    \begin{macrocode}
+  \if@sidenotesmarginpage%
+%    \end{macrocode}
+% First, we calculate the total width betwenn columns, including the width of the column separator line. We store it on \cs{@tempdima}.
+%    \begin{macrocode}
+  \@tempdima=\z@%
+  \ifdefstring{\columns@position}{C}%
+%    \end{macrocode}
+% First case, the columns are centered.
+%    \begin{macrocode}
+  {%
+%    \end{macrocode}
+% First sub-case, the width between columns is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*1/2% The total of the width before and after column separator
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Second sub-case, the width between column is fully determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/3%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \aftercolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/3%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Now, we have finished with the case the columns are centered aligned.
+%    \begin{macrocode}  
+  }%
+%    \end{macrocode}
+% Other case, the columns are left or right aligned.
+%    \begin{macrocode}
+  {%
+%    \end{macrocode}
+% First sub-case, the width between columns is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*2/3% The total of the width before and after column separator
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Second sub-case, the width between column is fully determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/2%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \@tempdima=\dimexpr%
+          \columnrulewidth + \aftercolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/2%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% We have finished with the case the columns are left or right aligned.
+%    \begin{macrocode}
+  }%
+%    \end{macrocode}
+% Now, we can calculate \cs{@morespace@leftnote@rightcolumn} and \cs{@morespace@rightnote@leftcolumn}.
+%    \begin{macrocode}
+  \global\@morespace@leftnote@rightcolumn=\dimexpr\@tempdima + \Lcolwidth\relax%
+  \global\@morespace@rightnote@leftcolumn=\dimexpr\@tempdima + \Rcolwidth\relax%
+%    \end{macrocode}
+% If \cs{if@sidenotesmarginpage} is False
+%    \begin{macrocode}
+  \else%
+  \global\@morespace@leftnote@rightcolumn=\z@%
+  \global\@morespace@rightnote@leftcolumn=\z@%  
+%    \end{macrocode}
+% End of \cs{get@sidenote@morespace@columns}.
+%    \begin{macrocode}
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \changes{v1.3.3}{2012/12/19}{Debugging the left notes of the right column.}
 % \changes{v1.3.4}{2013/07/03}{Allow use of commands in sidenotes, as introduced by eledmac 1.0.}
 % \changes{v1.8.0}{2014/08/05}{\protect\cs{l@dlsnote},\protect\cs{l@drsnote} and \protect\cs{l@dcsnote} defined only one time, in \protect\package{eledmac}. }
@@ -5604,6 +5788,7 @@
     \global\l@dpscL=\z@
     \global\l@dpscR=\z@
     \get@familiarfootnote@number%
+    \get@sidenote@morespace@columns%
 %    \end{macrocode}
 % Check if there are chunks to be processed, and process them
 % two by two (left and right pairs).

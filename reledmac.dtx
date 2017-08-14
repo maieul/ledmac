@@ -8627,14 +8627,32 @@
 % 
 % \begin{macro}{\l@dlsn@te}
 % \begin{macro}{\l@drsn@te}
-% Zero width boxes of the left and right side notes, together with their kerns.
+% Zero width boxes of the left and right side notes, together with their kerns, and, eventually, with additional space if we are in parallel columns typesetting.
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{l@dlsn@te} and \protect\cs{l@drsn@te}
 %              for use in \protect\cs{do@line}}
 %    \begin{macrocode}
 \newcommand{\l@dlsn@te}{%
-  \hb@xt@ \z@{\hss\box\l@dlp@rbox\kern\ledlsnotesep}}
+  \ifboolexpr{%
+      bool {l@dprintingcolumns}%
+      and bool {ledRcol@}%
+  }{%  If we are on a right column
+    \@tempdima=\@morespace@leftnote@rightcolumn%
+  }{%
+    \@tempdima=\z@%
+  }%
+  \hb@xt@ \z@{\hss\box\l@dlp@rbox\kern\ledlsnotesep\hskip\@tempdima}%
+}%
 \newcommand{\l@drsn@te}{%
-   \hb@xt@ \z@{\kern\ledrsnotesep\box\l@drp@rbox\hss}}
+  \ifboolexpr{%
+      bool {l@dprintingcolumns}%
+      and not bool {ledRcol@}%
+  }{%  If we are on a left column
+    \@tempdima=\@morespace@rightnote@leftcolumn%
+  }{%
+    \@tempdima=\z@%
+  }%
+  \hb@xt@ \z@{\hskip\@tempdima\kern\ledrsnotesep\box\l@drp@rbox\hss}%
+}%
 
 %    \end{macrocode}
 % \end{macro}
