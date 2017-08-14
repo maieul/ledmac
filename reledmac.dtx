@@ -9013,11 +9013,26 @@
                 \ifnum\@l@dtempcntb>\@ne
                    \advance\@l@dtempcntb \page@num
                 \fi
-                \ifodd\@l@dtempcntb
-                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-                 \else
-                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-                \fi
+                \ifboolexpr{%
+                  bool {l@dprintingcolumns}%
+                  and (% 
+                   (test {\ifdefstring{\linenum@OnlyPages@ForColumns}{left}}%
+                   and test {\ifnumodd{\page@num}}%
+                   )%
+                   or% 
+                   (test {\ifdefstring{\linenum@OnlyPages@ForColumns}{right}}%
+                   and not test {\ifnumodd{\page@num}}%
+                   )%
+                 )%
+                }%
+                {}%
+                {%
+	                \ifodd\@l@dtempcntb%
+	                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+	                 \else%
+	                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+	                \fi%
+	            }%
              \fi
           \fi
        \fi

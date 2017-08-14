@@ -4428,11 +4428,26 @@
         \ifnum\@l@dtempcntb>\@ne
           \advance\@l@dtempcntb by\page@numR
         \fi
-        \ifodd\@l@dtempcntb
-          \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
-        \else
-          \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
-        \fi
+        \ifboolexpr{%
+           bool {l@dprintingcolumns}%
+           and (% 
+             (test {\ifdefstring{\linenum@OnlyPages@ForColumnsR}{left}}%
+             and test {\ifnumodd{\page@numR}}%
+             )%
+             or% 
+             (test {\ifdefstring{\linenum@OnlyPages@ForColumnsR}{right}}%
+             and not test {\ifnumodd{\page@numR}}%
+             )%
+           )%
+        }%
+        {}%
+        {%
+          \ifodd\@l@dtempcntb%
+            \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+          \else%
+            \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+          \fi%
+        }%
       \fi
     \fi
   \fi
