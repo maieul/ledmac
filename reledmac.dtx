@@ -6086,6 +6086,7 @@
 \newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@num \@ne
+    \csgdef{l@dchset@num@\the\absline@num}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
     \let\l@dchset@num=\relax
     \advance\absline@num \m@ne
@@ -6162,7 +6163,9 @@
       \csnumgdef{@lastabsline@forpageR@\the\page@numR}{\the\absline@numR}%
       \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \ifbypage@R
-        \line@numR \z@ \subline@numR \z@
+        \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
+          \line@numR \z@ \subline@numR \z@%
+        \fi%
       \fi
       \global\page@numR=#1%
       \global\last@page@numR=#1%
@@ -6174,7 +6177,9 @@
       \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
       \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
-        \line@num \z@ \subline@num \z@
+        \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
+          \line@num \z@ \subline@num \z@%
+        \fi%
       \fi
       \global\page@num=#1%
       \global\last@page@num=#1%
@@ -8776,10 +8781,16 @@
          \global\@firstlineofpagetrue%
        \fi%
        \ifbypage@
-         \unless\ifresumenumbering@start%
-           \global\line@num=\z@ \global\subline@num=\z@%
-           \resetprevline@%
-         \fi%
+         \ifcsdef{l@dchset@num@\the\absline@num}%
+           {%
+           \global\csundef{l@dchset@num@\the\absline@num}%
+           }%
+           {%
+           \unless\ifresumenumbering@start%
+             \global\line@num=\z@ \global\subline@num=\z@%
+             \resetprevline@%
+           \fi%
+           }%
        \fi
        \global\resumenumbering@startfalse%
        \add@msdata@firstlineofpage%
