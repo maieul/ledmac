@@ -6116,6 +6116,7 @@
 \newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
     \advance\absline@num \@ne
+    \csgdef{l@dchset@num@\the\absline@num}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
     \let\l@dchset@num=\relax
     \advance\absline@num \m@ne
@@ -6192,7 +6193,9 @@
       \csnumgdef{@lastabsline@forpageR@\the\page@numR}{\the\absline@numR}%
       \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \ifbypage@R
-        \line@numR \z@ \subline@numR \z@
+        \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
+          \line@numR \z@ \subline@numR \z@%
+        \fi%
       \fi
       \global\page@numR=#1%
       \global\last@page@numR=#1%
@@ -6204,7 +6207,9 @@
       \csnumgdef{@lastabsline@forpage@\the\page@num}{\the\absline@num}%
       \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
-        \line@num \z@ \subline@num \z@
+        \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
+          \line@num \z@ \subline@num \z@%
+        \fi%
       \fi
       \global\page@num=#1%
       \global\last@page@num=#1%
@@ -8676,14 +8681,32 @@
 % 
 % \begin{macro}{\l@dlsn@te}
 % \begin{macro}{\l@drsn@te}
-% Zero width boxes of the left and right side notes, together with their kerns.
+% Zero width boxes of the left and right side notes, together with their kerns, and, eventually, with additional space if we are in parallel columns typesetting.
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{l@dlsn@te} and \protect\cs{l@drsn@te}
 %              for use in \protect\cs{do@line}}
 %    \begin{macrocode}
 \newcommand{\l@dlsn@te}{%
-  \hb@xt@ \z@{\hss\box\l@dlp@rbox\kern\ledlsnotesep}}
+  \ifboolexpr{%
+      bool {l@dprintingcolumns}%
+      and bool {ledRcol@}%
+  }{%  If we are on a right column
+    \@tempdima=\@morespace@leftnote@rightcolumn%
+  }{%
+    \@tempdima=\z@%
+  }%
+  \hb@xt@ \z@{\hss\box\l@dlp@rbox\kern\ledlsnotesep\hskip\@tempdima}%
+}%
 \newcommand{\l@drsn@te}{%
-   \hb@xt@ \z@{\kern\ledrsnotesep\box\l@drp@rbox\hss}}
+  \ifboolexpr{%
+      bool {l@dprintingcolumns}%
+      and not bool {ledRcol@}%
+  }{%  If we are on a left column
+    \@tempdima=\@morespace@rightnote@leftcolumn%
+  }{%
+    \@tempdima=\z@%
+  }%
+  \hb@xt@ \z@{\hskip\@tempdima\kern\ledrsnotesep\box\l@drp@rbox\hss}%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -8807,10 +8830,16 @@
          \global\@firstlineofpagetrue%
        \fi%
        \ifbypage@
-         \unless\ifresumenumbering@start%
-           \global\line@num=\z@ \global\subline@num=\z@%
-           \resetprevline@%
-         \fi%
+         \ifcsdef{l@dchset@num@\the\absline@num}%
+           {%
+           \global\csundef{l@dchset@num@\the\absline@num}%
+           }%
+           {%
+           \unless\ifresumenumbering@start%
+             \global\line@num=\z@ \global\subline@num=\z@%
+             \resetprevline@%
+           \fi%
+           }%
        \fi
        \global\resumenumbering@startfalse%
        \add@msdata@firstlineofpage%
@@ -9062,11 +9091,26 @@
                 \ifnum\@l@dtempcntb>\@ne
                    \advance\@l@dtempcntb \page@num
                 \fi
-                \ifodd\@l@dtempcntb
-                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-                 \else
-                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-                \fi
+                \ifboolexpr{%
+                  bool {l@dprintingcolumns}%
+                  and (% 
+                   (test {\ifdefstring{\linenum@OnlyPages@ForColumns}{left}}%
+                   and test {\ifnumodd{\page@num}}%
+                   )%
+                   or% 
+                   (test {\ifdefstring{\linenum@OnlyPages@ForColumns}{right}}%
+                   and not test {\ifnumodd{\page@num}}%
+                   )%
+                 )%
+                }%
+                {}%
+                {%
+	                \ifodd\@l@dtempcntb%
+	                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+	                 \else%
+	                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+	                \fi%
+	            }%
              \fi
           \fi
        \fi
