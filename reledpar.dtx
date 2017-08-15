@@ -311,6 +311,7 @@
 % \changes{v2.19.3}{2017/07/17}{Do not print footnotes at the first run.}
 % \changes{v2.19.4}{2017/07/31}{Optimisation of the code to not print footnotes at the first run.}
 % \changes{v2.19.5}{2017/08/10}{Fix bug added in \protect\environment{astanza} in v.~2.18.0}
+% \changes{v2.20.0}{2017/08/15}{Fix bug with \cs{continuousnumberingwithcolumns} when using multiple series of continued numbering text. Now, the line number are correctly reset at each \protec\cs{beginnumbering}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -591,6 +592,10 @@
 %
 % If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
 % You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
+%
+% The first time you start \textbf{a left column or a single column}, use \cs{beginnumbering}, then use \cs{resumenumbering}. When you stop a left or a single column, use \cs{pausenumbering}, except the last time, where you must use \cs{endnumbering}.
+%
+% The first time you start \textbf{a right column}, use \cs{beginnumbering}, then use \cs{resumenumbering}. When you stop a right column, use \cs{pausenumbering}, except the last time, where you must use \cs{endnumbering}.
 %
 % \subsection{Note about \cs{AtEveryPstart*} and \cs{AtEveryPend*}}
 % The content of \cs{AtEveryPstart} / \cs{AtEveryPend} (without star) is added before every \cs{pstart} / after every \cs{pend}, respecting the left / right side.
@@ -1728,6 +1733,7 @@
   \global\sublines@Rfalse
   \global\let\next@page@numR\relax
   \global\let\sub@change\relax
+  \global\last@page@numR=-10000%
   \global\stopmsdata@inserted@true%
   \global\let\@msdata@list\relax%
   \global\csundef{@msdata@\add@msd@cR @dataR}%
@@ -1845,16 +1851,26 @@
 %
 % \begin{macro}{\pausenumberingR}
 % \begin{macro}{\resumenumberingR}
+% \begin{macro}{\ifresumenumberingR@start}
+% \begin{macro}{\pausenumbering@page@numR}
 % These are the right text equivalents of \protect\cs{pausenumbering} and
 % \protect\cs{resumenumbering}.
 % \changes{v1.8.3}{2014/08/31}{Debug \protect\cs{resumenumberingR}}
 %    \begin{macrocode}
+\newcount\pausenumbering@page@numR%
 \newcommand*{\pausenumberingR}{%
+  \ifx\next@page@numR\relax%
+    \global\pausenumbering@page@numR=0%
+  \else%
+    \global\pausenumbering@page@numR=\next@page@numR%
+  \fi%
   \endnumberingR\global\numberingRtrue}
+\newif\ifresumenumberingR@start%
 \newcommand*{\resumenumberingR}{%
   \ifnumberingR
      \global\pst@rtedRtrue
      \global\advance\section@numR \@ne
+     \global\resumenumberingR@starttrue%
      \led@mess@SectionContinued{\the\section@numR R}%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
@@ -1862,12 +1878,14 @@
      \initnumbering@sectcountR%
      \set@continuousnumberingforR%
   \else
-    \led@err@numberingShouldHaveStarted
+     \led@err@NumberingShouldHaveStarted
      \endnumberingR
      \beginnumberingR
   \fi}
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -4220,11 +4238,17 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
-      \@firstlineofpageRtrue%
+      \unless\ifresumenumberingR@start%
+        \@firstlineofpageRtrue%
+      \fi%
       \global\page@numR=\next@actionR
       \ifbypage@R
-        \global\line@numR \z@  \global\subline@numR \z@
+        \unless\ifresumenumberingR@start%
+          \global\line@numR \z@%  
+          \global\subline@numR \z@%
+        \fi%
       \fi
+      \global\resumenumberingR@startfalse%
       \add@msdata@firstlineofpage%
     \else
       \ifnum\next@actionR<-4999\relax   %  9/05 added relax here
