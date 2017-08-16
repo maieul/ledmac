@@ -6,6 +6,7 @@ OBJ= $(SRC:.tex=.pdf)
 all:$(OBJ)
 	python3 check-example.py
 
+PDF:$(OBJ)
 
 %.pdf: %.tex
 	latexmk $<
