@@ -5056,7 +5056,9 @@
  \ifcontinuousnumberingwithcolumns%
    \ifdefined\line@numR%
      \ifnum\line@numR>\line@num% 
-       \expandafter\setlinenum\expandafter{\the\line@numR}%
+       \global\appto\next@line@list@stuff{%
+         \expandafter\setlinenum\expandafter{\the\line@numR}%
+       }%
      \fi% 
      \ifnum\last@page@numR>\last@page@num%
        \global\last@page@num=\last@page@numR%
@@ -6834,11 +6836,14 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
+% \begin{macro}{\next@line@list@stuff}
 % The \protect\cs{line@list@stuff}\marg{file} macro, which
 % is called by \protect\cs{beginnumbering}, performs
 % all the line-list operations needed at the start of a section.
 % Its argument is the name of the line-list file.
+% \changes{v2.24.0}{2017/08/15}{Add \cs{next@line@list@stuff} internal hook.}
 %    \begin{macrocode}
+\let\next@line@list@stuff\relax%
 \newcommand*{\line@list@stuff}[1]{%
 %    \end{macrocode}
 % First, define a toggle set to true when we are not in the first run.
@@ -6861,6 +6866,7 @@
 %                           \protect\cs{line@list@stuff}}
 % \changes{v0.7.0}{2005/02/25}{Deleted \protect\cs{page@start} from \protect\cs{line@list@stuff}}
 % \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
+% \Macpackage and \parpackage can fill the \cs{next@line@list@stuff} hook between a \cs{endnumbering} (associated with numbered file $n$) and a \cs{beginnumbering} (associated with numbered file $n+1$). It allow to add content to the numbered file $n+1$ and not $n$.
 %    \begin{macrocode}
   \iffirst@linenum@out@
      \global\first@linenum@out@false%
@@ -6884,11 +6890,14 @@
      \ifl@dpaging%
        \write\linenum@out{\string\@par@sync@option{\@par@this@sync@option}}%
      \fi%
-  \fi}
+  \fi%
+  \next@line@list@stuff%
+  \global\let\next@line@list@stuff\relax%
+}%
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \end{macro}
 % \begin{macro}{\new@line}
 % The \protect\cs{new@line} macro sends the \protect\cs{@nl} command to the line-list
 % file, to mark the start of a new text line, and its page number.

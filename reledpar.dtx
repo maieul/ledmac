@@ -316,6 +316,7 @@
 % \changes{v2.20.0}{2017/08/15}{Fix bug with \cs{continuousnumberingwithcolumns} when using multiple series of continued numbering text. Now, the line number are correctly reset at each \protect\cs{beginnumbering}.}
 % \changes{v2.20.0}{2017/08/15}{Fix bug with \protect\option{continuousnumberingwithcolumns} and inner / outer notes and line numbering.}
 % \changes{v2.20.0}{2017/08/15}{Add \protect\cs{linenumOnlyPagesForColumns} and \protect\cs{linenumOnlyPagesForColumnsR} to tell to print the line numbers associated to a column only on some specific pages (for example, only on right pages).}
+% \changes{v2.20.0}{2017/08/15}{Fix bug with \protect\option{continuousnumberingwithcolumns} when a \protect\cs{beginnumbering} is called after an other \protect\cs{beginnumbering}…\protect\cs{endnumbering}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -2023,7 +2024,9 @@
 \newcommand{\set@continuousnumberingforR}{%
   \ifcontinuousnumberingwithcolumns%
      \ifnum\line@numR<\line@num%
-       \expandafter\setlinenum\expandafter{\the\line@num}%
+       \global\appto\next@line@list@stuffR{%
+         \expandafter\setlinenum\expandafter{\the\line@num}%
+       }%
      \fi%
      \ifnum\last@page@num>\last@page@numR%
        \global\last@page@numR=\last@page@num%
@@ -2878,12 +2881,17 @@
 % \end{macro}
 %
 % \begin{macro}{\line@list@stuffR}
+% \begin{macro}{\next@line@list@stuffR}
 % This is the right text version of the \protect\cs{line@list@stuff}\marg{file} 
 % macro. It is called by \protect\cs{beginnumberingR} and performs
 % all the line-list operations needed at the start of a section.
 % Its argument is the name of the line-list file.
 % \changes{v1.10.1}{2015/01/16}{Revert modification of 1.4.2, which makes bugs with numbering. Leave vertical mode to solve spurious space before minipage.}
+% \Macpackage and \parpackage can fill the \cs{next@line@list@stuffR} hook between a \cs{endnumberingR} (associated with numbered file $n$) and a \cs{beginnumberingR} (associated with numbered file $n+1$). It allow to add content to the numbered file $n+1$ and not $n$.
+% \changes{v2.20.0}{2017/08/15}{Add \cs{next@line@list@stuffR} internal hook.}
 %    \begin{macrocode}
+
+\let\next@line@list@stuffR\relax%
 \newcommand*{\line@list@stuffR}[1]{%
   \global\newtoggle{notfirstrun@#1}%
   \IfFileExists{\l@auxdir#1}%
@@ -2903,9 +2911,13 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
-  \fi}
+  \fi%
+  \next@line@list@stuffR%
+  \global\let\next@line@list@stuffR\relax%
+}%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\new@lineL}
