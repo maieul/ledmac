@@ -53,6 +53,11 @@ dist: $(PACKAGE) examples
 	ln examples/makefile reledmac/examples
 	mkdir reledmac/doc-include
 	ln doc-include/*dtx reledmac/doc-include
+	$(MAKE) -C doc-more all
+	mkdir reledmac/doc-more
+	ln doc-more/*pdf reledmac/doc-more
+	ln doc-more/*tex reledmac/doc-more
+	ln doc-more/makefile reledmac/doc-more
 	ln $(PACKAGE) reledmac
 	@$(RM) ../reledmac.zip
 	zip -r ../reledmac.zip reledmac
