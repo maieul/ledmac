@@ -3,6 +3,7 @@
 \usepackage{unicode-math}
 \usepackage{libertineotf}
 \usepackage{tikz}
+\usepackage{csquotes}
 \newcommand{\package}[1]{\emph{#1}}
 \begin{document}
 \title{Page layout with \package{reledpar}}
@@ -30,7 +31,7 @@
 \end{tikzpicture}
 \caption{Page layout}\label{pic:page}
 \end{figure}
-
+\section{General}
 \package{Reledmac} doesn't care neither text width ($T$) nor margins, whose sizes are calculated by \LaTeX{} itself or depends on other packages like \package{geometry}. In normal typesetting, line numbers and sidenotes are in the margin.
 
 In parallel typesetting, sidenotes and lines numbers can be, or not, in page margins. 
@@ -42,8 +43,7 @@ Normally, we get:
 \end{equation}
 
 The only possible exceptions occur when the user makes mistakes when fixing $L$ and / or $A$ and / or $B$ and / or $R$.
-
-\smallskip
+\section{Parameters}
 Now, let's turn our attention to the the parameters that can be controlled by \package{reledmac} are (see fig.~\ref{pic:page}). These are:
 
 \begin{description}	
@@ -53,7 +53,7 @@ Now, let's turn our attention to the the parameters that can be controlled by \p
 	
 	\item[R] \verb!\Rcolwidth!; fixed width, by default \verb!{0.45\textwidth}!
 	
-	\item[S] \verb!\columnseparator!; it inserts a vertical rule of width \verb!\columnrulewidth!, by default set to be $0pt$. You can redefine \verb!\columnrulewidth! by
+	\item[S] \verb!\columnseparator!; it inserts a vertical rule of width \verb!\columnrulewidth!, by default set to be $0\,pt$. You can redefine \verb!\columnrulewidth! by
 	
 \begin{verbatim}
 	\setlength{\columnrulewidth}{0.4pt}
@@ -73,6 +73,7 @@ Now, let's turn our attention to the the parameters that can be controlled by \p
 
 \end{description}
 
+\section{Columns' position}
 By default, columns are positioned to the right of the page. However, you can use
 \verb!\columnsposition{L}! to align them to the left, or \verb!\columnsposition{C}! to center
 them.
@@ -85,43 +86,35 @@ In this case $LM$ and $RM$ are modified according:
 	\item with \verb!\columnsposition{C}!, $RM$ and $LM$ are automatically calculated
 \end{itemize}
 
-Therefore, the length automatically calculated are $LM$, $RM$, $B$ and $A$. Suppose we call $C$ these lenghts; to calculate them, we have this formula:
+\section{Automatically calculated parameters}
+Therefore, the length automatically calculated are $LM$, $RM$, and, if not fixed by user, $B$ and $A$. 
 
+
+\subsection{If $LM$, $RM$, $B$ and $A$ are calculated}
 \begin{equation}
-	C = \frac{T-Σ}{X}
+	LM = RM = B = A = \frac{T - (L + S + R)}{4}
 \end{equation}
 
-\noindent{}where $X$ is the number of involved lengths automatically calculated, \textit{i. e.}:
-
-\begin{description}
-	\item[4] if $LM$, $RM$, $B$ and $A$ are concerned
-	\item[3] if $LM$, $RM$, and $B$ are concerned
-	\item[3] if $LM$, $RM$, and $A$ are concerned
-	\item[2] if only $LM$ and $RM$ are concerned
-\end{description}
-
-\noindent{}and $\Sigma$ is the total amount of the fixed widhts and can be calculated by these formulas:
+\subsection{If $LM$, $RM$, $B$ are calculated}
 
 \begin{equation}
-\label{eqn:lrs}
-	Σ = L+R+S
+	LM = RM = B = \frac{T - (L + A + S + R)}{3}
 \end{equation}
+
+\subsection{If $LM$, $RM$, $A$ are calculated}
 
 \begin{equation}
-\label{eqn:lrsab}
-	Σ = L + R + S + A + B
+	LM = RM = A = \frac{T - (L + B + S + R)}{3}
 \end{equation}
+\subsection{If only $LM$ and $RM$ are concerned}
 
 \begin{equation}
-\label{eqn:lrsa}
-	Σ = L+R+S+A
+	LM = RM = \frac{T - (L + B + S + A + R)}{2}
 \end{equation}
 
-\begin{equation}
-\label{eqn:lrsb}
-	Σ = L+R+S+B
-\end{equation}
+\subsection{In any case}
+$LM$, $B$, $A$, $RM$ can't have a negative value. If the result of one the previous equation is negative, then that means the value equals to $0$.
 
-\noindent{}where (\ref{eqn:lrs}) refers to the cases where $LM$, $RM$, $B$ and $A$ are not fixed; (\ref{eqn:lrsab}) to the cases where only $LM$ and $RM$ are automatically calculated; (\ref{eqn:lrsa}) and (\ref{eqn:lrsb}), respectively, to the cases where $RM$ or $LM$ are fixed.
+Technically, the \enquote{calculated values} are determined using \verb+\hfill+.
 
 \end{document}
