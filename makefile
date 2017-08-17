@@ -46,7 +46,6 @@ dist: $(PACKAGE) examples
 	rm -f examples/*pdf
 	$(MAKE) -C examples all
 	mkdir reledmac/examples
-	ln examples/latexmkrc reledmac/examples
 	ln examples/*pdf reledmac/examples
 	ln examples/*tex reledmac/examples
 	ln examples/*xdy reledmac/examples
