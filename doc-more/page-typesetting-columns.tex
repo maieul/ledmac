@@ -1,0 +1,128 @@
+\documentclass[11pt,a4paper]{book}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\usepackage{libertineotf}
+\usepackage{tikz}
+\usepackage{listings}
+
+\begin{document}
+
+\begin{figure}[p]\centering
+\begin{tikzpicture}[every node/.style={anchor=above,font=\scriptsize}]
+	\draw (0,0) rectangle (6,8);
+	\draw (-1.5,-1.5) rectangle (7.5,9.5);
+	\draw (0.5,1) rectangle (2.5,5);
+	\draw (3.5,1) rectangle (5.5,5);
+	\draw[blue,thick,|<->|] (0,8.5) -- node[above] {textwidth ($T$)} (6,8.5);
+	\draw[blue,thick,<->] (-1.5,7) -- node[above] {$Lmargin$} (0,7);
+	\draw[blue,thick,<->] (0,7) -- node[above] {numb. text width ($N$)} (6,7);
+	\draw[blue,thick,<->] (6,7) -- node[above] {$Rmargin$} (7.5,7);
+	\draw[blue,thick,|<->|]  (0.5,6) -- node[above] {$widthliketwocolumns$} (5.5,6);
+	\draw[red] (3,1) -- (3,5) node[above] {colsep ($S$)};
+	\draw[blue,thick,<->] (0,3) -- node[above] {$LM$} (0.5,3);
+	\draw[blue,thick,<->] (0.5,3) -- node[above] {$L$} (2.5,3);
+	\draw[blue,thick,<->] (2.5,3) -- node[above] {$B$} (3,3);
+	\draw[blue,thick,<->] (3,3) -- node[above] {$A$} (3.5,3);
+	\draw[blue,thick,<->] (3.5,3) -- node[above] {$R$} (5.5,3);
+	\draw[blue,thick,<->] (5.5,3) -- node[above] {$RM$} (6,3);
+\end{tikzpicture}
+\caption{Page layout}\label{pic:page}
+\end{figure}
+
+\section{Page layout}
+\verb!reledmac! doesn't care neither text width ($T$) nor margins, whose size is calculated by \LaTeX{} itself or depends on other packages like \verb!geometry!. The margins are the places where line numbers and/or side notes are to be placed (but remember that side notes are not in margins in culumn typesetting).
+
+Normally, we get:
+
+\begin{equation}
+  T = LM + L + B + S + A + R + RM
+\end{equation}
+
+The only possible exceptions occur when the user fixes $A$ and $B$ and makes mistakes.
+
+\smallskip
+Now, let's turn our attention to the the parameters that can be controlled by \verb!reledmac! are (see fig.~\ref{pic:page}). These are:
+
+\begin{description}	
+	\item[N] The numbered text width, \textit{i. e.} the width of text with line numbers. Its width is by default equal to $T$, but can be also modified by the \verb!reledmac!/\verb!reledpar! option \verb!widthliketwocolumns!: in this case, $N=L+B+S+A+R$
+	
+	\item[L] \verb!\Lcolwidth!; fixed width, by default \verb!\setlength{\Lcolwidth}{0.45\textwidth}!
+	%\verb!0.45\textwidth!
+	
+	\item[R] \verb!\Rcolwidth!; fixed width, by default \verb!\setlength{\Rcolwidth}{0.45\textwidth}!
+	%\verb!0.45\textwidth!
+	
+	\item[S] \verb!\columnseparator!; it inserts a vertical rule of width \verb!\columnrulewidth!, by default sed to be $0pt$. You can redefine both \verb!\columnrulewidth! and \verb!\columnseparator! by
+	
+\begin{verbatim}
+	\setlength{\columnrulewidth}{0.4pt}
+	\setlength{\columnseparator}{lenght}
+\end{verbatim}
+	
+	\item[B] \verb!\beforecolumnseparator!: automatically calculated, but can be redefined by
+	
+\begin{verbatim}
+	\setlength{\beforecolumnseparator}{length}
+\end{verbatim}
+	
+	\item[A] \verb!\aftercolumnseparator!: automatically calculated, but can be redefined by
+
+\begin{verbatim}
+	\setlength{\aftercolumnseparator}{length}
+\end{verbatim}
+
+\end{description}
+
+By default, columns are positioned to the right of the page. However, you can use
+\verb!\columnsposition{L}! to align them to the left, or \verb!\columnsposition{C}! to center
+them.
+
+In this case $LM$ and $RM$ are modified according:
+
+\begin{itemize}
+	\item with \verb!\columnsposition{L}!, $LM=0$ and $RM$ is automatically calculated
+	\item with \verb!\columnsposition{R}!, $RM=0$ and $LM$ is automatically calculated
+	\item with \verb!\columnsposition{C}!, $RM$ and $LM$ are automatically calculated
+\end{itemize}
+
+Therefore, the lenght automatically calculated are $LM$, $RM$, $B$ and $A$. Suppose we call $C$ these lenghts; to calculate them, we have this formula:
+
+\begin{equation}
+%  C = (T-S):X
+	C = \frac{T-Σ}{X}
+\end{equation}
+
+\noindent{}where $X$ is the number of involved lengths automatically calculated, \textit{i. e.}:
+
+\begin{description}
+	\item[4] if $LM$, $RM$, $B$ and $A$ are concerned
+	\item[3] if $LM$, $RM$, and $B$ are concerned
+	\item[3] if $LM$, $RM$, and $A$ are concerned
+	\item[2] if only $LM$ and $RM$ are concerned
+\end{description}
+
+\noindent{}and $\Sigma$ is the total amount of the fixed widhts and can be calculated by these formulas:
+
+\begin{equation}
+\label{eqn:lrs}
+	Σ = L+R+S
+\end{equation}
+
+\begin{equation}
+\label{eqn:lrsab}
+	Σ = L + R + S + A + B
+\end{equation}
+
+\begin{equation}
+\label{eqn:lrsa}
+	Σ = L+R+S+A
+\end{equation}
+
+\begin{equation}
+\label{eqn:lrsb}
+	Σ = L+R+S+B
+\end{equation}
+
+\noindent{}where (\ref{eqn:lrs}) refers to the cases where $LM$, $RM$, $B$ and $A$ are not fixed; (\ref{eqn:lrsab}) to the cases where only $LM$ and $RM$ are automatically calculated; (\ref{eqn:lrsa}) and (\ref{eqn:lrsb}), respectively, to the cases where $RM$ or $LM$ are fixed.
+
+\end{document}
