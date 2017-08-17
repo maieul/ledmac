@@ -316,6 +316,9 @@
 % \changes{v2.20.0}{2017/08/15}{Fix bug with \cs{continuousnumberingwithcolumns} when using multiple series of continued numbering text. Now, the line number are correctly reset at each \protect\cs{beginnumbering}.}
 % \changes{v2.20.0}{2017/08/15}{Fix bug with \protect\option{continuousnumberingwithcolumns} and inner / outer notes and line numbering.}
 % \changes{v2.20.0}{2017/08/15}{Add \protect\cs{linenumOnlyPagesForColumns} and \protect\cs{linenumOnlyPagesForColumnsR} to tell to print the line numbers associated to a column only on some specific pages (for example, only on right pages).}
+% \changes{v2.20.0}{2017/08/15}{Fix bug with \protect\option{continuousnumberingwithcolumns} when a \protect\cs{beginnumbering} is called after an other \protect\cs{beginnumbering}…\protect\cs{endnumbering}.}
+% \changes{v2.20.0}{2017/08/15}{Fix incompatibility between \protect\option{continuousnumberingwithcolumns} and manual settings of \protect\cs{beforecolumnseparator} and \protect\cs{aftercolumnseparator}.}
+% \changes{v2.20.0}{2017/08/15}{Fix bug with \protect\option{widthliketwocolumns} when manually setting \protect\cs{beforecolumnseparator} and \protect\cs{aftercolumnseparator} \cs{next@line@list@stuffR} internal hook.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1786,8 +1789,8 @@
   \else%
     \setcounter{pstartR}{1}%
   \fi%
-  \set@continuousnumberingforR%
   \message{Section \the\section@numR R }%
+  \set@continuousnumberingforR%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
   \l@dend@stuff
   \begingroup
@@ -1916,11 +1919,11 @@
      \global\advance\section@numR \@ne
      \global\resumenumberingR@starttrue%
      \led@mess@SectionContinued{\the\section@numR R}%
+     \set@continuousnumberingforR%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
      \begingroup%
      \initnumbering@sectcountR%
-     \set@continuousnumberingforR%
   \else
      \led@err@NumberingShouldHaveStarted
      \endnumberingR
@@ -2025,7 +2028,9 @@
 \newcommand{\set@continuousnumberingforR}{%
   \ifcontinuousnumberingwithcolumns%
      \ifnum\line@numR<\line@num%
-       \expandafter\setlinenum\expandafter{\the\line@num}%
+       \global\appto\next@line@list@stuffR{%
+         \expandafter\setlinenum\expandafter{\the\line@num}%
+       }%
      \fi%
      \ifnum\last@page@num>\last@page@numR%
        \global\last@page@numR=\last@page@num%
@@ -2880,12 +2885,17 @@
 % \end{macro}
 %
 % \begin{macro}{\line@list@stuffR}
+% \begin{macro}{\next@line@list@stuffR}
 % This is the right text version of the \protect\cs{line@list@stuff}\marg{file} 
 % macro. It is called by \protect\cs{beginnumberingR} and performs
 % all the line-list operations needed at the start of a section.
 % Its argument is the name of the line-list file.
 % \changes{v1.10.1}{2015/01/16}{Revert modification of 1.4.2, which makes bugs with numbering. Leave vertical mode to solve spurious space before minipage.}
+% \Macpackage and \parpackage can fill the \cs{next@line@list@stuffR} hook between a \cs{endnumberingR} (associated with numbered file $n$) and a \cs{beginnumberingR} (associated with numbered file $n+1$). It allow to add content to the numbered file $n+1$ and not $n$.
+% \changes{v2.20.0}{2017/08/15}{Add \protect\cs{next@line@list@stuffR} internal hook.}
 %    \begin{macrocode}
+
+\let\next@line@list@stuffR\relax%
 \newcommand*{\line@list@stuffR}[1]{%
   \global\newtoggle{notfirstrun@#1}%
   \IfFileExists{\l@auxdir#1}%
@@ -2893,7 +2903,6 @@
     {\global\togglefalse{notfirstrun@#1}}%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
-     \immediate\closeout\linenum@outR
      \global\first@linenum@out@Rfalse
      \immediate\openout\linenum@outR=\l@auxdir#1%
      \immediate\write\linenum@outR{\string\line@list@version{\this@line@list@version}}%     
@@ -2906,9 +2915,13 @@
      \fi%
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
-  \fi}
+  \fi%
+  \next@line@list@stuffR%
+  \global\let\next@line@list@stuffR\relax%
+}%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\new@lineL}
@@ -5055,14 +5068,8 @@
 % If we are typesetting parallel columns, we may want a left sidenote called on the right column be put on the left of the page and not on the left of the column, 
 % and a right sidenote called on the left column be put on the right of the page and not on right of the column. We store as an option in the \cs{if@sidenotesmarginpage} boolean.
 %
-% To do it, we need to add spaces, respectively defined on \cs{@morespace@leftnote@rightcolumn} and \cs{@morespace@rightnote@leftcolumn}. These two length depend of many parameters:
-% \begin{itemize}
-%   \item Columns width;
-%   \item columns position;
-%   \item columns separator;
-%   \item space between columns and columns separator, which can be fixed by user or automatically calculated by \parpackage.
-% \end{itemize}
-% The \cs{get@sidenote@morespace@columns} calculate there two length. 
+% To do it, we need to add spaces, respectively defined on \cs{@morespace@leftnote@rightcolumn} and \cs{@morespace@rightnote@leftcolumn}. 
+% The \cs{get@sidenote@morespace@columns} calculate there two lengths. 
 %    \begin{macrocode}
 \newdimen\@morespace@leftnote@rightcolumn%
 \newdimen\@morespace@rightnote@leftcolumn%
@@ -5075,147 +5082,16 @@
 %    \begin{macrocode}
   \if@sidenotesmarginpage%
 %    \end{macrocode}
-% First, we calculate the total width betwenn columns, including the width of the column separator line. We store it on \cs{@tempdima}.
-%    \begin{macrocode}
-  \@tempdima=\z@%
-  \ifdefstring{\columns@position}{C}%
-%    \end{macrocode}
-% First case, the columns are centered.
-%    \begin{macrocode}
-  {%
-%    \end{macrocode}
-% First sub-case, the width between columns is automatically calculated.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimless{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*1/2% The total of the width before and after column separator
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Second sub-case, the width between column is fully determined by user setting.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \beforecolumnseparator +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/3%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimless{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \aftercolumnseparator +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/3%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Now, we have finished with the case the columns are centered aligned.
-%    \begin{macrocode}  
-  }%
-%    \end{macrocode}
-% Other case, the columns are left or right aligned.
-%    \begin{macrocode}
-  {%
-%    \end{macrocode}
-% First sub-case, the width between columns is automatically calculated.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimless{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*2/3% The total of the width before and after column separator
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Second sub-case, the width between column is fully determined by user setting.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \beforecolumnseparator +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/2%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
-%    \begin{macrocode}
-    \ifboolexpr{%
-      test {\ifdimless{\beforecolumnseparator}{\z@}}%
-      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
-    }%
-      {%
-        \@tempdima=\dimexpr%
-          \columnrulewidth + \aftercolumnseparator +%
-          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/2%
-        \relax%
-      }%
-      {}%
-%    \end{macrocode}
-% We have finished with the case the columns are left or right aligned.
-%    \begin{macrocode}
-  }%
-%    \end{macrocode}
 % Now, we can calculate \cs{@morespace@leftnote@rightcolumn} and \cs{@morespace@rightnote@leftcolumn}.
 %    \begin{macrocode}
-  \global\@morespace@leftnote@rightcolumn=\dimexpr\@tempdima + \Lcolwidth\relax%
-  \global\@morespace@rightnote@leftcolumn=\dimexpr\@tempdima + \Rcolwidth\relax%
+    \global\@morespace@leftnote@rightcolumn=\dimexpr\intercolumns@width + \Lcolwidth\relax%
+    \global\@morespace@rightnote@leftcolumn=\dimexpr\intercolumns@width + \Rcolwidth\relax%
 %    \end{macrocode}
 % If \cs{if@sidenotesmarginpage} is False
 %    \begin{macrocode}
   \else%
-  \global\@morespace@leftnote@rightcolumn=\z@%
-  \global\@morespace@rightnote@leftcolumn=\z@%  
+    \global\@morespace@leftnote@rightcolumn=\z@%
+    \global\@morespace@rightnote@leftcolumn=\z@%  
 %    \end{macrocode}
 % End of \cs{get@sidenote@morespace@columns}.
 %    \begin{macrocode}
@@ -5813,6 +5689,7 @@
     \global\l@dpscL=\z@
     \global\l@dpscR=\z@
     \get@familiarfootnote@number%
+    \get@intercolumns@width%
     \get@sidenote@morespace@columns%
 %    \end{macrocode}
 % Check if there are chunks to be processed, and process them
@@ -5942,7 +5819,155 @@
     \hspace{\aftercolumnseparator}%
   \fi%
 }%
-%\end{macrocode}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\get@intercolumns@width}
+% \begin{macro}{\intercolumns@width}
+% The \cs{intercolumns@width} is calculated by \cs{get@intercolumns@width}.
+% This length depends of many parameters:
+% \begin{itemize}
+%   \item Columns width;
+%   \item columns position;
+%   \item columns separator;
+%   \item space between columns and columns separator, which can be fixed by user or automatically calculated by \parpackage.
+% \end{itemize}
+% This length is never used directly, but it is used to calculate some other lenghts.
+%    \begin{macrocode}
+\newdimen\intercolumns@width%
+\newcommand{\get@intercolumns@width}{%
+%    \begin{macrocode}
+  \global\intercolumns@width=\z@%
+  \ifdefstring{\columns@position}{C}%
+%    \end{macrocode}
+% First case, the columns are centered.
+%    \begin{macrocode}
+  {%
+%    \end{macrocode}
+% First sub-case, the width between columns is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*1/2% The total of the width before and after column separator
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Second sub-case, the width between column is fully determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/3%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \aftercolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/3%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Now, we have finished with the case the columns are centered aligned.
+%    \begin{macrocode}  
+  }%
+%    \end{macrocode}
+% Other case, the columns are left or right aligned.
+%    \begin{macrocode}
+  {%
+%    \end{macrocode}
+% First sub-case, the width between columns is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth)*2/3% The total of the width before and after column separator
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Second sub-case, the width between column is fully determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator + \aftercolumnseparator%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Third sub-case, the width before column separator is determined by user setting, but the width after column separator is automatically calculated.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimgreater{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimless{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \beforecolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \beforecolumnseparator) * 1/2%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% Fourth and last sub-case, the width before column separator is automatically calculated, but the width after column separator is determined by user setting.
+%    \begin{macrocode}
+    \ifboolexpr{%
+      test {\ifdimless{\beforecolumnseparator}{\z@}}%
+      and test {\ifdimgreater{\aftercolumnseparator}{\z@}}%
+    }%
+      {%
+        \global\intercolumns@width=\dimexpr%
+          \columnrulewidth + \aftercolumnseparator +%
+          (\textwidth - \Lcolwidth - \Rcolwidth - \columnrulewidth - \aftercolumnseparator) * 1/2%
+        \relax%
+      }%
+      {}%
+%    \end{macrocode}
+% We have finished with the case the columns are left or right aligned.
+%    \begin{macrocode}
+  }%
+%    \end{macrocode}
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\print@leftcolumn}
 % \begin{macro}{\print@rightcolumn}
@@ -6068,40 +6093,21 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{setwidthliketwocolumns@L}
+% \begin{macro}{setwidthliketwocolumns}
 % \begin{macro}{setpositionliketwocolumns@L}
 % \begin{macro}{setnotepositionliketwocolumns@L}
-% \begin{macro}{setwidthliketwocolumns@C}
 % \begin{macro}{setpositionliketwocolumns@C}
 % \begin{macro}{setnotepositionliketwocolumns@C}
-% \begin{macro}{setwidthliketwocolumns@R}
 % \begin{macro}{setpositionliketwocolumns@R}
 % \begin{macro}{setnotepositionliketwocolumns@R}
-% The \protect\cs{setwidth…} macros are called in \protect\cs{beginnumbering} in a \textbf{non-parallel} 
-% typesetting context, to fix the width  of the lines to be vertically aligned with parallel columns. They are also called at the beginning of a note's group, if some options are enabled.
+% The \protect\cs{setwidthliketwocolumns} macro is called in \protect\cs{beginnumbering} in a \textbf{non-parallel} 
+% typesetting context, to fix the width of the lines to be vertically aligned with parallel columns. It is also called at the beginning of a note's group, if some options are enabled.
 % The \protect\cs{setposition…} macros are called in \protect\cs{beginnumbering} in a \textbf{non- parallel} typesetting context to fix the position of the lines.
 % The \protect\cs{setnoteposition…} macros are called in \protect\cs{xxxfootstart} in a \textbf{non- parallel} typesetting context to fix the position of notes block.
 % \begin{macrocode}
-\newcommand{\setwidthliketwocolumns@L}{%
-% Temporary dimension, initially equal to the standard hsize, i.e. text width
-%    \begin{macrocode}
-  \newdimen\temp%
-  \temp=\hsize%
-%    \end{macrocode}
-% Hsize : Left + Right width 
-%    \begin{macrocode}
-  \hsize=\Lcolwidth%
-  \advance\hsize\Rcolwidth%
-%    \end{macrocode}
-% Now, calculating the remaining space 
-%    \begin{macrocode}
-  \advance\temp-\hsize%
-%    \end{macrocode}
-% And multiply the hsize by 2/3 of this space
-%    \begin{macrocode}
-  \multiply\temp by 2%
-  \divide\temp by 3%
-  \advance\hsize\temp%
+\newcommand{\setwidthliketwocolumns}{%
+  \get@intercolumns@width%As \columns is not necessary called before \setwidthliketwocolumns
+  \hsize=\dimexpr \Lcolwidth + \intercolumns@width + \Rcolwidth \relax%
 }%
 
 \newcommand{\setpositionliketwocolumns@L}{%
@@ -6109,31 +6115,6 @@
 }%
 
 \newcommand{\setnotespositionliketwocolumns@L}{%
-}%
-
-
-%    \end{macrocode}
-%    \begin{macrocode}
-\newcommand{\setwidthliketwocolumns@C}{%
-% Temporary dimension, initially equal to the standard hsize, i.e. text width
-%    \end{macrocode}
-%    \begin{macrocode}
-  \newdimen\temp%
-  \temp=\hsize%
-% Hsize : Left + Right width 
-%    \end{macrocode}
-%    \begin{macrocode}
-  \hsize=\Lcolwidth%
-  \advance\hsize\Rcolwidth%
-% Now, calculating the remaining space 
-%    \end{macrocode}
-%    \begin{macrocode}
-  \advance\temp-\hsize%
-%    \end{macrocode}
-% And multiply the hsize by 1/2 of this space
-%    \begin{macrocode}
-  \divide\temp by 2%
-  \advance\hsize\temp%
 }%
 
 \newcommand{\setpositionliketwocolumns@C}{%
@@ -6153,48 +6134,10 @@
   \rightskip=-\temp%
 }%
 
-\newcommand{\setwidthliketwocolumns@R}{%
-%    \end{macrocode}
-% Temporary dimension, initially equal to the standard hsize, i.e. text width
-%    \begin{macrocode}
-  \newdimen\temp%
-  \temp=\hsize%
-%    \end{macrocode}
-% Hsize : Left + Right width 
-%    \begin{macrocode}
-  \hsize=\Lcolwidth%
-  \advance\hsize\Rcolwidth%
-%    \end{macrocode}
-% Now, calculating the remaining space 
-%    \begin{macrocode}
-  \advance\temp-\hsize%
-%    \end{macrocode}
-% And multiply the hsize by 2/3 of this space
-%    \begin{macrocode}
-  \multiply\temp by 2%
-  \divide\temp by 3%
-  \advance\hsize\temp%
-}%
-
 \newcommand{\setpositionliketwocolumns@R}{%
   \doinsidelinehook{\hfill}%
 }%
-
-\newcommand{\setnotespositionliketwocolumns@R}{%
-  \newdimen\temp%
-  \newdimen\tempa%
-  \temp=\hsize%
-  \tempa=\Lcolwidth%
-  \advance\tempa\Rcolwidth%
-  \advance\temp-\tempa%
-  \divide\temp by 2%
-  \leftskip=\temp%
-  \rightskip=-\temp%
-}%
-
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
