@@ -9,7 +9,7 @@ all:$(OBJ)
 PDF:$(OBJ)
 
 %.test: %.pdf 
-	latexmk $<
+	latexmk $*.tex
 	python3 check-example.py --filename=$<
 
 %.pdf: %.tex
