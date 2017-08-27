@@ -5050,17 +5050,10 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\set@continuousnumberingforL}
-% \cs{set@continuousnumberingforl} sets the left line numbers and pstart counters at a \cs{beginnumbering} or a \cs{resumenumbering} in order to have continuous numbering with single column text. 
+% \cs{set@continuousnumberingforl} sets pstart counters at a \cs{beginnumbering} or a \cs{resumenumbering} in order to have continuous numbering with single column text. 
 %    \begin{macrocode}
 \newcommand{\set@continuousnumberingforL}{%
  \ifcontinuousnumberingwithcolumns%
-   \ifdefined\line@numR%
-     \ifnum\line@numR>\line@num% 
-       \global\appto\next@line@list@stuff{%
-         \expandafter\setlinenum\expandafter{\the\line@numR}%
-       }%
-     \fi% 
-   \fi%
    \ifl@dpairing%
      \unless\ifl@dpaging%
        \global\c@pstartL=\c@pstart%
@@ -8566,6 +8559,15 @@
 %    \begin{macrocode}
         {\ledllfill\hb@xt@ \wd\one@line{%
           \new@line%
+%    \end{macrocode}
+% If we use the \option{continuousnumberingwithcolumns}, we increase right line number.
+%    \begin{macrocode}
+        \ifcontinuousnumberingwithcolumns%
+          \xappto\next@line@list@stuffR{%
+            \noexpand\write\noexpand\linenum@outR{\noexpand\string\noexpand\@nl[\the\c@page][\thepage]}%
+            \unexpanded{\global\line@numR=}\the\line@num%
+          }%
+        \fi%
 %    \end{macrocode}
 % If we use \LuaLaTeX\, then restore the direction.
 %    \begin{macrocode}
