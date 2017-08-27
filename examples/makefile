@@ -8,7 +8,8 @@ all:$(OBJ)
 
 PDF:$(OBJ)
 
-%.test: %.pdf
+%.test: %.pdf 
+	latexmk $<
 	python3 check-example.py --filename=$<
 
 %.pdf: %.tex
