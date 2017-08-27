@@ -6208,10 +6208,14 @@
         \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
           \ifboolexpr{%
             bool{resumenumberingR@start}%
-            and test {\ifnumequal{\last@page@numR}{-1}}%
+            and test {\ifnumequal{\last@page@numR}{-10000}}%
           }%
           {}%
-          {\line@numR \z@ \subline@numR \z@}%
+          {%
+            \line@numR \z@% 
+            \subline@numR \z@%
+            \global\csdef{reset@lineR\the\numexpr\absline@numR+1\relax @\the\section@numR}{}%
+          }%
         \fi%
       \fi
       \global\page@numR=#1%
@@ -6226,6 +6230,7 @@
       \ifbypage@
         \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
           \line@num \z@ \subline@num \z@%
+          \global\csdef{reset@line\the\numexpr\absline@num+1\relax @\the\section@num}{}%
         \fi%
       \fi
       \global\page@num=#1%
@@ -8868,23 +8873,12 @@
        }%
          {}%
          {\global\@firstlineofpagetrue}%
-       \ifbypage@
-         \ifcsdef{l@dchset@num@\the\absline@num}%
-           {%
-           \global\csundef{l@dchset@num@\the\absline@num}%
-           }%
-           {%
-             \ifboolexpr{%
-          	    bool{resumenumbering@start}%
-                and test {\ifdimgreater{\pagedepth}{\z@}}%
-             }%
-             {}%
-             {% 
-             \global\line@num=\z@ \global\subline@num=\z@%
-             \resetprevline@%
-             }%
-           }%
-       \fi
+       \ifcsdef{reset@line\the\absline@num @\the\section@num}%
+         {%
+         \global\line@num=\z@ \global\subline@num=\z@%
+         \resetprevline@%
+         }%
+         {}%
        \global\resumenumbering@startfalse%
        \add@msdata@firstlineofpage%
 %    \end{macrocode}
