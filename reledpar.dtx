@@ -225,7 +225,7 @@
 % \changes{v1.15.0}{2015/04/13}{Fix vertical spurious space before right \protect\cs{eledchapter} (bug added in v1.13.0).}
 % \changes{v1.15.0}{2015/04/13}{Prevent vertical space when using \protect\cs{AtEveryPstart} or \protect\cs{AtEveryPend} with a command which prints nothing}
 % \changes{v1.16.0}{2015/05/18}{Fix a bug with nofamiliar / nocritical option of eledmac.}
-% \changes{v1.16.0}{2015/05/18}{Error message when using \protect\cs{beginnumbering}…\protect\cs{endnumbering} without \protect\cs{pstart}.}
+% \changes{v1.16.0}{2015/05/18}{Error message when using \protect\cs{beginnumbering}\ …\ \protect\cs{endnumbering} without \protect\cs{pstart}.}
 % \changes{v1.16.0}{2015/05/18}{Error message when starting a Leftside/a Rightside while the previous one has not been yet typeset.}
 % \changes{v1.16.0}{2015/05/18}{Error message when calling \protect\cs{Pages} inside `pages' environment and \protect\cs{Columns} inside `pairs' environment.}
 % \changes{v1.16.0}{2015/05/18}{New package option sameparallelpagenumber to have the same page number for both left and right side.}
@@ -293,7 +293,7 @@
 % \changes{v2.14.4}{2016/11/14}{Take into account \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
 % \changes{v2.15.0}{2016/12/12}{Add \protect\option{movecolumnspositiononrightpage} option.}
 % \changes{v2.15.0}{2016/12/12}{New macro \protect\cs{sidenotemarginR}, fix default value to right.}
-% \changes{v.2.15.0}{2016/12/12}{Fix a bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}…\protect\cs{endnumbering}}
+% \changes{v.2.15.0}{2016/12/12}{Fix a bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}\ …\ \protect\cs{endnumbering}}
 % \changes{v2.15.0}{2016/12/12}{Fix a bug about space before sectioning commands after a pairs environment (bug added in v.~2.14.4).}
 % \changes{v2.15.0}{2016/12/12}{Fix a bug with page break when using \protect\cs{columns} (bug added in v.~2.14.1).}
 % \changes{v2.16.0}{2016/12/23}{Compatibility with \protect\cs{setmsdataposition}}
@@ -317,11 +317,11 @@
 % \changes{v2.20.0}{2017/08/17}{Fix a bug with \protect\cs{continuousnumberingwithcolumns} when using multiple series of continued numbering text. Now, the line number are correctly reset at each \protect\cs{beginnumbering}.}
 % \changes{v2.20.0}{2017/08/17}{Fix a bug with \protect\option{continuousnumberingwithcolumns} and inner / outer notes and line numbering.}
 % \changes{v2.20.0}{2017/08/17}{Add \protect\cs{linenumOnlyPagesForColumns} and \protect\cs{linenumOnlyPagesForColumnsR} to tell to print the line numbers associated with a column only on some specific pages (for example, only on right pages).}
-% \changes{v2.20.0}{2017/08/17}{Fix a bug with \protect\option{continuousnumberingwithcolumns} when a \protect\cs{beginnumbering} is called after an other \protect\cs{beginnumbering}…\protect\cs{endnumbering}.}
+% \changes{v2.20.0}{2017/08/17}{Fix a bug with \protect\option{continuousnumberingwithcolumns} when a \protect\cs{beginnumbering} is called after an other \protect\cs{beginnumbering}\ …\ \protect\cs{endnumbering}.}
 % \changes{v2.20.0}{2017/08/17}{Fix a bug with \protect\option{widthliketwocolumns} when manually setting \protect\cs{beforecolumnseparator} and \protect\cs{aftercolumnseparator}.}
 % \changes{v2.20.0}{2017/08/17}{Fix compatibility between \protect\option{continuousnumberingwithcolumns} and \protect\cs{numberpstartfalse}.}
 % \changes{v2.20.1}{2017/08/23}{Fix bug with \protect\option{continuousnumberingwithcolumns} when left column and right column have not the same size.}
-
+% \changes{v2.20.2}{2017/08/31}{Fix bugs with \protect\option{continuousnumberingwithcolumns} when going to a new page}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -602,17 +602,47 @@
 % In most cases, you should use \protect\cs{widthliketwocolumns} in combination with \protect\cs{Xnoteswidthliketwocolumns} and \protect\cs{notesXwidthliketwocolumns} to align the critical/familiar footnotes with the two colums. 
 % See \macpackage's handbook for more details.
 %
-% \label{continuousnumberingwithcolumns}If you want to have continuous line numbers between multiple columns and single columns, use the \option{continuousnumberingwithcolumns} option when loading \macpackage or \parpackage.
-% You will need to use \cs{pausenumbering}\ldots\cs{resumenumbering} instead of \cs{endnumbering}\ldots{endnumbering} (see \reff{reledmac-pause}).
-%
-% The first time you start \textbf{a left column or a single column}, use \cs{beginnumbering}, then use \cs{resumenumbering}. When you stop a left or a single column, use \cs{pausenumbering}, except the last time, where you must use \cs{endnumbering}.
-%
-% The first time you start \textbf{a right column}, use \cs{beginnumbering}, then use \cs{resumenumbering}. When you stop a right column, use \cs{pausenumbering}, except the last time, where you must use \cs{endnumbering}.
-%
 % \subsubsection{Schemas of column typesetting}
 % Domenico Cufalo wrote a schema of the parallel column typesetting parameters, with explanations.
 % You can read the file \href{run:doc-more/page-typesetting-columns.pdf}{doc-more/page-typesetting-columns.pdf}.
 % 
+% \subsubsection{Continuous numbering between single and double column texts}
+% \label{continuousnumberingwithcolumns}If you want to have continuous line 
+% numbers between multiple columns and single columns, use the 
+% \option{continuousnumberingwithcolumns} option when loading \macpackage 
+% or \parpackage.
+% You will need to use \cs{pausenumbering}~…\ 
+% \cs{resumenumbering} in addition to \cs{beginnumbering}~…\ 
+% \cs{endnumbering} (see \reff{reledmac-pause}).
+%
+% The best way to understand the behaviour of \cs{pausenumbering} and 
+% \cs{resumenumbering} is to think of the left-column text as a continuation of 
+% single-column text (or, vice versa, to think of single-column text as 
+% left-column text), and of the right-column as independent text, which needs to be 
+% synchronised with the left one manually. The numbering commands in a 
+% right column are interconnected with each other, and not with the respective 
+% left-column commands.
+%
+% This means that you must switch between single-column and left-column 
+% text using \cs{beginnumbering}~…\ \cs{pausenumbering}~…\ 
+% \cs{resumenumbering}~…\ \cs{pausenumbering}~…\ 
+% \cs{resumenumbering}~…\ \cs{endnumbering}. 
+%
+% On the other side, the first right column must always begin with 
+% \cs{beginnumbering}, no matter if the corresponding left-column started 
+% with \cs{resumenumbering} or not; this is because numbering in the right 
+% column has not been started yet. Then, for consecutive chunks of 
+% right-column text you should use \cs{pausenumbering}~…\ 
+% \cs{resumenumbering}. The important thing to remember is that you have 
+% to use \cs{endnumbering} in a right column before every 
+% \cs{endnumbering} in single-column text or in parallel with 
+% \cs{endnumbering} in a left-column text (the latter is the case when a 
+% document or a section ends in a two-columns mode). Without this, you will 
+% get wrong numbering when a right column reappears next time.
+%
+% The file 
+% \file{examples/4-reledpar_column_mix_with_not_column-continuous-numbering.tex} 
+% covers all these cases.
 % \subsection{Note about \cs{AtEveryPstart*} and \cs{AtEveryPend*}}
 % The content of \cs{AtEveryPstart} / \cs{AtEveryPend} (without star) is added before every \cs{pstart} / after every \cs{pend}, respecting the left / right side.
 %
@@ -1047,9 +1077,9 @@
 % \DescribeMacro{\linenummarginColumns}
 % \DescribeMacro{\linenummarginColumnsR}
 % \DescribeMacro{\linenummarginColumns*}
-% Suppose you typeset parallel texts both in parallel pages and in parallel columns. 
-% In this case, your setting of line margin in parallel pages could be different from your setting of line margin in parallel columns. 
-% For example, you could want to have line numbers on the right when your are in parallel pages, but when you are in parallel columns, to have them on the left for the left column and on the right for the right column.
+% Suppose you typeset texts both in parallel pages (or in normal typesetting) and in parallel columns. 
+% In this case, your setting of line margin in parallel pages (or in normal typesetting) could be different from your setting of line margin in parallel columns. 
+% For example, you could want to have line numbers on the right when your are in parallel pages (or in normal typesetting), but when you are in parallel columns, to have them on the left for the left column and on the right for the right column.
 % 
 % In this case, you can use \cs{linenummarginColumns}, which overrides the default setting for the left column, \cs{linenummarginColumnsR} which overrides the default setting for the right column, and \cs{linenummarginColumns*}, which overrides the default for both left and right columns.
 %
@@ -1336,7 +1366,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/08/23 v2.20.1 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/08/31 v2.20.2 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1658,7 +1688,7 @@
 % \begin{macro}{\led@error@missing@numbering}
 %    \begin{macrocode}
 \newcommand{\led@error@missing@numbering}[1]{%
-  \reledpar@error{Missing \string\pstart…\string\pend\space inside `#1` environment}{\@ehc}%
+  \reledpar@error{Missing \string\pstart\space …\space\string\pend\space inside `#1` environment}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -1790,6 +1820,9 @@
   \global\let\@msdata@list\relax%
   \global\csundef{@msdata@\add@msd@cR @dataR}%
   \ifcontinuousnumberingwithcolumns%
+    \ifnumbering%
+      \global\resumenumberingR@starttrue%
+    \fi%    
     \ifnumberpstart%
       \addtocounter{pstartR}{1}%
     \fi%
@@ -1797,7 +1830,6 @@
     \setcounter{pstartR}{1}%
   \fi%
   \message{Section \the\section@numR R }%
-  \set@continuousnumberingforR%
   \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
   \l@dend@stuff
   \begingroup
@@ -1926,7 +1958,6 @@
      \global\advance\section@numR \@ne
      \global\resumenumberingR@starttrue%
      \led@mess@SectionContinued{\the\section@numR R}%
-     \set@continuousnumberingforR%
      \line@list@stuffR{\jobname.\extensionchars\the\section@numR R}%
      \l@dend@stuff
      \begingroup%
@@ -2029,23 +2060,6 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\set@continuousnumberingforR}
-% \cs{set@continuousnumberingforR} set the right line number and the pstart counters at a \cs{beginnumberingR} or a \cs{resumenumberingR} in order to have continuous numbering with single column text. 
-%    \begin{macrocode}
-\newcommand{\set@continuousnumberingforR}{%
-  \ifcontinuousnumberingwithcolumns%
-     \ifnum\line@numR<\line@num%
-       \global\appto\next@line@list@stuffR{%
-         \expandafter\setlinenum\expandafter{\the\line@num}%
-       }%
-     \fi%
-     \ifnum\last@page@num>\last@page@numR%
-       \global\last@page@numR=\last@page@num%
-     \fi%
-  \fi%
-}
-%    \end{macrocode}
-% \end{macro}
 % \begin{macro}{\lineation*}
 % \changes{v1.8.2}{2014/08/15}{Add \protect\cs{lineation*}}
 % \protect\cs{lineation*} change the lineation system for both sides.
@@ -2908,6 +2922,8 @@
   \IfFileExists{\l@auxdir#1}%
     {\global\toggletrue{notfirstrun@#1}}%
     {\global\togglefalse{notfirstrun@#1}}%
+  \next@line@list@stuffR%
+  \global\let\next@line@list@stuffR\relax%
   \read@linelist{#1}%
   \iffirst@linenum@out@R
      \global\first@linenum@out@Rfalse
@@ -2923,8 +2939,6 @@
      \closeout\linenum@outR%
      \openout\linenum@outR=\l@auxdir#1%
   \fi%
-  \next@line@list@stuffR%
-  \global\let\next@line@list@stuffR\relax%
 }%
 
 %    \end{macrocode}
@@ -3913,21 +3927,23 @@
     \global\advance\@donetotallinesL\@ne%
   \else%
     \iflinenumberLevenifblank
-      \new@lineL%
-      \l@demptyd@ta%
-      \getline@numL%
-      \affixline@num%
       \setbox\l@dleftbox \hb@xt@ \Lcolwidth{%
+        \new@lineL%
+        \l@demptyd@ta%
+        \getline@numL%
+        \affixline@num%
         \l@dld@ta%
         \hspace*{\Lcolwidth}%
         \ledrlfill\l@drd@ta%
       }%
     \else%
-      \ifcontinuousnumberingwithcolumns%
-        \new@lineL%
-        \getline@numL%
-      \fi%
-      \setbox\l@dleftbox \hb@xt@ \Lcolwidth{\hspace*{\Lcolwidth}}%
+      \setbox\l@dleftbox \hb@xt@ \Lcolwidth{%
+        \ifcontinuousnumberingwithcolumns%
+          \new@lineL%
+          \getline@numL%
+        \fi%
+        \hspace*{\Lcolwidth}%
+      }%
     \fi%
     \global\advance\@donetotallinesL\@ne%
   \fi%
@@ -4101,21 +4117,23 @@
     \global\advance\@donetotallinesR\@ne%
   \else%
     \iflinenumberRevenifblank%
-      \new@lineR
-      \l@demptyd@ta%
-      \getline@numR%
       \setbox\l@drightbox \hb@xt@ \Rcolwidth{%
+        \new@lineR%
+        \l@demptyd@ta%
+        \getline@numR%
         \affixline@numR%
         \l@dld@ta%
         \hspace*{\Rcolwidth}%
         \ledrlfill\l@drd@ta%
       }%
     \else%
-      \ifcontinuousnumberingwithcolumns%
-        \new@lineR%
-        \getline@numR%
-      \fi%
-      \setbox\l@drightbox \hb@xt@ \Rcolwidth{\hspace*{\Rcolwidth}}%
+      \setbox\l@drightbox \hb@xt@ \Rcolwidth{%
+        \ifcontinuousnumberingwithcolumns%
+          \new@lineR%
+          \getline@numR%
+        \fi%
+        \hspace*{\Rcolwidth}%
+      }%
     \fi%
     \global\advance\@donetotallinesR\@ne%
   \fi%
@@ -4329,22 +4347,18 @@
   \@l@dtempcntb=\absline@numR
   \ifnum\@l@dtempcntb<\next@actionlineR\else
     \ifnum\next@actionR>-1001\relax
-      \unless\ifresumenumberingR@start%
-        \@firstlineofpageRtrue%
-      \fi%
+      \ifboolexpr{%
+      	bool{resumenumberingR@start}%
+        and test {\ifdimgreater{\pagedepth}{\z@}}%
+      }%
+       {}%
+       {\@firstlineofpageRtrue}%
       \global\page@numR=\next@actionR
-      \ifbypage@R
-        \ifcsdef{l@dchset@num@R\the\absline@numR}%
-          {%
-          \global\csundef{l@dchset@num@R\the\absline@numR}%
-          }%
-          {%
-          \unless\ifresumenumberingR@start%
-            \global\line@numR \z@%
-            \global\subline@numR \z@%
-          \fi%
-          }%
-      \fi
+      \ifcsdef{reset@lineR\the\absline@numR @\the\section@numR}%
+         {%
+         \global\line@numR=\z@ \global\subline@numR=\z@%
+         }%
+         {}%
       \global\resumenumberingR@startfalse%
       \add@msdata@firstlineofpage%
     \else
