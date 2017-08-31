@@ -4740,7 +4740,7 @@
 
 % In preparation for the \parpackage  package, these are related to 
 % the `right' text of parallel texts (when \protect\cs{ifl@dpairing} is TRUE). 
-% They are explained in the \protect\package{eledpar}
+% They are explained in the \protect\parpackage
 % manual.
 % \changes{v0.7.0}{2005/02/24}{Added \protect\cs{l@dnumpstartsL}, \protect\cs{ifl@dpairing} 
 %              and \protect\cs{ifpst@rted} for/from eledpar}
@@ -4777,6 +4777,12 @@
 %    \begin{macrocode}
 \newif\ifnumberingR
 %    \end{macrocode}
+% \begin{macro}{\ifafterendnumberingR}
+% The \cs{ifafterendnumberingR} boolean is set to TRUE at \cs{endnumberingR} and to FALSE at next \cs{beginnumberingR} or real \cs{beginnumbering} (not \cs{resumenumbering}). It is mainly used for the \option{continuousnumberingwithcolumns}, to avoid incrementing right column line counters after a \cs{endnumberingR}.
+%    \begin{macrocode}
+\newif\ifafterendnumberingR%
+%    \end{macrocode}
+% \end{macro}
 % The \cs{ifXnote@} macro is set to true when we are typesetting a critical footnote.
 %    \begin{macrocode}
 \newif\ifXnote@%
@@ -4877,12 +4883,13 @@
     \endnumbering
   \fi
   \global\numberingtrue
+  \global\afterendnumberingRfalse%
   \global\advance\section@num \@ne
   \initnumbering@reg
   \message{Section \the\section@num }%
   \line@list@stuff{\jobname.\extensionchars\the\section@num}%
   \ifcontinuousnumberingwithcolumns%
-    \ifnumberingR%
+    \unless\ifafterendnumberingR%
       \unless\ifl@dpairing%
         \ledRcoltrue%
         \global\advance\section@numR \@ne%
@@ -5041,7 +5048,7 @@
      \set@continuousnumberingforL%
      \line@list@stuff{\jobname.\extensionchars\the\section@num}%
      \ifcontinuousnumberingwithcolumns%
-       \ifnumberingR%
+       \unless\ifafterendnumberingR%
           \unless\ifl@dpairing%
             \ledRcoltrue%
             \global\advance\section@numR \@ne%
@@ -8599,7 +8606,7 @@
 % If we use the \option{continuousnumberingwithcolumns}, we increase right line number.
 %    \begin{macrocode}
         \ifcontinuousnumberingwithcolumns%
-          \ifnumberingR%
+          \unless\ifafterendnumberingR%
             \new@lineR%
             \xappto\next@line@list@stuffR{%
               \unexpanded{\global\line@numR=}\the\line@num%
