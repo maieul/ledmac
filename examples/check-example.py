@@ -6,6 +6,9 @@
 
 import os
 import subprocess
+import argparse
+parser = argparse.ArgumentParser()
+
 
 
 directory_files = os.listdir(".")
@@ -52,16 +55,25 @@ def create_repository(rep):
         print ("Create " + rep + " respository")
         os.mkdir(rep)
 
+def one_file(filename):
+    basename, ext = os.path.splitext(filename)
+    if ext != '.pdf':#only the .pdf file
+        return
+    export_png(filename,basename)
+    diff_png(basename)
+
 def _main_():
     create_repository("export")
     create_repository("diff")
-    #List all the files on the current directory, and check
-    for filename in directory_files:
-        basename, ext = os.path.splitext(filename)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--filename")
+    args = parser.parse_args()
+    if args.filename:
+        one_file(args.filename)
+    else:
+        #List all the files on the current directory, and check
+        for filename in directory_files:
+            one_file(filename)
 
-        if ext != '.pdf':#only the .pdf file
-            continue
-        export_png(filename,basename)
-        diff_png(basename)
 
 _main_()
