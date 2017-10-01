@@ -46,13 +46,19 @@ dist: $(PACKAGE) examples
 	rm -f examples/*pdf
 	$(MAKE) -C examples all
 	mkdir reledmac/examples
-	ln examples/latexmkrc reledmac/examples
 	ln examples/*pdf reledmac/examples
 	ln examples/*tex reledmac/examples
 	ln examples/*xdy reledmac/examples
 	ln examples/makefile reledmac/examples
+	ln examples/latexmkrc reledmac/examples
 	mkdir reledmac/doc-include
 	ln doc-include/*dtx reledmac/doc-include
+	$(MAKE) -C doc-more all
+	mkdir reledmac/doc-more
+	ln doc-more/*pdf reledmac/doc-more
+	ln doc-more/*tex reledmac/doc-more
+	ln doc-more/makefile reledmac/doc-more
+	ln doc-more/latexmkrc reledmac/doc-more
 	ln $(PACKAGE) reledmac
 	@$(RM) ../reledmac.zip
 	zip -r ../reledmac.zip reledmac
