@@ -489,6 +489,7 @@
 % \changes{v2.24.0}{2017/08/17}{Add \protect\cs{swnoexpands} macro to avoid problems with not fully expandable macro inside \protect\cs{sameword}.}
 % \changes{v2.24.0}{2017/08/17}{Fix spurious space with \protect\cs{labelpstarttrue}}
 % \changes{v2.24.1}{2017/08/31}{Compatibility with \protect\parpackage 2.20.2}
+% \changes{v2.24.2}{2017/10/21}{Fix bug between tabular environments and endnotes}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1989,7 +1990,7 @@
 % Note that you must define the position of all the series of footnotes you use.
 % If you don't, you will have infinite runs of \LaTeX.
 %
-% \section{Critical apparatus appearance}
+% \section{Apparatus customization}
 % \label{displayoptions}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
 % Some commands can be used to change the display of the footnotes.
@@ -2567,7 +2568,7 @@
 % \subsubsection{Code before notes}
 %\DescribeMacro{\Xbhookgroup}
 %\DescribeMacro{\bhookgroupX}
-% While \cs{Xtxtbeforenotes} is for typesetting code before notes, \cs{Xbhookgroup} and \cs{bhookgroupX} (respectively for critical and familiar) are for executing code before a groups of notes, between the rules and the printing of the notes. 
+% While \cs{Xtxtbeforenotes} is for typesetting text before notes, \cs{Xbhookgroup}\oarg{s}\marg{code} and \cs{bhookgroupX}\oarg{s}\marg{code} (respectively for critical and familiar) are for executing code before a groups of notes, between the rules and the printing of the notes. 
 % 
 % 
 % \subsubsection{Spacing}
@@ -4061,7 +4062,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/08/31 v2.24.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/10/21 v2.24.2 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -14084,7 +14085,7 @@
          \newcommand{\content}{##2}%
          \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
-           \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}\@percentchar\space%Explicit space, to add a linebreak in the output file
+         \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}\@percentchar\space%Explicit space, to add a linebreak in the output file
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
            {\ifnumberedpar@\expandonce\@tag\fi}%
@@ -18311,17 +18312,43 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\disable@endnotes}
+% \begin{macro}{\restore@endnotes}
+% The same for endnotes.
+%    \begin{macrocode}
+\newcommand{\disable@endnotes}{%
+  \unless\ifnoend@%
+    \def\do##1{%
+        \csletcs{##1@@endnote}{##1endnote}%
+        \expandafter\renewcommand \csname ##1endnote\endcsname[1]{}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+\newcommand{\restore@endnotes}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{##1endnote}{##1@@endnote}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\disable@notes}
 % \begin{macro}{\restore@notes}
-% Disable/restore side and familiar notes.
+% Disable/restore side, familiar and end notes.
 %    \begin{macrocode}
 \newcommand{\disable@notes}{%
   \disable@sidenotes%
   \disable@familiarnotes%
+  \disable@endnotes%
 }%
 \newcommand{\restore@notes}{%
   \restore@sidenotes%
   \restore@familiarnotes%
+  \restore@endnotes%
 }%
 %    \end{macrocode}
 % \end{macro}
