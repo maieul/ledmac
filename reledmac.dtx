@@ -7848,6 +7848,26 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\lineannot}
+% \begin{macro}{\lineannot@set}
+% Last but not least, \cs{lineannot} allow us to substitute line number annotation. It is different of \cs{linenum} for ascendant compatibility with older version of \macpackage. It calls \cs{lineannot@set} to determine if we must change only one annotation or two, or zero. 
+%    \begin{macrocode}
+\newcommand*{\lineannot}[1]{%
+  \lineannot@set#1|%
+}%
+\def\lineannot@set#1|#2|{%
+  \expandafter\parse@annot#1|#2|%
+  \IfStrEq{#1}{}%
+    {\let\@tempa\annot@start}%
+    {\def\@tempa{#1}}%
+  \IfStrEq{#2}{}%
+    {\let\@tempb\annot@start}%
+    {\def\@tempb{#2}}%
+  \xdef\l@current@annot{\@tempa|\@tempb}%  
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Lemma disambiguation}
 % The mechanism which counts the occurrence of a same word in a same line is quite complex, because, when \LaTeX\ reads a command between a \protect\cs{pstart} and a \protect\cs{pend}, it does not know yet which are the line numbers.
 % 
@@ -15089,12 +15109,15 @@
 % \end{macro}
 %
 %
+% \begin{macro}{\zz@@@}
 % \begin{macro}{\zz@@@@}
-% A convenience macro to zero four labeling counters in one go.
+% Two convenience macros to zero three / four labeling counters in one go.
 %    \begin{macrocode}
+\newcommand*{\zz@@@}{000|000|000|000}% Set three counters to zero in one go
 \newcommand*{\zz@@@@}{000|000|000|000}% Set four counters to zero in one go
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\edlabel}
@@ -15592,22 +15615,44 @@
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
   {%
-   \expandafter\ifx\csname the@label#1\endcsname \relax%
-     \expandafter\let\csname the@@label#1\endcsname\zz@@@@%
+   \expandafter\ifx\csname the@label#1\endcsname\relax%
+      \let\@tempa\zz@@@%
+      \def\@tempc{}%
     \else%
-      \expandafter\def\csname the@@label#1\endcsname{\l@dgetref@num{1}{#1}|\l@dgetref@num{2}{#1}|\l@dgetref@num{3}{#1}}%
+      \def\@tempa{%
+        \l@dgetref@num{1}{#1}|%
+        \l@dgetref@num{2}{#1}|%
+        \l@dgetref@num{3}{#1}%
+      }%
+      \edef\@tempc{%
+        \l@dgetref@num{5}{#1}%
+      }%
    \fi%
-   \expandafter\ifx\csname the@label#2\endcsname \relax%
-     \expandafter\let\csname the@@label#2\endcsname\zz@@@@%
+   \expandafter\ifx\csname the@label#2\endcsname\relax%
+      \let\@tempb\zz@@@%
+      \def\@tempd{}%
    \else%
-      \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
+      \def\@tempb{%
+        \l@dgetref@num{1}{#2}|%
+        \l@dgetref@num{2}{#2}|%
+        \l@dgetref@num{3}{#2}%
+      }%
+      \edef\@tempd{%
+        \l@dgetref@num{5}{#2}%
+      }%
    \fi%
-   \letcs{\@tempa}{the@@label#1}%
-   \letcs{\@tempb}{the@@label#2}%
-   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@start{#1}}%
-   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@end{#2}}%
-   \linenum{\@tempa|%
-    \@tempb}}}%
+   \global\appto\@beforeinsertofthisedtext{%
+     \def\@this@crossref@start{#1}%
+   }%
+   \global\appto\@beforeinsertofthisedtext{%
+     \def\@this@crossref@end{#2}%
+   }%
+   \linenum{\@tempa|\@tempb}%
+   \edef\@tempe{\@tempc|\@tempd}%
+   \expandafter\lineannot\expandafter{\@tempe}%
+ }%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}
