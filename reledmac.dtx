@@ -5573,9 +5573,12 @@
   \fi%
   \numlabfont%
   \ifdefstring{\linenumannotation@position}{before}{%
-    \wraplinenumannotation{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-    }%
+    \ifcsvoid{annot@\the\absline@num @\the\section@num}%
+      {}%
+      {\wraplinenumannotation{%
+        \csuse{annot@\the\absline@num @\the\section@num}%
+        }%
+      }%
   }{}%
   \linenumrep{\line@num}%
   \ifsublines@
@@ -5586,9 +5589,12 @@
     \fi
   \fi%
   \ifdefstring{\linenumannotation@position}{after}{%
-    \wraplinenumannotation{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-    }%
+    \ifcsvoid{annot@\the\absline@num @\the\section@num}%
+      {}%
+      {\wraplinenumannotation{%
+        \csuse{annot@\the\absline@num @\the\section@num}%
+        }%
+      }%
   }{}%
   \egroup%
 }%
@@ -9054,12 +9060,25 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\wraplinenumannotation}
-% The \cs{wraplinenumannotation} command can be defined to change the way the annotations are wrapped. By default, inside a \cs{textsuperscript} command.
+% \begin{macro}{\wraplinenumannotationfornote}
+% \begin{macro}{\wraplinenumannotationforref}
+% The \cs{wraplinenumannotation} command can be redefined to change the way the annotations are wrapped. By default, inside a \cs{textsuperscript} command.
+%
+% The \cs{wraplinenumannotationfornote} is applied to annotation in note, and  \cs{wraplinenumannotationforref} is applied to crossref made to annotation.
+% By default, they call \cs{wraplinenumannotation}. 
 %    \begin{macrocode}
 \newcommand{\wraplinenumannotation}[1]{%
   \textsuperscript{#1}%
 }%
+\newcommand{\wraplinenumannotationfornote}[1]{%
+  \wraplinenumannotation{#1}%
+}%
+\newcommand{\wraplinenumannotationforref}[1]{%
+  \wraplinenumannotation{#1}%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\@annot}
 % \begin{macro}{\store@annot@to@absline}
@@ -11474,14 +11493,22 @@
 %    \begin{macrocode}
   \ifl@d@pnum 
     \l@d@elintrue 
-    \def\@annot@end@print{\annot@end}%
+    \unless\ifx\relax\annot@end%
+      \def\@annot@end@print{%
+        \wraplinenumannotationfornote{\annot@end}%
+      }%
+    \fi%
   \else 
     \l@d@elinfalse 
   \fi
   \ifnum#2=#5 \else
       \l@d@elintrue
       \l@d@dashtrue
-      \def\@annot@end@print{\annot@end}%
+      \unless\ifx\relax\annot@end%
+        \def\@annot@end@print{%
+          \wraplinenumannotationfornote{\annot@end}%
+        }%
+      \fi%
   \fi
 %    \end{macrocode}
 %
@@ -11489,21 +11516,29 @@
 % Otherwise, it is only the starting annotation.
 %    \begin{macrocode}
   \ifl@d@elin%
-    \def\@annot@start@print{\annot@start}%
+    \def\@annot@start@print{%
+      \wraplinenumannotationfornote{\annot@start}%
+    }%
   \else%
     \ifx\annot@start\annot@end%
-      \def\@annot@start@print{\annot@start}%
+      \unless\ifx\@annot@start\relax%
+        \def\@annot@start@print{%
+          \wraplinenumannotationfornote{\annot@start}%
+        }%
+      \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \annot@start%
-          \ifdefined\linerangesep@%
-            \linerangesep@%
-          \else%
-            \csuse{Xlinerangeseparator@\@currentseries}%
-          \fi%
-          \annot@end%
-        }%
+          \wraplinenumannotationfornote{%
+            \annot@start%
+            \ifdefined\linerangesep@%
+              \linerangesep@%
+            \else%
+              \csuse{Xlinerangeseparator@\@currentseries}%
+            \fi%
+            \annot@end%
+            }%
+          }%
        \else%
          \let\@annot@start@print\@annot@end@print%
          \let\@annot@end@print\relax%
@@ -11659,7 +11694,7 @@
     \csuse{Xsublinesep@\@currentseries}%
     \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
-  \wraplinenumannotation{\@annot@start@print}%
+  \@annot@start@print%
   \egroup%
 %    \end{macrocode}
 % Then print the dash + end line number, or the range symbol.
@@ -11700,7 +11735,7 @@
        \fi%
        \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
     \fi%
-    \wraplinenumannotation{\@annot@end@print}%
+    \@annot@end@print%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
     {}%
@@ -15448,7 +15483,11 @@
 %    \begin{macrocode}
 \newcommand*{\annotationref}[1]{%
   \l@dref@undefined{#1}%
-  \wrap@edcrossref{#1}{\wraplinenumannotation{\l@dgetref@num{5}{#1}}}%
+  \wrap@edcrossref{#1}{%
+    \wraplinenumannotationforref{%
+      \l@dgetref@num{5}{#1}%
+    }%
+  }%
 }%
 \newcommand*{\xannotationref}[1]{%
   \l@dgetref@num{5}{#1}%
