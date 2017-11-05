@@ -2359,12 +2359,30 @@
   \kern\linenumsep 
   \l@dlinenumR}
 \newcommand*{\l@dlinenumR}{%
-  \numlabfont\linenumrepR{\line@numR}\@Rlineflag%
+  \numlabfont%
+  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+    \ifcsvoid{annotR@\the\absline@numR @\the\section@numR}%
+      {}%
+      {\Xwraplinenumannotation@side{%
+        \csuse{annotR@\the\absline@numR @\the\section@numR}%
+        }%
+      }%
+  }{}%
+  \linenumrepR{\line@numR}\@Rlineflag%
   \ifsublines@R
     \ifnum\subline@numR>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
     \fi
-  \fi}
+  \fi%
+  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+    \ifcsvoid{annotR@\the\absline@numR @\the\section@numR}%
+      {}%
+      {\Xwraplinenumannotation@side{%
+        \csuse{annotR@\the\absline@numR @\the\section@numR}%
+        }%
+      }%
+  }{}%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -2407,6 +2425,7 @@
 % \begin{macro}{\insertlines@listR}
 % \begin{macro}{\actionlines@listR}
 % \begin{macro}{\actions@listR}
+% \begin{macro}{\annot@listR}
 % Now we can define the list macros that will be created from the
 % line-list file.  They are directly analogous to the left text ones.
 % The full list of action codes and their meanings is given in the \macpackage 
@@ -2419,8 +2438,9 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
-
+\list@create{\annot@listR}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -2513,6 +2533,7 @@
 %
 %    \begin{macrocode}
 \newcommand{\@nl@regR}{%
+  \reset@current@annot%
   \ifx\l@dchset@num\relax \else
     \advance\absline@numR \@ne
     \csgdef{l@dchset@num@R\the\absline@numR}{}%To remember this line have been marked by a \setlinenum
@@ -2760,10 +2781,12 @@
     \let\@lab=\relax
     \let\@lemma=\relax
     \let\@sw\@gobblethree%
+    \let\store@annot@to@abslineR\@gobble%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
     \global\endsubline@num=\subline@numR
+    \global\let\endcurrent@annot=\current@annot%
   \endgroup
 %    \end{macrocode}
 %
@@ -2775,6 +2798,8 @@
        \ifsublines@R \the\subline@numR \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
        \ifsublines@R \the\endsubline@num \else 0\fi}\to\line@listR
+    \xright@appenditem%
+      {\current@annot|\endcurrent@annot}\to\annot@list%
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
@@ -5033,18 +5058,18 @@
 % \changes{v2.6.0}{2015/11/13}{\protect\cs{@Rlineflag} is not stored directly after the line number, but as a fith argument of \protect\cs{the@labelX}. Can be retrieved by \protect\cs{xflagref}.}
 %
 %    \begin{macrocode}
-\def\l@dmake@labelsR#1|#2|#3|#4|#5|#6{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+\def\l@dmake@labelsR#1|#2|#3|#4|#5|#6|#7{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#7\endcsname%
     \relax%
   \else%
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#7}%
   \fi%
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\@Rlineflag}%
-  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \global\toggletrue{label@#6@ledRcol}%
+  \csgdef{the@label\csuse{XR@prefix}#7}{#1|#2|#3|#4|#5|#6|\@Rlineflag}%
+  \global\providetoggle{label@#7@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
+  \global\toggletrue{label@#7@ledRcol}%
   \ignorespaces}
 \AtBeginDocument{%
-  \def\l@dmake@labelsR#1|#2|#3|#4|#5|#6{}%
+  \def\l@dmake@labelsR#1|#2|#3|#4|#5|#6|#7{}%
 }
 
 %    \end{macrocode}

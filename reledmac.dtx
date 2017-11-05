@@ -7725,6 +7725,13 @@
       \xdef\l@d@nums{\@tempb|\edfont@info}%
       \global\let\@tempb=\undefined
     \fi
+    \ifx\annot@listR\empty%
+      \xdef\l@current@annotR{|}%
+    \else%
+      \gl@p\annot@listR\to\@tempb%
+      \xdef\l@current@annotR{\@tempb}%
+      \global\let\@tempb=\undefined%
+    \fi%
   \else
     \ifx\line@list\empty
       \global\noteschanged@true
@@ -7863,7 +7870,7 @@
     {\def\@tempa{#1}}%
   \IfStrEq{#2}{}%
     {\let\@tempb\annot@start}%
-    {\def\@tempb{#2}}%
+    {\def\@tempb{#2}}% 
   \xdef\l@current@annot{\@tempa|\@tempb}%  
 }%
 %    \end{macrocode}
@@ -9066,7 +9073,11 @@
 %    \begin{macrocode}
 \newcommand{\linenumannotation}[1]{%
   \leavevmode%In case it start a \pstart, ensure the \@annot is written after \@nl
-  \write\linenum@out{\string\@annot[#1]}%
+  \ifledRcol%
+    \write\linenum@outR{\string\@annot[#1]}%
+  \else%
+    \write\linenum@out{\string\@annot[#1]}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -13955,6 +13966,7 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}% Internal for now, no reason to make it public
+                      \noexpand\parse@annot\l@current@annot|%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
@@ -15225,7 +15237,7 @@
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
     \ifXnote@%
      \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1}}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartR|{#1}}%
       \ifdef{\hypertarget}%
         {\Hy@raisedlink{\hypertarget{#1}{}}}%
         {}%
@@ -15387,7 +15399,10 @@
 \newcommand*{\@lab}{%
   \ifledRcol
     \xright@appenditem{\linenumr@p{\line@numR}|%
-      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|\the\absline@numR}%
+      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|%
+      \the\absline@numR|%
+      \current@annot%
+      }%
       \to\labelref@listR
   \else
     \xright@appenditem{%
@@ -15428,12 +15443,12 @@
 %    \begin{macrocode}
       \ifledRcol%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1:start}}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartR|{#1:start}}%
         \ifdef{\hypertarget}%
           {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
           {}%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub||\annot@end|\the\c@pstartR|{#1:end}}%
       \else%
         \ifl@dpairing%pstart or pstartL?
           \protected@write\@auxout{}%
