@@ -4694,6 +4694,30 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \susection{Wrapping content}
+% \begin{macro}{\l@wrap@ifnotempty}
+% \begin{macro}{\l@wrapcs@ifnotempty}
+% The \cs{l@wrap@ifnotempty} macro wrap its second argument the command passed as first argument, but only if the second argument is not empty.
+% That is useful for example when we need to wrap something on a \cs{textsuperscript}.
+%
+%
+% Indeed \verb+a\textsuperscript{}b+ does not produce the same typographical result than 
+% \verb+ab+.\footnote{Compare the distance between letters in the first case (a\textsuperscript{}b) and in the second one (ab).}
+% The l@wrapcs@ifnotempty does the same, but take as argument a control sequence name, so without the antislash.
+%
+%    \begin{macrocode}
+\newcommand{\l@wrap@ifnotempty}[2]{%
+  \edef\@tmpa{#2}%
+  \ifx\@tmpa\empty\else%
+    #1{#2}%
+  \fi%
+}%
+\newcommand{\l@wrapcs@ifnotempty}[2]{%
+  \l@wrap@ifnotempty{\csname #1\endcsname}{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Miscellaneous commands}
 % \begin{macro}{\showlemma}
 % \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
@@ -11522,7 +11546,7 @@
     \l@d@dashtrue%
     \unless\ifx\relax\annot@end%
       \def\@annot@end@print{%
-        \csuse{Xwraplinenumannotation@\@currentseries}{\annot@end}%
+        \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@end}%
       }%
     \fi%
     }{}%
@@ -11533,19 +11557,19 @@
 %    \begin{macrocode}
   \ifl@d@elin%
     \def\@annot@start@print{%
-      \csuse{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+      \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@start}%
     }%
   \else%
     \ifx\annot@start\annot@end%
       \unless\ifx\@annot@start\relax%
         \def\@annot@start@print{%
-          \csuse{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+          \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@start}%
         }%
       \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \csuse{Xwraplinenumannotation@\@currentseries}{%
+          \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{%
             \ifx\annot@start\empty\else%
               \annot@start%
               \ifdefined\linerangesep@%
@@ -13282,7 +13306,7 @@
     {}%
   \bgroup%
     \csuse{Xendlemmafont@#4}%
-    \csuse{Xendwraplemma@#4}{#2}%
+    \l@wrapcs@ifnotempty{Xendwraplemma@#4}{#2}%
   \egroup%
   \ifboolexpr{%
     togl {nosep@}%
@@ -13295,7 +13319,7 @@
      \hskip\csuse{Xendafterlemmaseparator@#4}%
      \relax%
     }%
-  \csuse{Xendwrapcontent@#4}{#3}%
+  \l@wrapcs@ifnotempty{Xendwrapcontent@#4}{#3}%
   \nottoggle{Xendparagraph@#4}{\par}{}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -13514,7 +13538,7 @@
       \l@d@dashtrue
       \unless\ifx\relax\annot@end%
         \def\@annot@end@print{%
-          \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
+          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
         }%
       \fi%
    }%
@@ -13526,19 +13550,19 @@
 %    \begin{macrocode}
   \ifl@d@elin%
     \def\@annot@start@print{%
-      \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+      \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
     }%
   \else%
     \ifx\annot@start\annot@end%
       \unless\ifx\@annot@start\relax%
         \def\@annot@start@print{%
-          \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
         }%
       \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \csuse{Xendwraplinenumannotation@\@currentseries}{%
+          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{%
             \ifx\annot@start\empty\else%
               \annot@start%
               \ifdefined\linerangesep@%
