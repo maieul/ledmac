@@ -5572,10 +5572,10 @@
     \textdir TLT%
   \fi%
   \numlabfont%
-  \ifdefstring{\linenumannotation@position}{before}{%
+  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
     \ifcsvoid{annot@\the\absline@num @\the\section@num}%
       {}%
-      {\wraplinenumannotation{%
+      {\Xwraplinenumannotation@side{%
         \csuse{annot@\the\absline@num @\the\section@num}%
         }%
       }%
@@ -5588,10 +5588,10 @@
       \sublinenumrep{\subline@num}%
     \fi
   \fi%
-  \ifdefstring{\linenumannotation@position}{after}{%
+  \ifdefstring{\Xlinenumannotationposition@side}{after}{%
     \ifcsvoid{annot@\the\absline@num @\the\section@num}%
       {}%
-      {\wraplinenumannotation{%
+      {\Xwraplinenumannotation@side{%
         \csuse{annot@\the\absline@num @\the\section@num}%
         }%
       }%
@@ -9069,35 +9069,23 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\linenumannotationposition}
-% We can use \cs{linenumannotationposition} to determine the position of line number annotation in the line margin, relative to the line number position.
-% The default value is after, but it could be change to before.
-%    \begin{macrocode}
-\newcommand{\linenumannotationposition}[1]{%
-  \gdef\linenumannotation@position{#1}%
-}%
-\def\linenumannotation@position{after}%
+% \begin{macro}{\linenumannotation@side}
+% The \cs{linenumannotation@side} macro to determine the position of line number annotation in the line printed in the side, relative to the line number position.
+% The default value is after, but it could be change to before, using the \cs{Xlinenumannotationposition} macro.
+%    \begin{macrocode
+\def\linenumannotation@side{after}%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\wraplinenumannotation}
-% \begin{macro}{\wraplinenumannotationfornote}
-% \begin{macro}{\wraplinenumannotationforref}
-% The \cs{wraplinenumannotation} command can be redefined to change the way the annotations are wrapped. By default, inside a \cs{textsuperscript} command.
-%
-% The \cs{wraplinenumannotationfornote} is applied to annotation in note, and  \cs{wraplinenumannotationforref} is applied to crossref made to annotation.
-% By default, they call \cs{wraplinenumannotation}. 
+% \begin{macro}{\Xwraplinenumannotation@ref}
+% \begin{macro}{\Xwraplinenumannotation@side}
+% The  \cs{Xwraplinenumannotation@ref} macro is applied to crossref made to line annotation. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in side.
+% They must be modified by users using \cs{Xwraplinenumannotation}.
+% By default, they call \cs{textsuperscript}. 
 %    \begin{macrocode}
-\newcommand{\wraplinenumannotation}[1]{%
-  \textsuperscript{#1}%
-}%
-\newcommand{\wraplinenumannotationfornote}[1]{%
-  \wraplinenumannotation{#1}%
-}%
-\newcommand{\wraplinenumannotationforref}[1]{%
-  \wraplinenumannotation{#1}%
-}%
+
+\def\Xwraplinenumannotation@ref{\textsuperscript}%
+\def\Xwraplinenumannotation@side{\textsuperscript}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\@annot}
@@ -11515,7 +11503,7 @@
     \l@d@elintrue 
     \unless\ifx\relax\annot@end%
       \def\@annot@end@print{%
-        \wraplinenumannotationfornote{\annot@end}%
+        \csuse{Xwraplinenumannotation@\@currentseries}{\annot@end}%
       }%
     \fi%
   \else 
@@ -11526,7 +11514,7 @@
       \l@d@dashtrue
       \unless\ifx\relax\annot@end%
         \def\@annot@end@print{%
-          \wraplinenumannotationfornote{\annot@end}%
+          \csuse{Xwraplinenumannotation@\@currentseries}{\annot@end}%
         }%
       \fi%
   \fi
@@ -11537,19 +11525,19 @@
 %    \begin{macrocode}
   \ifl@d@elin%
     \def\@annot@start@print{%
-      \wraplinenumannotationfornote{\annot@start}%
+      \csuse{Xwraplinenumannotation@\@currentseries}{\annot@start}%
     }%
   \else%
     \ifx\annot@start\annot@end%
       \unless\ifx\@annot@start\relax%
         \def\@annot@start@print{%
-          \wraplinenumannotationfornote{\annot@start}%
+          \csuse{Xwraplinenumannotation@\@currentseries}{\annot@start}%
         }%
       \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \wraplinenumannotationfornote{%
+          \csuse{Xwraplinenumannotation@\@currentseries}{%
             \ifx\annot@start\empty\else%
               \annot@start%
               \ifdefined\linerangesep@%
@@ -13860,6 +13848,7 @@
       \csgdef{Xlemmafont@#1}{}%
       \csgdef{Xwraplemma@#1}{}
       \csgdef{Xwidth@#1}{\hsize}%
+      \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -14573,7 +14562,6 @@
   
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
-  \newhookcommand@series{Xlinenumannotationposition}%
   \newhookcommand@series@reload{Xwidth}{critical}%
   
   \ifundef{\Xhsize}%
@@ -14596,6 +14584,8 @@
 \newhooktoggle@series{Xtwolinesbutnotmore}[appref,SEref]
 \newhooktoggle@series{Xtwolinesonlyinsamepage}[appref,SEref]
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
+\newhookcommand@series{Xlinenumannotationposition}[side,appref,SEref]%
+\newhookcommand@series{Xwraplinenumannotation}[side,ref]%
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -15525,7 +15515,7 @@
 \newcommand*{\annotationref}[1]{%
   \l@dref@undefined{#1}%
   \wrap@edcrossref{#1}{%
-    \wraplinenumannotationforref{%
+    \Xwraplinenumannotation@ref{%
       \l@dgetref@num{5}{#1}%
     }%
   }%
