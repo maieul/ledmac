@@ -13467,14 +13467,20 @@
 % by always printing the page number. The coding is slightly simpler than
 % \protect\cs{setprintlines}.
 %
-% First of all, we print the second page number only if
-% the ending page number is different
 % from the starting page number.\label{printendlines}
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{setprintendlines} for use by
 %              \protect\cs{printendlines}}
 %    \begin{macrocode}
 \newcommand*{\setprintendlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse 
+  \let\@annot@start@print\relax%
+  \let\@annot@end@print\relax%
+  \l@d@pnumfalse%
+  \l@d@dashfalse%
+  \l@d@elinfalse%
+%    \end{macrocode}
+% First of all, we print the second page number only if
+% the ending page number is different
+%    \begin{macrocode}
   \ifnum#4=#1 \else
     \l@d@pnumtrue 
     \l@d@dashtrue
@@ -13482,15 +13488,60 @@
 %    \end{macrocode}
 %
 % We print the ending line number if\/: (1)~we are printing the ending
-% page number, or (2)~it is different from the starting line number.
+% page number, or (2)~the ending line is different from the starting line number.
 %    \begin{macrocode}
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
+  \ifboolexpr{%
+      bool{l@d@pnum}%
+      or not test{\ifnumequal{#2}{#5}}%
+     }{%
+      \l@d@elintrue%
+      \l@d@dashtrue%
       \l@d@elintrue
       \l@d@dashtrue
-  \fi
+      \unless\ifx\relax\annot@end%
+      \def\@annot@end@print{%
+        \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
+      }%
+   }%
+   {}%
 %    \end{macrocode}
 %
+% We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print ending line number.
+% Otherwise, it is only the starting annotation.
+%    \begin{macrocode}
+  \ifl@d@elin%
+    \def\@annot@start@print{%
+      \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+    }%
+  \else%
+    \ifx\annot@start\annot@end%
+      \unless\ifx\@annot@start\relax%
+        \def\@annot@start@print{%
+          \csuse{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+        }%
+      \fi%
+    \else%
+      \ifx\@annot@end@print\relax%
+        \def\@annot@start@print{%
+          \csuse{Xendwraplinenumannotation@\@currentseries}{%
+            \ifx\annot@start\empty\else%
+              \annot@start%
+              \ifdefined\linerangesep@%
+                \linerangesep@%
+              \else%
+                \csuse{Xendlinerangeseparator@\@currentseries}%
+              \fi%
+            \fi%
+            \annot@end%
+            }%
+          }%
+       \else%
+         \let\@annot@start@print\@annot@end@print%
+         \let\@annot@end@print\relax%
+      \fi%
+    \fi%
+  \fi%
+%    \end{macrocode}
 % We print the starting sub-line if it is nonzero.
 %    \begin{macrocode}
   \l@d@ssubfalse
@@ -13612,8 +13663,11 @@
     \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
 %    \end{macrocode}
-% The print the starting line, followed, if needed, by the side flag and the starting sub line number.
+% The print the starting line, followed, if needed, by the side flag and the starting sub line number, and the line number annotation.
 %    \begin{macrocode}
+  \ifcsstring{Xendlinenumannotationposition@\@currentseries}{before}%
+    {\@annot@start@print}%
+    {}%
   \wrap@edcrossref{\@this@crossref@start}{%
     \ifledRcol@%
       \linenumrepR{#2}%
@@ -13632,6 +13686,9 @@
       \fi%
     }%
   \fi%
+  \ifcsstring{Xendlinenumannotationposition@\@currentseries}{after}%
+    {\@annot@start@print}%
+    {}%
 %    \end{macrocode}
 % Close the box.
 %    \begin{macrocode}
@@ -13674,8 +13731,11 @@
        }%
     \fi%
 %    \end{macrocode}
-% Print the ending line number, with, if needed, the line prefix, and followed by the side flag and the subline number.
+% Print the ending line number, with, if needed, the line prefix, and followed by the side flag, the subline number, and line number annotation.
 %    \begin{macrocode}
+    \ifcsstring{Xendlinenumannotationposition@\@currentseries}{before}%
+      {\@annot@end@print}%
+      {}%
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
       \wrap@edcrossref{\@this@crossref@end}{%
@@ -13699,6 +13759,9 @@
         \fi%
       }%
     \fi%
+    \ifcsstring{Xendlinenumannotationposition@\@currentseries}{after}%
+      {\@annot@end@print}%
+      {}%
   \fi%
 %    \end{macrocode}
 % Close the ending line box.
@@ -14157,6 +14220,7 @@
            \unexpanded{\def\sw@list@inedtext}%
            {\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%
            \@percentchar\space%Explicit space, to add a linebreak in the output file
+           \noexpand\parse@annot\l@current@annot|\@percentchar\space%
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
            {\ifnumberedpar@\expandonce\@tag\fi}%
@@ -14262,7 +14326,9 @@
       \newtoggle{Xendlineflag@#1}
      
       \csgdef{Xendlemmafont@#1}{}%
+
       \csgdef{Xendlinenumannotationposition@#1}{after}%
+      \csgdef{Xendwraplinenumannotation@#1}{\textsuperscript}%
       
       \newtoggle{Xendpagenumberonlyfirst@#1}%
       \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
@@ -14671,8 +14737,6 @@
  \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
  \newhookcommand@series{Xendsympagenum}%
  \newhookcommand@series{Xendinplaceofpagenumber}%
-
- \newhookcommand@series{Xendlinenumannotationposition}%
   
 \fi
 \newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
@@ -14687,6 +14751,8 @@
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
 
+\newhookcommand@series{Xendlinenumannotationposition}[apprefwithpage,SErefwithpage]%
+\newhookcommand@series{Xendwraplinenumannotation}[apprefwithpage,SErefwithpage]%
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
