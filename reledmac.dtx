@@ -490,6 +490,7 @@
 % \changes{v2.24.0}{2017/08/17}{Fix spurious space with \protect\cs{labelpstarttrue}}
 % \changes{v2.24.1}{2017/08/31}{Compatibility with \protect\parpackage 2.20.2}
 % \changes{v2.24.2}{2017/10/21}{Fix bug between tabular environments and endnotes}
+%% \changes{v2.25.0}{2017/11/05}{Add \cs{Xendtxtbeforenotes} hook}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2562,7 +2563,11 @@
 % \DescribeMacro{\Xtxtbeforenotes}
 % You can add text before critical footnotes with \protect\cs{Xtxtbeforenotes}\oarg{s}\marg{text}.
 % \DescribeMacro{\txtbeforenotesX}
+%
 % You can add text before familiar footnotes with \protect\cs{txtbeforenotesX}\oarg{s}\marg{text}.
+%
+% \DescribeMacro{\Xendtxtbeforenotes}
+% You can add text before endnotes with \protect\cs{Xendtxtbeforenotes}\oarg{s}\marg{text}. The text will be typeset only if we have endnotes.
 %
 % \DescribeMacro{\Xtxtbeforenotesonlyonce}
 % \DescribeMacro{\txtbeforenotesonlyonceX} By default, such texts are inserted at the beginning of the groups of notes on each pages.
@@ -4064,7 +4069,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/10/21 v2.24.2 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/11/05 v2.25.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9600,7 +9605,8 @@
             \ifcsdef{\csuse{series@display#1}@begin@insert}{%
               \csuse{\csuse{series@display#1}@begin@insert}{#1}%
             }{}%
-            \strut\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}%
+            \strut\csuse{Xnotefontsize@#1}%
+            \csuse{Xtxtbeforenotes@#1}%
           \egroup%
         }%
     }%
@@ -13038,6 +13044,10 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
+  \iftoggle{Xendfirstnote@#4}{%
+    \global\togglefalse{Xendfirstnote@#4}%
+    \csuse{Xendtxtbeforenotes@#4}%
+  }{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
@@ -13219,6 +13229,7 @@
    \begingroup
       \csxdef{prevpagenum@#1}{}%
       \csxdef{prevpagerange@#1}{}%
+      \global\toggletrue{Xendfirstnote@#1}%
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
       \input\l@auxdir\jobname.#1end%
@@ -13240,6 +13251,7 @@
  \begingroup%
     \makeatletter%
     \def\l@d@section##1{%
+      \global\toggletrue{Xendfirstnote@#1}%
       \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
         {\cslet{#1end}{\endprint}}%
         {\cslet{#1end}{\@gobbleseven}}%
@@ -14056,11 +14068,14 @@
      
       \csgdef{Xendlemmafont@#1}{}%
       
-  \newtoggle{Xendpagenumberonlyfirst@#1}%
-  \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
-  \newtoggle{Xendpagenumberonlyfirstintwo@#1}%
-  \csgdef{Xendsympagenum@#1}{}%
-  \csgdef{Xendinplaceofpagenumber@#1}{0pt}%
+      \newtoggle{Xendpagenumberonlyfirst@#1}%
+      \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
+      \newtoggle{Xendpagenumberonlyfirstintwo@#1}%
+      \csgdef{Xendsympagenum@#1}{}%
+      \csgdef{Xendinplaceofpagenumber@#1}{0pt}%
+
+      \csgdef{Xendtxtbeforenotes@#1}{}%
+      \newtoggle{Xendfirstnote@#1}%Not a hook, but used to apply Xendtxtbeforenotes 
   
 %    \end{macrocode}
 % End of endnotes declaration
@@ -14454,12 +14469,14 @@
 
   \newhookcommand@series{Xendhangindent}%
 
- \newhooktoggle@series{Xendpagenumberonlyfirst}%
- \newhooktoggle@series{Xendpagenumberonlyfirstifsingle}%
- \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
- \newhookcommand@series{Xendsympagenum}%
- \newhookcommand@series{Xendinplaceofpagenumber}%
+  \newhooktoggle@series{Xendpagenumberonlyfirst}%
+  \newhooktoggle@series{Xendpagenumberonlyfirstifsingle}%
+  \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
+  \newhookcommand@series{Xendsympagenum}%
+  \newhookcommand@series{Xendinplaceofpagenumber}%
   
+  \newhookcommand@series{Xendtxtbeforenotes}%
+
 \fi
 \newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendtwolines}[apprefwithpage,SErefwithpage]
