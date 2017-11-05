@@ -11480,7 +11480,9 @@
 \newcommand*{\setprintlines}[6]{%
   \let\@annot@start@print\relax%
   \let\@annot@end@print\relax%
-  \l@d@pnumfalse \l@d@dashfalse 
+  \l@d@pnumfalse%
+  \l@d@dashfalse%
+  \l@d@elinfalse%
 %    \end{macrocode}
 % We print the page numbers only if\/: 1)~we are doing
 % the lineation by page, and 2)~the ending page number is different
@@ -11495,28 +11497,21 @@
 %    \end{macrocode}
 %
 % We print the ending line number if\/: (1)~we are printing the ending
-% page number, or (2)~it is different from the starting line number.
+% page number, or (2)~the ending line number is different from the starting line number.
 % If one of these condition is true, we also print the annotation linked to the ending line number annotations.
 %    \begin{macrocode}
-  \ifl@d@pnum 
-    \l@d@elintrue 
+  \ifboolexpr{%
+    bool{l@d@pnum}%
+    or not test{\ifnumequal{#2}{#5}}%
+   }{%
+    \l@d@elintrue%
+    \l@d@dashtrue%
     \unless\ifx\relax\annot@end%
       \def\@annot@end@print{%
         \csuse{Xwraplinenumannotation@\@currentseries}{\annot@end}%
       }%
     \fi%
-  \else 
-    \l@d@elinfalse 
-  \fi
-  \ifnum#2=#5 \else
-      \l@d@elintrue
-      \l@d@dashtrue
-      \unless\ifx\relax\annot@end%
-        \def\@annot@end@print{%
-          \csuse{Xwraplinenumannotation@\@currentseries}{\annot@end}%
-        }%
-      \fi%
-  \fi
+    }{}%
 %    \end{macrocode}
 %
 % We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print ending line number.
