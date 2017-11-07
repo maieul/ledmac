@@ -4803,25 +4803,25 @@
 % \end{macro}
 % \end{macro}
 % \subsection{Wrapping content}
-% \begin{macro}{\l@wrap@ifnotempty}
-% \begin{macro}{\l@wrapcs@ifnotempty}
-% The \cs{l@wrap@ifnotempty} macro wrap its second argument the command passed as first argument, but only if the second argument is not empty.
+% \begin{macro}{\l@wrap@ifnotemptybox}
+% \begin{macro}{\l@wrapcs@ifnotemptybox}
+% The \cs{l@wrap@ifnotemptybox} macro wrap its second argument the command passed as first argument, but only if the second argument does not produce a emptybox.
 % That is useful for example when we need to wrap something on a \cs{textsuperscript}.
 %
 %
 % Indeed \verb+a\textsuperscript{}b+ does not produce the same typographical result than 
 % \verb+ab+.\footnote{Compare the distance between letters in the first case (a\textsuperscript{}b) and in the second one (ab).}
-% The l@wrapcs@ifnotempty does the same, but take as argument a control sequence name, so without the antislash.
+% The l@wrapcs@ifnotemptybox does the same, but take as argument a control sequence name, so without the antislash.
 %
 %    \begin{macrocode}
-\newcommand{\l@wrap@ifnotempty}[2]{%
-  \edef\@tmpa{#2}%
-  \ifx\@tmpa\empty\else%
+\newcommand{\l@wrap@ifnotemptybox}[2]{%
+  \setbox0=\hbox{#2}%
+  \ifdim\wd0=\z@\else%
     #1{#2}%
   \fi%
 }%
-\newcommand{\l@wrapcs@ifnotempty}[2]{%
-  \l@wrap@ifnotempty{\csname #1\endcsname}{#2}%
+\newcommand{\l@wrapcs@ifnotemptybox}[2]{%
+  \l@wrap@ifnotemptybox{\csname #1\endcsname}{#2}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -11655,7 +11655,7 @@
     \l@d@dashtrue%
     \unless\ifx\relax\annot@end%
       \def\@annot@end@print{%
-        \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@end}%
+        \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@end}%
       }%
     \fi%
     }{}%
@@ -11666,19 +11666,19 @@
 %    \begin{macrocode}
   \ifl@d@elin%
     \def\@annot@start@print{%
-      \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+      \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@start}%
     }%
   \else%
     \ifx\annot@start\annot@end%
       \unless\ifx\@annot@start\relax%
         \def\@annot@start@print{%
-          \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+          \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@start}%
         }%
       \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \l@wrapcs@ifnotempty{Xwraplinenumannotation@\@currentseries}{%
+          \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{%
             \ifx\annot@start\empty\else%
               \annot@start%
               \ifdefined\linerangesep@%
@@ -13653,7 +13653,7 @@
       \l@d@dashtrue
       \unless\ifx\relax\annot@end%
         \def\@annot@end@print{%
-          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
         }%
       \fi%
    }%
@@ -13665,19 +13665,19 @@
 %    \begin{macrocode}
   \ifl@d@elin%
     \def\@annot@start@print{%
-      \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+      \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
     }%
   \else%
     \ifx\annot@start\annot@end%
       \unless\ifx\@annot@start\relax%
         \def\@annot@start@print{%
-          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
         }%
       \fi%
     \else%
       \ifx\@annot@end@print\relax%
         \def\@annot@start@print{%
-          \l@wrapcs@ifnotempty{Xendwraplinenumannotation@\@currentseries}{%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{%
             \ifx\annot@start\empty\else%
               \annot@start%
               \ifdefined\linerangesep@%
@@ -15740,7 +15740,7 @@
 \newcommand*{\annotationref}[1]{%
   \l@dref@undefined{#1}%
   \wrap@edcrossref{#1}{%
-    \l@wrap@ifnotempty{\Xwraplinenumannotation@ref}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@ref}{%
       \l@dgetref@num{5}{#1}%
     }%
   }%
