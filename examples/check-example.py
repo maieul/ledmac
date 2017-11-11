@@ -18,7 +18,7 @@ def diff_png(basename):
     the png stored in png folder (older)
     and the png in export folder (new)'''
 
-    print ("Check change for" + basename)
+    print ("Check change for " + basename)
     olders = set([x for x in os.listdir('png') if basename in x])
     news = set([x for x in os.listdir('export') if basename in x])
 
