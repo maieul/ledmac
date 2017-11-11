@@ -429,7 +429,7 @@
 % \changes{v2.15.2}{2016/09/12}{Fix a bug with \protect\package{fancyhdr} package 3.8 and later.}
 % \changes{v2.15.3}{2016/09/26}{Fix a bug with \protect\cs{section} in optional argument of \protect\cs{pstart} and empty line before \protect\cs{pend} (bug added in v2.8.2).}
 % \changes{v2.15.3}{2016/09/26}{Simplification of the sectioning command code.}
-% \changes{v2.16.0}{2016/10/02}{Display a warning message if using a version of \protect\LaTeX that is too old.}
+% \changes{v2.16.0}{2016/10/02}{Display a warning message if using a version of \protect\LaTeX\ that is too old.}
 % \changes{v2.16.0}{2016/10/02}{Deleted dead code.}
 % \changes{v2.16.0}{2016/10/02}{New options for \protect\cs{fnpos} and \protect\cs{mpfnpos} to set a customized order for familiar and critical footnotes.}
 % \changes{v2.16.0}{2016/10/02}{Compatibility with new features of \protect\reledpar}
@@ -489,6 +489,10 @@
 % \changes{v2.24.0}{2017/08/17}{Add \protect\cs{swnoexpands} macro to avoid problems with not fully expandable macro inside \protect\cs{sameword}.}
 % \changes{v2.24.0}{2017/08/17}{Fix spurious space with \protect\cs{labelpstarttrue}}
 % \changes{v2.24.1}{2017/08/31}{Compatibility with \protect\parpackage 2.20.2}
+% \changes{v2.24.2}{2017/10/21}{Fix bug between tabular environments and endnotes}
+% \changes{v2.25.0}{2017/11/05}{Add \protect\cs{Xendtxtbeforenotes} hook}
+% \changes{v2.26.0}{2017/11/11}{Fix bug in \protect\cs{xpstartref}}
+% \changes{v2.26.0}{2017/11/11}{Add a mechanism for annotation of stanza line numbering}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1134,6 +1138,8 @@
 % or sub-line depending on what it started out as, even if it 
 % changes in the middle.
 %
+% \DescribeMacro{Xsublinesep}
+% \DescribeMacro{Xsublinesepside} 
 % You can change the separator between the line number and the subline number either by using \cs{Xsublinesep} without any optional argument (\reff{Xsublinesep}) or by using \cs{Xsublinesepside}. In the second case, it will change the separator only for line numbers in the margins, not in the footnotes. 
 % \subsubsection{Locking lineation}
 % \DescribeMacro{\startlock}
@@ -1795,9 +1801,9 @@
 % comments and questions as well as error reports are very welcome at
 % \url{https://github.com/stenskjaer/samewords/issues}.
 % 
-% Please not that the maintainer of this script is not the maintainer of \macpackage.
+% Please note that the maintainer of this script is not identical with the maintainer of \macpackage.
 %
-% \subsection{Apparatus of Manuscripts}
+% \subsection{Apparatus of manuscripts}
 % The critical notes mostly refer to textual variants between manuscripts which contain the text to be edited.
 % It may so happen that the manuscripts only contain parts of the text.
 % Depending on one's wishes, \macpackage\ can generate lists of relevant manuscripts for any delimited portion of text.
@@ -1964,7 +1970,7 @@
 % \end{verbatim}
 %
 % You can also decide to alternate familiar and critical footnotes with your own order.
-% In this case, the second argument of \cs{fnpos} or \cs{mpfnpos} is a comma separated list of values.
+% In this case, the second argument of \cs{fnpos} or \cs{mpfnpos} is a comma-separated list of values.
 % Each value has the following form:\\
 % \meta{series}\meta{type}
 %
@@ -1989,7 +1995,7 @@
 % Note that you must define the position of all the series of footnotes you use.
 % If you don't, you will have infinite runs of \LaTeX.
 %
-% \section{Critical apparatus appearance}
+% \section{Apparatus customization}
 % \label{displayoptions}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
 % Some commands can be used to change the display of the footnotes.
@@ -2058,10 +2064,10 @@
 % value.  
 % \subsection{Control line number printing}
 % \subsubsection{Print line number only at first time}
-% \DescribeMacro{\Xnumberonlyfirstinline}\label{Xnumberonlyfirstinline}.
+% \DescribeMacro{\Xnumberonlyfirstinline}\label{Xnumberonlyfirstinline}
 % \changes{v1.0.1}{2012/09/16}{Correction on \protect\cs{Xnumberonlyfirstinline} with lineation by pstart or by page.}
 % By default, the line number is printed in every note. If you want to print it only the first time for a given line number
-% (i.e., one time for line 1, one time for line 2, etc.), you can use \protect\cs{Xnumberonlyfirstinline}\oarg{s}. 
+% (i.e., once for line 1, once for line 2, etc.), you can use \protect\cs{Xnumberonlyfirstinline}\oarg{s}. 
 %
 %
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{Xnumberonlyfirstintwolines}}
@@ -2108,7 +2114,17 @@
 %
 % \subsubsection{Arbitrary text before line number}
 % \DescribeMacro{\Xbeforenumber}
-% \cs{Xbeforenumber}\oarg{s}\marg{txt} allow to insert \meta{txt} before the line number, only when the line number is printed, so taking into accout \cs{Xnumberonlyfirstinline} and similar.
+% \cs{Xbeforenumber}\oarg{s}\marg{txt} allows the insertion of \meta{txt} before the line number only when the line number is printed, so taking into account \cs{Xnumberonlyfirstinline} and the like.
+% \paragraph{For endnotes}\label{pagelineendnotes}
+% \DescribeMacro{\Xendbeforepagenumber}
+% \cs{Xendbeforepagenumber}\oarg{s}\marg{text} defines the text before the page number in endnotes. Default value is \verb+p.+ (``p'' followed by a dot).
+%
+% \DescribeMacro{\Xendafterpagenumber}
+% \cs{Xendafterpagenumber}\oarg{s}\marg{text} defines the text after the page number in endnotes. Default value is \verb+) + (open parenthesis followed by a single space). 
+% \DescribeMacro{\Xendlineprefixsingle}
+% \cs{Xendlineprefixsingle}\oarg{s}\marg{text} defines the text before the line number in endnotes when there is only one line. Default value is empty.
+% \DescribeMacro{\Xendlineprefixmore}
+% \cs{Xendlineprefixmore}\oarg{s}\marg{text} defines the text before the line number in endnotes when there is more than one line. Default value is empty. If you don't define it, it will use the value defined by \cs{Xendlineprefixsingle}.
 % \subsubsection{Separator for line range}\label{linerangeseparator}
 % \changes{v2.4.0}{2015/10/19}{New hooks:  \protect\cs{Xlinerangeseparator} and \protect\cs{Xendlinerangeseparator}.}
 % \changes{v2.4.0}{2015/10/19}{Option linerangesep for critical footnotes and endnotes.}
@@ -2198,12 +2214,12 @@
 % \DescribeMacro{\Xsublinesep}
 % \cs{Xsublinesep}\oarg{s}\marg{txt} changes the separator between line and subline in footnotes. 
 %
-% \textbf{Employed without optional argument, it also change separator in side number}.
+% \textbf{Employed without optional argument, it also changes the separator in side numbering}.
 % 
 % \DescribeMacro{\Xendsublinesep}
 % \cs{Xendsublinesep}\oarg{s}\marg{txt} does the same thing for endnotes. 
 %
-% \textbf{However, it does not change anything for the separator in side number. Use \cs{Xsublinesep} without optional argument or \cs{Xsublinesepside}\marg{txt} to do it.}
+% \textbf{However, it does not change anything for the separator in side numbering. Use \cs{Xsublinesep} without optional argument or \cs{Xsublinesepside}\marg{txt} to do it.}
 %
 % The default value is \verb+\textnormal{.}+.
 % \subsubsection{Separator between page and line numbers}
@@ -2218,10 +2234,10 @@
 % With \protect\cs{Xbeforenumber}\oarg{s}\marg{l}, you can add some space before the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0~pt.
 %
 % \DescribeMacro{\Xafternumber}
-% With \protect\cs{Xafternumber}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, the space is not either. The default value is 0.5~em.
+% With \protect\cs{Xafternumber}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, neither is the space. The default value is 0.5~em.
 %
-% \DescribeMacro{\Xendbeforenumber}\DescribeMacro{Xendafterenumber}
-% \cs{Xendbeforenumber} and \cs{Xendafterenumber} are the equivalents of \cs{Xbeforenumber} and \cs{afterenumber} for endnotes.
+% \DescribeMacro{\Xendbeforenumber}\DescribeMacro{\Xendaftrenumber}
+% \cs{Xendbeforenumber} and \cs{Xendafterenumber} are the equivalents of \cs{Xbeforenumber} and \cs{Xafterenumber} for endnotes.
 %
 %\changes{v1.4.3}{2012/12/18}{Add \protect\cs{Xnonbreakableafternumber}.}
 %\DescribeMacro{\Xnonbreakableafternumber}
@@ -2294,19 +2310,9 @@
 % \protect\cs{Xendboxlinenum}\oarg{s}\marg{l}, \protect\cs{Xendboxlinenumalign}\oarg{s}\marg{text},  \protect\cs{Xendboxstartlinenum}\oarg{s}\marg{l},  \protect\cs{Xendboxendlinenum}\oarg{s}\marg{l} are the same as, respectively, \protect\cs{Xboxlinenum} and \protect\cs{Xboxlinenumalign}, \protect\cs{Xboxstartlinenum}, \protect\cs{Xboxendlinenum} except in endnotes.
 %
 %
-% \subsection{For endnotes}\label{pagelineendnotes}
-% \DescribeMacro{\Xendbeforepagenumber}
-% \cs{Xendbeforepagenumber}\oarg{s}\marg{text} defines the text before the page number in endnotes. Default value is \verb+p.+ (``p'' followed by a dot).
-%
-% \DescribeMacro{\Xendafterpagenumber}
-% \cs{Xendafterpagenumber}\oarg{s}\marg{text} defines the text after the page number in endnotes. Default value is \verb+) + (open parenthesis followed by a single space). 
-% \DescribeMacro{\Xendlineprefixsingle}
-% \cs{Xendlineprefixsingle}\oarg{s}\marg{text} defines the text before the line number in endnotes, when there is only one line. Default value is empty.
-% \DescribeMacro{\Xendlineprefixmore}
-% \cs{Xendlineprefixmore}\oarg{s}\marg{text} defines the text before the line number in endnotes, when there is more than one line. Default value is empty. If you don't define it, use the value defined by \cs{Xendlineprefixsingle}.
 % \subsection{Arbitrary code around line number}
 % \DescribeMacro{\Xendbhooklinenumber}
-% \cs{Xendbhooklinenumber}\oarg{s}\marg{code} is used to execute code before line number in endnotes. The code is executed before the \cs{Xendbeforelinenumber} space  and before the \cs{Xendnotenumfont} font setting.
+% \cs{Xendbhooklinenumber}\oarg{s}\marg{code} is used to execute code before line numbers in endnotes. The code is executed before the \cs{Xendbeforelinenumber} space  and before the \cs{Xendnotenumfont} font setting.
 %
 % \DescribeMacro{\Xendahooklinenumber}
 % \cs{Xendahooklinenumber}\oarg{s}\marg{code} is used to execute code after line number in endnotes. 
@@ -2354,7 +2360,7 @@
 %
 %
 % \DescribeMacro{\Xendinplaceoflemmaseparator}\label{Xendinplaceoflemmaseparator}
-% With \protect\cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add some space if you chose to remove the lemma separator. The default value is 0.5~em. 
+% With \protect\cs{Xendinplaceoflemmaseparator}\oarg{s}\marg{l} you can add some space if you choose to remove the lemma separator. The default value is 0.5~em. 
 %
 %
 % \subsection{Font style}
@@ -2456,15 +2462,15 @@
 % \end{verbatim}
 % 
 % \DescribeMacro{\Xbhooknote}
-% \protect\cs{Xbhooknote}\oarg{s}\marg{code} is to be used at the beginning of the critical footnotes.
+% \protect\cs{Xbhooknote}\oarg{s}\marg{code} is to be used at the beginning of each critical footnote.
 %
 %
 % \DescribeMacro{\bhooknoteX}
-% \protect\cs{bhooknoteX}\oarg{s}\marg{code} is to be used at the beginning of the familiar footnotes.
+% \protect\cs{bhooknoteX}\oarg{s}\marg{code} is to be used at the beginning of each familiar footnote.
 %
 %
 % \DescribeMacro{\Xendbhooknote}
-% \protect\cs{Xendbhooknote}\oarg{s}\marg{code} is to be used at the beginning of the endnotes.
+% \protect\cs{Xendbhooknote}\oarg{s}\marg{code} is to be used at the beginning of each endnote.
 %
 % \subsection{Arbitrary code before inserting note}
 % \DescribeMacro{\Xbeforeinserting}
@@ -2559,15 +2565,19 @@
 % \DescribeMacro{\Xtxtbeforenotes}
 % You can add text before critical footnotes with \protect\cs{Xtxtbeforenotes}\oarg{s}\marg{text}.
 % \DescribeMacro{\txtbeforenotesX}
+%
 % You can add text before familiar footnotes with \protect\cs{txtbeforenotesX}\oarg{s}\marg{text}.
 %
+% \DescribeMacro{\Xendtxtbeforenotes}
+% You can add text before endnotes with \protect\cs{Xendtxtbeforenotes}\oarg{s}\marg{text}. The text will be typeset only if there are endnotes.
+%
 % \DescribeMacro{\Xtxtbeforenotesonlyonce}
-% \DescribeMacro{\txtbeforenotesonlyonceX} By default, such texts are inserted at the beginning of the groups of notes on each pages.
+% \DescribeMacro{\txtbeforenotesonlyonceX} By default, such texts are inserted at the beginning of the groups of notes on each page.
 % You can add \cs{Xtxtbeforenotesonlyonce} (for critical footnotes) and \cs{txtbeforenotesonlyonceX} (for familiar footnotes) to insert them only the first time notes are typeset. 
 % \subsubsection{Code before notes}
 %\DescribeMacro{\Xbhookgroup}
 %\DescribeMacro{\bhookgroupX}
-% While \cs{Xtxtbeforenotes} is for typesetting code before notes, \cs{Xbhookgroup} and \cs{bhookgroupX} (respectively for critical and familiar) are for executing code before a groups of notes, between the rules and the printing of the notes. 
+% While \cs{Xtxtbeforenotes} is for typesetting text before notes, \cs{Xbhookgroup}\oarg{s}\marg{code} and \cs{bhookgroupX}\oarg{s}\marg{code} (for critical and familiar respectively) are for executing code before a group of notes, between the rules and the printing of the notes. 
 % 
 % 
 % \subsubsection{Spacing}
@@ -2659,6 +2669,10 @@
 %   \item \protect\cs{Xnoteswidthliketwocolumns}\oarg{s} to create critical notes with a two-column size width. 
 %   \item \protect\cs{noteswidthliketwocolumnsX}\oarg{s} to create familiar notes with a two-column size width. 
 % \end{itemize}
+% \subsection{Line number annotation}
+% The way line number annotations are typeset can be changed using hooks as described in \reff{annotationposition} and 
+% \reff{wraplinenumannotation}.
+% 
 % \subsection{Endnotes in one paragraph}
 % \changes{v1.12.0}{2015/04/25}{Add \protect\cs{Xendparagraph} and related settings.}
 % \DescribeMacro{\Xendparagraph}
@@ -2910,12 +2924,104 @@
 %    \flagstanza{#1}%
 %}
 % \end{verbatim}
+% \subsection{Add annotation to line of verse numbers}\label{annotation}
+% You may want to have two or more numbers associated with a line of verse.
+% Consider, for example, the following cases:
+% \begin{itemize}
+%  \item You want to split a line of verse into two parts depending upon some stylistic / rythmic / linguistic convention.
+%  \item You want to add the line number used by a previous edition of the work.
+% \end{itemize}
+% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such pattern which will in turn call \macpackage\ commands.}
+%
+% \DescribeMacro{\linenumannotation}
+% To resolve this issue, \macpackage\ allows you to annotate to a line of verse number:
+% \begin{verbatim}
+% \linenumannotation{<annotation>}
+% \end{verbatim}
+% 
+% The annotation can contain any textual value (whether number, text, or other) such as the line number from the older edition.
+% Here are some characteristics of line number annotation:
+% \begin{itemize}
+%  \item An annotation is associated with a line of verse. It is reset with each new line of verse.
+%  \item It is printed alongside the line number in the margin.
+%  \item It is printed following the line number in critical footnotes and endnotes. 
+%  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
+%  \item If two or more annotations are called before a \cs{edtext}, the last one is used in associated notes.
+%  \item If an annotation is called within a \cs{edtext}, it is printed as an annotation for the end of the lemma.
+% \end{itemize}
+% Here is an example, supposing we are on line 1:
+% \begin{verbatim}
+% \edtext{first lemma}
+% \linenumannotation{A}
+% \edtext{second lemma}{…}
+% \edtext{third%
+%   \lienumannotation{B}
+%  lemma}{…}
+% \edtext{fourth lemma}& 
+% \end{verbatim}
+% In the critical notes, the line number will be followed
+% \begin{itemize}
+%   \item by nothing in the first lemma, as  there is no annotation for this line;
+%   \item by \enquote{A} for the second lemma;
+%   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
+%   \item by \enquote{B} for the fourth lemma. 
+% \end{itemize}
+% \subsubsection{Modify annotation associated to a specific note}
+%
+% The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
+% \DescribeMacro{\lineannot} does the same for the annotations.
+% It takes one argument, containing the beginnning and ending annotations separated by a pipe (\verb+|+).
+% As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
+% \begin{verbatim}
+% \lineannot{|b}% to change the ending annotation
+% \lineannot{a|}% to change the beginning annotation
+% \lineannot{a|b}% to change both
+% \lineannot{\empty|}% to delete the beginning annotation 
+% \end{verbatim}
+% \subsubsection{Changing the position of the annotation}{annotationposition}
+% By default, annotations are placed after line numbers in both margin and footnote.
+% 
+% \DescribeMacro{\Xlinenumannotationposition}
+% \DescribeMacro{\Xendlinenumannotationposition}
+% To change this behaviour, one can use one of the following commands:
+% \begin{itemize}
+%  \item \cs{Xlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical footnotes with \meta{s} for the series of footnotes to which it applies, where \meta{s} may be a comma-separated list of series. When \meta{s} is empty, the change applies also to annotations at the sides of the page, alongside the line number.
+%  \item \cs{Xlinenumannotationpositionside}\marg{v} changes the position at the sides of the page, alongside the line numbers. 
+%
+% Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
+%  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes, 
+% \meta{} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
+% \end{itemize}
+% In each of these three commands, \meta{v} can be \option{after} or \option{before} the line number.
+% \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
+% By default, annotations are wrapped in the \cs{textsuperscript} macro.
+% You can modify this using one of the following:
+% \begin{itemize}
+%   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
+% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}.
+%   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}.
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
+% \end{itemize}
+% \meta{cmd} is a command which can take one argument; the backslash is required though.
+% 
+% For example, if you do not wish to have annotations in the margins, but do want to have them in bold in the critical footnotes and endnotes, you say:\footnote{The \cs{@gobble} command takes one argument, and returns nothing.}
+% \begin{verbatim}
+% \makeatletter
+% \Xwraplinenumannotation{\textbf}
+% \Xendwraplinenumannotation{\textbf}
+% \Xwraplinenumannotationside{\@gobble}
+% \makeatother
+% \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand? 
-% macro, not \verb?\&? which will end the stanza.
-%
-%
+% macro, not \verb?\&? as this will end the stanza.
+% 
 % \DescribeMacro{\flagstanza}
 % Putting \protect\cs{flagstanza}\oarg{len}\marg{text} at the start of a  line
 % in a stanza (or elsewhere) will typeset \meta{text} at a 
@@ -2990,11 +3096,12 @@
 % \DescribeMacro{\edlineref}
 % \DescribeMacro{\sublineref}
 % \DescribeMacro{\pstartref}
+% \DescribeMacro{\annotref}
 % Elsewhere in the text, either before or after the \protect\cs{edlabel},
 % you can refer to its location with \protect\cs{edpageref}\marg{lab},
-% \protect\cs{edlineref}\marg{lab}, \cs{edsublineref}\marg{lab} or \cs{pstartref}\marg{lab},
+% \protect\cs{edlineref}\marg{lab}, \cs{edsublineref}\marg{lab}, \cs{pstartref}\marg{lab} or \cs{annotref}\marg{lab}, 
 % that
-% will produce, respectively, the page, line, sub-line and pstart on which
+% will produce, respectively, the page, line, sub-line,  pstart, the annotation,  on which
 % the \protect\cs{edlabel}\marg{lab} command occurred.
 %
 % Note that the \cs{edlineref} command insert the side flag after the line number. 
@@ -3029,8 +3136,9 @@
 % \DescribeMacro{\xlineref}
 % \DescribeMacro{\xsublineref}
 % \DescribeMacro{\xpstartref}
+% \DescribeMacro{\xannotref}
 %
-% However, there are situations in which you will want \macpackage to
+% However, there are situations in which you will want \macpackage\ to
 % return a number without displaying any
 % warning messages about undefined labels or the like: if you want to
 % use the reference in a context where \LaTeX{} is looking for a
@@ -3040,9 +3148,9 @@
 % argument to \protect\cs{linenum}, for example (see \reff{linenum}). 
 %
 %For this situation,
-% four variants of the reference commands, with the \verb"x"
-% prefix, are supplied: \protect\cs{xpageref}, \protect\cs{xlineref}, \protect\cs{xsublineref} and \protect\cs{xpstartref}.
-% They have these limitations:
+% \macpackage\ supplies variants of the reference commands, with the \verb"x"
+% prefix: \cs{xpageref}, \cs{xlineref}, \cs{xsublineref}, \cs{xpstartref} and \cs{xannotationref}.
+% They have the following limitations:
 % \begin{itemize}
 %     \item They will not tell you if the label is undefined.
 %     \item They must
@@ -3065,9 +3173,9 @@
 % labels: e.g., \verb"\xxref{mouse}{elephant}". 
 %
 % It automatically calls \protect\cs{linenum}
-% (q.v., \reff{linenum} above) and sets the beginning page,
-% line and  subline numbers to those of the place where
-% \verb"\edlabel{mouse}" was placed, and the ending numbers to those where
+% (\reff{linenum}) and \cs{lineannot} (\reff{lineannot})  and sets the beginning page,
+% line,   subline numbers and line annotations to those of the place where
+% \verb"\edlabel{mouse}" was placed, and the ending ones to those where
 % \verb"\edlabel{elephant}" occurs.
 %
 % For example, one might use the following:
@@ -3109,7 +3217,7 @@
 % \subsubsection{Reference to main text lines}
 % \changes{v2.5.0}{2015/11/13}{New tools to easily make cross-reference to a passage defined by a start and an end line}
 % Many times, you may want to make a cross-reference to a passage that is defined by a start line and an end line.
-% \Macpackage provides specific tools for this scenario.
+% \Macpackage\ provides specific tools for this scenario.
 
 % \DescribeMacro{\edlabelS}
 % Use \cs{edlabelS}\marg{label} to mark the start line of the passage.
@@ -3135,15 +3243,15 @@
 % \subsubsection{References to lines that are commented on in the apparatus}\label{appref}
 % \changes{v1.21.0}{2015/03/09}{Add \protect\cs{applabel} and related}
 % You may want to make a cross-reference to a passage that is referred to by \protect\cs{edtext}.
-% \Macpackage provides specific tools for this scenario.
+% \Macpackage\ provides specific tools for this scenario.
 %
 % \DescribeMacro{\applabel}
 % If you use \protect\cs{applabel}\marg{label} inside the second argument of a \protect\cs{edtext},
-% \Macpackage will add a \protect\cs{edlabel} at the beginning and end of the marked passage.
+% \Macpackage\ will add a \protect\cs{edlabel} at the beginning and end of the marked passage.
 % The label at the beginning of the passage will have the title \meta{label}\verb+:start+, while the label at the end will have the title \meta{label}\verb+:end+.
 % 
 % If you use \protect\cs{linenum} (\reff{linenum}) to
-% refer to these labels, \macpackage will use your line settings to refer
+% refer to these labels, \macpackage\ will use your line settings to refer
 % to the passage.
 %
 % \DescribeMacro{\appref}\DescribeMacro{\apprefwithpage}  
@@ -3186,10 +3294,10 @@
 %
 % \textbf{Also note that \cs{setSErefonlypageprefixsingle} is only a shortcut for \cs{XendbeforepagenumberSErefonlypage} (see \reff{crossrefsetting:linked}).
 % So if you use \cs{Xendbeforepagenumber} without any optional argument, it will override this setting.}
-% \paragraph{Linked to setting of critical endnotes and footnotes}\label{crossrefsetting:linked}
-% Some commands who set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if you call them \emph{without the optional series argument}.
+% \paragraph{Linked to setting of critical footnotes and endnotes}\label{crossrefsetting:linked}
+% Some commands which set the appearance of line numbers in critical footnotes also set the appearance of line numbers in \cs{appref} and \cs{SEref} if called \emph{without the optional series argument}.
 % 
-% These commandes are the following:
+% These commands are the following:
 % \begin{itemize}
 %   \item \cs{Xlineflag} (for \parpackage), enabled by default.
 %   \item \cs{Xlinerangeseparator}
@@ -3198,6 +3306,8 @@
 %   \item \cs{Xtwolines}
 %   \item \cs{Xtwolinesbutnotmore}
 %   \item \cs{Xtwolinesonlyinsamepage}
+%   \item \cs{Xlinenumannotationposition}
+%   \item \cs{Xwraplinenumannotation}
 % \end{itemize}
 %
 % If you want to make settings specific  to \cs{appref} or \cs{SEref}, just call them with an optional argument containing a comma-separated list of command names (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
@@ -3216,6 +3326,8 @@
 %   \item\cs{Xendtwolines}
 %   \item\cs{Xendtwolinesbutnotmore}
 %   \item\cs{Xendtwolinesonlyinsamepage}
+%   \item\cs{Xendlinenumannotationposition}
+%   \item\cs{Xendwraplinenumannotation}
 % \end{itemize}
 % \paragraph{For one specific command}
 %
@@ -3225,13 +3337,13 @@
 % \subsection{Compatibility with \protect\package{xr} package}
 % The \cs{externaldocument} command of the \cs{xr} package allows making cross-references from an external document, with the standard \LaTeX\ commands \cs{label} and \cs{ref} (and related).
 %
-% To use it with the \macpackage cross-reference commands (i.e. \cs{edlabel} and related), you must do the following:
+% To use it with the \macpackage\ cross-reference commands (i.e. \cs{edlabel} and related), you must do the following:
 % \begin{enumerate}
 % \item Load the \package{xr} package.
 % \item Load the \package{reledmac} package.
 % \item Use the \cs{externaldocument} document command. 
 % \end{enumerate}
-% \section{Side notes}
+% \section{Sidenotes}
 %
 % \subsection{Basics}
 % The \protect\cs{marginpar} command does not work in numbered text. Instead, 
@@ -3384,19 +3496,19 @@
 % who read French, read \url{http://geekographie.maieul.net/174}.}
 %
 % This file also provides, with an explanation, the settings that are needed to put
-% \macpackage lines numbers in parenthesis, in order
+% \macpackage\ lines numbers in parenthesis, in order
 % to make a better distinction between line numbers and page ranges.
 %
-% In any case, you must load \macpackage  with the \verb+xindy+ option,
+% In any case, you must load \macpackage\  with the \verb+xindy+ option,
 % in order to generate a \verb|.xdy| file which is specific to your document.
 % This file is needed by the \verb+.xdy+ example file which is in the ``\href{examples/.}{examples}'' folder.
 % Its default name is \verb+reledmac-markup-attr.xdy+,
 % but you can change it by using your own as an argument of the \verb|xindy+hyperref| option.
 %
-% If you chose to use both \verb+xindy+ and the \verb+hyperref+ package,
+% If you choose to use both \verb+xindy+ and the \verb+hyperref+ package,
 % you must do three more things:
 % \begin{enumerate}
-%   \item Use \verb|xindy+hyperref| option when loading the \macpackage  package.
+%   \item Use \verb|xindy+hyperref| option when loading the \macpackage\  package.
 % When you run (Xe/Lua)\LaTeX with this option, a \verb+.xdy+ configuration file will be generated with all the settings needed to allow internal hyperlinking in each index entry which is created by \protect\cs{edindex}. 
 %   \item Use \verb+hyperindex=false+ option when loading hyperref.
 %   \item Uncomment\,---\,by removing the semicolons at the beginning of the relevant lines\,---\,some lines in the <code>.xdy</code> file provided in the ``\href{examples/.}{examples}'' folder in order to restore internal links in the index to be used by the standard \verb+index+ command.\footnote{These are the recommended lines to provide the best possible compatibility between hyperref and xindy, even without using \macpackage.}.
@@ -3413,9 +3525,9 @@
 % You can change \protect\cs{edindexlab} to something else if you need to.
 %
 % \section{Glossary}
-% \Macpackage provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
+% \Macpackage\ provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
 % \subsection{Preamble setting}
-% The standard compositor between page and line number in \macpackage  is a dash, while \package{glossaries} uses, by default, a dot.
+% The standard compositor between page and line number in \macpackage\  is a dash, while \package{glossaries} uses, by default, a dot.
 % Consequently, you must:
 % \begin{itemize}
 % \item Or set .
@@ -3433,7 +3545,7 @@
 %
 % \LaTeX's normal |tabular| and |array| environments cannot be used where
 % line numbering is being done; more precisely, they can be used but with 
-% odd results, so don't use them. However, \macpackage  provides some simple 
+% odd results, so don't use them. However, \macpackage\  provides some simple 
 % tabulation environments that can be line numbered. The environments
 % can also be used in normal unnumbered text.
 %
@@ -3744,8 +3856,8 @@
 %
 % \subsection{Optimization}\label{optimize}
 % \DescribeMacro{\noeledsec}
-% If you are not going to have any \protect\cs{eledxxx} commands, then load \macpackage  with \protect\cs{noeledsec} option. 
-% That will suppress the generation of unneeded \file{.eledsec} files, save memory, and make \macpackage run faster.
+% If you are not going to have any \protect\cs{eledxxx} commands, then load \macpackage\  with \protect\cs{noeledsec} option. 
+% That will suppress the generation of unneeded \file{.eledsec} files, save memory, and make \macpackage\ run faster.
 % 
 % \section{Quotation environments}
 % The \verb+quotation+ and \verb+quote+ environments can be used so that the same definition/note appears both inside and outside a numbered section.
@@ -3762,7 +3874,7 @@
 %
 % \subsection{Control page breaking}
 % \changes{v1.7.0}{2013/11/08}{New features for managing page breaks.}
-% \Macpackage and \parpackage break pages automatically. However, you may sometimes want to either force page breaks, or prevent them. 
+% \Macpackage\ and \parpackage break pages automatically. However, you may sometimes want to either force page breaks, or prevent them. 
 % \DescribeMacro{\ledpb} \DescribeMacro{\lednopb} The packages provide two macros: 
 % \begin{itemize}
 %    \item \protect\cs{ledpb} adds a page break.
@@ -3830,7 +3942,7 @@
 % \subsubsection{\package{floatrow} package compatibility}
 % The \package{floatrow} package must be loaded before the \macpackage.
 % \subsubsection{`No room for a new'}\label{noroom}
-% Sometimes, especially when using \macpackage with other packages, you could obtain warning messages such 'no room for a new count' or 'no room for a new write'.
+% Sometimes, especially when using \macpackage\ with other packages, you could obtain warning messages such 'no room for a new count' or 'no room for a new write'.
 %
 % In order to prevent such problems, the first thing is to use the options to optimize \macpackage.
 % For example, if you need only two series of notes, use the \verb+series={A,B}+ option.
@@ -3839,7 +3951,7 @@
 % However, if with these options you still have such messages, here are some tricks.
 % \begin{description}
 %  \item['no room for a new count'] is often caused by \protect\package{biblatex} being used at the same time.
-%  Load \macpackage (and \parpackage) \emph{before} \protect\package{biblatex}.
+%  Load \macpackage\ (and \parpackage) \emph{before} \protect\package{biblatex}.
 %  \item['no room for a new write'] can be caused by multiple indexes.
 % In this case, use \protect\package{indextools} of \protect\package{imakeidx} with the \verb+splitindex+ option, in order to obtain only one \verb+.idx+ file.
 % If that does not solve your problem, you can use \protect\package{morewrites} package.
@@ -3867,7 +3979,7 @@
 % \LaTeX\ is a three-pass system, but even after a document has
 % been processed three times, there are some tricky situations in
 % which the page breaks decided by \TeX\ never settle down.  At
-% each successive run, \macpackage may oscillate between two
+% each successive run, \macpackage\ may oscillate between two
 % different sets of page decisions.  To stop this happening, should
 % it arise, Wayne Sullivan\index{Sullivan, Wayne} suggested the
 % inclusion of the quantity \protect\cs{ballast}.  The amount of \protect\cs{ballast}
@@ -3910,7 +4022,7 @@
 % \subsubsection{Use with other packages}
 %
 % Because of \macpackage's complexity, it may not play well with other
-% packages. In particular \macpackage is sensitive to commands in the
+% packages. In particular \macpackage\ is sensitive to commands in the
 % arguments to the \protect\cs{edtext} and \protect\cs{*footnote} macros (this is
 % discussed in more detail in section~\ref{text}, and in particular
 % the discussion about \protect\cs{no@expands} and \protect\cs{morenoexpands}). You
@@ -3965,7 +4077,7 @@
 %%
 %
 % If you want to use the option \emph{bottom} of the \protect\package{footmisc} package, 
-% you must load this package \emph{before} the \macpackage package.
+% you must load this package \emph{before} the \macpackage\ package.
 % 
 
 % \subsection{Parallel typesetting}\label{eledpar}
@@ -3997,7 +4109,7 @@
 % \section{Implementation overview}\label{overview}
 %
 %
-% We present the \macpackage code in roughly the order in which it is used
+% We present the \macpackage\ code in roughly the order in which it is used
 % during a run of \TeX. The order is \emph{exactly} that in which
 % it is read when you load The \Eledmac{} package, because the same file
 % is used to generate this manual and to generate the \LaTeX\ package file.
@@ -4028,7 +4140,7 @@
 % (Section~\ref{endnotes}) complete the story.
 %
 % In what follows, macros with an @ in their name are more internal
-% to the workings of \macpackage than those made up just of
+% to the workings of \macpackage\ than those made up just of
 % ordinary letters, just as in \PlainTeX\ (see \thetexbook,
 % p.\,344).  You are meant to be able to make free with
 % ordinary macros, but the `@' ones should be treated with more
@@ -4061,7 +4173,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/08/31 v2.24.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/11/11 v2.26.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4088,7 +4200,7 @@
 \RequirePackage{xkeyval}
 %    \end{macrocode}
 % The \verb+parledgroup+ option is for \parpackage.
-% However, it has consequence on \macpackage internal command.
+% However, it has consequence on \macpackage\ internal command.
 % So we need to define the boolean now.
 %    \begin{macrocode}
 \newif\ifparledgroup
@@ -4690,6 +4802,30 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \subsection{Wrapping content}
+% \begin{macro}{\l@wrap@ifnotemptybox}
+% \begin{macro}{\l@wrapcs@ifnotemptybox}
+% The \cs{l@wrap@ifnotemptybox} macro wraps its second argument in the command passed as the first argument, but only if the second argument does not produce an empty box.
+% That is useful for example when we need to wrap something on a \cs{textsuperscript}.
+%
+%
+% Indeed \verb+a\textsuperscript{}b+ does not produce the same typographical result as 
+% \verb+ab+.\footnote{Compare the distance between letters in the first case (a\textsuperscript{}b) and in the second one (ab).}
+% The l@wrapcs@ifnotemptybox does the same, but take as argument a control sequence name, so without backslash.
+%
+%    \begin{macrocode}
+\newcommand{\l@wrap@ifnotemptybox}[2]{%
+  \setbox0=\hbox{#2}%
+  \ifdim\wd0=\z@\else%
+    #1{#2}%
+  \fi%
+}%
+\newcommand{\l@wrapcs@ifnotemptybox}[2]{%
+  \l@wrap@ifnotemptybox{\csname #1\endcsname}{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Miscellaneous commands}
 % \begin{macro}{\showlemma}
 % \verb?\showlemma?\marg{lemma} typesets the lemma text in the body.
@@ -5206,7 +5342,7 @@
 % \item line-of-page: \verb|bypstart@ = false| and \verb|bypage@ = true|.
 % \item line-of-pstart: \verb|bypstart@ = true| and \verb|bypage@ = false|.
 % \end{itemize}
-% \Macpackage will use the line-of-section system unless instructed otherwise.
+% \Macpackage\ will use the line-of-section system unless instructed otherwise.
 %    \begin{macrocode}
 \newif\ifbypage@
 \newif\ifbypstart@
@@ -5342,7 +5478,7 @@
 % \subsection{Line number initialization and increment}
 % \begin{macro}{\c@firstlinenum}
 % \begin{macro}{\c@linenumincrement}
-% The following counters tell \macpackage which lines should be
+% The following counters tell \macpackage\ which lines should be
 % printed with line numbers. \verb+firstlinenum+ is the number of the
 % first line in each section that gets a number;
 % \verb+linenumincrement+
@@ -5570,7 +5706,13 @@
   \ifluatex%
     \textdir TLT%
   \fi%
-  \numlabfont\linenumrep{\line@num}%
+  \numlabfont%
+  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@num @\the\section@num}%
+      }%
+  }{}%
+  \linenumrep{\line@num}%
   \ifsublines@
     \ifnum\subline@num>0\relax
       \unskip%
@@ -5578,6 +5720,11 @@
       \sublinenumrep{\subline@num}%
     \fi
   \fi%
+  \ifdefstring{\Xlinenumannotationposition@side}{after}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@num @\the\section@num}%
+      }%
+  }{}%
   \egroup%
 }%
 
@@ -5697,7 +5844,8 @@
 % \begin{macro}{\insertlines@list}
 % \begin{macro}{\actionlines@list}
 % \begin{macro}{\actions@list}
-% Now we can define the list macros that will be created from the
+% \begin{macro}{\annot@list}
+% Now we can define the list of macros which will be created from the
 % line-list file.  We will maintain the following lists:
 % \begin{itemize}\addtolength{\itemsep}{-1ex}
 % \item \protect\cs{line@list}: the page and line numbers for every
@@ -5744,7 +5892,7 @@
 % defined below.
 %
 % \item \protect\cs{actions@list}: action codes corresponding to the line
-% numbers in \protect\cs{actionlines@list}. These codes tell \macpackage what action
+% numbers in \protect\cs{actionlines@list}. These codes tell \macpackage\ what action
 % it is supposed to take at each of these lines. One action, the
 % page-start action, is generated behind the scenes by \macpackage{} itself;
 % the others, for specifying sub-lineation, line-number locking, and
@@ -5813,7 +5961,9 @@
 % from the absolute line numbers with reference to the other
 % action codes and the settings they invoke; it does not require an
 % entry in the action-code list for every line.
-%
+% \item \cs{annot@list} stores line number annotations for the start and the end lines of each  \cs{edtext}, as \cs{line@list} does for line numbers.
+% We don't store that in the same list as line numbers as \cs{printlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
+% \end{itemize}
 % Here are the commands to create these lists:
 %
 %    \begin{macrocode}
@@ -5821,10 +5971,10 @@
 \list@create{\insertlines@list}
 \list@create{\actionlines@list}
 \list@create{\actions@list}
-
+\list@create{\annot@list}%
 %    \end{macrocode}
 %
-% \end{itemize}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6139,6 +6289,7 @@
 }
 \newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
+    \reset@current@annot%
     \advance\absline@num \@ne
     \csgdef{l@dchset@num@\the\absline@num}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
@@ -6261,7 +6412,7 @@
 % \begin{macro}{\@lopR}
 % These do not do anything at this point, but will have been added to the 
 % auxiliary file(s) if the  \parpackage package has been used. They
-% are just here to stop \macpackage from moaning if the \parpackage 
+% are just here to stop \macpackage\ from moaning if the \parpackage 
 % is used for one run and then not for the following one.
 % \changes{v0.6.0}{2004/11/16}{Added \protect\cs{@pend},\protect\cs{@pendR}, \protect\cs{@lopL} and 
 %        \protect\cs{@lopR} in anticipation of parallel processing}
@@ -6735,10 +6886,12 @@
     \let\@lab=\relax
     \let\@lemma=\relax%
     \let\@sw\@gobblethree%
+    \let\store@annot@to@absline\@gobble%
     #2
     \global\endpage@num=\page@num
     \global\endline@num=\line@num
     \global\endsubline@num=\subline@num
+    \global\let\endcurrent@annot=\current@annot%
   \endgroup
 %    \end{macrocode}
 %
@@ -6750,6 +6903,8 @@
        \ifsublines@ \the\subline@num \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
        \ifsublines@ \the\endsubline@num \else 0\fi}\to\line@list
+    \xright@appenditem%
+      {\current@annot|\endcurrent@annot}\to\annot@list%
 %    \end{macrocode}
 % And now, call \cs{@ref@reg@parsearg}, which can be also called by \cs{@ref@later}
 %    \begin{macrocode}
@@ -6816,7 +6971,7 @@
 %
 % We have now defined all the counters, lists, and commands involved in
 % reading the line-list file at the start of a section. Now we will
-% cover the commands that \macpackage uses within the text of a
+% cover the commands that \macpackage\ uses within the text of a
 % section to write commands out to the line-list.
 %
 % \begin{macro}{\linenum@out}
@@ -6901,7 +7056,7 @@
 %                           \protect\cs{line@list@stuff}}
 % \changes{v0.7.0}{2005/02/25}{Deleted \protect\cs{page@start} from \protect\cs{line@list@stuff}}
 % \changes{v1.15.1}{2015/01/16}{Revert modification of 1.5.2 which makes bug with numbering. Leave vertical mode to solve spurious space before minipage.}
-% \Macpackage and \parpackage can fill the \cs{next@line@list@stuff} hook between a \cs{endnumbering} (associated with numbered file $n$) and a \cs{beginnumbering} (associated with numbered file $n+1$). It allows adding content to the numbered file $n+1$ and not $n$.
+% \Macpackage\ and \parpackage can fill the \cs{next@line@list@stuff} hook between a \cs{endnumbering} (associated with numbered file $n$) and a \cs{beginnumbering} (associated with numbered file $n+1$). It allows adding content to the numbered file $n+1$ and not $n$.
 %    \begin{macrocode}
   \iffirst@linenum@out@
      \global\first@linenum@out@false%
@@ -7142,12 +7297,15 @@
 \newcommand*{\setline}[1]{%
  \leavevmode%
   \ifnum#1<\z@
-    \led@warn@BadSetline
-  \else
-    \ifledRcol \write\linenum@outR{\string\@set[#1]}%
-    \else      \write\linenum@out{\string\@set[#1]}%
-    \fi
-  \fi}
+    \led@warn@BadSetline%
+  \else%
+    \ifledRcol% 
+      \write\linenum@outR{\string\@set[#1]}%
+    \else%      
+      \write\linenum@out{\string\@set[#1]}%
+    \fi%
+  \fi%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -7279,7 +7437,7 @@
 % it a new name; otherwise you will need to add an appropriate
 % definition for your new macro to \protect\cs{morenoexpands}.
 %
-% Side effects of our line-numbering code make it impossible to use
+% Side-effects of our line-numbering code make it impossible to use
 % the usual footnote macros directly within a paragraph whose lines are
 % numbered (see comments to
 % \protect\cs{do@line}, \reff{doline}).
@@ -7392,7 +7550,7 @@
 % and any other that causes trouble, will get by all right if you put
 % a \protect\cs{protect} in front of it in your file.)
 %
-% We also need to eliminate all \macpackage macros like \protect\cs{edlabel} and
+% We also need to eliminate all \macpackage\ macros like \protect\cs{edlabel} and
 % \protect\cs{setline} that write things to auxiliary files: that writing
 % should be done only once. And we make
 % \protect\cs{edtext} itself, if it appears within its own
@@ -7403,7 +7561,7 @@
 % a version of your own when you need to add more expansion
 % suppressions as needed with your macros. That makes it possible
 % to make such additions without needing to copy or modify the
-% standard \macpackage code. If you define your own
+% standard \macpackage\ code. If you define your own
 % \protect\cs{morenoexpands}, you must be very careful about spaces: if the
 % macro adds any spaces to the text when it runs, extra space
 % will appear in the main text when \protect\cs{edtext} is used.
@@ -7438,6 +7596,7 @@
   \let\edtext=\dummy@edtext
   \let\edindex\dummy@edindex%
   \l@dtabnoexpands
+  \let\linenumannotation=\@gobble%
   \morenoexpands}
 \let\morenoexpands=\relax
 
@@ -7655,7 +7814,7 @@
 %
 % 
 % \begin{macro}{\@beforeinsertofthisedtext}
-% \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
+% \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage\ or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
 % Its content is \cs{let} equal to \cs{relax} at the end of every \cs{edtext}.
 %    \begin{macrocode}
 \let\@beforeinsertofthisedtext\relax
@@ -7694,6 +7853,13 @@
       \xdef\l@d@nums{\@tempb|\edfont@info}%
       \global\let\@tempb=\undefined
     \fi
+    \ifx\annot@listR\empty%
+      \xdef\l@current@annotR{|}%
+    \else%
+      \gl@p\annot@listR\to\@tempb%
+      \xdef\l@current@annotR{\@tempb}%
+      \global\let\@tempb=\undefined%
+    \fi%
   \else
     \ifx\line@list\empty
       \global\noteschanged@true
@@ -7703,6 +7869,13 @@
       \xdef\l@d@nums{\@tempb|\edfont@info}%
       \global\let\@tempb=\undefined
     \fi
+    \ifx\annot@list\empty%
+      \xdef\l@current@annot{|}%
+    \else%
+      \gl@p\annot@list\to\@tempb%
+      \xdef\l@current@annot{\@tempb}%
+      \global\let\@tempb=\undefined%
+    \fi%
   \fi}
 
 %    \end{macrocode}
@@ -7811,13 +7984,33 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\lineannot}
+% \begin{macro}{\lineannot@set}
+% Last but not least, \cs{lineannot} allows us to substitute line number annotation. It is different from \cs{linenum} for backward compatibility with older versions of \macpackage. It calls \cs{lineannot@set} to determine whether we must change only one annotation or two, or none. 
+%    \begin{macrocode}
+\newcommand*{\lineannot}[1]{%
+  \lineannot@set#1|%
+}%
+\def\lineannot@set#1|#2|{%
+  \expandafter\parse@annot#1|#2|%
+  \IfStrEq{#1}{}%
+    {\let\@tempa\annot@start}%
+    {\def\@tempa{#1}}%
+  \IfStrEq{#2}{}%
+    {\let\@tempb\annot@start}%
+    {\def\@tempb{#2}}% 
+  \xdef\l@current@annot{\@tempa|\@tempb}%  
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Lemma disambiguation}
 % The mechanism which counts the occurrence of a same word in a same line is quite complex, because, when \LaTeX\ reads a command between a \protect\cs{pstart} and a \protect\cs{pend}, it does not know yet which are the line numbers.
 % 
 % The general mechanism is the following:
 % \begin{itemize}
 %    \item \textbf{At the first run}, each \protect\cs{sameword} command increments an \protect\package{etoolbox} counter the name of which contains the argument of the \protect\cs{sameword} commands.
-%    \item Then this counter, associated with the argument of \protect\cs{sameword} is stored with the \protect\cs{@sw} command in the auxiliary file of the current \macpackage section (the \verb+.1+, \verb+.2+… file).
+%    \item Then this counter, associated with the argument of \protect\cs{sameword} is stored with the \protect\cs{@sw} command in the auxiliary file of the current \macpackage\ section (the \verb+.1+, \verb+.2+… file).
 %    \item \textbf{When this auxiliary file is read at the second run}, different operations are achieved:
 %  \begin{enumerate} 
 %         \item  Get the rank of each \protect\cs{sameword} in a line (relative rank) from the rank of each \protect\cs{sameword} in all the numbered section (absolute rank):
@@ -8554,7 +8747,7 @@
 %    \begin{macrocode}
 \def\print@line{
 %    \end{macrocode}
-% Insert the pstart number in side, if we are in the first line of a pstart.
+% Insert the pstart number inside, if we are in the first line of a pstart.
 %    \begin{macrocode}
     \affixpstart@num%
 %    \end{macrocode}
@@ -8736,7 +8929,7 @@
 % 
 % \begin{macro}{\l@dlsn@te}
 % \begin{macro}{\l@drsn@te}
-% Zero width boxes of the left and right side notes, together with their kerns, and, eventually, with additional space if we are in parallel columns typesetting.
+% Zero width boxes of the left and right sidenotes, together with their kerns, and, eventually, with additional space if we are in parallel columns typesetting.
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{l@dlsn@te} and \protect\cs{l@drsn@te}
 %              for use in \protect\cs{do@line}}
 %    \begin{macrocode}
@@ -8994,11 +9187,98 @@
 
 %    \end{macrocode}
 % \end{macro}
+% \section{Line number annotation}
+% The \cs{linenumannotation} allows users  to add manual annotations to line numbers, for example to refer to line numbers from an older edition.
+%
+% That implies that annotations be added
+% \begin{itemize}
+%  \item in marginal line numbers. This feature is implemented by associating annotations with the absolute line numbers when reading the auxiliary numbered files (\verb+.1+, \verb+.2+ etc.).
+%  \item in critical footnotes. This feature is implemented by associating start / end line number annotations with each \cs{edtext} when reading the auxiliary numbered files.
+% \item to crossref commands which refer to line numbers (to be completed when I will have resolved this issue). 
+% \end{itemize}
+% \begin{macro}{\linenumannotation}
+% First, the user-level command, which only writes commands to the numbered files, storing the annotation.
+%    \begin{macrocode}
+\newcommand{\linenumannotation}[1]{%
+  \leavevmode%In case it begins with a \pstart, ensure the \@annot is written after \@nl
+  \ifledRcol%
+    \write\linenum@outR{\string\@annot[#1]}%
+  \else%
+    \write\linenum@out{\string\@annot[#1]}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\Xlinenumannotationposition@side}
+% The \cs{Xlinenumannotationposition@side} macro, to determine the position of line number annotations in lines printed in the side, relative to the line number position.
+% The default value is \enquote{after}, but it can be changed to \enquote{before}, using the \cs{Xlinenumannotationposition} macro.
+%    \begin{macrocode}
+\def\Xlinenumannotationposition@side{after}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\Xwraplinenumannotation@ref}
+% \begin{macro}{\Xwraplinenumannotation@side}
+% The  \cs{Xwraplinenumannotation@ref} macro is applied to crossrefs made to line annotations. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
+% They must be modified by users using \cs{Xwraplinenumannotation}.
+% By default, they call \cs{textsuperscript}. 
+%    \begin{macrocode}
+\def\Xwraplinenumannotation@ref{\textsuperscript}%
+\def\Xwraplinenumannotation@side{\textsuperscript}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\@annot}
+% \begin{macro}{\store@annot@to@absline}
+% Then, the numbered files command \cs{@annot}, which
+% \begin{itemize}
+%  \item associates the annotation to the absolute lines number.
+%  \item stores the current annotation in a macro to be used by the \cs{@ref@reg} macro, which manages all things related to \cs{edtext} in numbered files. As we don't want to store it multiple times in the event of nested \cs{edtext}, we use an auxiliary macro, \cs{store@annot@to@absline}, which is set to \cs{@gobble} when we parse nested \cs{edtext} in numbered auxiliary files.
+% \end{itemize}
+%    \begin{macrocode}
+\newcommand{\@annot}[1]{%
+  \store@annot@to@absline{#1}%
+  \def\current@annot{#1}%
+}%
+\newcommand{\store@annot@to@absline}[1]{%
+  \ifledRcol%
+    \csgappto{annotR@\the\absline@numR @\the\section@numR}{#1}%
+  \else%
+    \csgappto{annot@\the\absline@num @\the\section@num}{#1}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\current@annot}
+% By default, there is no annotation to a line number, so we store an empty \cs{current@annot}
+%    \begin{macrocode}
+\let\current@annot=\empty%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\reset@current@annot}
+% \cs{reset@current@annot} is called at each \cs{@nl} in numbered auxiliary files.
+% It resets the annotation of line numbers at each line.
+%    \begin{macrocode}
+\newcommand{\reset@current@annot}{%
+  \let\current@annot\empty%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\parse@annot}
+% In the \cs{annot@list} list, each individual \cs{edtext} is associated with a starting and an ending line number annotation, which is stored this way: \verb+start annotation|end annotation+
+% The \cs{parse@annot} reads the format and defines two global macros.
+%    \begin{macrocode}
+\def\parse@annot#1|#2|{%
+  \gdef\annot@start{#1}%
+  \gdef\annot@end{#2}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \section{Line number printing}
 %
 % \begin{macro}{\affixline@num}
 % \protect\cs{affixline@num}  just puts a left line number into \protect\cs{l@dld@ta}
-% or a right line number into \protect\cs{l@drd@ta} if required.
+% or a right line number into \protect\cs{l@drd@ta} as required.
 %
 % To determine whether we need to affix a line number to this line,
 % we compute the following:
@@ -9253,12 +9533,12 @@
 %
 %
 %
-% \section{Pstart number printing in side}
-% In side, the printing of pstart number is running like the printing of line number. There is only some differences:
+% \section{Pstart number printing inside}
+% Inside, the printing of the pstart number runs like the printing of the line number. There are only a few differences:
 % \begin{macro}{\affixpstart@num}
 % \begin{macro}{\pstartnum}
 % \begin{itemize}
-%  \item The pstarts counter is upgrade in the \protect\cs{pend} command. Consequently, the \protect\cs{affixpstart@num} command has not to upgrade it, unlike the \protect\cs{affixline@num} which upgrades the lines counter.
+%  \item The pstarts counter is upgraded in the \protect\cs{pend} command. Consequently, the \protect\cs{affixpstart@num} command has not to upgrade it, unlike the \protect\cs{affixline@num} which upgrades the lines counter.
 %  \item To print the pstart number only at the beginning of a pstart, and not in every line, a boolean test is made. The \protect\cs{pstartnum} boolean is set to TRUE at every \protect\cs{pend}. It is tried in the \protect\cs{leftpstartnum} and \protect\cs{rightstartnum} commands. After the try, it is set to FALSE.
 % \end{itemize}
 % \begin{macro}{\leftpstartnum}
@@ -9312,7 +9592,7 @@
 % \end{macro}
 % \end{macro}
 % \section{Restoring footnotes and penalties} 
-% Because of the paragraph decomposition process in order to number line, \macpackage must hack the standard way \TeX\ works in order to manage insertion of footnotes,  both critical and familiar.
+% Because of the paragraph decomposition process in order to number line, \macpackage\ must hack the standard way \TeX\ works in order to manage insertion of footnotes,  both critical and familiar.
 %
 % We need to call the \protect\cs{insert} commands not when the content of \protect\cs{pstart}\ldots\protect\cs{pend} is read by \TeX\, by when each individual line is typeset.
 % 
@@ -9597,7 +9877,8 @@
             \ifcsdef{\csuse{series@display#1}@begin@insert}{%
               \csuse{\csuse{series@display#1}@begin@insert}{#1}%
             }{}%
-            \strut\csuse{Xnotefontsize@#1}\csuse{Xtxtbeforenotes@#1}%
+            \strut\csuse{Xnotefontsize@#1}%
+            \csuse{Xtxtbeforenotes@#1}%
           \egroup%
         }%
     }%
@@ -9676,7 +9957,7 @@
 %    \begin{macrocode}
 \newcommand*{\footnoteoptions@}[3]{%
    \def\do##1{%
-      \ifstrequal{#1}{L}{% In Leftside
+      \ifstrequal{#1}{L}{% On the left side
           \xright@appenditem{\noexpand\setkeys[mac]{#3footnoteoption}{\unexpanded{##1}}}\to\inserts@list%
          \global\advance\insert@count \@ne% Increment the left insert counter.
       }%
@@ -9996,7 +10277,9 @@
 % Argument \verb"#1" contains the line and page number information
 % and lemma font specifier;
 % \verb"#2" is the lemma;
-% \verb"#3" is the note's text. This version is very
+% \verb"#3" is the note's text;
+% \verb"#4" is the note's series.
+% This version is very
 % rudimentary---it uses \protect\cs{printlines}
 % to print just the range of line numbers,
 % followed by a square bracket, the lemma, and the note text.
@@ -11251,6 +11534,7 @@
 %
 % Maïeul Rouquette has added \protect\cs{ifl@d@Xtwolines} and \protect\cs{ifl@d@Xmorethantwolines}
 % to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
+% Is also defines \cs{@annot@start@print} and \cs{@annot@end@print} which define annotations associated with the starting and ending line numbers in critical footnotes.
 % \begin{macro}{\ifl@d@pnum}
 % \begin{macro}{\ifl@d@ssub}
 % \begin{macro}{\ifl@d@elin}
@@ -11258,6 +11542,8 @@
 % \begin{macro}{\ifl@d@dash}
 % \begin{macro}{\ifl@d@Xtwolines}
 % \begin{macro}{\ifl@d@Xmorethantwolines}
+% \begin{macro}{\@annot@start@print}
+% \begin{macro}{\@annot@end@print}
 %    \begin{macrocode}
 \newif\ifl@d@pnum 
 \newif\ifl@d@ssub 
@@ -11266,7 +11552,11 @@
 \newif\ifl@d@dash
 \newif\ifl@d@Xtwolines%
 \newif\ifl@d@Xmorethantwolines%
+\let\@annot@start@print\relax%
+\let\@annot@end@print\relax%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -11333,7 +11623,11 @@
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{setprintlines} for use by \protect\cs{printlines}}
 %    \begin{macrocode}
 \newcommand*{\setprintlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse 
+  \let\@annot@start@print\relax%
+  \let\@annot@end@print\relax%
+  \l@d@pnumfalse%
+  \l@d@dashfalse%
+  \l@d@elinfalse%
 %    \end{macrocode}
 % We print the page numbers only if\/: 1)~we are doing
 % the lineation by page, and 2)~the ending page number is different
@@ -11348,15 +11642,59 @@
 %    \end{macrocode}
 %
 % We print the ending line number if\/: (1)~we are printing the ending
-% page number, or (2)~it is different from the starting line number.
+% page number, or (2)~the ending line number is different from the starting line number.
+% If either of these conditions is true, we also print the annotation linked to the ending line number annotations.
 %    \begin{macrocode}
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
-      \l@d@elintrue
-      \l@d@dashtrue
-  \fi
+  \ifboolexpr{%
+    bool{l@d@pnum}%
+    or not test{\ifnumequal{#2}{#5}}%
+   }{%
+    \l@d@elintrue%
+    \l@d@dashtrue%
+    \unless\ifx\relax\annot@end%
+      \def\@annot@end@print{%
+        \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@end}%
+      }%
+    \fi%
+    }{}%
 %    \end{macrocode}
 %
+% We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print the ending line number.
+% Otherwise, it is only the starting annotation.
+%    \begin{macrocode}
+  \ifl@d@elin%
+    \def\@annot@start@print{%
+      \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+    }%
+  \else%
+    \ifx\annot@start\annot@end%
+      \unless\ifx\@annot@start\relax%
+        \def\@annot@start@print{%
+          \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\annot@start}%
+        }%
+      \fi%
+    \else%
+      \ifx\@annot@end@print\relax%
+        \def\@annot@start@print{%
+          \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{%
+            \ifx\annot@start\empty\else%
+              \annot@start%
+              \ifdefined\linerangesep@%
+                \linerangesep@%
+              \else%
+                \csuse{Xlinerangeseparator@\@currentseries}%
+              \fi%
+            \fi%
+            \annot@end%
+            }%
+          }%
+       \else%
+         \let\@annot@start@print\@annot@end@print%
+         \let\@annot@end@print\relax%
+      \fi%
+    \fi%
+  \fi%
+%    \end{macrocode}
 % We print the starting sub-line if it is nonzero.
 %    \begin{macrocode}
   \l@d@ssubfalse
@@ -11493,6 +11831,9 @@
   \ifdimequal{\csuse{Xboxstartlinenum@\@currentseries}}{0pt}%
     {\bgroup}%
     {\leavevmode\hbox to \csuse{Xboxstartlinenum@\@currentseries}\bgroup\hfill}%
+  \ifcsstring{Xlinenumannotationposition@\@currentseries}{before}%
+    {\@annot@start@print}%
+    {}%
   \ifl@d@pnum%
     \wrap@edcrossref{\@this@crossref@start}{#1}%
     \csuse{Xpagelinesep@\@currentseries}%
@@ -11505,6 +11846,9 @@
     \csuse{Xsublinesep@\@currentseries}%
     \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
   \fi
+  \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
+    {\@annot@start@print}%
+    {}%
   \egroup%
 %    \end{macrocode}
 % Then print the dash + end line number, or the range symbol.
@@ -11529,6 +11873,9 @@
         \csuse{Xlinerangeseparator@\@currentseries}%
       \fi%
     \fi%
+    \ifcsstring{Xlinenumannotationposition@\@currentseries}{before}%
+      {\@annot@end@print}%
+      {}%
     \ifl@d@pnum%
        \wrap@edcrossref{\@this@crossref@end}{#4}%
        \csuse{Xpagelinesep@\@currentseries}%
@@ -11544,7 +11891,10 @@
          \csuse{Xsublinesep@\@currentseries}%
        \fi%
        \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
-     \fi%
+    \fi%
+    \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
+      {\@annot@end@print}%
+      {}%
   \fi%
   \ifdimequal{\csuse{Xboxendlinenum@\@currentseries}}{0pt}%
     {}%
@@ -11556,7 +11906,7 @@
 % \end{macro}
 % \subsubsection{Footnote grouped by line}
 % \begin{macro}{\prepare@Xgroupbyline}
-% \cs{prepare@Xgroupbyline} is a macro called on on the \cs{\meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling directly the \cs{insert}.
+% \cs{prepare@Xgroupbyline} is a macro called on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling \cs{insert} directly.
 %    \begin{macrocode}  
 \newcommand{\prepare@Xgroupbyline}[3]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
@@ -12844,9 +13194,9 @@
 % \end{macro}
 % \end{macro}
 % \section{Specific skip for first series of footnotes}\label{skipfirstseries}
-% \subsubsection{Overview}
+% \subsection{Overview}
 % \protect\cs{Xbeforenotes} inserts a specific skip for the first series of notes in a page.
-% As we can't know in advance which series will be the first, we call \protect\cs{prepare@Xprenotes} before inserting any critical notes, in order to prevent page number overlapping. 
+% As we can't know in advance which series will be the first, we call \protect\cs{prepare@Xprenotes} before inserting any critical notes in order to prevent page number overlapping. 
 % \begin{enumerate}
 %   \item If it is the first note of the current page, it changes the footnote skip for the series to the value specified to \protect\cs{Xbeforenotes}. It also keeps the series of the note as the first one of the current page.
 %   \item If it is not the first note of the current page:
@@ -12867,7 +13217,7 @@
 % After the rule, the space which is defined by \protect\cs{Xafterrule} does not depend on whether the series is the first one of the page or not. So we use its normal value for each series.
 %
 % And now, implementation !
-% \subsubsection{User level command}
+% \subsection{User level command}
 % \begin{macro}{\Xprenotes@}
 % \begin{macro}{\Xprenotes}
 % \changes{v1.1.0}{2012/09/25}{New skip \protect\cs{Xprenotes@}}
@@ -12896,7 +13246,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \subsubsection{Internal commands}
+% \subsection{Internal commands}
 % \begin{macro}{firstXseries@}
 % \begin{macro}{prepare@Xprenotes}
 %    \begin{macrocode}
@@ -13035,6 +13385,10 @@
 % \end{itemize}
 %    \begin{macrocode}
 \global\notbool{parapparatus@}{}{\long}\def\endprint#1#2#3#4#5#6#7{{%
+  \iftoggle{Xendfirstnote@#4}{%
+    \global\togglefalse{Xendfirstnote@#4}%
+    \csuse{Xendtxtbeforenotes@#4}%
+  }{}%
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
@@ -13216,6 +13570,7 @@
    \begingroup
       \csxdef{prevpagenum@#1}{}%
       \csxdef{prevpagerange@#1}{}%
+      \global\toggletrue{Xendfirstnote@#1}%
       \makeatletter
       \expandafter\let\csname #1end\endcsname=\endprint
       \input\l@auxdir\jobname.#1end%
@@ -13237,6 +13592,7 @@
  \begingroup%
     \makeatletter%
     \def\l@d@section##1{%
+      \global\toggletrue{Xendfirstnote@#1}%
       \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
         {\cslet{#1end}{\endprint}}%
         {\cslet{#1end}{\@gobbleseven}}%
@@ -13262,14 +13618,20 @@
 % by always printing the page number. The coding is slightly simpler than
 % \protect\cs{setprintlines}.
 %
-% First of all, we print the second page number only if
-% the ending page number is different
 % from the starting page number.\label{printendlines}
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{setprintendlines} for use by
 %              \protect\cs{printendlines}}
 %    \begin{macrocode}
 \newcommand*{\setprintendlines}[6]{%
-  \l@d@pnumfalse \l@d@dashfalse 
+  \let\@annot@start@print\relax%
+  \let\@annot@end@print\relax%
+  \l@d@pnumfalse%
+  \l@d@dashfalse%
+  \l@d@elinfalse%
+%    \end{macrocode}
+% First of all, we print the second page number only if
+% the ending page number is different
+%    \begin{macrocode}
   \ifnum#4=#1 \else
     \l@d@pnumtrue 
     \l@d@dashtrue
@@ -13277,15 +13639,61 @@
 %    \end{macrocode}
 %
 % We print the ending line number if\/: (1)~we are printing the ending
-% page number, or (2)~it is different from the starting line number.
+% page number, or (2)~the ending line is different from the starting line number.
 %    \begin{macrocode}
-  \ifl@d@pnum \l@d@elintrue \else \l@d@elinfalse \fi
-  \ifnum#2=#5 \else
+  \ifboolexpr{%
+      bool{l@d@pnum}%
+      or not test{\ifnumequal{#2}{#5}}%
+     }{%
+      \l@d@elintrue%
+      \l@d@dashtrue%
       \l@d@elintrue
       \l@d@dashtrue
-  \fi
+      \unless\ifx\relax\annot@end%
+        \def\@annot@end@print{%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@end}%
+        }%
+      \fi%
+   }%
+   {}%
 %    \end{macrocode}
 %
+% We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print the ending line number.
+% Otherwise, it is only the starting annotation.
+%    \begin{macrocode}
+  \ifl@d@elin%
+    \def\@annot@start@print{%
+      \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+    }%
+  \else%
+    \ifx\annot@start\annot@end%
+      \unless\ifx\@annot@start\relax%
+        \def\@annot@start@print{%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\annot@start}%
+        }%
+      \fi%
+    \else%
+      \ifx\@annot@end@print\relax%
+        \def\@annot@start@print{%
+          \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{%
+            \ifx\annot@start\empty\else%
+              \annot@start%
+              \ifdefined\linerangesep@%
+                \linerangesep@%
+              \else%
+                \csuse{Xendlinerangeseparator@\@currentseries}%
+              \fi%
+            \fi%
+            \annot@end%
+            }%
+          }%
+       \else%
+         \let\@annot@start@print\@annot@end@print%
+         \let\@annot@end@print\relax%
+      \fi%
+    \fi%
+  \fi%
+%    \end{macrocode}
 % We print the starting sub-line if it is nonzero.
 %    \begin{macrocode}
   \l@d@ssubfalse
@@ -13407,8 +13815,11 @@
     \csuse{Xendlineprefixsingle@\@currentseries}%
   \fi%
 %    \end{macrocode}
-% The print the starting line, followed, if needed, by the side flag and the starting sub line number.
+% Then print the starting line, followed, if needed, by the side flag and the starting sub line number, then the line number annotation.
 %    \begin{macrocode}
+  \ifcsstring{Xendlinenumannotationposition@\@currentseries}{before}%
+    {\@annot@start@print}%
+    {}%
   \wrap@edcrossref{\@this@crossref@start}{%
     \ifledRcol@%
       \linenumrepR{#2}%
@@ -13427,6 +13838,9 @@
       \fi%
     }%
   \fi%
+  \ifcsstring{Xendlinenumannotationposition@\@currentseries}{after}%
+    {\@annot@start@print}%
+    {}%
 %    \end{macrocode}
 % Close the box.
 %    \begin{macrocode}
@@ -13469,8 +13883,11 @@
        }%
     \fi%
 %    \end{macrocode}
-% Print the ending line number, with, if needed, the line prefix, and followed by the side flag and the subline number.
+% Print the ending line number, with, if needed, the line prefix, and followed by the side flag, the subline number, and line number annotation.
 %    \begin{macrocode}
+    \ifcsstring{Xendlinenumannotationposition@\@currentseries}{before}%
+      {\@annot@end@print}%
+      {}%
     \ifl@d@elin%
       \ifl@d@pnum\csuse{Xendlineprefixsingle@\@currentseries}\fi%
       \wrap@edcrossref{\@this@crossref@end}{%
@@ -13494,6 +13911,9 @@
         \fi%
       }%
     \fi%
+    \ifcsstring{Xendlinenumannotationposition@\@currentseries}{after}%
+      {\@annot@end@print}%
+      {}%
   \fi%
 %    \end{macrocode}
 % Close the ending line box.
@@ -13637,6 +14057,7 @@
       \csgdef{Xlemmafont@#1}{}%
       \csgdef{Xwraplemma@#1}{}
       \csgdef{Xwidth@#1}{\hsize}%
+      \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -13684,6 +14105,7 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}% Internal for now, no reason to make it public
+                      \noexpand\parse@annot\l@current@annot|%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
@@ -13724,6 +14146,7 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}%Internal for now, no reason to make it public
+                      \noexpand\parse@annot\l@current@annot|%
                       \noexpand\csuse{v#1footnote}%
                          {#1}%
                          {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
@@ -13798,6 +14221,7 @@
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
+      \csgdef{Xlinenumannotationposition@#1}{after}%
 % End of for familiar footnotes.
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
@@ -13946,7 +14370,10 @@
          \newcommand{\content}{##2}%
          \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
-           \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}\@percentchar\space%Explicit space, to add a linebreak in the output file
+           \unexpanded{\def\sw@list@inedtext}%
+           {\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%
+           \@percentchar\space%Explicit space, to add a linebreak in the output file
+           \noexpand\parse@annot\l@current@annot|\@percentchar\space%
            \expandafter\string\csname #1end\endcsname%
            {\ifnumberedpar@\l@d@nums\fi}%
            {\ifnumberedpar@\expandonce\@tag\fi}%
@@ -14052,12 +14479,18 @@
       \newtoggle{Xendlineflag@#1}
      
       \csgdef{Xendlemmafont@#1}{}%
+
+      \csgdef{Xendlinenumannotationposition@#1}{after}%
+      \csgdef{Xendwraplinenumannotation@#1}{\textsuperscript}%
       
-  \newtoggle{Xendpagenumberonlyfirst@#1}%
-  \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
-  \newtoggle{Xendpagenumberonlyfirstintwo@#1}%
-  \csgdef{Xendsympagenum@#1}{}%
-  \csgdef{Xendinplaceofpagenumber@#1}{0pt}%
+      \newtoggle{Xendpagenumberonlyfirst@#1}%
+      \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
+      \newtoggle{Xendpagenumberonlyfirstintwo@#1}%
+      \csgdef{Xendsympagenum@#1}{}%
+      \csgdef{Xendinplaceofpagenumber@#1}{0pt}%
+
+      \csgdef{Xendtxtbeforenotes@#1}{}%
+      \newtoggle{Xendfirstnote@#1}%Not a hook, but used to apply Xendtxtbeforenotes 
   
 %    \end{macrocode}
 % End of endnotes declaration
@@ -14347,7 +14780,6 @@
   
   \newhookcommand@series{Xafternote}%
   \newhookcommand@series{Xparafootsep}
-  
   \newhookcommand@series@reload{Xwidth}{critical}%
   
   \ifundef{\Xhsize}%
@@ -14359,6 +14791,9 @@
     }%
     {}%
 \fi
+%    \end{macrocode}
+% Now, hooks for critical notes which also apply to crossreferencing and line numbering at the sides of the page. 
+%    \begin{macrocode}
 \newhooktoggle@series{Xlineflag}[appref,SEref]
 \newhookcommand@series{Xtwolines}[appref,SEref]
 \newhookcommand@series{Xmorethantwolines}[appref,SEref]
@@ -14367,6 +14802,8 @@
 \newhooktoggle@series{Xtwolinesbutnotmore}[appref,SEref]
 \newhooktoggle@series{Xtwolinesonlyinsamepage}[appref,SEref]
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
+\newhookcommand@series{Xlinenumannotationposition}[side,appref,SEref]%
+\newhookcommand@series{Xwraplinenumannotation}[side,ref,appref,SEref]%
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -14451,12 +14888,14 @@
 
   \newhookcommand@series{Xendhangindent}%
 
- \newhooktoggle@series{Xendpagenumberonlyfirst}%
- \newhooktoggle@series{Xendpagenumberonlyfirstifsingle}%
- \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
- \newhookcommand@series{Xendsympagenum}%
- \newhookcommand@series{Xendinplaceofpagenumber}%
+  \newhooktoggle@series{Xendpagenumberonlyfirst}%
+  \newhooktoggle@series{Xendpagenumberonlyfirstifsingle}%
+  \newhooktoggle@series{Xendpagenumberonlyfirstintwo}%
+  \newhookcommand@series{Xendsympagenum}%
+  \newhookcommand@series{Xendinplaceofpagenumber}%
   
+  \newhookcommand@series{Xendtxtbeforenotes}%
+
 \fi
 \newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendtwolines}[apprefwithpage,SErefwithpage]
@@ -14470,6 +14909,8 @@
 \newhookcommand@series{Xendlineprefixmore}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendsublinesep}[apprefwithpage,SErefwithpage]
 
+\newhookcommand@series{Xendlinenumannotationposition}[apprefwithpage,SErefwithpage]%
+\newhookcommand@series{Xendwraplinenumannotation}[apprefwithpage,SErefwithpage]%
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -14486,8 +14927,8 @@
 % \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
 \newcommand{\newhookarg@specific}[1]{%
-  \define@key[mac]{truefootnoteoption}{#1}{\global\def\linerangesep@{##1}}%When enabling footnote option
-  \define@key[mac]{falsefootnoteoption}{#1}{\global\undef\linerangesep@}%When 
+  \define@key[mac]{truefootnoteoption}{#1}{\csgdef{#1@}{##1}}%When enabling footnote option
+  \define@key[mac]{falsefootnoteoption}{#1}{\global\csundef{#1@}}%When disabling footnote option
 }
 %    \end{macrocode}
 % \end{macro}
@@ -14539,7 +14980,7 @@
 %
 % \begin{macro}{\doxtrafeet}
 % \protect\cs{doxtrafeet} is the code extending \protect\cs{@makecol} to cater for
-% the extra \macpackage feet. We have two categories of extra footnotes.
+% the extra \macpackage\ feet. We have two categories of extra footnotes.
 % By default, we order the footnote inserts so that the regular footnotes of \LaTeX\ are first,
 % then familiar familiar footnotes and finally 
 % the critical footnotes.
@@ -14898,12 +15339,14 @@
 %
 %
 % \begin{macro}{\zz@@@}
-% A convenience macro to zero three labeling counters in one go.
-% \changes{v0.2.1}{2003/08/26}{Minor change to \protect\cs{zz@@@}}
+% \begin{macro}{\zz@@@@}
+% Two convenience macros to zero three / four labeling counters in one go.
 %    \begin{macrocode}
 \newcommand*{\zz@@@}{000|000|000}% Set three counters to zero in one go
+\newcommand*{\zz@@@@}{000|000|000|000}% Set four counters to zero in one go
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\edlabel}
@@ -14930,7 +15373,7 @@
 % \changes{v0.2.1}{2003/08/26}{Tweaked \protect\cs{edlabel} to get correct page numbers}
 % \changes{v0.14.0}{2012/04/04}{Tweaked \protect\cs{edlabel} to get correct line number if the command is first element of a paragraph.}
 % \changes{v1.18.0}{2015/02/23}{\protect\cs{edlabel} is now defined only one time for both \eledmac and \eledpar}
-% \changes{v2.5.0}{2015/11/13}{Fix a bug when calling\protect\cs{edlabel} in a footnotes of the rightside}
+% \changes{v2.5.0}{2015/11/13}{Fix a bug when calling\protect\cs{edlabel} in a footnotes of the right side}
 %    \begin{macrocode}
 \newcommand*{\edlabel}[1]{%
   \leavevmode%
@@ -14938,14 +15381,14 @@
   \ifboolexpr{bool{ledRcol} or bool{ledRcol@}}{%
     \ifXnote@%
      \protected@write\@auxout{}%
-      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1}}%
+      {\string\l@dmake@labelsR\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartR|{#1}}%
       \ifdef{\hypertarget}%
         {\Hy@raisedlink{\hypertarget{#1}{}}}%
         {}%
     \else%
       \write\linenum@outR{\string\@lab}%
       \ifx\labelref@listR\empty%
-        \xdef\label@refs{\zz@@@}%
+        \xdef\label@refs{\zz@@@@}%
       \else%
         \gl@p\labelref@listR\to\label@refs%
       \fi%
@@ -14967,13 +15410,13 @@
     \ifXnote@%
        \ifl@dpairing%pstart or pstartL?
          \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartL|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
         \else%
           \protected@write\@auxout{}%
-          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1}}%
+          {\string\l@dmake@labels\space\thepage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstart|{#1}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1}{}}}%
             {}%
@@ -14981,7 +15424,7 @@
     \else%
       \write\linenum@out{\string\@lab}%
       \ifx\labelref@list\empty%
-        \xdef\label@refs{\zz@@@}%
+        \xdef\label@refs{\zz@@@@}%
       \else%
         \gl@p\labelref@list\to\label@refs%
       \fi%
@@ -15050,18 +15493,18 @@
 % The initial use of \protect\cs{newcommand} is to catch if \protect\cs{l@dmake@labels}
 % has been previously defined (by a class or package).
 %
-% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ pstart number, \verb+#6+ label.
+% \verb+#1+ page number, \verb+#2+ line number, \verb-#3- sub-line number, \verb+#4+ absolute line number, \verb+#5+ line number annotation, \verb+#6+ pstart number, \verb+#7+ label.
 %
 %    \begin{macrocode}
 \newcommand*{\l@dmake@labels}{}
-\def\l@dmake@labels#1|#2|#3|#4|#5|#6{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+\def\l@dmake@labels#1|#2|#3|#4|#5|#6|#7{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#7\endcsname%
     \relax%
   \else%
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#7}%
   \fi
-  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\relax}%
+  \global\providetoggle{label@#7@ledRcol}%False is the default value of this toggle, which tells us whether a label is linked to the right or left side
+  \csgdef{the@label\csuse{XR@prefix}#7}{#1|#2|#3|#4|#5|#6|\relax}%
   \ignorespaces}
 
 %    \end{macrocode}
@@ -15073,7 +15516,7 @@
 %
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \def\l@dmake@labels#1|#2|#3|#4|#5|#6{}%
+  \def\l@dmake@labels#1|#2|#3|#4|#5|#6|#7{}%
 }
 
 %    \end{macrocode}
@@ -15100,17 +15543,24 @@
 \newcommand*{\@lab}{%
   \ifledRcol
     \xright@appenditem{\linenumr@p{\line@numR}|%
-      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|\the\absline@numR}%
+      \ifsublines@ \sublinenumr@p{\subline@numR}\else 0\fi|%
+      \the\absline@numR|%
+      \current@annot%
+      }%
       \to\labelref@listR
   \else
-    \xright@appenditem{\linenumr@p{\line@num}|%
-      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|\the\absline@num}%
+    \xright@appenditem{%
+      \linenumr@p{\line@num}|%
+      \ifsublines@ \sublinenumr@p{\subline@num}\else 0\fi|%
+      \the\absline@num|%
+      \current@annot%
+      }%
       \to\labelref@list
   \fi}
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\applabel}
-% \protect\cs{applabel}, if called in \protect\cs{edtext} will insert automatically both a start and an end label for the current edtext lines.
+% \protect\cs{applabel}, if called in \protect\cs{edtext} will insert automatically both a starting and an ending label for the current edtext lines.
 %    \begin{macrocode}
 \newcommand*{\applabel}[1]{%
   \if@edtext@secondarg@% 
@@ -15124,9 +15574,10 @@
          \led@warn@DuplicateLabel{#1 (applabel)}%
        }%
 %    \end{macrocode}
-% Parse the \protect\cs{edtext} line numbers.
+% Parse the \protect\cs{edtext} line numbers and annotations.
 %    \begin{macrocode}      
      \expandafter\l@dp@rsefootspec\l@d@nums|%
+     \expandafter\parse@annot\l@current@annot|%
 %    \end{macrocode}
 % Use the \LaTeX\  standard hack for label. 
 %    \begin{macrocode}
@@ -15136,29 +15587,29 @@
 %    \begin{macrocode}
       \ifledRcol%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartR|{#1:start}}%
+          {\string\l@dmake@labelsR\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartR|{#1:start}}%
         \ifdef{\hypertarget}%
           {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
           {}%
         \protected@write\@auxout{}%
-          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub|\the\c@pstartR|{#1:end}}%
+          {\string\l@dmake@labelsR\space\l@dparsedendpage|\l@dparsedendline||\l@dparsedendsub||\annot@end|\the\c@pstartR|{#1:end}}%
       \else%
         \ifl@dpairing%pstart or pstartL?
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstartL|{#1:start}}%
+            {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstartL|{#1:start}}%
           \ifdef{\hypertarget}%
             {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
             {}%
           \protected@write\@auxout{}%
-            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstartL|{#1:end}}%
+            {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\annot@end|\the\c@pstartL|{#1:end}}%
          \else%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\the\c@pstart|{#1:start}}%
+              {\string\l@dmake@labels\space\l@dparsedstartpage|\l@dparsedstartline|\l@dparsedstartsub||\annot@start|\the\c@pstart|{#1:start}}%
             \ifdef{\hypertarget}%
               {\Hy@raisedlink{\hypertarget{#1:start}{}}}%
               {}%
             \protected@write\@auxout{}%
-              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\the\c@pstart|{#1:end}}%
+              {\string\l@dmake@labels\space\l@dparsedendpage|\l@dparsedendline|\l@dparsedendsub||\annot@end|\the\c@pstart|{#1:end}}%
          \fi%
       \fi%
 %    \end{macrocode}
@@ -15198,7 +15649,7 @@
 % \begin{macro}{\wrap@edcrossref}
 % \changes{v1.12.1}{2014/08/06}{Fix spurious spaces.}
 % \changes{v1.12.7}{2014/09/07}{\protect\cs{wrap@edcrossref} is now robust}
-% \protect\cs{wrap@edcrossref} is called around all \macpackage crossref commands, except those which start with x. 
+% \protect\cs{wrap@edcrossref} is called around all \macpackage\ crossref commands, except those which start with x. 
 % It adds the hyperlink.
 %    \begin{macrocode}
 \newrobustcmd{\wrap@edcrossref}[2]{%
@@ -15275,17 +15726,35 @@
 %
 % \begin{macro}{\xabslineref}
 % If the specified label exists, \cs{xabslineref} gives its absolute line number.
-% That is used usually only by some \reledmac\ internal macros.
+% This is generally used only by \macpackage\ internal macros.
 %    \begin{macrocode}
 \newcommand*{\xabslineref}[1]{\l@dgetref@num{4}{#1}}%
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\annotationref}
+% \begin{macro}{\xannotationref}
+% If the specified label exists, \cs{edannotationref} gives the line number annotation with which it is associated.
+%    \begin{macrocode}
+\newcommand*{\annotationref}[1]{%
+  \l@dref@undefined{#1}%
+  \wrap@edcrossref{#1}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@ref}{%
+      \l@dgetref@num{5}{#1}%
+    }%
+  }%
+}%
+\newcommand*{\xannotationref}[1]{%
+  \l@dgetref@num{5}{#1}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\pstarteref}
 % \begin{macro}{\xpstartref}
 % If the specified label exists, \protect\cs{pstartref} gives its pstart number.
 %    \begin{macrocode}
-\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{5}{#1}}}%
-\newcommand*{\xpstartref}[1]{\l@dgetref@num{5}{#1}}%
+\newcommand*{\pstartref}[1]{\l@dref@undefined{#1}\wrap@edcrossref{#1}{\l@dgetref@num{6}{#1}}}%
+\newcommand*{\xpstartref}[1]{\l@dgetref@num{6}{#1}}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -15293,7 +15762,7 @@
 % \begin{macro}{\xflagref}
 % \cs{xflagref} finds the side flag of any ref defined with \cs{edlabel}.
 %    \begin{macrocode}
-\newcommand*{\xflagref}[1]{\l@dgetref@num{6}{#1}}%
+\newcommand*{\xflagref}[1]{\l@dgetref@num{7}{#1}}%
 %    \end{macrocode}
 % \end{macro}
 % The next three macros are used by the referencing commands above,
@@ -15339,22 +15808,23 @@
 % penultimate line of \protect\cs{l@dgetref@num}, to
 % keep the `switch-number' separate from the reference numbers.  This
 % \verb"|" is used as another parameter delimiter by \protect\cs{l@dlabel@parse},
-% which extracts the appropriate number from its first arguments.
+% which extracts the appropriate number from its first argument.
 % The \verb"|"-delimited arguments consist of the expanded label-macro
 % (three reference numbers), followed by the switch-number (1,
-% 2, 3, 4 or 5) which defines which of the earlier six numbers to
-% pick out. (It was earlier given as the first argument of
+% 2, 3, 4, 5, 6) which defines which of the former seven numbers to
+% extract. (It was given earlier as the first argument of
 % \protect\cs{l@dgetref@num}.)
 %    \begin{macrocode}
 \newcommand*{\l@dlabel@parse}{}
-\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7{%
-  \ifcase #7%
+\def\l@dlabel@parse#1|#2|#3|#4|#5|#6|#7|#8{%
+  \ifcase #8%
   \or #1%
   \or #2%
   \or #3%
   \or #4%
   \or #5%
   \or #6%
+  \or #7%
   \fi}
 %    \end{macrocode}
 % \end{macro}
@@ -15377,22 +15847,44 @@
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
   {%
-   \expandafter\ifx\csname the@label#1\endcsname \relax%
-     \expandafter\let\csname the@@label#1\endcsname\zz@@@%
+   \expandafter\ifx\csname the@label#1\endcsname\relax%
+      \let\@tempa\zz@@@%
+      \def\@tempc{}%
     \else%
-      \expandafter\def\csname the@@label#1\endcsname{\l@dgetref@num{1}{#1}|\l@dgetref@num{2}{#1}|\l@dgetref@num{3}{#1}}%
+      \def\@tempa{%
+        \l@dgetref@num{1}{#1}|%
+        \l@dgetref@num{2}{#1}|%
+        \l@dgetref@num{3}{#1}%
+      }%
+      \edef\@tempc{%
+        \l@dgetref@num{5}{#1}%
+      }%
    \fi%
-   \expandafter\ifx\csname the@label#2\endcsname \relax%
-     \expandafter\let\csname the@@label#2\endcsname\zz@@@%
+   \expandafter\ifx\csname the@label#2\endcsname\relax%
+      \let\@tempb\zz@@@%
+      \def\@tempd{}%
    \else%
-      \expandafter\def\csname the@@label#2\endcsname{\l@dgetref@num{1}{#2}|\l@dgetref@num{2}{#2}|\l@dgetref@num{3}{#2}}%
+      \def\@tempb{%
+        \l@dgetref@num{1}{#2}|%
+        \l@dgetref@num{2}{#2}|%
+        \l@dgetref@num{3}{#2}%
+      }%
+      \edef\@tempd{%
+        \l@dgetref@num{5}{#2}%
+      }%
    \fi%
-   \letcs{\@tempa}{the@@label#1}%
-   \letcs{\@tempb}{the@@label#2}%
-   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@start{#1}}%
-   \global\appto\@beforeinsertofthisedtext{\def\@this@crossref@end{#2}}%
-   \linenum{\@tempa|%
-    \@tempb}}}%
+   \global\appto\@beforeinsertofthisedtext{%
+     \def\@this@crossref@start{#1}%
+   }%
+   \global\appto\@beforeinsertofthisedtext{%
+     \def\@this@crossref@end{#2}%
+   }%
+   \linenum{\@tempa|\@tempb}%
+   \edef\@tempe{\@tempc|\@tempd}%
+   \expandafter\lineannot\expandafter{\@tempe}%
+ }%
+}%
+
 
 %    \end{macrocode}
 % \end{macro}
@@ -15438,6 +15930,12 @@
 \newtoggle{Xlineflag@SEref}%
 \toggletrue{Xlineflag@SEref}%%Here exception
 
+\def\Xlinenumannotationposition@appref{after}%
+\def\Xlinenumannotationposition@SEref{after}%
+
+\def\Xwraplinenumannotation@appref{\textsuperscript}%
+\def\Xwraplinenumannotation@SEref{\textsuperscript}%
+
 \def\Xendtwolines@apprefwithpage{}%
 \def\Xendtwolines@SErefwithpage{}%
 
@@ -15476,6 +15974,11 @@
 \newtoggle{Xendlineflag@SErefwithpage}
 \toggletrue{Xendlineflag@SErefwithpage}%Here, exception
 
+\def\Xendlinenumannotationposition@apprefwithpage{after}%
+\def\Xendlinenumannotationposition@apprefwithpage@SErefwithpage{after}%
+
+\def\Xendwraplinenumannotation@apprefwithpage{\textsuperscript}%
+\def\Xendwraplinenumannotation@SErefwithpage{\textsuperscript}%
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
@@ -15575,6 +16078,8 @@
    {%
     \def\@this@crossref@start{#2:start}%
     \def\@this@crossref@end{#2:end}%
+    \xdef\annot@start{\xannotationref{#2:start}}%
+    \xdef\annot@end{\xannotationref{#2:end}}%
     \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
     \undef\@this@crossref@end%
     \undef\@this@crossref@start%   
@@ -15718,7 +16223,7 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \section{Side notes}
+% \section{Sidenotes}
 %
 %    Regular \protect\cs{marginpar}s do not work inside numbered text\,---\,they
 % do not produce any note but do put an extra unnumbered blank line into
@@ -15747,9 +16252,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-%  We provide side notes as replacement for \protect\cs{marginpar} in numbered text.
-% \changes{v0.5.0}{2004/04/03}{Added left and right side notes}
-% \changes{v0.5.1}{2004/04/10}{Added moveable side note}
+%  We provide sidenotes as replacement for \protect\cs{marginpar} in numbered text.
+% \changes{v0.5.0}{2004/04/03}{Added left and right sidenotes}
+% \changes{v0.5.1}{2004/04/10}{Added moveable sidenote}
 %
 % \begin{macro}{\sidenote@margin}
 % \begin{macro}{\sidenotemargin}
@@ -15757,7 +16262,7 @@
 % These are the sidenote equivalents to \protect\cs{line@margin} and \protect\cs{linenummargin}
 % for specifying which margin. The default is the right margin (opposite to
 % the default for line numbers).
-% \protect\cs{l@dgetsidenote@margin} returns the number associated to side note margin:
+% \protect\cs{l@dgetsidenote@margin} returns the number associated to sidenote margin:
 % \begin{description}
 %   \item[left:] 0
 %    \item[right:] 1
@@ -15980,7 +16485,7 @@
 % \begin{macro}{\vl@disnote}
 % \begin{macro}{\vl@dosnote}
 % Put the left/right text into boxes, but just save the moveable text.
-% \protect\cs{l@dcsnotetext}, \protect\cs{l@dcsnotetext@l} and \protect\cs{l@dcsnotetext@r} are \protect\package{etoolbox}'s  lists which will store the content of side notes.
+% \protect\cs{l@dcsnotetext}, \protect\cs{l@dcsnotetext@l} and \protect\cs{l@dcsnotetext@r} are \protect\package{etoolbox}'s  lists which will store the content of sidenotes.
 % We store the content in lists, because we need to loop later on them, in case many sidenote co-exist for the same line.
 % That is there some special test to do, in order to:
 % \begin{itemize}
@@ -17037,11 +17542,11 @@
 % \begin{macro}{\ifinstanza}
 % The macro \protect\cs{@hangingsymbol} is used to insert a symbol on each hanging of verses. It is set by user level macro \protect\cs{sethangingsymbol}.
 %
-% For example,  in french typographie the symbol is `['. We obtain it by the next code:
+% For example, in French typography, the symbol is `['. We obtain it by means of the following code:
 %\begin{verbatim}
 %\sethangingsymbol{[\,}
 %\end{verbatim}
-% The \protect\cs{ifinstanza} boolean is used to be sure that we are in a stanza part.
+% The \protect\cs{ifinstanza} boolean is used to ensure that we are in a stanza part.
 %    \begin{macrocode}
 \def\@hangingsymbol{}
 \newcommand*{\sethangingsymbol}[1]{%
@@ -18133,7 +18638,7 @@
 % \end{macro}
 % \begin{macro}{\disable@sidenotes}
 % \begin{macro}{\restore@sidenotes}
-% The sames, for side notes.
+% The same for sidenotes.
 %    \begin{macrocode}
 \newcommand{\disable@sidenotes}{%
   \let\@@ledrightnote\ledrightnote%
@@ -18151,17 +18656,43 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\disable@endnotes}
+% \begin{macro}{\restore@endnotes}
+% The same for endnotes.
+%    \begin{macrocode}
+\newcommand{\disable@endnotes}{%
+  \unless\ifnoend@%
+    \def\do##1{%
+        \csletcs{##1@@endnote}{##1endnote}%
+        \expandafter\renewcommand \csname ##1endnote\endcsname[1]{}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+\newcommand{\restore@endnotes}{%
+  \unless\ifnofamiliar@%
+    \def\do##1{%
+        \csletcs{##1endnote}{##1@@endnote}%
+    }%
+    \dolistloop{\@series}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\disable@notes}
 % \begin{macro}{\restore@notes}
-% Disable/restore side and familiar notes.
+% Disable/restore side, familiar and end notes.
 %    \begin{macrocode}
 \newcommand{\disable@notes}{%
   \disable@sidenotes%
   \disable@familiarnotes%
+  \disable@endnotes%
 }%
 \newcommand{\restore@notes}{%
   \restore@sidenotes%
   \restore@familiarnotes%
+  \restore@endnotes%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -19326,7 +19857,7 @@
 % \subsection{General overview}
 % The system of \protect\cs{eledxxxx} commands to section text work like this:
 % \begin{enumerate}
-%     \item When one of these commands is called, \macpackage  writes to an auxiliary files:
+%     \item When one of these commands is called, \macpackage\  writes to an auxiliary files:
 %     \begin{itemize}
 %           \item The section level.
 %           \item The section title.
@@ -19334,7 +19865,7 @@
 %           \item The pstart where the command is called.
 %           \item If we have starred version or not.
 %     \end{itemize}
-%   \item \macpackage adds the title of the section to pstart, as  normal content. This is to enable critical notes.
+%   \item \macpackage\ adds the title of the section to pstart, as  normal content. This is to enable critical notes.
 %   \item When \LaTeX\ is run a other time, this file is read. That:
 %    \begin{itemize}
 %         \item Adds the pstart number to a list of pstarts where a sectioning command is used.
@@ -19371,7 +19902,7 @@
 % \subsection{Auxiliary commands}
 % \begin{macro}{\print@leftmargin@eledsection}
 % \begin{macro}{\print@rightmargin@eledsection}
-% \protect\cs{print@leftmargin@eledsection} and \protect\cs{print@rightmargin@eledsection} are added by \macpackage inside the code of sectioning command, in order to affix lines numbers.
+% \protect\cs{print@leftmargin@eledsection} and \protect\cs{print@rightmargin@eledsection} are added by \macpackage\ inside the code of sectioning command, in order to affix lines numbers.
 % They include tests for RTL languages. 
 %    \begin{macrocode}
 \def\print@rightmargin@eledsection{%
@@ -19996,7 +20527,7 @@
 % \section{Long verse: prevents being separated by a page break}
 % \begin{macro}{\iflednopbinverse}
 % The \protect\cs{lednopbinverse} boolean is set to false by default.
-% If set to true, \macpackage will automatically prevent page breaks inside verse.
+% If set to true, \macpackage\ will automatically prevent page breaks inside verse.
 % The declaration is made at the beginning of the file, because it is used as a package option.
 % \end{macro}
 % \begin{macro}{\check@pb@in@verse}
@@ -20028,7 +20559,7 @@
 % The \package{hyperref} package provides a \cs{Hy@raisedlink} command, to be used to add an anchor to the top of a line and not to the bottom of it.\footnote{\url{http://tex.stackexchange.com/a/17138/7712}.}
 %
 % However, this command disrupts the line breaking mechanism when it is called before any word.
-% This is why \macpackage defines \cs{Hy@raisedlink@left} that is called to the left of words, at the beginning of \cs{edtext} or inside the \cs{edlabel} commands.\footnote{The code is inspired by an answer given by @unbonpetit.
+% This is why \macpackage\ defines \cs{Hy@raisedlink@left} that is called to the left of words, at the beginning of \cs{edtext} or inside the \cs{edlabel} commands.\footnote{The code is inspired by an answer given by @unbonpetit.
 % Thanks to him.
 % \url{http://texnique.fr:80/osqa/questions/781/hyraisedlink-perturbe-la-maniere-dont-se-fait-la-coupure-de-ligne/801}.} 
 % 

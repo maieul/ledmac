@@ -322,6 +322,7 @@
 % \changes{v2.20.0}{2017/08/17}{Fix compatibility between \protect\option{continuousnumberingwithcolumns} and \protect\cs{numberpstartfalse}.}
 % \changes{v2.20.1}{2017/08/23}{Fix bug with \protect\option{continuousnumberingwithcolumns} when left column and right column have not the same size.}
 % \changes{v2.20.2}{2017/08/31}{Fix bugs with \protect\option{continuousnumberingwithcolumns} when going to a new page}
+% \changes{v2.21.0}{2017/11/11}{Add compatibility with new features of \protect\reledmac 2.26.0}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -728,8 +729,8 @@
 %
 %The aim of the default setting is twofold:
 %\begin{itemize}
-%\item To ensure that left pages contain what is to be on left sides and
-%that right pages contain what is to be on right sides.
+%\item To ensure that left pages contain what is to be on left side and
+%that right pages contain what is to be on right side.
 %\item To ensure that every chunk starts on the page that is facing its
 %corresponding chunk.
 %\end{itemize}
@@ -1107,6 +1108,13 @@
 % \linenumOnlyPagesForColumnsR{}
 % \end{verbatim}
 % Note that these settings only apply when we are typesetting columns (as, if we are not typesetting columns, the \enquote{inner} and \enquote{outer} setting of \cs{linenummargin} and \cs{linenummarginR} are enough). 
+%
+% \DescribeMacro{\linenumberLevenifblanktrue}
+% \DescribeMacro{\linenumberRevenifblanktrue}
+% By default, when a blank line is printed on one side, no line number is printed for the sake of synchronizing with the other side, .
+% However, line numbers can be printed for blank lines as well.
+% Use \cs{linenumberLevenifblanktrue} to enable this on the left side and \cs{linenumberRevenifblanktrue} for the right side.
+%
 % \subsection{Line flag}
 % \DescribeMacro{\setRlineflag}\label{Rlineflag}
 % A ``R''  is appended to the line numbers of the
@@ -1114,12 +1122,6 @@
 % This may be useful for parallel columns but for parallel pages it might
 % be more appropriate to redefine it using \protect\cs{setRlineflag}\marg{flag}.
 % Use \verb?\setRlineflag{}? to empty it.
-%
-% \DescribeMacro{\linenumberLevenifblanktrue}
-% \DescribeMacro{\linenumberRevenifblanktrue}
-% By default, when a blank line is printed on one side, in order to synchronize with the other side, no line number is printed.
-% However, you can decide to print them for blank lines, also.
-% Use \cs{linenumberLevenifblanktrue} to enable it on the left side, and \cs{linenumberRevenifblanktrue} to enable it on right side.
 %
 % \subsection{Chunks}
 % \DescribeMacro{\pstart}
@@ -1366,7 +1368,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/08/31 v2.20.2 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2017/11/11 v2.21.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2358,12 +2360,24 @@
   \kern\linenumsep 
   \l@dlinenumR}
 \newcommand*{\l@dlinenumR}{%
-  \numlabfont\linenumrepR{\line@numR}\@Rlineflag%
+  \numlabfont%
+  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annotR@\the\absline@numR @\the\section@numR}%
+      }%
+  }{}%
+  \linenumrepR{\line@numR}\@Rlineflag%
   \ifsublines@R
     \ifnum\subline@numR>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
     \fi
-  \fi}
+  \fi%
+  \ifdefstring{\Xlinenumannotationposition@side}{after}{%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annotR@\the\absline@numR @\the\section@numR}%
+      }%
+  }{}%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -2406,6 +2420,7 @@
 % \begin{macro}{\insertlines@listR}
 % \begin{macro}{\actionlines@listR}
 % \begin{macro}{\actions@listR}
+% \begin{macro}{\annot@listR}
 % Now we can define the list macros that will be created from the
 % line-list file.  They are directly analogous to the left text ones.
 % The full list of action codes and their meanings is given in the \macpackage 
@@ -2418,8 +2433,9 @@
 \list@create{\insertlines@listR}
 \list@create{\actionlines@listR}
 \list@create{\actions@listR}
-
+\list@create{\annot@listR}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -2513,6 +2529,7 @@
 %    \begin{macrocode}
 \newcommand{\@nl@regR}{%
   \ifx\l@dchset@num\relax \else
+    \reset@current@annot%
     \advance\absline@numR \@ne
     \csgdef{l@dchset@num@R\the\absline@numR}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
@@ -2759,10 +2776,12 @@
     \let\@lab=\relax
     \let\@lemma=\relax
     \let\@sw\@gobblethree%
+    \let\store@annot@to@absline\@gobble%
     #2
     \global\endpage@num=\page@numR
     \global\endline@num=\line@numR
     \global\endsubline@num=\subline@numR
+    \global\let\endcurrent@annot=\current@annot%
   \endgroup
 %    \end{macrocode}
 %
@@ -2774,6 +2793,8 @@
        \ifsublines@R \the\subline@numR \else 0\fi|%
        \the\endpage@num|\the\endline@num|%
        \ifsublines@R \the\endsubline@num \else 0\fi}\to\line@listR
+    \xright@appenditem%
+      {\current@annot|\endcurrent@annot}\to\annot@list%
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
@@ -4778,7 +4799,7 @@
 % which replaces \protect\cs{print@Xnotes} inside \protect\cs{Pages}. 
 % Here is how we proceed\footnote{See \url{http://tex.stackexchange.com/a/230332/7712}.}:
 % \begin{itemize}
-%    \item If notes are to be printed in both sides, we just proceed the usual way: print the foot starts for the series, then the foot group.
+%    \item If notes are to be printed on both sides, we just proceed the usual way: print the foot starts for the series, then the foot group.
 %    \item If notes are to be printed in the left side, we do these prints only for even pages ; if notes are to be printed in the right side, we do these prints only for odd pages.
 %    \item However, that is not enough. Because the problem does not only consists in printing notes in any particular page. It is also not to put aside room for notes in the pages where we do not want to print them.
 %    To take an example: if some note in the left side is too long by 160pt to be printed in full in the left page, we do not want to put aside 160pt a space for it in the following right page. 
@@ -5032,18 +5053,18 @@
 % \changes{v2.6.0}{2015/11/13}{\protect\cs{@Rlineflag} is not stored directly after the line number, but as a fith argument of \protect\cs{the@labelX}. Can be retrieved by \protect\cs{xflagref}.}
 %
 %    \begin{macrocode}
-\def\l@dmake@labelsR#1|#2|#3|#4|#5|#6{%
-  \expandafter\ifx\csname the@label\csuse{XR@prefix}#6\endcsname%
+\def\l@dmake@labelsR#1|#2|#3|#4|#5|#6|#7{%
+  \expandafter\ifx\csname the@label\csuse{XR@prefix}#7\endcsname%
     \relax%
   \else%
-    \led@warn@DuplicateLabel{\csuse{XR@prefix}#6}%
+    \led@warn@DuplicateLabel{\csuse{XR@prefix}#7}%
   \fi%
-  \expandafter\gdef\csname the@label\csuse{XR@prefix}#6\endcsname{#1|#2|#3|#4|#5|\@Rlineflag}%
-  \global\providetoggle{label@#6@ledRcol}%False is the default value of this toggle, which tell us if a label is linked to a right or a left side
-  \global\toggletrue{label@#6@ledRcol}%
+  \csgdef{the@label\csuse{XR@prefix}#7}{#1|#2|#3|#4|#5|#6|\@Rlineflag}%
+  \global\providetoggle{label@#7@ledRcol}%False is the default value of this toggle, which tells us whether a label is linked to the right or left side
+  \global\toggletrue{label@#7@ledRcol}%
   \ignorespaces}
 \AtBeginDocument{%
-  \def\l@dmake@labelsR#1|#2|#3|#4|#5|#6{}%
+  \def\l@dmake@labelsR#1|#2|#3|#4|#5|#6|#7{}%
 }
 
 %    \end{macrocode}
@@ -5062,7 +5083,7 @@
 % \end{macro}
 %
 %
-% \section{Side notes}
+% \section{Sidenotes}
 %
 %    Regular \verb?\marginpar?s do not work inside numbered text --- they
 % do not produce any note but do put an extra unnumbered blank line into
