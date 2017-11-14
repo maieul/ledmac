@@ -32,6 +32,7 @@ def diff_png(basename):
         print ("\x1b[31mDeleted files\x1b[0m")
         print ("\x1b[31m"+str(files_deleted)+"\x1b[0m")
 
+    erreurs = []
     for file in news & olders:
         old = "png/" + file
         new = "export/" + file
@@ -39,8 +40,11 @@ def diff_png(basename):
         result = subprocess.call(command,shell=True,stdout=subprocess.PIPE)
 
         if result !=0:
-            print ("\x1b[31mFile " + file + " has changed\x1b[0m")
-
+            erreur = "\x1b[31mFile " + file + " has changed\x1b[0m"
+            print (erreur)
+            erreurs.append(erreur)
+    for i in erreurs:
+        print (i)
 
 
 def export_png(filename,basename):
