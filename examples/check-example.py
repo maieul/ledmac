@@ -8,8 +8,7 @@ import os
 import subprocess
 import argparse
 parser = argparse.ArgumentParser()
-
-
+erreurs = []
 
 directory_files = os.listdir(".")
 
@@ -17,7 +16,7 @@ def diff_png(basename):
     '''Produce a diff between
     the png stored in png folder (older)
     and the png in export folder (new)'''
-
+    global erreurs
     print ("Check change for " + basename)
     olders = set([x for x in os.listdir('png') if basename in x])
     news = set([x for x in os.listdir('export') if basename in x])
@@ -32,7 +31,6 @@ def diff_png(basename):
         print ("\x1b[31mDeleted files\x1b[0m")
         print ("\x1b[31m"+str(files_deleted)+"\x1b[0m")
 
-    erreurs = []
     for file in news & olders:
         old = "png/" + file
         new = "export/" + file
@@ -43,8 +41,6 @@ def diff_png(basename):
             erreur = "\x1b[31mFile " + file + " has changed\x1b[0m"
             print (erreur)
             erreurs.append(erreur)
-    for i in erreurs:
-        print (i)
 
 
 def export_png(filename,basename):
@@ -78,6 +74,7 @@ def _main_():
         #List all the files on the current directory, and check
         for filename in directory_files:
             one_file(filename)
-
+    for e in erreurs:
+        print (e)
 
 _main_()
