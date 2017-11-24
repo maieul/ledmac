@@ -1,4 +1,4 @@
-Issue can be opened in English or in French (I prefer in french). Please fill this form.
+Issue can be opened in English or in French (I prefer in French). Please fill this form.
 
 # Version of reledmac / reledpar
 
