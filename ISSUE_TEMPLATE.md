@@ -8,7 +8,7 @@ Issue can be opened in English or in French (I prefer in french). Please fill th
 
 # Does the problem happens both in parallel typesetting and normal typesetting?
 
-# Minimal Working Exemple
+# Minimal Working Example
 
 Please provide a [MWE](http://minimalbeispiel.de/mini-en.html). 
 
