@@ -2,8 +2,7 @@ Issue can be opened in English or in French (I prefer in French). Please fill th
 
 # Version of reledmac / reledpar
 
-# Does the problem happen recently? Precise in which version the problem didn't exist.
-
+# If this is a newly introduced problem, please indicate the last working version of the package(s)
 # Does the problem happen only when combining with some packages?
 
 # Does the problem happens both in parallel typesetting and normal typesetting?
