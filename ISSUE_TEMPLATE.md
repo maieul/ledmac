@@ -11,6 +11,7 @@ Issue can be opened in English or in French (I prefer in French). Please fill th
 # Minimal Working Example
 
 Please provide a [MWE](http://minimalbeispiel.de/mini-en.html). 
+In  case where the problem happens both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting (because your MWE must be _Minimal_). 
 
 ```` 
 Type your MWE HERE
