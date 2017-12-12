@@ -1,4 +1,5 @@
 Issue can be opened in English or in French (I prefer in French). Please fill this form.
+Please open one issue by problem, and not a global issue for multiple problems. 
 
 # Version of reledmac / reledpar
 
