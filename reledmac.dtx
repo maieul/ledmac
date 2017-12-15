@@ -494,6 +494,8 @@
 % \changes{v2.26.0}{2017/11/11}{Fix bug in \protect\cs{xpstartref}}
 % \changes{v2.26.0}{2017/11/11}{Add a mechanism for annotation of stanza line numbering}
 % \changes{v2.26.1}{2017/11/26}{Fix bug with \protect\cs{linenumberannotation}}
+% \changes{v2.26.2}{2017/12/20}{Fix bug with \protect\cs{Xgroupbyline} and optional argument of critical footnotes.}
+% \changes{v2.26.2}{2017/12/20}{Fix bug with \protect\cs{Xgroupbyline} for the series after the first one.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4174,7 +4176,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/11/26 v2.26.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2017/12/20 v2.26.2 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9676,12 +9678,13 @@
 % \end{macro}
 %
 % \begin{macro}{\add@Xgroupbyline}
-% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, to be inserted in one block.
+% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, in order to be inserted later in one block.
 % This insertion in one block is made by \cs{add@Xgroupbyline}.
 %    \begin{macrocode}
 \newcommand{\add@Xgroupbyline}{%
   \unless\ifnocritical@%
     \def\do##1{%Looping on the series
+      \let\olddo\do%Save the old \do macro, that is this macro itself!
       \def\do####1{%Looping on the ##1@forinserting command
          \ifcsdef{##1@forinserting@####1}{%
            \X@beforeinsertion{##1}%
@@ -9715,6 +9718,7 @@
         \dolistcsloop{##1@forinserting}%
       }{}%
       \global\csundef{##1@forinserting}%
+      \let\do\olddo%Restore old do
       }%
     \dolistloop{\@series}%
   \fi%
@@ -11913,46 +11917,29 @@
 \newcommand{\prepare@Xgroupbyline}[3]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
     \l@dparsefootspec#2%
-    \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hookarg@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \csgappto%
+    {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
     {%
-      \csgappto%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
-          \ifcsempty{Xsymlinenum@#1}%
-            {\csuse{Xparafootsep@#1}}%
-            {}%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
-    }%
-    {%
-      \csdef%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
+      \ifcsempty{Xsymlinenum@#1}%
+      {\csuse{Xparafootsep@#1}}%
+      {}%
+      #3{#1}{#2}%
+      \hskip\csuse{Xafternote@#1}\relax%
     }%
     \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
   }{%
-    \ifcsdef{#1@forinserting@all}{%
-      \csgappto%
-        {#1@forinserting@all}%
-        {%
-          \ifcsempty{Xsymlinenum@#1}%
-            {\csuse{Xparafootsep@#1}}%
-            {}%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
-    }%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@all}%
+    \add@hookarg@specific@to@cs{#1@forinserting@all}%
+    \csgappto%
+    {#1@forinserting@all}%
     {%
-      \csdef%
-        {#1@forinserting@all}%
-        {%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
+      \ifcsempty{Xsymlinenum@#1}%
+      {\csuse{Xparafootsep@#1}}%
+      {}%
+      #3{#1}{#2}%
+      \hskip\csuse{Xafternote@#1}\relax%
     }%
     \listcsgadd{#1@forinserting}{all}%
   }%
@@ -14920,6 +14907,7 @@
 %    \begin{macrocode}
 \newcommand{\newhooktoggle@specific}[1]{%
   \newtoggle{#1@}%
+  \listgadd{\hooktoggle@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
 }
@@ -14929,10 +14917,64 @@
 % \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
 \newcommand{\newhookarg@specific}[1]{%
+  \listgadd{\hookarg@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}{\csgdef{#1@}{##1}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}{\global\csundef{#1@}}%When disabling footnote option
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\hooktoggle@specific}
+% \begin{macro}{\add@hooktoggle@specific@to@cs}
+% The \cs{add@hooktoggle@specific@to@cs} macro stores to a macro 
+% all the current values of hook toggle specific to a command.
+% It is useful for \cs{Xgroupbyline} option, which does not add immediately notes to the inserts list.
+% It uses the \cs{hooktoggle@specific} list.
+%    \begin{macrocode}
+\def\hooktoggle@specific{}%
+\newcommand{\add@hooktoggle@specific@to@cs}[1]{%
+  \def\do##1{%
+    \iftoggle{##1@}{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\toggletrue{##1@}}%
+      }{%
+        \csgdef{#1}{\toggletrue{##1@}}%
+      }%
+    }{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\togglefalse{##1@}}%
+      }{%
+        \csgdef{#1}{\togglefalse{##1@}}%
+      }%
+    }%
+  }%
+  \dolistloop{\hooktoggle@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\hookarg@specific}
+% \begin{macro}{\add@hookarg@specific@to@cs}
+% The same, but for optional argument of critical footnotes with assigned value.
+%    \begin{macrocode}
+\def\hookarg@specific{}%
+\newcommand{\add@hookarg@specific@to@cs}[1]{%
+  \def\do##1{%
+    \ifcsdef{#1}{%
+      \csxappto{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }{%
+      \csxdef{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }%
+  }%
+  \dolistloop{\hookarg@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % And now, we define some hooks specific to a note.
 %    \begin{macrocode}
