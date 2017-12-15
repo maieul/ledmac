@@ -9677,12 +9677,13 @@
 % \end{macro}
 %
 % \begin{macro}{\add@Xgroupbyline}
-% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, to be inserted in one block.
+% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, in order to be inserted later in one block.
 % This insertion in one block is made by \cs{add@Xgroupbyline}.
 %    \begin{macrocode}
 \newcommand{\add@Xgroupbyline}{%
   \unless\ifnocritical@%
     \def\do##1{%Looping on the series
+      \let\olddo\do%Save the old \do macro, that is this macro itself!
       \def\do####1{%Looping on the ##1@forinserting command
          \ifcsdef{##1@forinserting@####1}{%
            \X@beforeinsertion{##1}%
@@ -9716,6 +9717,7 @@
         \dolistcsloop{##1@forinserting}%
       }{}%
       \global\csundef{##1@forinserting}%
+      \let\do\olddo%Restore old do
       }%
     \dolistloop{\@series}%
   \fi%
