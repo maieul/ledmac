@@ -10,7 +10,6 @@ PDF:$(OBJ)
 
 %.test: %.pdf 
 	latexmk $*.tex
-	python3 check-example.py --filename=$<
 
 %.pdf: %.tex
 	latexmk $<
