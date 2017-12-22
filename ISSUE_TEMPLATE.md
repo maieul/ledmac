@@ -1,7 +1,7 @@
 Issue can be opened in English or in French (I prefer in French). Please fill this form.
 Please open one issue by problem, and not a global issue for multiple problems. 
 
-# Version of reledmac / reledpar
+# Version of reledmac / reledpar (if that is a devellopement version, please precise the branch)
 
 # If this is a newly introduced problem, please indicate the last working version of the package(s)
 # Does the problem happen only when combining with some packages?
