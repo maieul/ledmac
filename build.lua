@@ -1,6 +1,6 @@
 #!/usr/bin/env texlua
 module="reledmac"
-stdengine="xetex"
+stdengine="luatex"
 checkengines={"xetex","luatex"}
 checkruns=3
 kpse.set_program_name("kpsewhich")
