@@ -37,7 +37,7 @@ def diff_png(basename):
         command = "compare -metric AE " + old + " " + new + " /dev/null"
         result = subprocess.call(command,shell=True,stdout=subprocess.PIPE)
         if result !=0:
-            if result == 0:
+            if result == 1:
                 erreur = "\x1b[31mFile " + file + " has changed\x1b[0m"
             else: 
                 erreur = "\x1b[31mFile " + file + " bad result " + str(result) +"\x1b[0m"
