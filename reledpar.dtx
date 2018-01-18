@@ -3586,14 +3586,19 @@
 % that you set when the group for the \protect\cs{vbox} ends. 
 %    \begin{macrocode}
   \l@dzeropenalties%
-  \ifautopar\else%
+  \ifboolexpr{%
+    bool{autopar}%
+    and  bool{by@autopar}%
+  }%
+  {}%
+  {%
     \ifnumberpstart%
       \ifsidepstartnum%
         \else%
-         \thepstartL%
-        \fi%
-       \fi%
+        \thepstartL%
       \fi%
+    \fi%
+  }%m
   \@at@start@every@pstart%
   \hsize=\Lcolwidth%
   \numberedpar@true%
@@ -3629,11 +3634,13 @@
     }%
    \at@every@pstart@call%
 %    \end{macrocode}
+% Let \cs{by@autopar} to FALSE.
+%    \begin{macrocode}
+  \global\by@autoparfalse%
+%    \end{macrocode}
 % Gobble following space (automatically done if there is no optional argument)
 %    \begin{macrocode}
   \ignorespaces%
-%    \end{macrocode}
-%    \begin{macrocode}
   }
 %    \end{macrocode}
 % The same for right side.
@@ -3672,13 +3679,18 @@
   \fi%
   \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
     \l@dzeropenalties%
-    \ifautopar\else%
+    \ifboolexpr{%
+      bool{autopar}%
+      and  bool{by@autopar}%
+    }%
+    {}%
+    {%
       \ifnumberpstart%
         \ifsidepstartnum\else%
           \thepstartR%
-         \fi%
         \fi%
-       \fi%
+      \fi%
+    }%
   \@at@start@every@pstart%
   \hsize=\Rcolwidth%
   \numberedpar@true%
@@ -3710,6 +3722,7 @@
       }%
     }%
    \at@every@pstart@call%
+   \global\by@autoparfalse%
    \ignorespaces%
   }
 %    \end{macrocode}
