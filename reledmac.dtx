@@ -499,6 +499,7 @@
 % \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} and \protect\cs{Xparafootsep}.}
 % \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation} in parallel typesetting}
 % \changes{v2.26.3}{2018/01/06}{Fix bug added by v2.26.0 with notes in parallel typesetting}
+% \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic produced by \protect\cs{autopar}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4176,7 +4177,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/01/06 v2.26.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/01/18 v2.26.4 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8455,21 +8456,27 @@
         \global\@afterindenttrue%
       \fi%
     \fi%
-    \ifautopar\else%
-    \ifnumberpstart%
-      \ifinstanza\else%
-       \ifsidepstartnum\else%
-         \thepstart%
+    \ifboolexpr{%
+      bool{autopar}%
+      and  bool{by@autopar}%
+    }%
+    {}%
+    {%
+      \ifnumberpstart%
+        \ifinstanza\else%
+           \ifsidepstartnum\else%
+             \thepstart%
+           \fi%
         \fi%
-       \fi%
       \fi%
-     \fi%
+    }%
   \numberedpar@true%
   \iflabelpstart%
     \protected@edef\@currentlabel{\p@pstart\thepstart}%
   \fi%
   \l@dzeropenalties%
   \@at@start@every@pstart%
+  \global\by@autoparfalse%
   \ignorespaces%because not automatically ignored if an optional argument is used (classical TeX behavior for space after commands)
   }
 %    \end{macrocode}
@@ -8653,9 +8660,12 @@
 % that has been added for this paragraph. Then we start again with
 % \protect\cs{pstart}, restoring the indentation that we saved, and
 % locally change \protect\cs{par} so that it will do our \protect\cs{pend} for us.
+%
+% The boolean \cs{ifautopar} is set to TRUE while \cs{autopar} is enabled, and the \cs{ifby@autopar} is set to TRUE at each \cs{pstart}  automatically called by \cs{autopar} feature. A manually \cs{pstart} will have a \cs{ifby@autopar} set to false.
+% 
 %    \begin{macrocode}
 \newif\ifautopar
-\autoparfalse
+\newif\ifby@autopar%
 \newcommand*{\autopar}{
   \ifledRcol
     \ifnumberingR \else
@@ -8671,7 +8681,13 @@
   \autopartrue
   \everypar{\setbox0=\lastbox
     \endgraf \vskip-\parskip
-    \pstart \noindent \kern\wd0 \ifnumberpstart\ifinstanza\else\thepstart\fi\fi
+    \global\by@autopartrue%
+    \pstart \noindent \kern\wd0%
+    \ifnumberpstart%
+      \ifinstanza\else%
+        \thepstart%
+      \fi%
+    \fi%
     \let\par=\pend}%
   \ignorespaces}
 %    \end{macrocode}
