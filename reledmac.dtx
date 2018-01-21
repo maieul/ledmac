@@ -5114,36 +5114,8 @@
 % We define it using \cs{def} and not \cs{newcommand} because \LaTeX\ does not allow defining command whose name starts by \enquote{end} except if we are currently creating an environment, which is not the case here. 
 %    \begin{macrocode}
 \def\endnumbering{%
-  \ifnumbering
-    \global\numberingfalse
-    \normal@pars
-    \ifnum\l@dnumpstartsL=0%
-      \led@err@NumberingWithoutPstart%
-    \fi%
-    \ifl@dpairing
-      \global\pst@rtedLfalse
-    \else
-      \ifx\insertlines@list\empty\else
-        \global\noteschanged@true
-      \fi
-      \ifx\line@list\empty\else
-        \global\noteschanged@true
-      \fi
-    \fi
-    \ifnoteschanged@
-      \led@mess@NotesChanged
-    \fi
-  \else
-    \led@err@NumberingNotStarted
-  \fi
-  \autoparfalse  
-  \if@noeled@sec\else%
-    \immediate\closeout\eled@sectioning@out%
-  \fi%
-  \ifl@dpairing\else
-    \global\l@dnumpstartsL=\z@%
-    \endgroup
-  \fi
+  \endorpause@numbering%
+  \global\numberingfalse%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -5169,8 +5141,7 @@
   \ifautopar%
     \global\autopar@pausetrue%
   \fi%
-  \endnumbering%
-  \global\numberingtrue%
+  \endorpause@numbering%
 }%
 %    \end{macrocode}
 % The \protect\cs{resumenumbering} macro is a bit more involved, but not much.
@@ -5224,6 +5195,42 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+% \end{macro}
+% \begin{macro}{\endorpause@numbering}
+% The \cs{endorpause@numbering} makes all the thing commons to both \cs{pausenumbering} and \cs{endnumbering}.
+%    \begin{macrocode}
+\def\endorpause@numbering{%
+  \ifnumbering%
+    \normal@pars%
+    \ifnum\l@dnumpstartsL=0%
+      \led@err@NumberingWithoutPstart%
+    \fi%
+    \ifl@dpairing%
+      \global\pst@rtedLfalse%
+    \else%
+      \ifx\insertlines@list\empty\else%
+        \global\noteschanged@true%
+      \fi%
+      \ifx\line@list\empty\else%
+        \global\noteschanged@true%
+      \fi%
+    \fi%
+    \ifnoteschanged@%
+      \led@mess@NotesChanged%
+    \fi%
+  \else%
+    \led@err@NumberingNotStarted%
+  \fi%
+  \autoparfalse%
+  \if@noeled@sec\else%
+    \immediate\closeout\eled@sectioning@out%
+  \fi%
+  \ifl@dpairing\else%
+    \global\l@dnumpstartsL=\z@%
+    \endgroup%
+  \fi%
+}%
+%    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\set@continuousnumberingforL}
 % \cs{set@continuousnumberingforl} sets pstart counters at a \cs{beginnumbering} or a \cs{resumenumbering} in order to have continuous numbering with single column text. 
