@@ -326,6 +326,7 @@
 % \changes{v2.21.1}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation}}
 % \changes{v2.21.2}{2018/01/08}{Fix bug with \protect\cs{Xpstart} and \protect\cs{edtextlater}}
 % \changes{v2.21.3}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
+% \changes{v2.21.4}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1371,7 +1372,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/01/18 v2.21.3 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/01/28 v2.21.4 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3575,6 +3576,7 @@
 % forthcoming text.
 %    \begin{macrocode}
   \global\advance\l@dnumpstartsL \@ne%
+  \global\advance\pstarts@read@L \@ne%
   \ifnum\l@dnumpstartsL>\l@dc@maxchunks%
     \led@err@TooManyPstarts%
     \global\l@dnumpstartsL=\l@dc@maxchunks%
@@ -3957,7 +3959,7 @@
       \else%
         \affixline@num%
       \fi%
-      \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
         {\unless\ifshiftedpstarts%
           \add@apparatusL%
          \fi%
@@ -4025,7 +4027,7 @@
     \addtocounter{pstartL}{-1}%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
-    \numdef{\temp@}{\l@dpscL-1}%
+    \numdef{\temp@}{\pstarts@typeset@L-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
@@ -4035,10 +4037,10 @@
         \bodydir\l@luatexbodydir@L%
         \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
-      \csuse{eled@sectioning@\the\l@dpscL}%
+      \csuse{eled@sectioning@\the\pstarts@typeset@L}%
     \egroup%
     \@eled@sectioningfalse%
-    \global\csundef{eled@sectioning@\the\l@dpscL}%
+    \global\csundef{eled@sectioning@\the\pstarts@typeset@L}%
     \if@RTL%
       \hspace{-3\paperwidth}%
     {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
@@ -5556,9 +5558,9 @@
 % \end{macro}
 % \end{macro}
 % 
-% \begin{macro}{\l@pscL}
-% \begin{macro}{\l@pscR}
-% A couple of scratch counts for use in left and right texts, respectively.
+% \begin{macro}{\l@dpscL}
+% \begin{macro}{\l@dpscR}
+% A couple of scratch counts to count left and right \cs{pstart}, respectively.
 %    \begin{macrocode}
 \newcount\l@dpscL
 \newcount\l@dpscR
@@ -5778,12 +5780,14 @@
         \global\pstartnumtrue 
         \global\pstartnumRtrue
 %    \end{macrocode}
-% Increment \protect\cs{l@dpscL} and \protect\cs{l@dpscR} which here count
+% Increase \protect\cs{l@dpscL} and \protect\cs{l@dpscR} which here count
 % the numbers of left and right chunks.
+% Increase \cs{pstarts@typeset@L}, which counts the number of \cs{pstart} typeset both in not parallel mode and in the left side of parallel mode.
 % Also restore the value of the public pstart counters.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne
       \global\advance\l@dpscR \@ne
+      \global\advance\pstarts@typeset@L\@ne%
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
@@ -5806,12 +5810,12 @@
 %    \begin{macrocode}
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
-            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+            \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                 {%
                 \ifdefstring{\@eledsectmark}{L}%
-                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  {\csuse{eled@sectmark@\the\pstarts@typeset@L}%
                   }{}%
-                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \global\csundef{eled@sectmark@\the\pstarts@typeset@L}%
                 \savebox{\@eledsectionL}{\parbox[t][][t]{\Lcolwidth}{\vbox{}\print@eledsectionL}}%\vbox{}-> prevent alignment troubles with RTL language
                 }%
                 {}%
@@ -6381,7 +6385,8 @@
 %    \end{macrocode}
 % Loop over the number of chunks, incrementing the chunk counts 
 % (\protect\cs{l@dpscL}
-% and \protect\cs{l@dpscR} are chunk (box) counts.)
+% and \protect\cs{l@dpscR} are chunk (box) counts).
+%
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne%
       \global\advance\l@dpscR \@ne%
@@ -6420,6 +6425,7 @@
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne%
       \global\advance\l@dpscR \@ne%
+      \global\advance\pstarts@typeset@L\@ne%
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
@@ -6455,7 +6461,7 @@
               \csuse{before@pstartL@\the\l@dpscL}%
               \global\csundef{before@pstartL@\the\l@dpscL}%
               \do@lineL%
-              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+              \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                 {\print@eledsectionL}%
                 {}%
               \advance\numpagelinesL \@ne%
@@ -6473,7 +6479,7 @@
                         \parledgroup@correction@notespacing{L}%
                         \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
                       \else%
-                        \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+                        \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                           {\add@apparatusL}%
                           {}%
                         \unless\ifadvancedshiftedpstarts%
@@ -7174,6 +7180,7 @@
 % Go to the next pstart
 %    \begin{macrocode}
         \global\advance\l@dpscL \@ne
+        \global\advance\pstarts@typeset@L\@ne%
         \global\pstartnumtrue%
         \restore@pstartL@pc%
 %    \end{macrocode}

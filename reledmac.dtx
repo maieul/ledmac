@@ -500,6 +500,7 @@
 % \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation} in parallel typesetting}
 % \changes{v2.26.3}{2018/01/06}{Fix bug added by v2.26.0 with notes in parallel typesetting}
 % \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
 % \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
@@ -4316,39 +4317,10 @@
 % Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
 %  \begin{macrocode}
 \RequirePackage{xargs}
-
-\RequirePackage{xparse}[2017/02/16]%
-\@ifpackagelater{xparse}{2017/02/16}%
-  {}%
-  {%
-    \PackageError{reledmac}{You are using a xparse version older than 2017/02/16.
-     \MessageBreak
-     You must update your xparse package version to use this version of reledmac.
-     \MessageBreak
-     Loading reledmac will abort !
-   }%
-   \endinput%
-}%
-
+\RequirePackage{xparse}%
 \RequirePackage{etoolbox}
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifluatex}
-\RequirePackage{ragged2e}
-\RequirePackage{ifxetex}%
-%    \end{macrocode}
-%
-% \subsection{\LaTeX\ version}
-% We need to check we use not bugged \LaTeX\ version\footnote{Some version of \LaTeX\ had bug when using \cs{newinsert}. See \url{https://github.com/latex3/latex2e/commit/a87715}.}
-%    \begin{macrocode}
 \@ifl@t@r\fmtversion{2015/10/01}
- {\ifboolexpr{%
-   not test{\@ifl@t@r\fmtversion{2016/03/31}}%
-   or (%
-     test{\ifdefstring{\fmtversion}{2016/03/31}}% 
-     and test {\ifnumless{\patch@level}{3}}%
-      )%
-   }%
+ {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
    {\PackageWarning{reledmac}{You are using a LaTeX version older than 2016/03/31 patch 3.%
    \MessageBreak You are strongly encouraged to use a newer version.}}%
    {}%
@@ -4356,7 +4328,13 @@
  {\RequirePackage{etex}%
  \csname reserveinserts\endcsname{32}%
  }%
-%   \end{macrocode}
+\RequirePackage{suffix}
+\RequirePackage{xstring}
+\RequirePackage{ifluatex}
+\RequirePackage{ragged2e}
+\RequirePackage{ifxetex}%
+%    \end{macrocode}
+%
 % \subsection{Compatibility with \LuaTeX}
 % Here, we enable some primitives for \LuaTeX.
 %    \begin{macrocode}
