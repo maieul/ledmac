@@ -502,6 +502,7 @@
 % \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
 % \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
 % \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -8368,6 +8369,23 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\pstarts@typeset@L}
+% \begin{macro}{\pstarts@read@L}
+% The \cs{pstarts@typeset@L} counts the number of LEFT \cs{pstart} typeset. 
+% A left \cs{pstart} can be a  \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased in \cs{Columns} or \cs{Pages} when we prepare to typeset a left \cs{pstart}.
+% The \cs{pstarts@readL} counts the number of LEFT \cs{pstart} read. 
+% A left \cs{pstart} can be a  \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased at every \cs{pstarL}.
+% 
+%    \begin{macrocode}
+\newcount\pstarts@typeset@L%
+\newcount\pstarts@read@L%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\pstart}
 % \begin{macro}{\AtEveryPstart}
 % \begin{macro}{\AtStartEveryPstart}
@@ -8451,6 +8469,8 @@
   \global\let\next@insert=\empty%
   \begingroup\normal@pars%
   \global\advance \l@dnumpstartsL\@ne
+  \global\advance \pstarts@typeset@L\@ne%
+  \global\advance \pstarts@read@L\@ne%
   \global\setbox\raw@text=\vbox\bgroup%
     \if@nobreak%
       \if@afterindent\else%
@@ -8724,6 +8744,8 @@
 % do all the processing for a single line of text.
 % \changes{v1.6.1}{2013/10/27}{Move the call to \protect\cs{inserthangingsymbol} to allow use \protect\cs{hfill} inside.}
 % \changes{v1.12.2}{2014/08/07}{Fix a bug with critical notes at the tops of pages (added by v12.0.0)}
+% The \cs{l@dunhbox@line} macro only \cs{unhbox} one lines, but some package as \cs{microtype} can override it for custom needs.
+% 
 %    \begin{macrocode}
  \newcommand*{\l@dunhbox@line}[1]{\unhbox #1}
  \newcommand*{\do@line}{%
@@ -8752,7 +8774,7 @@
 % Depending weither a sectioning command is called at this pstart or not 
 % we print sectioning command or normal line, 
 %    \begin{macrocode}
-  \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
+  \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
      {\print@eledsection}%
      {\print@line}%
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
@@ -8880,12 +8902,12 @@
       \insert@msdata%
     }%
     \affixside@note%
-    \numdef{\temp@}{\l@dnumpstartsL-1}%
+    \numdef{\temp@}{\pstarts@typeset@L-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
-    \csuse{eled@sectioning@\the\l@dnumpstartsL}%
+    \csuse{eled@sectioning@\the\pstarts@typeset@L}%
     \@eled@sectioningfalse%
-    \global\csundef{eled@sectioning@\the\l@dnumpstartsL}%
+    \global\csundef{eled@sectioning@\the\pstarts@typeset@L}%
     \if@RTL%
       \hspace{-3\paperwidth}%
     {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
@@ -19883,7 +19905,7 @@
 %     \begin{itemize}
 %           \item The section level.
 %           \item The section title.
-%           \item The side (when \protect\package{eledpar} is used).
+%           \item The side (when \parpackage\  is used).
 %           \item The pstart where the command is called.
 %           \item If we have starred version or not.
 %     \end{itemize}
@@ -20242,7 +20264,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20257,7 +20279,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20272,7 +20294,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20286,7 +20308,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20302,7 +20324,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20317,7 +20339,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20332,7 +20354,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20347,7 +20369,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
