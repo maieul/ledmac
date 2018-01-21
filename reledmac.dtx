@@ -503,6 +503,7 @@
 % \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
 % \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
 % \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
+% \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -8842,14 +8843,7 @@
 %    \end{macrocode}
 % If we use the \option{continuousnumberingwithcolumns}, we increase right line number.
 %    \begin{macrocode}
-        \ifcontinuousnumberingwithcolumns%
-          \unless\ifafterendnumberingR%
-            \new@lineR%
-            \xappto\next@line@list@stuffR{%
-              \unexpanded{\global\line@numR=}\the\line@num%
-            }%
-          \fi%
-        \fi%
+        \continuousnumberingwithcolumns@sync@linenumber@singletext%
 %    \end{macrocode}
 % If we use \LuaLaTeX\, then restore the direction.
 %    \begin{macrocode}
@@ -8916,6 +8910,7 @@
     {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip-\baselineskip%
+    \continuousnumberingwithcolumns@sync@linenumber@singletext%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -9229,6 +9224,30 @@
   \fi}
 
 
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Continuous line numbering between parallel typesetting and normal typesetting}
+% \begin{macro}{\continuousnumberingwithcolumns@sync@linenumber@singletext}
+% The \opt{continuousnumberingwithcolumns}
+%  option allows to alternate between single text and two parallels texts, keeping same line numbers when switching from one layout to the other one.
+% The lines counter for the text in a single column and for the text in the text in the left column in parallel typesetting is the same.
+% But the lines counter for the text in the same column is the not the same.
+%
+% When typesetting single column text, if the option is enabled, we need to \enquote{simulate} typesetting right line, in order to keep the two counters synchronized.
+% That is the aim of the \\
+% \cs{continuousnumberingwithcolumns@sync@linenumber@singletext}\\
+% macro.
+%    \begin{macrocode}
+\newcommand{\continuousnumberingwithcolumns@sync@linenumber@singletext}{%
+  \ifcontinuousnumberingwithcolumns%
+    \unless\ifafterendnumberingR%
+      \new@lineR%
+      \xappto\next@line@list@stuffR{%
+        \unexpanded{\global\line@numR=}\the\line@num%
+      }%
+    \fi%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Line number annotation}
