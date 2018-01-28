@@ -500,6 +500,10 @@
 % \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation} in parallel typesetting}
 % \changes{v2.26.3}{2018/01/06}{Fix bug added by v2.26.0 with notes in parallel typesetting}
 % \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
+% \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
+% \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4177,7 +4181,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/01/18 v2.26.4 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/01/28 v2.26.5 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8366,6 +8370,23 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\pstarts@typeset@L}
+% \begin{macro}{\pstarts@read@L}
+% The \cs{pstarts@typeset@L} counts the number of LEFT \cs{pstart} typeset. 
+% A left \cs{pstart} can be a  \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased in \cs{Columns} or \cs{Pages} when we prepare to typeset a left \cs{pstart}.
+% The \cs{pstarts@readL} counts the number of LEFT \cs{pstart} read. 
+% A left \cs{pstart} can be a  \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased at every \cs{pstarL}.
+% 
+%    \begin{macrocode}
+\newcount\pstarts@typeset@L%
+\newcount\pstarts@read@L%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\pstart}
 % \begin{macro}{\AtEveryPstart}
 % \begin{macro}{\AtStartEveryPstart}
@@ -8449,6 +8470,8 @@
   \global\let\next@insert=\empty%
   \begingroup\normal@pars%
   \global\advance \l@dnumpstartsL\@ne
+  \global\advance \pstarts@typeset@L\@ne%
+  \global\advance \pstarts@read@L\@ne%
   \global\setbox\raw@text=\vbox\bgroup%
     \if@nobreak%
       \if@afterindent\else%
@@ -8752,7 +8775,7 @@
 % Depending weither a sectioning command is called at this pstart or not 
 % we print sectioning command or normal line, 
 %    \begin{macrocode}
-  \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
+  \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
      {\print@eledsection}%
      {\print@line}%
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
@@ -8820,14 +8843,7 @@
 %    \end{macrocode}
 % If we use the \option{continuousnumberingwithcolumns}, we increase right line number.
 %    \begin{macrocode}
-        \ifcontinuousnumberingwithcolumns%
-          \unless\ifafterendnumberingR%
-            \new@lineR%
-            \xappto\next@line@list@stuffR{%
-              \unexpanded{\global\line@numR=}\the\line@num%
-            }%
-          \fi%
-        \fi%
+        \continuousnumberingwithcolumns@sync@linenumber@singletext%
 %    \end{macrocode}
 % If we use \LuaLaTeX\, then restore the direction.
 %    \begin{macrocode}
@@ -8880,12 +8896,12 @@
       \insert@msdata%
     }%
     \affixside@note%
-    \numdef{\temp@}{\l@dnumpstartsL-1}%
+    \numdef{\temp@}{\pstarts@typeset@L-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
-    \csuse{eled@sectioning@\the\l@dnumpstartsL}%
+    \csuse{eled@sectioning@\the\pstarts@typeset@L}%
     \@eled@sectioningfalse%
-    \global\csundef{eled@sectioning@\the\l@dnumpstartsL}%
+    \global\csundef{eled@sectioning@\the\pstarts@typeset@L}%
     \if@RTL%
       \hspace{-3\paperwidth}%
     {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
@@ -8894,6 +8910,7 @@
     {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip-\baselineskip%
+    \continuousnumberingwithcolumns@sync@linenumber@singletext%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -9207,6 +9224,30 @@
   \fi}
 
 
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Continuous line numbering between parallel typesetting and normal typesetting}
+% \begin{macro}{\continuousnumberingwithcolumns@sync@linenumber@singletext}
+% The \opt{continuousnumberingwithcolumns}
+%  option allows to alternate between single text and two parallels texts, keeping same line numbers when switching from one layout to the other one.
+% The lines counter for the text in a single column and for the text in the text in the left column in parallel typesetting is the same.
+% But the lines counter for the text in the same column is the not the same.
+%
+% When typesetting single column text, if the option is enabled, we need to \enquote{simulate} typesetting right line, in order to keep the two counters synchronized.
+% That is the aim of the \\
+% \cs{continuousnumberingwithcolumns@sync@linenumber@singletext}\\
+% macro.
+%    \begin{macrocode}
+\newcommand{\continuousnumberingwithcolumns@sync@linenumber@singletext}{%
+  \ifcontinuousnumberingwithcolumns%
+    \unless\ifafterendnumberingR%
+      \new@lineR%
+      \xappto\next@line@list@stuffR{%
+        \unexpanded{\global\line@numR=}\the\line@num%
+      }%
+    \fi%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Line number annotation}
@@ -19883,7 +19924,7 @@
 %     \begin{itemize}
 %           \item The section level.
 %           \item The section title.
-%           \item The side (when \protect\package{eledpar} is used).
+%           \item The side (when \parpackage\  is used).
 %           \item The pstart where the command is called.
 %           \item If we have starred version or not.
 %     \end{itemize}
@@ -20242,7 +20283,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20257,7 +20298,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20272,7 +20313,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20286,7 +20327,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20302,7 +20343,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20317,7 +20358,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20332,7 +20373,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20347,7 +20388,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
