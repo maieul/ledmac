@@ -5,6 +5,37 @@
 \begin{document}
 \let\footnote\endnote
 \renewcommand{\theendnote}{\roman{endnote}}
+\makeatletter
+\pretocmd{\@endnotetext}{%
+  \ifnumberedpar@
+  \edtext{}{\l@dbenote{#1}}%
+  \else
+  }{}{}
+\apptocmd{\@endnotetext}{\fi}{}{}%
+
+
+\newcommand{\vl@dbenote}[1]{%
+  \@endnotetext{#1}%
+}%
+\newcommand{\l@dbenote}[1]{%
+  \gdef\@tag{#1\relax}%
+    \ifledRcol%
+      \xright@appenditem{%
+          \noexpand\vl@dbenote{{\expandonce\@tag}}
+        }%
+                         \to\inserts@listR
+       \global\advance\insert@countR \@ne%
+    \else%
+      \xright@appenditem{%
+          \noexpand\vl@dbenote{{\expandonce\@tag}}
+       }%
+                         \to\inserts@list
+      \global\advance\insert@count \@ne%
+    \fi
+  \ignorespaces%
+}%
+
+\makeatother
 \begin{pairs}
   \begin{Rightside}
     \beginnumbering
