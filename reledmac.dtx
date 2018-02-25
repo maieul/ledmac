@@ -5089,6 +5089,7 @@
   \global\sub@lock \z@
   \global\sublines@false
   \global\let\next@page@num=\relax
+  \global\let\this@section@next@page@num=\relax%
   \global\let\sub@change=\relax
   \global\last@page@num=-10000%
   \ifdefined\line@numR%
@@ -5122,6 +5123,13 @@
     \ifnum\l@dnumpstartsL=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+%    \end{macrocode}
+% For the continuousnumberingwithcolumn options, we need to store some value globally, for the next \cs{endnumbering}.
+% We didn't  modify this counter globally, because that creates problem for nested \cs{edtext}.
+%    \begin{macrocode}
+    \global\page@num=\this@section@page@num%
+    \global\last@page@num=\this@section@last@page@num%
+    \global\let\next@page@num\this@section@next@page@num%
     \ifl@dpairing
       \global\pst@rtedLfalse
     \else
@@ -5159,14 +5167,14 @@
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
 % to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
 % behind these macros.}
-% The \cs{pausenumbering@page@num} counter stores the \cs{next@page@num} when the \cs{pause@numbering} is called. 
+% The \cs{pausenumbering@page@num} counter stores the \cs{this@section@next@page@num} when the \cs{pause@numbering} is called. 
 %    \begin{macrocode}
 \newcount\pausenumbering@page@num%
 \newcommand{\pausenumbering}{%
-  \ifx\next@page@num\relax%
+  \ifx\this@section@next@page@num\relax%
     \global\pausenumbering@page@num=0%
   \else%
-    \global\pausenumbering@page@num=\next@page@num%
+    \global\pausenumbering@page@num=\this@section@next@page@num%
   \fi%
   \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
@@ -6006,7 +6014,12 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\this@section@page@num}
+% The \cs{this@section@page@num} stores the page number of the on which a numbering section finish.
+%    \begin{macrocode}
+\newcount\this@section@page@num%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifnoteschanged@}
 % \begin{macro}{\noteschanged@true}
 % \begin{macro}{\noteschanged@false}
@@ -6361,6 +6374,7 @@
 %
 %
 % \begin{macro}{\last@page@num}
+% \begin{macro}{\this@section@last@page@num}
 % \begin{macro}{\fix@page}
 %  \protect\cs{fix@page} basically replaces \protect\cs{@page}. It determines whether or not
 % a new page has been started, based on the page values held by \protect\cs{@nl}.
@@ -6368,6 +6382,9 @@
 %    \begin{macrocode}
 \newcount\last@page@num
   \last@page@num=-10000
+
+\newcount\this@section@last@page@num%
+  \this@section@last@page@num=-10000%
  
 \newcommand*{\fix@page}[1]{%
   \ifledRcol
@@ -6389,9 +6406,12 @@
           }%
         \fi%
       \fi
-      \global\page@numR=#1%
-      \global\last@page@numR=#1%
-      \global\def\next@page@numR{#1}%
+      \page@numR=#1%
+      \this@section@page@numR=#1%
+      \last@page@numR=#1%
+      \this@section@last@page@numR=#1%
+      \def\next@page@numR{#1}%
+      \gdef\this@section@next@page@numR{#1}%
     \fi
   \else
     \ifnum #1=\last@page@num
@@ -6405,13 +6425,17 @@
           \global\csdef{reset@line\the\numexpr\absline@num+1\relax @\the\section@num}{}%
         \fi%
       \fi
-      \global\page@num=#1%
-      \global\last@page@num=#1%
-      \global\def\next@page@num{#1}%
+      \page@num=#1%
+      \global\this@section@page@num=#1%
+      \last@page@num=#1%
+      \global\this@section@last@page@num=#1%
+      \def\next@page@num{#1}%
+      \gdef\this@section@next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
   \fi}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %

@@ -1821,6 +1821,7 @@
   \global\sub@lockR \z@
   \global\sublines@Rfalse
   \global\let\next@page@numR\relax
+  \global\let\this@section@next@page@numR\relax%
   \global\let\sub@change\relax
   \global\last@page@numR=-10000%
   \global\stopmsdata@inserted@true%
@@ -1873,6 +1874,9 @@
     \ifnum\l@dnumpstartsR=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+    \global\page@numR=\this@section@page@numR%
+    \global\last@page@numR=\this@section@last@page@numR%
+    \global\let\next@page@numR\this@section@next@page@numR%
     \ifl@dpairing
       \global\pst@rtedRfalse
     \else
@@ -1953,10 +1957,10 @@
 %    \begin{macrocode}
 \newcount\pausenumbering@page@numR%
 \newcommand*{\pausenumberingR}{%
-  \ifx\next@page@numR\relax%
+  \ifx\this@section@next@page@numR\relax%
     \global\pausenumbering@page@numR=0%
   \else%
-    \global\pausenumbering@page@numR=\next@page@numR%
+    \global\pausenumbering@page@numR=\this@section@next@page@numR%
   \fi%
   \endnumberingR%
   \global\numberingRtrue%
@@ -2446,11 +2450,13 @@
 % \end{macro}
 %
 % \begin{macro}{\page@numR}
-% The right text page number.
+% \begin{macro}{\this@section@page@numR}
+% The right text page numbers.
 %    \begin{macrocode}
 \newcount\page@numR
-
+\newcount\this@section@page@numR%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \subsubsection{Specific to \parpackage}
 % \begin{macro}{\linesinpar@listL}
@@ -2582,16 +2588,22 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\last@page@numR}
+% \begin{macro}{\this@section@last@page@numR}
 % \begin{macro}{\fix@page}
 % \protect\cs{last@page@numR} store the page number of the last right page.
-% It is modified by \protect\cs{fix@page}, defined by \reledmac.
+% \protect\cs{this@section@last@page@numR} store the page number of the last right page of the current section. Is value is modified globally, contrary to \cs{last@page@numR}.
+% Both are modified by \protect\cs{fix@page}, defined by \reledmac.
+%
 % \changes{v2.0.0}{2105/06/28}{\protect\cs{fix@page} is defined only once in \reledmac} 
 %
 %    \begin{macrocode}
 \newcount\last@page@numR
   \last@page@numR=-10000
+\newcount\this@section@last@page@numR%
+  \this@section@last@page@numR=-10000%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
