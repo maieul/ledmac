@@ -327,6 +327,7 @@
 % \changes{v2.21.2}{2018/01/08}{Fix bug with \protect\cs{Xpstart} and \protect\cs{edtextlater}}
 % \changes{v2.21.3}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
 % \changes{v2.21.4}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
+% \changes{v2.21.5}{2018/01/18}{Compatibility with reledmac v.~2.26.6}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1372,7 +1373,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/01/28 v2.21.4 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/02/28 v2.21.5 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1821,6 +1822,7 @@
   \global\sub@lockR \z@
   \global\sublines@Rfalse
   \global\let\next@page@numR\relax
+  \global\let\this@section@next@page@numR\relax%
   \global\let\sub@change\relax
   \global\last@page@numR=-10000%
   \global\stopmsdata@inserted@true%
@@ -1873,6 +1875,9 @@
     \ifnum\l@dnumpstartsR=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+    \global\page@numR=\this@section@page@numR%
+    \global\last@page@numR=\this@section@last@page@numR%
+    \global\let\next@page@numR\this@section@next@page@numR%
     \ifl@dpairing
       \global\pst@rtedRfalse
     \else
@@ -1953,10 +1958,10 @@
 %    \begin{macrocode}
 \newcount\pausenumbering@page@numR%
 \newcommand*{\pausenumberingR}{%
-  \ifx\next@page@numR\relax%
+  \ifx\this@section@next@page@numR\relax%
     \global\pausenumbering@page@numR=0%
   \else%
-    \global\pausenumbering@page@numR=\next@page@numR%
+    \global\pausenumbering@page@numR=\this@section@next@page@numR%
   \fi%
   \endnumberingR%
   \global\numberingRtrue%
@@ -2446,11 +2451,13 @@
 % \end{macro}
 %
 % \begin{macro}{\page@numR}
-% The right text page number.
+% \begin{macro}{\this@section@page@numR}
+% The right text page numbers.
 %    \begin{macrocode}
 \newcount\page@numR
-
+\newcount\this@section@page@numR%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \subsubsection{Specific to \parpackage}
 % \begin{macro}{\linesinpar@listL}
@@ -2582,16 +2589,22 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\last@page@numR}
+% \begin{macro}{\this@section@last@page@numR}
 % \begin{macro}{\fix@page}
 % \protect\cs{last@page@numR} store the page number of the last right page.
-% It is modified by \protect\cs{fix@page}, defined by \reledmac.
+% \protect\cs{this@section@last@page@numR} store the page number of the last right page of the current section. Is value is modified globally, contrary to \cs{last@page@numR}.
+% Both are modified by \protect\cs{fix@page}, defined by \reledmac.
+%
 % \changes{v2.0.0}{2105/06/28}{\protect\cs{fix@page} is defined only once in \reledmac} 
 %
 %    \begin{macrocode}
 \newcount\last@page@numR
   \last@page@numR=-10000
+\newcount\this@section@last@page@numR%
+  \this@section@last@page@numR=-10000%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %

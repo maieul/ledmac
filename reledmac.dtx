@@ -504,6 +504,7 @@
 % \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
 % \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
 % \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
+% \changes{v2.26.6}{2018/02/28}{Fix bug with \protect\cs{lineation} by page and nexted \protect\cs{edtext} between two pages (added in v.~2.24.0)}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4182,7 +4183,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/01/28 v2.26.5 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/02/28 v2.26.6 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5090,6 +5091,7 @@
   \global\sub@lock \z@
   \global\sublines@false
   \global\let\next@page@num=\relax
+  \global\let\this@section@next@page@num=\relax%
   \global\let\sub@change=\relax
   \global\last@page@num=-10000%
   \ifdefined\line@numR%
@@ -5123,6 +5125,13 @@
     \ifnum\l@dnumpstartsL=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+%    \end{macrocode}
+% For the continuousnumberingwithcolumn options, we need to store some value globally, for the next \cs{endnumbering}.
+% We didn't  modify this counter globally, because that creates problem for nested \cs{edtext}.
+%    \begin{macrocode}
+    \global\page@num=\this@section@page@num%
+    \global\last@page@num=\this@section@last@page@num%
+    \global\let\next@page@num\this@section@next@page@num%
     \ifl@dpairing
       \global\pst@rtedLfalse
     \else
@@ -5160,14 +5169,14 @@
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
 % to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
 % behind these macros.}
-% The \cs{pausenumbering@page@num} counter stores the \cs{next@page@num} when the \cs{pause@numbering} is called. 
+% The \cs{pausenumbering@page@num} counter stores the \cs{this@section@next@page@num} when the \cs{pause@numbering} is called. 
 %    \begin{macrocode}
 \newcount\pausenumbering@page@num%
 \newcommand{\pausenumbering}{%
-  \ifx\next@page@num\relax%
+  \ifx\this@section@next@page@num\relax%
     \global\pausenumbering@page@num=0%
   \else%
-    \global\pausenumbering@page@num=\next@page@num%
+    \global\pausenumbering@page@num=\this@section@next@page@num%
   \fi%
   \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
@@ -6007,7 +6016,12 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\this@section@page@num}
+% The \cs{this@section@page@num} stores the page number of the on which a numbering section finish.
+%    \begin{macrocode}
+\newcount\this@section@page@num%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifnoteschanged@}
 % \begin{macro}{\noteschanged@true}
 % \begin{macro}{\noteschanged@false}
@@ -6274,7 +6288,7 @@
 % these to the macro. It is now: \\
 % \protect\cs{@nl}\marg{page counter number}\marg{printed page number} \\
 % We do not (yet) use the printed number (i.e., the \protect\cs{thepage}) but
-% it may come in handy later. The macro \protect\cs{fix@page} checks if a new
+% it may come in handy later. The macro \cs{@page} checks if a new
 % page has started.
 % 
 % Exactly what \protect\cs{@nl} does depends
@@ -6284,12 +6298,11 @@
 % \changes{v0.3.0}{2004/02/14}{Added a bunch of code to \protect\cs{@nl} for handling
 %                          \protect\cs{setlinenum}}
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{@nl} to include the page number}
-% \changes{v0.6.0}{2004/11/16}{Added \protect\cs{fix@page} to \protect\cs{@nl}}
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{@nl@reg}}
 %    \begin{macrocode}
 
 \newcommand*{\@nl}[2]{%
-  \fix@page{#1}%
+  \@page{#1}%
   \ifledRcol%
     \@nl@regR%
   \else%
@@ -6362,15 +6375,18 @@
 %
 %
 % \begin{macro}{\last@page@num}
-% \begin{macro}{\fix@page}
-%  \protect\cs{fix@page} basically replaces \protect\cs{@page}. It determines whether or not
+% \begin{macro}{\this@section@last@page@num}
+% \begin{macro}{\@page}
+%  \protect\cs{@page}  determines whether or not
 % a new page has been started, based on the page values held by \protect\cs{@nl}.
-% \changes{v0.6.0}{2004/11/16}{Added \protect\cs{last@page@num} and \protect\cs{fix@page}}
 %    \begin{macrocode}
 \newcount\last@page@num
   \last@page@num=-10000
+
+\newcount\this@section@last@page@num%
+  \this@section@last@page@num=-10000%
  
-\newcommand*{\fix@page}[1]{%
+\newcommand*{\@page}[1]{%
   \ifledRcol
     \ifnum #1=\last@page@numR
     \else
@@ -6390,9 +6406,12 @@
           }%
         \fi%
       \fi
-      \global\page@numR=#1%
-      \global\last@page@numR=#1%
-      \global\def\next@page@numR{#1}%
+      \page@numR=#1%
+      \this@section@page@numR=#1%
+      \last@page@numR=#1%
+      \this@section@last@page@numR=#1%
+      \def\next@page@numR{#1}%
+      \gdef\this@section@next@page@numR{#1}%
     \fi
   \else
     \ifnum #1=\last@page@num
@@ -6401,17 +6420,27 @@
       \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
         \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
-          \line@num \z@ \subline@num \z@%
+          \line@num \z@%
+          \subline@num \z@%
           \global\csdef{reset@line\the\numexpr\absline@num+1\relax @\the\section@num}{}%
         \fi%
       \fi
-      \global\page@num=#1%
-      \global\last@page@num=#1%
-      \global\def\next@page@num{#1}%
+      \page@num=#1%
+      \global\this@section@page@num=#1%
+      \last@page@num=#1%
+      \global\this@section@last@page@num=#1%
+      \def\next@page@num{#1}%
+%    \end{macrocode}
+% And we set a flag that tells \cs{@nl} that a new page number is
+% to be set, because other associated actions shouldn't occur until the
+% next line-start occurs.
+%    \begin{macrocode}
+      \gdef\this@section@next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
   \fi}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -9122,7 +9151,8 @@
          {\global\@firstlineofpagetrue}%
        \ifcsdef{reset@line\the\absline@num @\the\section@num}%
          {%
-         \global\line@num=\z@ \global\subline@num=\z@%
+         \global\line@num=\z@%
+         \global\subline@num=\z@%
          \resetprevline@%
          }%
          {}%
