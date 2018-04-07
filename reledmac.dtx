@@ -505,6 +505,7 @@
 % \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
 % \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
 % \changes{v2.26.6}{2018/02/28}{Fix bug with \protect\cs{lineation} by page and nexted \protect\cs{edtext} between two pages (added in v.~2.24.0)}
+% \changes{v2.26.7}{2018/04/07}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option of \protect\parpackage and typesetting critical text in single mode after critical text in double page mode}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4183,12 +4184,15 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/02/28 v2.26.6 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/04/07 v2.26.7 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
 % \changes{v0.4.0}{2004/02/29}{Added final/draft options}
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
+% \begin{macro}{\ifparledgroup}
+% \begin{macro}{\ifsameparallelpagenumber}
+% \begin{macro}{\ifprevpgnotnumbered}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifnocritical@}
 % \begin{macro}{\if@noeled@sec}
@@ -4198,7 +4202,6 @@
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
 % \begin{macro}{\iflednopbinverse}
-% \begin{macro}{\ifparledgroup}
 % \begin{macro}{\ifwidthliketwocolumns}
 % \begin{macro}{\ifxindy@}
 % \begin{macro}{\ifxindyhyperref@}
@@ -4209,13 +4212,14 @@
 %    \begin{macrocode}
 \RequirePackage{xkeyval}
 %    \end{macrocode}
-% The \verb+parledgroup+ option is for \parpackage.
-% However, it has consequence on \macpackage\ internal command.
-% So we need to define the boolean now.
+%\subsubsection{Options of \parpackage}
+% Here, we define some booleans specific to \parpackage\  options, but which have consequences on \macpackage\ internal commands.
 %    \begin{macrocode}
 \newif\ifparledgroup
+\newif\ifsameparallelpagenumber%
+\newif\ifprevpgnotnumbered%%
 %    \end{macrocode}
-% And now, the options of \macpackage.
+%\subsubsection{Options of \macpackage}
 %    \begin{macrocode}
 \DeclareOptionX{series}[A,B,C,D,E]{\xdef\default@series{#1}}
 \ExecuteOptionsX{series}%
@@ -4300,6 +4304,8 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -7126,37 +7132,65 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\new@line}
+% \begin{macro}{\l@the@c@page}
 % The \protect\cs{new@line} macro sends the \protect\cs{@nl} command to the line-list
 % file, to mark the start of a new text line, and its page number.
+% \label{new@line@pagecounting}
+% It writes the two forms of the page number:
+% \begin{itemize}
+%  \item Raw form (\cs{the}\cs{c@page}, which can be used to make numeric test.
+%  \item Formatted form (for example, in Roman).
+% \end{itemize}
+% Actually, only the first form is effectivly used by \cs{@nl}.
+% If we use the \cs{sameparallelpagenumber} option of \parpackage, we must write not the real page number (i.e. \verb+page+ counter, defined in standard \LaTeX) but the printed page number (i.e \verb+par@page+ counter, defined only on \macpackage).
+% \begin{itemize}
+%   \item For the raw form, we use \cs{the}\cs{c@page@page} macro, because the \verb+{par@page}+ couter is increased at each page.
+%   \item For the formatted version, \cs{thepage} is patched through \cs{par@patch@thepage}. So we have nothing to change.
+% \end{itemize}
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
   \IfStrEq{\led@pb@setting}{after}%
     {\xifinlist{\the\absline@num}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@page+\@ne}%
+        {\numgdef{\@next@page}{\c@par@page+\@ne}%
         \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
     }%
-    {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
+    {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
     {\numdef{\next@absline}{\the\absline@num+\@ne}%
     \xifinlist{\next@absline}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@page+\@ne}%
+        {\numgdef{\nc@page}{\c@par@page+\@ne}%
         \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
         }%
-        {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+        {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
     }%
     {}%
-  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@nl[\the\c@page][\thepage]}]%
+  \IfStrEqCase{\led@pb@setting}%
+    {%
+    {before}{\relax}%
+    {after}{\relax}%
+  }[%
+    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  ]%
 }
 
+\newcommand{\l@the@c@page}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {\the\c@par@page}%
+  {\the\c@page}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\if@noneed@Footnote}
 % \protect\cs{if@noneed@Footnote} is a boolean to check if we have to print a error message when a \protect\cs{edtext} is called without any critical notes.
@@ -15403,6 +15437,104 @@
 % \end{macro}
 % \end{macro}
 %
+% \section{Page numbering in parallel typsetting}
+% The \parpackage\  package has  two options which change the way the page numbering works.
+% We need to implement these options on \macpackage and not on \parpackage because they have some consequences on the \macpackage auxiliaries files (numbered file see~\reff{new@line@pagecounting}).
+% The \verb+sameparallelpagenumber+ option  allows the same page number on both left and right side
+% The \verb+prevpgnotnumbered+ option allows an empty (not numbered) right-side page before \cs{Pages}.
+%
+%
+% We cannot implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX\  features to determine whether a page is left (even-numbered) or right (odd-numbered).
+% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of value of \verb+page+ counter.
+% 
+% This counter will be increased in a patched version of the \LaTeX's \protect\cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
+%
+
+%
+
+% \begin{macro}{\par@patch@thepage}
+% \begin{macro}{\par@patch@pagenumbering}
+% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+page+.  
+% It must be called after any redefinition of \cs{thepage}. 
+% That is why we insert it at the end of the \LaTeX\ macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
+% In cases when we are using the \ltxclass{memoir} class, we insert it at the end of  \cs{@mempnum}.
+% When using \cs{pagenumbering}, we also need to restart \verb+par@page+ counter. Consequently, we have wrapped \cs{par@patch@thepage} and counter restart in \cs{par@patch@pagenumbering}
+% We also call \cs{par@patch@thepage} at the beginning of the document.
+%    \begin{macrocode}
+
+\newcommand{\par@patch@thepage}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {%
+    \patchcmd{\thepage}%
+      {page}{par@page}%
+      {}%
+      {\led@error@fail@patch@thepage}%
+  }{}%
+}%
+
+\newcommand{\par@patch@pagenumbering}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+    }%
+    {%
+    \setcounter{par@page}{1}%
+    }%
+    {}%
+  \par@patch@thepage%
+}%
+
+\ifl@dmemoir%
+  \apptocmd{\@mempnum}%
+    {\par@patch@pagenumbering}%
+    {}%%
+    {\led@error@fail@patch@@mempnum}%
+
+\else%
+  \apptocmd{\pagenumbering}%
+    {\par@patch@pagenumbering}%
+    {}%
+    {\led@error@fail@patch@pagenumbering}%
+\fi%
+
+\AtBeginDocument{\par@patch@thepage}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\@outputpage}
+% As its name says, \cs{@outputpage} is a \LaTeX's macro called in the output routine. It is this macro which increases the \verb+page+ counter. 
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \apptocmd{\@outputpage}{%
+    \ifsameparallelpagenumber%
+      \ifl@dprintingpages%
+        \ifodd\c@page\else%
+          \stepcounter{par@page}%
+        \fi%
+      \else%
+        \stepcounter{par@page}%
+      \fi%
+    \else%
+      \stepcounter{par@page}%
+    \fi%
+    }%
+    {}%
+    {\led@error@fail@patch@@outputpage}%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\thepar@page}
+% The  \verb+par@page+ counter.
+%    \begin{macrocode}
+\newcounter{par@page}%
+\setcounter{par@page}{1}%
+%    \end{macrocode}
+% \end{macro} 
 %
 % \section{Cross referencing}
 % \label{xref}\relax

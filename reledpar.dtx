@@ -329,6 +329,7 @@
 % \changes{v2.21.4}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
 % \changes{v2.21.5}{2018/02/28}{Compatibility with reledmac v.~2.26.6}
 % \changes{v2.21.6}{2018/04/06}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option}
+% \changes{v2.21.7}{2018/04/07}{Compatibility with \protect\macpackage 2.26.7}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1374,7 +1375,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/04/06 v2.21.6 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/04/07 v2.21.7 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1473,17 +1474,12 @@
 \DeclareOptionX{continuousnumberingwithcolumns}{\continuousnumberingwithcolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\ifsameparallelpagenumber}
-% \begin{macro}{\ifprevpgnotnumbered}
-% Options related to page numbering
+% Options related to page numbering.
+% The boolean are defined in \macpackage.
 %    \begin{macrocode}
-\newif\ifsameparallelpagenumber
-\newif\ifprevpgnotnumbered
 \DeclareOptionX{sameparallelpagenumber}{\sameparallelpagenumbertrue}
 \DeclareOptionX{prevpgnotnumbered}{\prevpgnotnumberedtrue}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \begin{macro}{\prevpgstyle}
 % We store on \protect\cs{prevpgstyle} the argument of the option \verb+prevpgstyle+. 
 %    \begin{macrocode}
@@ -2994,12 +2990,7 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-  }%
-  {\write\linenum@out{\string\@nl[\the\c@par@page][\thepar@page]}}%
-  {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+  \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -3008,12 +2999,7 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-  }%
-  {\write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}}%
-  {\write\linenum@outR{\string\@nl[\the\c@page][\thepage]}}%
+  \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -7300,104 +7286,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \section{Page numbering}
-% \subsection{Global options}
-% The \verb+sameparallelpagenumber+ option  allows the same page number on both left and right side
-% The \verb+prevpgnotnumbered+ option allows an empty (not numbered) right-side page before \cs{Pages}.
-%
-%
-% We cannot implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX features to determine whether a page is left (even-numbered) or right (odd-numbered).
-% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of value of \verb+page+ counter.
-% 
-% This counter will be increased in a patched version of the \LaTeX's \protect\cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
-%
-
-%
-
-% \begin{macro}{\par@patch@thepage}
-% \begin{macro}{\par@patch@pagenumbering}
-% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
-% It must be called after any redefinition of \cs{thepage}. 
-% That is why we insert it at the end of the \LaTeX\ macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
-% In cases when we are using the \ltxclass{memoir} class, we insert it at the end of  \cs{@mempnum}.
-% When using \cs{pagenumbering}, we also need to restart \verb+par@page+ counter. Consequently, we have wrapped \cs{par@patch@thepage} and counter restart in \cs{par@patch@pagenumbering}
-% We also call \cs{par@patch@thepage} it at the beginning of the document.
-%    \begin{macrocode}
-
-\newcommand{\par@patch@thepage}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-  }%
-  {%
-    \patchcmd{\thepage}%
-      {page}{par@page}%
-      {}%
-      {\led@error@fail@patch@thepage}%
-  }{}%
-}%
-
-\newcommand{\par@patch@pagenumbering}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-    }%
-    {%
-    \setcounter{par@page}{1}%
-    }%
-    {}%
-  \par@patch@thepage%
-}%
-
-\ifl@dmemoir%
-  \apptocmd{\@mempnum}%
-    {\par@patch@pagenumbering}%
-    {}%%
-    {\led@error@fail@patch@@mempnum}%
-
-\else%
-  \apptocmd{\pagenumbering}%
-    {\par@patch@pagenumbering}%
-    {}%
-    {\led@error@fail@patch@pagenumbering}%
-\fi%
-
-\AtBeginDocument{\par@patch@thepage}%
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\@outputpage}
-% As its name says, \cs{@outputpage} is a \LaTeX's macro called in the output routine. It is this macro which increases the \verb+page+ counter.. 
-% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
-%    \begin{macrocode}
-\AtBeginDocument{%
-  \apptocmd{\@outputpage}{%
-    \ifsameparallelpagenumber%
-      \ifl@dprintingpages%
-        \ifodd\c@page\else%
-          \stepcounter{par@page}%
-        \fi%
-      \else%
-        \stepcounter{par@page}%
-      \fi%
-    \else%
-      \stepcounter{par@page}%
-    \fi%
-    }%
-    {}%
-    {\led@error@fail@patch@@outputpage}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\thepar@page}
-% And now, initialize \verb+par@page+ counter.
-%    \begin{macrocode}
-\newcounter{par@page}%
-\setcounter{par@page}{1}%
-%    \end{macrocode}
-% \end{macro} 
-% \subsection{mainmatter option of \cs{Pages}}
+% \section{The \option{mainmatter} option of \cs{Pages}}
 % The optional argument of \cs{Pages} could be equal to \verb+mainmatter+.
 % In this case the boolean \cs{ifPages@mainmatter} is set to true, and some special things are done in \cs{Pages@mainmatter}, called by \cs{cleartol@devenpage}.
 % \begin{macro}{\ifPages@mainmatter}
