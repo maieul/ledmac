@@ -493,6 +493,19 @@
 % \changes{v2.25.0}{2017/11/05}{Add \protect\cs{Xendtxtbeforenotes} hook}
 % \changes{v2.26.0}{2017/11/11}{Fix bug in \protect\cs{xpstartref}}
 % \changes{v2.26.0}{2017/11/11}{Add a mechanism for annotation of stanza line numbering}
+% \changes{v2.26.1}{2017/11/26}{Fix bug with \protect\cs{linenumberannotation}}
+% \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} and optional argument of critical footnotes.}
+% \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} for the series after the first one.}
+% \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} and \protect\cs{Xparafootsep}.}
+% \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation} in parallel typesetting}
+% \changes{v2.26.3}{2018/01/06}{Fix bug added by v2.26.0 with notes in parallel typesetting}
+% \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
+% \changes{v2.26.5}{2018/01/28}{Check that users have a enough recent version of \protect\package{xparse}}
+% \changes{v2.26.5}{2018/01/18}{Fix bug when using \protect\cs{eledsection} with the \protect\option{continuousnumberingwithcolumns} of \protect\parpackage}
+% \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
+% \changes{v2.26.6}{2018/02/28}{Fix bug with \protect\cs{lineation} by page and nexted \protect\cs{edtext} between two pages (added in v.~2.24.0)}
+% \changes{v2.26.7}{2018/04/07}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option of \protect\parpackage and typesetting critical text in single mode after critical text in double page mode}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -792,15 +805,15 @@
 % 
 % \subsection{Optimizing package performance}\label{option:performance}
 % \begin{description}
-% \item[nocritical] disables tools for critical footnotes (\protect\cs{Afootnote}, \protect\cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \eledmac\ run faster. 
+% \item[nocritical] disables tools for critical footnotes (\protect\cs{Afootnote}, \protect\cs{Bfootnote} etc.). If you do not need critical footnotes, this option lets \macpackage\ run faster. 
 % It will also preserve room for other packages.
 % \item[noeledsec] disables tools for \protect\cs{eledsection} and related commands (\reff{eledsection}).
 % \item[noend] disables tools for endnotes (\protect\cs{Aendnote}, \protect\cs{Bendnote} etc.). If you do not need endnotes, this option lets \macpackage\ run faster. 
 % It will also preserve room for other packages.
-% \item[nofamiliar] disables tools for familiar footnotes (\protect\cs{footnoteA}, \protect\cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \eledmac\ run faster.
+% \item[nofamiliar] disables tools for familiar footnotes (\protect\cs{footnoteA}, \protect\cs{footnoteB} etc.). If you do not need familiar footnotes, this option lets \macpackage\ run faster.
 % It will also preserve room for other packages.
 % \item[noledgroup] \macpackage allows use of a series of critical notes and a new series of normal notes inside minipage and ledgroup environments (see \reff{ledgroup}). However, such features use up computer memory, at the expense of other processing needs. So if you do not need this feature, use \verb+noledgroup+ option. This should make \macpackage faster.
-% \item[series] \Macpackage defines five levels of notes: A, B, C, D, E.
+% \item[series] \Macpackage\  defines five levels of notes: A, B, C, D, E.
 % Using all these levels consumes memory space and processing speed.
 % This is why, if your work does not require the entire A--E series, you can narrow down the available number of series.
 % For example, if you only need A and B series, call the package with \verb+series={A,B}+ option.
@@ -891,12 +904,10 @@
 % \subsubsection{Automatically producing  \protect\cs{pstart} \ldots{} \protect\cs{pend}}
 % \DescribeMacro{\autopar}\label{autopar}
 % You can use \protect\cs{autopar} to avoid the nuisance of this paragraph markup
-% and still have every paragraph automatically numbered.  The scope of the
-% \protect\cs{autopar} command needs to be limited by keeping it within a group, as
-% follows:
+% and still have every paragraph automatically numbered.  The
+% \protect\cs{autopar} command needs to be called inside a \cs{beginnumbering}\ldots\cs{endnumbering} structure, as follows:
 % \egstart
 % \begin{verbatim}
-% \begingroup
 %   \beginnumbering
 %   \autopar
 %
@@ -906,7 +917,6 @@
 %   text.
 %
 %   \endnumbering
-% \endgroup
 % \end{verbatim}
 % \egend
 %
@@ -2843,7 +2853,7 @@
 % values; values between 10001 and 20000 have 10000 subtracted and the result
 % is given as a negative penalty. The mechanism used for indentations and
 % penalties requires unsigned values less than 32768. No penalty is placed
-% after the last line, so the final \verb+,0+ in then example above could
+% after the last line, so the final \verb+,0+ in the example above could
 % be omitted.  A penalty of 10000 will prevent a page break; such a
 % penalty is included automatically where there is stanza hanging indentation.
 % A penalty of ${-10000}$ (corresponding to the entry value 20000 in this
@@ -2924,17 +2934,17 @@
 %    \flagstanza{#1}%
 %}
 % \end{verbatim}
-% \subsection{Add annotation to line of verse numbers}\label{annotation}
+% \subsection{Adding annotations to line numbers}\label{annotation}
 % You may want to have two or more numbers associated with a line of verse.
 % Consider, for example, the following cases:
 % \begin{itemize}
 %  \item You want to split a line of verse into two parts depending upon some stylistic / rythmic / linguistic convention.
 %  \item You want to add the line number used by a previous edition of the work.
 % \end{itemize}
-% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such pattern which will in turn call \macpackage\ commands.}
+% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
 %
 % \DescribeMacro{\linenumannotation}
-% To resolve this issue, \macpackage\ allows you to annotate to a line of verse number:
+% To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
 % \begin{verbatim}
 % \linenumannotation{<annotation>}
 % \end{verbatim}
@@ -2946,8 +2956,8 @@
 %  \item It is printed alongside the line number in the margin.
 %  \item It is printed following the line number in critical footnotes and endnotes. 
 %  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
-%  \item If two or more annotations are called before a \cs{edtext}, the last one is used in associated notes.
-%  \item If an annotation is called within a \cs{edtext}, it is printed as an annotation for the end of the lemma.
+%  \item If two or more annotations are called before an \cs{edtext}, the last one is used in associated notes.
+%  \item If an annotation is called within an \cs{edtext}, it is printed as an annotation for the end of the lemma.
 % \end{itemize}
 % Here is an example, supposing we are on line 1:
 % \begin{verbatim}
@@ -2955,7 +2965,7 @@
 % \linenumannotation{A}
 % \edtext{second lemma}{…}
 % \edtext{third%
-%   \lienumannotation{B}
+%   \linenumannotation{B}
 %  lemma}{…}
 % \edtext{fourth lemma}& 
 % \end{verbatim}
@@ -2966,10 +2976,10 @@
 %   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
 %   \item by \enquote{B} for the fourth lemma. 
 % \end{itemize}
-% \subsubsection{Modify annotation associated to a specific note}
+% \subsubsection{Modifying annotation associated with a specific note}
 %
 % The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
-% \DescribeMacro{\lineannot} does the same for the annotations.
+% \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
 % It takes one argument, containing the beginnning and ending annotations separated by a pipe (\verb+|+).
 % As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
 % \begin{verbatim}
@@ -2978,7 +2988,7 @@
 % \lineannot{a|b}% to change both
 % \lineannot{\empty|}% to delete the beginning annotation 
 % \end{verbatim}
-% \subsubsection{Changing the position of the annotation}{annotationposition}
+% \subsubsection{Changing the position of the annotation}\label{annotationposition}
 % By default, annotations are placed after line numbers in both margin and footnote.
 % 
 % \DescribeMacro{\Xlinenumannotationposition}
@@ -2990,19 +3000,19 @@
 %
 % Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
 %  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes, 
-% \meta{} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
+% \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
 % \end{itemize}
-% In each of these three commands, \meta{v} can be \option{after} or \option{before} the line number.
+% In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
 % \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
 % By default, annotations are wrapped in the \cs{textsuperscript} macro.
 % You can modify this using one of the following:
 % \begin{itemize}
 %   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
-% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}.
+% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
 %   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
 %
 % Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
-%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}.
+%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
 %
 % Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
 %   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
@@ -3431,6 +3441,8 @@
 % Note that the file \verb+.idx+ will contain the right reference only after the third run, because of the internal indexing mechanism of \protect\macpackage.
 % That means you must first run (Xe/Lua)\LaTeX three times, then run \verb+makeindex+, and then finally run (Xe/Lua)\LaTeX\ again, in order to get an index with the right page numbers.
 %
+% Also note that using \cs{edtext} in familiar footnotes refers to the line where the footnotes are called
+% \subsection{Use with \package{imakeidx} or \package{indextools}}
 % If  the \protect\package{imakeidx} or \protect\package{indextools} package is used then the macro takes an optional
 % argument, which is the name of a raw index file. For example
 % |\edindex[line]{item}| will use |line.idx| as the raw file instead of
@@ -3445,7 +3457,6 @@
 %   \item Declare the index with the macro \cs{makeindex} of \package{imakeidx} and \package{indextools}.
 % \end{enumerate}
 %
-% Also note that using \cs{edtext} in familiar footnotes refers to the line where the footnotes are called
 % \subsection{Referring to critical notes}
 % If you want to refer to a word inside an
 % \protect\cs{edtext}\marg{lemma}\marg{app} command, \protect\cs{edindex} should be defined inside
@@ -3883,7 +3894,7 @@
 % \textbf{These commands have effect only at the second run}.
 % 
 % These two commands take effect at the beginning of line in which they are called.
-% For example, if you call \protect\cs{ledpb} at l.~444, then l.~443 will be at the p.~$n$, and the l.~444 at the p.~$n+1$.
+% For example, if you call \protect\cs{ledpb} at l.~444, then l.~443 will be at p.~$n$, and l.~444 at p.~$n+1$.
 % \DescribeMacro{\ledpbsetting} However, you can change the behavior and decide they will have effect after  the end of the line, adding
 % \verb+\ledpbsetting{after}+ at the beginning of your file (better: in your preamble). With the previous example, l.~444 will be
 % on p.~$n$ and l.~445 will be on p.~$n+1$.
@@ -4173,12 +4184,15 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2017/11/11 v2.26.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/04/07 v2.26.7 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
 % \changes{v0.4.0}{2004/02/29}{Added final/draft options}
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
+% \begin{macro}{\ifparledgroup}
+% \begin{macro}{\ifsameparallelpagenumber}
+% \begin{macro}{\ifprevpgnotnumbered}
 % \begin{macro}{\ifledfinal}
 % \begin{macro}{\ifnocritical@}
 % \begin{macro}{\if@noeled@sec}
@@ -4188,7 +4202,6 @@
 % \begin{macro}{\ifparapparatus@}
 % \begin{macro}{\ifnoquotation@}
 % \begin{macro}{\iflednopbinverse}
-% \begin{macro}{\ifparledgroup}
 % \begin{macro}{\ifwidthliketwocolumns}
 % \begin{macro}{\ifxindy@}
 % \begin{macro}{\ifxindyhyperref@}
@@ -4199,13 +4212,14 @@
 %    \begin{macrocode}
 \RequirePackage{xkeyval}
 %    \end{macrocode}
-% The \verb+parledgroup+ option is for \parpackage.
-% However, it has consequence on \macpackage\ internal command.
-% So we need to define the boolean now.
+%\subsubsection{Options of \parpackage}
+% Here, we define some booleans specific to \parpackage\  options, but which have consequences on \macpackage\ internal commands.
 %    \begin{macrocode}
 \newif\ifparledgroup
+\newif\ifsameparallelpagenumber%
+\newif\ifprevpgnotnumbered%%
 %    \end{macrocode}
-% And now, the options of \macpackage.
+%\subsubsection{Options of \macpackage}
 %    \begin{macrocode}
 \DeclareOptionX{series}[A,B,C,D,E]{\xdef\default@series{#1}}
 \ExecuteOptionsX{series}%
@@ -4290,6 +4304,8 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5081,6 +5097,7 @@
   \global\sub@lock \z@
   \global\sublines@false
   \global\let\next@page@num=\relax
+  \global\let\this@section@next@page@num=\relax%
   \global\let\sub@change=\relax
   \global\last@page@num=-10000%
   \ifdefined\line@numR%
@@ -5114,6 +5131,13 @@
     \ifnum\l@dnumpstartsL=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+%    \end{macrocode}
+% For the continuousnumberingwithcolumn options, we need to store a global value for the next \cs{endnumbering}.
+% We don't modify this counter globally, because that creates problem for nested \cs{edtext}.
+%    \begin{macrocode}
+    \global\page@num=\this@section@page@num%
+    \global\last@page@num=\this@section@last@page@num%
+    \global\let\next@page@num\this@section@next@page@num%
     \ifl@dpairing
       \global\pst@rtedLfalse
     \else
@@ -5151,14 +5175,14 @@
 % show that numbering continues across the gap.\footnote{Peter Wilson's thanks
 % to Wayne Sullivan,\index{Sullivan, Wayne} who suggested the idea
 % behind these macros.}
-% The \cs{pausenumbering@page@num} counter stores the \cs{next@page@num} when the \cs{pause@numbering} is called. 
+% The \cs{pausenumbering@page@num} counter stores the \cs{this@section@next@page@num} when the \cs{pause@numbering} is called. 
 %    \begin{macrocode}
 \newcount\pausenumbering@page@num%
 \newcommand{\pausenumbering}{%
-  \ifx\next@page@num\relax%
+  \ifx\this@section@next@page@num\relax%
     \global\pausenumbering@page@num=0%
   \else%
-    \global\pausenumbering@page@num=\next@page@num%
+    \global\pausenumbering@page@num=\this@section@next@page@num%
   \fi%
   \ifautopar\global\autopar@pausetrue\fi%
   \endnumbering\global\numberingtrue}
@@ -5998,7 +6022,12 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
+% \begin{macro}{\this@section@page@num}
+% The \cs{this@section@page@num} stores the page number on which a numbering section ends.
+%    \begin{macrocode}
+\newcount\this@section@page@num%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\ifnoteschanged@}
 % \begin{macro}{\noteschanged@true}
 % \begin{macro}{\noteschanged@false}
@@ -6265,7 +6294,7 @@
 % these to the macro. It is now: \\
 % \protect\cs{@nl}\marg{page counter number}\marg{printed page number} \\
 % We do not (yet) use the printed number (i.e., the \protect\cs{thepage}) but
-% it may come in handy later. The macro \protect\cs{fix@page} checks if a new
+% it may come in handy later. The macro \cs{@page} checks if a new
 % page has started.
 % 
 % Exactly what \protect\cs{@nl} does depends
@@ -6275,12 +6304,11 @@
 % \changes{v0.3.0}{2004/02/14}{Added a bunch of code to \protect\cs{@nl} for handling
 %                          \protect\cs{setlinenum}}
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{@nl} to include the page number}
-% \changes{v0.6.0}{2004/11/16}{Added \protect\cs{fix@page} to \protect\cs{@nl}}
 % \changes{v0.7.0}{2005/02/22}{Added \protect\cs{@nl@reg}}
 %    \begin{macrocode}
 
 \newcommand*{\@nl}[2]{%
-  \fix@page{#1}%
+  \@page{#1}%
   \ifledRcol%
     \@nl@regR%
   \else%
@@ -6353,15 +6381,18 @@
 %
 %
 % \begin{macro}{\last@page@num}
-% \begin{macro}{\fix@page}
-%  \protect\cs{fix@page} basically replaces \protect\cs{@page}. It determines whether or not
+% \begin{macro}{\this@section@last@page@num}
+% \begin{macro}{\@page}
+%  \protect\cs{@page}  determines whether or not
 % a new page has been started, based on the page values held by \protect\cs{@nl}.
-% \changes{v0.6.0}{2004/11/16}{Added \protect\cs{last@page@num} and \protect\cs{fix@page}}
 %    \begin{macrocode}
 \newcount\last@page@num
   \last@page@num=-10000
+
+\newcount\this@section@last@page@num%
+  \this@section@last@page@num=-10000%
  
-\newcommand*{\fix@page}[1]{%
+\newcommand*{\@page}[1]{%
   \ifledRcol
     \ifnum #1=\last@page@numR
     \else
@@ -6381,9 +6412,12 @@
           }%
         \fi%
       \fi
-      \global\page@numR=#1%
-      \global\last@page@numR=#1%
-      \global\def\next@page@numR{#1}%
+      \page@numR=#1%
+      \this@section@page@numR=#1%
+      \last@page@numR=#1%
+      \this@section@last@page@numR=#1%
+      \def\next@page@numR{#1}%
+      \gdef\this@section@next@page@numR{#1}%
     \fi
   \else
     \ifnum #1=\last@page@num
@@ -6392,17 +6426,27 @@
       \csnumgdef{@lastline@forpage@\the\page@num}{\the\line@num}%
       \ifbypage@
         \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
-          \line@num \z@ \subline@num \z@%
+          \line@num \z@%
+          \subline@num \z@%
           \global\csdef{reset@line\the\numexpr\absline@num+1\relax @\the\section@num}{}%
         \fi%
       \fi
-      \global\page@num=#1%
-      \global\last@page@num=#1%
-      \global\def\next@page@num{#1}%
+      \page@num=#1%
+      \global\this@section@page@num=#1%
+      \last@page@num=#1%
+      \global\this@section@last@page@num=#1%
+      \def\next@page@num{#1}%
+%    \end{macrocode}
+% And we set a flag that tells \cs{@nl} that a new page number is
+% to be set, because other associated actions shouldn't occur until the
+% next line-start occurs.
+%    \begin{macrocode}
+      \gdef\this@section@next@page@num{#1}%
       \listxadd{\normal@page@break}{\the\absline@num}
     \fi
   \fi}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -6694,6 +6738,7 @@
   \fi}
 
 \newcommand*{\do@lockoff}{%
+  \reset@current@annot%
   \ifledRcol
     \do@lockoffR
   \else
@@ -7087,37 +7132,65 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\new@line}
+% \begin{macro}{\l@the@c@page}
 % The \protect\cs{new@line} macro sends the \protect\cs{@nl} command to the line-list
 % file, to mark the start of a new text line, and its page number.
+% \label{new@line@pagecounting}
+% It writes the two forms of the page number:
+% \begin{itemize}
+%  \item Raw form (\cs{the}\cs{c@page}, which can be used for numeric tests.
+%  \item Formatted form (for example, in Roman).
+% \end{itemize}
+% Actually, only the first form is used by \cs{@nl}.
+% If we use the \cs{sameparallelpagenumber} option of \parpackage, we must write not the real page number (i.e. \verb+page+ counter, defined in standard \LaTeX) but the printed page number (i.e \verb+par@page+ counter, defined only on \macpackage).
+% \begin{itemize}
+%   \item For the raw form, we use \cs{the}\cs{c@page@page} macro, because the \verb+{par@page}+ counter is increased for each page.
+%   \item For the formatted version, \cs{thepage} is patched through \cs{par@patch@thepage}. So we have nothing to change.
+% \end{itemize}
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
   \IfStrEq{\led@pb@setting}{after}%
     {\xifinlist{\the\absline@num}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@page+\@ne}%
+        {\numgdef{\@next@page}{\c@par@page+\@ne}%
         \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
     }%
-    {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}}%
+    {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
   {}%
   \IfStrEq{\led@pb@setting}{before}%
     {\numdef{\next@absline}{\the\absline@num+\@ne}%
     \xifinlist{\next@absline}{\l@prev@nopb}%
       {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@page+\@ne}%
+        {\numgdef{\nc@page}{\c@par@page+\@ne}%
         \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
         }%
-        {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+        {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@page][\thepage]}}%
+      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
     }%
     {}%
-  \IfStrEqCase{\led@pb@setting}{{before}{\relax}{after}{\relax}}[\write\linenum@out{\string\@nl[\the\c@page][\thepage]}]%
+  \IfStrEqCase{\led@pb@setting}%
+    {%
+    {before}{\relax}%
+    {after}{\relax}%
+  }[%
+    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  ]%
 }
 
+\newcommand{\l@the@c@page}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {\the\c@par@page}%
+  {\the\c@page}%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\if@noneed@Footnote}
 % \protect\cs{if@noneed@Footnote} is a boolean to check if we have to print a error message when a \protect\cs{edtext} is called without any critical notes.
@@ -8361,6 +8434,23 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\pstarts@typeset@L}
+% \begin{macro}{\pstarts@read@L}
+% The \cs{pstarts@typeset@L} counts the number of LEFT \cs{pstart} typeset. 
+% A left \cs{pstart} can be a \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased in \cs{Columns} or \cs{Pages} when we prepare to typeset a left \cs{pstart}.
+% The \cs{pstarts@readL} counts the number of LEFT \cs{pstart} read. 
+% A left \cs{pstart} can be a  \cs{pstart} typeset in normal mode, or \cs{pstart} typset in left column or page in parallel mode (with{\parpackage}).
+% In the first case, its value is increased at every \cs{pstart} command.
+% In the second case, its value is increased at every \cs{pstarL}.
+% 
+%    \begin{macrocode}
+\newcount\pstarts@typeset@L%
+\newcount\pstarts@read@L%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\pstart}
 % \begin{macro}{\AtEveryPstart}
 % \begin{macro}{\AtStartEveryPstart}
@@ -8444,6 +8534,8 @@
   \global\let\next@insert=\empty%
   \begingroup\normal@pars%
   \global\advance \l@dnumpstartsL\@ne
+  \global\advance \pstarts@typeset@L\@ne%
+  \global\advance \pstarts@read@L\@ne%
   \global\setbox\raw@text=\vbox\bgroup%
     \if@nobreak%
       \if@afterindent\else%
@@ -8451,21 +8543,27 @@
         \global\@afterindenttrue%
       \fi%
     \fi%
-    \ifautopar\else%
-    \ifnumberpstart%
-      \ifinstanza\else%
-       \ifsidepstartnum\else%
-         \thepstart%
+    \ifboolexpr{%
+      bool{autopar}%
+      and  bool{by@autopar}%
+    }%
+    {}%
+    {%
+      \ifnumberpstart%
+        \ifinstanza\else%
+           \ifsidepstartnum\else%
+             \thepstart%
+           \fi%
         \fi%
-       \fi%
       \fi%
-     \fi%
+    }%
   \numberedpar@true%
   \iflabelpstart%
     \protected@edef\@currentlabel{\p@pstart\thepstart}%
   \fi%
   \l@dzeropenalties%
   \@at@start@every@pstart%
+  \global\by@autoparfalse%
   \ignorespaces%because not automatically ignored if an optional argument is used (classical TeX behavior for space after commands)
   }
 %    \end{macrocode}
@@ -8649,9 +8747,12 @@
 % that has been added for this paragraph. Then we start again with
 % \protect\cs{pstart}, restoring the indentation that we saved, and
 % locally change \protect\cs{par} so that it will do our \protect\cs{pend} for us.
+%
+% The boolean \cs{ifautopar} is set to TRUE while \cs{autopar} is enabled, and the \cs{ifby@autopar} is set to TRUE at each \cs{pstart} automatically called by the \cs{autopar} feature. A manual \cs{pstart} will have a \cs{ifby@autopar} set to FALSE.
+% 
 %    \begin{macrocode}
 \newif\ifautopar
-\autoparfalse
+\newif\ifby@autopar%
 \newcommand*{\autopar}{
   \ifledRcol
     \ifnumberingR \else
@@ -8667,7 +8768,13 @@
   \autopartrue
   \everypar{\setbox0=\lastbox
     \endgraf \vskip-\parskip
-    \pstart \noindent \kern\wd0 \ifnumberpstart\ifinstanza\else\thepstart\fi\fi
+    \global\by@autopartrue%
+    \pstart \noindent \kern\wd0%
+    \ifnumberpstart%
+      \ifinstanza\else%
+        \thepstart%
+      \fi%
+    \fi%
     \let\par=\pend}%
   \ignorespaces}
 %    \end{macrocode}
@@ -8702,6 +8809,8 @@
 % do all the processing for a single line of text.
 % \changes{v1.6.1}{2013/10/27}{Move the call to \protect\cs{inserthangingsymbol} to allow use \protect\cs{hfill} inside.}
 % \changes{v1.12.2}{2014/08/07}{Fix a bug with critical notes at the tops of pages (added by v12.0.0)}
+% The \cs{l@dunhbox@line} macro only \cs{unhbox}es one line, but packages like \cs{microtype} can override it as required.
+% 
 %    \begin{macrocode}
  \newcommand*{\l@dunhbox@line}[1]{\unhbox #1}
  \newcommand*{\do@line}{%
@@ -8730,7 +8839,7 @@
 % Depending weither a sectioning command is called at this pstart or not 
 % we print sectioning command or normal line, 
 %    \begin{macrocode}
-  \xifinlist{\the\l@dnumpstartsL}{\eled@sections@@}%
+  \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
      {\print@eledsection}%
      {\print@line}%
   \IfStrEq{\led@pb@setting}{after}{\led@check@pb\led@check@nopb}{}
@@ -8798,14 +8907,7 @@
 %    \end{macrocode}
 % If we use the \option{continuousnumberingwithcolumns}, we increase right line number.
 %    \begin{macrocode}
-        \ifcontinuousnumberingwithcolumns%
-          \unless\ifafterendnumberingR%
-            \new@lineR%
-            \xappto\next@line@list@stuffR{%
-              \unexpanded{\global\line@numR=}\the\line@num%
-            }%
-          \fi%
-        \fi%
+        \continuousnumberingwithcolumns@sync@linenumber@singletext%
 %    \end{macrocode}
 % If we use \LuaLaTeX\, then restore the direction.
 %    \begin{macrocode}
@@ -8858,12 +8960,12 @@
       \insert@msdata%
     }%
     \affixside@note%
-    \numdef{\temp@}{\l@dnumpstartsL-1}%
+    \numdef{\temp@}{\pstarts@typeset@L-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
-    \csuse{eled@sectioning@\the\l@dnumpstartsL}%
+    \csuse{eled@sectioning@\the\pstarts@typeset@L}%
     \@eled@sectioningfalse%
-    \global\csundef{eled@sectioning@\the\l@dnumpstartsL}%
+    \global\csundef{eled@sectioning@\the\pstarts@typeset@L}%
     \if@RTL%
       \hspace{-3\paperwidth}%
     {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
@@ -8872,6 +8974,7 @@
     {\new@line \hbox{\l@dunhbox@line{\one@line}}}%
     \fi%
     \vskip-\baselineskip%
+    \continuousnumberingwithcolumns@sync@linenumber@singletext%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -9082,7 +9185,8 @@
          {\global\@firstlineofpagetrue}%
        \ifcsdef{reset@line\the\absline@num @\the\section@num}%
          {%
-         \global\line@num=\z@ \global\subline@num=\z@%
+         \global\line@num=\z@%
+         \global\subline@num=\z@%
          \resetprevline@%
          }%
          {}%
@@ -9185,6 +9289,30 @@
   \fi}
 
 
+%    \end{macrocode}
+% \end{macro}
+% \subsection{Continuous line numbering between parallel typesetting and normal typesetting}
+% \begin{macro}{\continuousnumberingwithcolumns@sync@linenumber@singletext}
+% The \option{continuousnumberingwithcolumns}
+%  option allows to alternate between single text and two parallel texts, keeping the same line numbers when switching from one layout to the other.
+% The lines counter for the text in a single column and for the text in the left column in parallel typesetting is the same.
+% But the lines counter for the text in the same column is the not the same.
+%
+% When typesetting single column text, if the option is enabled, we need to \enquote{simulate} typesetting right line, in order to keep the two counters synchronized.
+% That is the aim of the \\
+% \cs{continuousnumberingwithcolumns@sync@linenumber@singletext}\\
+% macro.
+%    \begin{macrocode}
+\newcommand{\continuousnumberingwithcolumns@sync@linenumber@singletext}{%
+  \ifcontinuousnumberingwithcolumns%
+    \unless\ifafterendnumberingR%
+      \new@lineR%
+      \xappto\next@line@list@stuffR{%
+        \unexpanded{\global\line@numR=}\the\line@num%
+      }%
+    \fi%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \section{Line number annotation}
@@ -14105,7 +14233,7 @@
                       \unexpanded{\def\@this@crossref@start}{\theedtext:start}%
                       \unexpanded{\def\@this@crossref@end}{\theedtext:end}%
                       \expandonce{\@beforeinsertofthisedtext}% Internal for now, no reason to make it public
-                      \noexpand\parse@annot\l@current@annot|%
+                      \noexpand\parse@annot\l@current@annotR|%
                       \noexpand\csuse{v#1footnote}{#1}%
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false% 
@@ -15309,6 +15437,104 @@
 % \end{macro}
 % \end{macro}
 %
+% \section{Page numbering in parallel typsetting}
+% The \parpackage\ package has two options which change the way page numbering works.
+% We need to implement these options on \macpackage and not on \parpackage because they have some consequences for the \macpackage auxiliary files (numbered file; see~\reff{new@line@pagecounting}).
+% The \verb+sameparallelpagenumber+ option allows the same page number on both left and right side
+% The \verb+prevpgnotnumbered+ option allows an empty (not numbered) right-side page before \cs{Pages}.
+%
+%
+% We cannot implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX\ features to determine whether a page is left (even numbered) or right (odd numbered).
+% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of the value of the \verb+page+ counter.
+% 
+% This counter will be increased in a patched version of \LaTeX's \protect\cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
+%
+
+%
+
+% \begin{macro}{\par@patch@thepage}
+% \begin{macro}{\par@patch@pagenumbering}
+% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+page+.  
+% It must be called after any redefinition of \cs{thepage}. 
+% That is why we insert it at the end of the \LaTeX\ macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
+% In cases when we are using the \ltxclass{memoir} class, we insert it at the end of  \cs{@mempnum}.
+% When using \cs{pagenumbering}, we also need to reset the \verb+par@page+ counter. Consequently, we put \cs{par@patch@thepage} and counter reset in \cs{par@patch@pagenumbering}
+% We also call \cs{par@patch@thepage} at the beginning of the document.
+%    \begin{macrocode}
+
+\newcommand{\par@patch@thepage}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+  }%
+  {%
+    \patchcmd{\thepage}%
+      {page}{par@page}%
+      {}%
+      {\led@error@fail@patch@thepage}%
+  }{}%
+}%
+
+\newcommand{\par@patch@pagenumbering}{%
+  \ifboolexpr{%
+    bool{sameparallelpagenumber}%
+    or bool{prevpgnotnumbered}%
+    }%
+    {%
+    \setcounter{par@page}{1}%
+    }%
+    {}%
+  \par@patch@thepage%
+}%
+
+\ifl@dmemoir%
+  \apptocmd{\@mempnum}%
+    {\par@patch@pagenumbering}%
+    {}%%
+    {\led@error@fail@patch@@mempnum}%
+
+\else%
+  \apptocmd{\pagenumbering}%
+    {\par@patch@pagenumbering}%
+    {}%
+    {\led@error@fail@patch@pagenumbering}%
+\fi%
+
+\AtBeginDocument{\par@patch@thepage}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\@outputpage}
+% As its name says, \cs{@outputpage} is a \LaTeX\ macro called in the output routine. It is this macro which increases the \verb+page+ counter. 
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \apptocmd{\@outputpage}{%
+    \ifsameparallelpagenumber%
+      \ifl@dprintingpages%
+        \ifodd\c@page\else%
+          \stepcounter{par@page}%
+        \fi%
+      \else%
+        \stepcounter{par@page}%
+      \fi%
+    \else%
+      \stepcounter{par@page}%
+    \fi%
+    }%
+    {}%
+    {\led@error@fail@patch@@outputpage}%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\thepar@page}
+% The  \verb+par@page+ counter.
+%    \begin{macrocode}
+\newcounter{par@page}%
+\setcounter{par@page}{1}%
+%    \end{macrocode}
+% \end{macro} 
 %
 % \section{Cross referencing}
 % \label{xref}\relax
@@ -19861,7 +20087,7 @@
 %     \begin{itemize}
 %           \item The section level.
 %           \item The section title.
-%           \item The side (when \protect\package{eledpar} is used).
+%           \item The side (when \parpackage\  is used).
 %           \item The pstart where the command is called.
 %           \item If we have starred version or not.
 %     \end{itemize}
@@ -20220,7 +20446,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20235,7 +20461,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20250,7 +20476,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20264,7 +20490,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{}{}%
       }%
   \fi%
 }
@@ -20280,7 +20506,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@chapter{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20295,7 +20521,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@section{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@section{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20310,7 +20536,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }
@@ -20325,7 +20551,7 @@
       }%
   \else%
     \immediate\write\eled@sectioning@out{%
-      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\l@dnumpstartsL}{*}{}
+      \string\eled@subsubsection{#1}{\unexpanded{#2}}{\the\pstarts@read@L}{*}{}%
       }%
   \fi%
 }

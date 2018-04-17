@@ -258,7 +258,7 @@
 % \changes{v2.6.0}{2015/11/13}{\protect\cs{Xlineflag}  and \protect\cs{Xendlineflag} added}
 % \changes{v2.6.0}{2015/11/13}{Fix a bug with footnote numbering when using the same series of familiar footnotes on both sides.}
 % \changes{v2.6.0}{2015/11/13}{Error message when calling \protect\cs{Pages} or \protect\cs{Columns} without previous \protect\env{pages} or \protect\env{pairs} environnment.}
-% \changes{v2.6.0}{2015/11/13}{Fix compatibility with \protect\package{babel} (broken in v.2.0.0).}
+% \changes{v2.6.0}{2015/11/13}{Fix compatibility with \protect\package{babel} (broken in v2.0.0).}
 % \changes{v2.6.0}{2015/11/13}{No error messages about ends of left / right page when using the \protect\cs{syntaxonly} command of the \protect\package{syntonly} package.}
 % \hyphenation{man-u-script man-u-scripts}
 % \changes{v2.6.0}{2015/11/13}{Fix a bug with right side title number when using title commands before \protect\env{pages} or \protect\env{columns} environments.}
@@ -293,7 +293,7 @@
 % \changes{v2.14.4}{2016/11/14}{Take into account \protect\cs{linenumberstyle} when using \protect\cs{edlineref}.}
 % \changes{v2.15.0}{2016/12/12}{Add \protect\option{movecolumnspositiononrightpage} option.}
 % \changes{v2.15.0}{2016/12/12}{New macro \protect\cs{sidenotemarginR}, fix default value to right.}
-% \changes{v.2.15.0}{2016/12/12}{Fix a bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}\ …\ \protect\cs{endnumbering}}
+% \changes{v2.15.0}{2016/12/12}{Fix a bug with \protect\cs{msdata} when using multiple \protect\cs{beginnumbering}\ …\ \protect\cs{endnumbering}}
 % \changes{v2.15.0}{2016/12/12}{Fix a bug about space before sectioning commands after a pairs environment (bug added in v.~2.14.4).}
 % \changes{v2.15.0}{2016/12/12}{Fix a bug with page break when using \protect\cs{columns} (bug added in v.~2.14.1).}
 % \changes{v2.16.0}{2016/12/23}{Compatibility with \protect\cs{setmsdataposition}}
@@ -323,6 +323,13 @@
 % \changes{v2.20.1}{2017/08/23}{Fix bug with \protect\option{continuousnumberingwithcolumns} when left column and right column have not the same size.}
 % \changes{v2.20.2}{2017/08/31}{Fix bugs with \protect\option{continuousnumberingwithcolumns} when going to a new page}
 % \changes{v2.21.0}{2017/11/11}{Add compatibility with new features of \protect\reledmac 2.26.0}
+% \changes{v2.21.1}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation}}
+% \changes{v2.21.2}{2018/01/08}{Fix bug with \protect\cs{Xpstart} and \protect\cs{edtextlater}}
+% \changes{v2.21.3}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
+% \changes{v2.21.4}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
+% \changes{v2.21.5}{2018/02/28}{Compatibility with reledmac v.~2.26.6}
+% \changes{v2.21.6}{2018/04/06}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option}
+% \changes{v2.21.7}{2018/04/07}{Compatibility with \protect\macpackage 2.26.7}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1368,7 +1375,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2017/11/11 v2.21.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/04/07 v2.21.7 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1467,17 +1474,12 @@
 \DeclareOptionX{continuousnumberingwithcolumns}{\continuousnumberingwithcolumnstrue}%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\ifsameparallelpagenumber}
-% \begin{macro}{\ifprevpgnotnumbered}
-% Options related to page numbering
+% Options related to page numbering.
+% The booleans are defined in \macpackage.
 %    \begin{macrocode}
-\newif\ifsameparallelpagenumber
-\newif\ifprevpgnotnumbered
 \DeclareOptionX{sameparallelpagenumber}{\sameparallelpagenumbertrue}
 \DeclareOptionX{prevpgnotnumbered}{\prevpgnotnumberedtrue}
 %    \end{macrocode}
-% \end{macro}
-% \end{macro}
 % \begin{macro}{\prevpgstyle}
 % We store on \protect\cs{prevpgstyle} the argument of the option \verb+prevpgstyle+. 
 %    \begin{macrocode}
@@ -1817,6 +1819,7 @@
   \global\sub@lockR \z@
   \global\sublines@Rfalse
   \global\let\next@page@numR\relax
+  \global\let\this@section@next@page@numR\relax%
   \global\let\sub@change\relax
   \global\last@page@numR=-10000%
   \global\stopmsdata@inserted@true%
@@ -1869,6 +1872,9 @@
     \ifnum\l@dnumpstartsR=0%
       \led@err@NumberingWithoutPstart%
     \fi%
+    \global\page@numR=\this@section@page@numR%
+    \global\last@page@numR=\this@section@last@page@numR%
+    \global\let\next@page@numR\this@section@next@page@numR%
     \ifl@dpairing
       \global\pst@rtedRfalse
     \else
@@ -1949,10 +1955,10 @@
 %    \begin{macrocode}
 \newcount\pausenumbering@page@numR%
 \newcommand*{\pausenumberingR}{%
-  \ifx\next@page@numR\relax%
+  \ifx\this@section@next@page@numR\relax%
     \global\pausenumbering@page@numR=0%
   \else%
-    \global\pausenumbering@page@numR=\next@page@numR%
+    \global\pausenumbering@page@numR=\this@section@next@page@numR%
   \fi%
   \endnumberingR%
   \global\numberingRtrue%
@@ -2442,11 +2448,13 @@
 % \end{macro}
 %
 % \begin{macro}{\page@numR}
-% The right text page number.
+% \begin{macro}{\this@section@page@numR}
+% The right text page numbers.
 %    \begin{macrocode}
 \newcount\page@numR
-
+\newcount\this@section@page@numR%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \subsubsection{Specific to \parpackage}
 % \begin{macro}{\linesinpar@listL}
@@ -2578,16 +2586,22 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\last@page@numR}
+% \begin{macro}{\this@section@last@page@numR}
 % \begin{macro}{\fix@page}
-% \protect\cs{last@page@numR} store the page number of the last right page.
-% It is modified by \protect\cs{fix@page}, defined by \reledmac.
+% \protect\cs{last@page@numR} holds the page number of the last right page.
+% \protect\cs{this@section@last@page@numR} holds the page number of the last right page of the current section. Its value is modified globally, contrary to \cs{last@page@numR}.
+% Both are modified by \protect\cs{fix@page}, defined by \reledmac.
+%
 % \changes{v2.0.0}{2105/06/28}{\protect\cs{fix@page} is defined only once in \reledmac} 
 %
 %    \begin{macrocode}
 \newcount\last@page@numR
   \last@page@numR=-10000
+\newcount\this@section@last@page@numR%
+  \this@section@last@page@numR=-10000%
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 %
@@ -2794,7 +2808,7 @@
        \the\endpage@num|\the\endline@num|%
        \ifsublines@R \the\endsubline@num \else 0\fi}\to\line@listR
     \xright@appenditem%
-      {\current@annot|\endcurrent@annot}\to\annot@list%
+      {\current@annot|\endcurrent@annot}\to\annot@listR%
 %    \end{macrocode}
 % Create a list which will store all the second argument of  each \protect\cs{@sw}
 % in this lemma, at this level.
@@ -2976,7 +2990,8 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \write\linenum@out{\string\@nl[\the\c@page][\thepage]}}
+  \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\new@lineR}
@@ -2984,7 +2999,8 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \write\linenum@outR{\string\@nl[\the\c@page][\thepage]}}
+  \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3572,6 +3588,7 @@
 % forthcoming text.
 %    \begin{macrocode}
   \global\advance\l@dnumpstartsL \@ne%
+  \global\advance\pstarts@read@L \@ne%
   \ifnum\l@dnumpstartsL>\l@dc@maxchunks%
     \led@err@TooManyPstarts%
     \global\l@dnumpstartsL=\l@dc@maxchunks%
@@ -3584,14 +3601,19 @@
 % that you set when the group for the \protect\cs{vbox} ends. 
 %    \begin{macrocode}
   \l@dzeropenalties%
-  \ifautopar\else%
+  \ifboolexpr{%
+    bool{autopar}%
+    and  bool{by@autopar}%
+  }%
+  {}%
+  {%
     \ifnumberpstart%
       \ifsidepstartnum%
         \else%
-         \thepstartL%
-        \fi%
-       \fi%
+        \thepstartL%
       \fi%
+    \fi%
+  }%m
   \@at@start@every@pstart%
   \hsize=\Lcolwidth%
   \numberedpar@true%
@@ -3627,11 +3649,13 @@
     }%
    \at@every@pstart@call%
 %    \end{macrocode}
+% Let \cs{by@autopar} to FALSE.
+%    \begin{macrocode}
+  \global\by@autoparfalse%
+%    \end{macrocode}
 % Gobble following space (automatically done if there is no optional argument)
 %    \begin{macrocode}
   \ignorespaces%
-%    \end{macrocode}
-%    \begin{macrocode}
   }
 %    \end{macrocode}
 % The same for right side.
@@ -3670,13 +3694,18 @@
   \fi%
   \global\setnamebox{l@dRcolrawbox\the\l@dnumpstartsR}=\vbox\bgroup%
     \l@dzeropenalties%
-    \ifautopar\else%
+    \ifboolexpr{%
+      bool{autopar}%
+      and  bool{by@autopar}%
+    }%
+    {}%
+    {%
       \ifnumberpstart%
         \ifsidepstartnum\else%
           \thepstartR%
-         \fi%
         \fi%
-       \fi%
+      \fi%
+    }%
   \@at@start@every@pstart%
   \hsize=\Rcolwidth%
   \numberedpar@true%
@@ -3708,6 +3737,7 @@
       }%
     }%
    \at@every@pstart@call%
+   \global\by@autoparfalse%
    \ignorespaces%
   }
 %    \end{macrocode}
@@ -3941,7 +3971,7 @@
       \else%
         \affixline@num%
       \fi%
-      \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+      \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
         {\unless\ifshiftedpstarts%
           \add@apparatusL%
          \fi%
@@ -4009,7 +4039,7 @@
     \addtocounter{pstartL}{-1}%
     \ifdefstring{\@eledsectnotoc}{L}{\ledsectnotoc}{}
     \ifdefstring{\@eledsectmark}{L}{}{\ledsectnomark}
-    \numdef{\temp@}{\l@dpscL-1}%
+    \numdef{\temp@}{\pstarts@typeset@L-1}%
     \xifinlist{\temp@}{\eled@sections@@}{\@nobreaktrue}{\@nobreakfalse}%
     \@eled@sectioningtrue%
     \bgroup%
@@ -4019,10 +4049,10 @@
         \bodydir\l@luatexbodydir@L%
         \ifdefstring{\l@luatextextdir@L}{TRT}{\@RTLtrue}{}%
       \fi%
-      \csuse{eled@sectioning@\the\l@dpscL}%
+      \csuse{eled@sectioning@\the\pstarts@typeset@L}%
     \egroup%
     \@eled@sectioningfalse%
-    \global\csundef{eled@sectioning@\the\l@dpscL}%
+    \global\csundef{eled@sectioning@\the\pstarts@typeset@L}%
     \if@RTL%
       \hspace{-3\paperwidth}%
     {\hbox{\l@dunhbox@line{\one@line}} \new@line}%
@@ -4971,16 +5001,23 @@
       \unexpanded{%
         \lemma{\no@expands #1}%
       }%
-        \noexpand\xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
+      \noexpand\xxref{start:edtext:later:\the\edtext@later}{end:edtext:later:\the\edtext@later}%
       \noexpand\linenum{||||||\edfont@info}%
       \unexpanded{\def\sw@inthisedtext}{\expandonce{\sw@inthisedtext}}%
 %    \end{macrocode}
-% As the \cs{edtextnow} is generally called on the other side than the corresponding \cs{edtextlater}, we need to store the side for a proper formatting of the footnote.
+% As the \cs{edtextnow} is generally called on the other side than the corresponding \cs{edtextlater}, we need to store the side for a proper formatting of the footnote. We also need to store the pstartL / pstartR counter.
 %    \begin{macrocode}
       \ifledRcol%
         \unexpanded{\appto\@beforeinsertofthisedtext{\ledRcol@true}}%
+        {%
+          \noexpand\setcounter{pstartR}{\noexpand\xpstartref{start:edtext:later:\the\edtext@later}}%
+        }%
       \else%
         \unexpanded{\appto\@beforeinsertofthisedtext{\ledRcol@false}}%
+        \unexpanded{\appto\@beforeinsertofthisedtext}%
+        {%
+          \noexpand\setcounter{pstartL}{\noexpand\xpstartref{start:edtext:later:\the\edtext@later}}%
+        }%
       \fi%
 %    \end{macrocode}
 % And the footnote command of this \cs{edtextlater}.
@@ -5533,9 +5570,9 @@
 % \end{macro}
 % \end{macro}
 % 
-% \begin{macro}{\l@pscL}
-% \begin{macro}{\l@pscR}
-% A couple of scratch counts for use in left and right texts, respectively.
+% \begin{macro}{\l@dpscL}
+% \begin{macro}{\l@dpscR}
+% A couple of scratch counts to count left and right \cs{pstart}, respectively.
 %    \begin{macrocode}
 \newcount\l@dpscL
 \newcount\l@dpscR
@@ -5755,12 +5792,14 @@
         \global\pstartnumtrue 
         \global\pstartnumRtrue
 %    \end{macrocode}
-% Increment \protect\cs{l@dpscL} and \protect\cs{l@dpscR} which here count
+% Increase \protect\cs{l@dpscL} and \protect\cs{l@dpscR} which here count
 % the numbers of left and right chunks.
+% Increase \cs{pstarts@typeset@L}, which counts the number of \cs{pstart} typeset both in not parallel mode and in the left side of parallel mode.
 % Also restore the value of the public pstart counters.
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne
       \global\advance\l@dpscR \@ne
+      \global\advance\pstarts@typeset@L\@ne%
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
@@ -5783,12 +5822,12 @@
 %    \begin{macrocode}
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
-            \xifinlist{\the\l@dpscL}{\eled@sections@@}
+            \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                 {%
                 \ifdefstring{\@eledsectmark}{L}%
-                  {\csuse{eled@sectmark@\the\l@dpscL}%
+                  {\csuse{eled@sectmark@\the\pstarts@typeset@L}%
                   }{}%
-                \global\csundef{eled@sectmark@\the\l@dpscL}%
+                \global\csundef{eled@sectmark@\the\pstarts@typeset@L}%
                 \savebox{\@eledsectionL}{\parbox[t][][t]{\Lcolwidth}{\vbox{}\print@eledsectionL}}%\vbox{}-> prevent alignment troubles with RTL language
                 }%
                 {}%
@@ -6358,7 +6397,8 @@
 %    \end{macrocode}
 % Loop over the number of chunks, incrementing the chunk counts 
 % (\protect\cs{l@dpscL}
-% and \protect\cs{l@dpscR} are chunk (box) counts.)
+% and \protect\cs{l@dpscR} are chunk (box) counts).
+%
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne%
       \global\advance\l@dpscR \@ne%
@@ -6397,6 +6437,7 @@
 %    \begin{macrocode}
       \global\advance\l@dpscL \@ne%
       \global\advance\l@dpscR \@ne%
+      \global\advance\pstarts@typeset@L\@ne%
       \restore@pstartL@pc%
       \restore@pstartR@pc%
 %    \end{macrocode}
@@ -6432,7 +6473,7 @@
               \csuse{before@pstartL@\the\l@dpscL}%
               \global\csundef{before@pstartL@\the\l@dpscL}%
               \do@lineL%
-              \xifinlist{\the\l@dpscL}{\eled@sections@@}
+              \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                 {\print@eledsectionL}%
                 {}%
               \advance\numpagelinesL \@ne%
@@ -6450,7 +6491,7 @@
                         \parledgroup@correction@notespacing{L}%
                         \hb@xt@ \hsize{\ledstrutL\unhbox\l@dleftbox}%
                       \else%
-                        \xifinlist{\the\l@dpscL}{\eled@sections@@}%
+                        \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                           {\add@apparatusL}%
                           {}%
                         \unless\ifadvancedshiftedpstarts%
@@ -7151,6 +7192,7 @@
 % Go to the next pstart
 %    \begin{macrocode}
         \global\advance\l@dpscL \@ne
+        \global\advance\pstarts@typeset@L\@ne%
         \global\pstartnumtrue%
         \restore@pstartL@pc%
 %    \end{macrocode}
@@ -7244,104 +7286,7 @@
 % \end{macro}
 % \end{macro}
 %
-% \section{Page numbering}
-% \subsection{Global options}
-% The \verb+sameparallelpagenumber+ option  allows the same page number on both left and right side
-% The \verb+prevpgnotnumbered+ option allows an empty (not numbered) right-side page before \cs{Pages}.
-%
-%
-% We cannot implement these two options by changing the value of the \verb|page| counter, since its value is used by many \LaTeX features to determine whether a page is left (even-numbered) or right (odd-numbered).
-% Consequently, we have to do it by patching \cs{thepage}, in order to use the value of the \verb+par@page+ counter instead of value of \verb+page+ counter.
-% 
-% This counter will be increased in a patched version of the \LaTeX's \protect\cs{@outputpage} macro, as is the \verb+page+ counter in this macro. However, this increase will take account of the options.
-%
-
-%
-
-% \begin{macro}{\par@patch@thepage}
-% \begin{macro}{\par@patch@pagenumbering}
-% \cs{par@patch@thepage} patches \cs{thepage} in order to use the value of \verb+par@page+ counter and not the value of \verb+par@page+.  
-% It must be called after any redefinition of \cs{thepage}. 
-% That is why we insert it at the end of the \LaTeX\ macro \cs{pagenumbering}, which is called by some \cs{xxxmatter} commands. 
-% In cases when we are using the \ltxclass{memoir} class, we insert it at the end of  \cs{@mempnum}.
-% When using \cs{pagenumbering}, we also need to restart \verb+par@page+ counter. Consequently, we have wrapped \cs{par@patch@thepage} and counter restart in \cs{par@patch@pagenumbering}
-% We also call \cs{par@patch@thepage} it at the beginning of the document.
-%    \begin{macrocode}
-
-\newcommand{\par@patch@thepage}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-  }%
-  {%
-    \patchcmd{\thepage}%
-      {page}{par@page}%
-      {}%
-      {\led@error@fail@patch@thepage}%
-  }{}%
-}%
-
-\newcommand{\par@patch@pagenumbering}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-    }%
-    {%
-    \setcounter{par@page}{1}%
-    }%
-    {}%
-  \par@patch@thepage%
-}%
-
-\ifl@dmemoir%
-  \apptocmd{\@mempnum}%
-    {\par@patch@pagenumbering}%
-    {}%%
-    {\led@error@fail@patch@@mempnum}%
-
-\else%
-  \apptocmd{\pagenumbering}%
-    {\par@patch@pagenumbering}%
-    {}%
-    {\led@error@fail@patch@pagenumbering}%
-\fi%
-
-\AtBeginDocument{\par@patch@thepage}%
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \begin{macro}{\@outputpage}
-% As its name says, \cs{@outputpage} is a \LaTeX's macro called in the output routine. It is this macro which increases the \verb+page+ counter.. 
-% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
-%    \begin{macrocode}
-\AtBeginDocument{%
-  \apptocmd{\@outputpage}{%
-    \ifsameparallelpagenumber%
-      \ifl@dprintingpages%
-        \ifodd\c@page\else%
-          \stepcounter{par@page}%
-        \fi%
-      \else%
-        \stepcounter{par@page}%
-      \fi%
-    \else%
-      \stepcounter{par@page}%
-    \fi%
-    }%
-    {}%
-    {\led@error@fail@patch@@outputpage}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\thepar@page}
-% And now, initialize \verb+par@page+ counter.
-%    \begin{macrocode}
-\newcounter{par@page}%
-\setcounter{par@page}{1}%
-%    \end{macrocode}
-% \end{macro} 
-% \subsection{mainmatter option of \cs{Pages}}
+% \section{The \option{mainmatter} option of \cs{Pages}}
 % The optional argument of \cs{Pages} could be equal to \verb+mainmatter+.
 % In this case the boolean \cs{ifPages@mainmatter} is set to true, and some special things are done in \cs{Pages@mainmatter}, called by \cs{cleartol@devenpage}.
 % \begin{macro}{\ifPages@mainmatter}
