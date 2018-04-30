@@ -3275,7 +3275,7 @@
 % While in \macpackage the footnotes are inserted at the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the \verb+PstartL+ and \verb+PstartR+ counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \protect\cs{pstart} and restore these at each \protect\cs{pstart} when calling \protect\cs{Columns} or \protect\cs{Pages}. 
-% We also dump and restore the value of the boolean \protect\cs{ifnumberpstart}.
+% We also dump and restore the value of the booleans \protect\cs{ifnumberpstart} and \protect\cs{ifnumberline}.
 
 % So, first step, creating the lists. 
 % Here, ``pc'' means ``public counters''.
@@ -3296,11 +3296,13 @@
 \def\dump@pstartL@pc{%
   \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
   \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
+  \global\cslet{numberline@L\the\l@dnumpstartsL}{\ifnumberline}%
 }%
 
 \def\dump@pstartR@pc{%
   \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
   \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
+  \global\cslet{numberline@R\the\l@dnumpstartsR}{\ifnumberline}%
 }%
 
 %    \end{macrocode}
@@ -3946,6 +3948,7 @@
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
+  \letcs{\ifnumberline}{numberline@L\the\l@dpscL}%
   \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
     {\vbadness=10000%
@@ -4135,6 +4138,7 @@
   \let\linenumrep\linenumrepR%
   \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
+  \letcs{\ifnumberline}{numberline@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
