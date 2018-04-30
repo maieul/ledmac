@@ -7151,35 +7151,37 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
-  \IfStrEq{\led@pb@setting}{after}%
-    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
-      }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
-    }%
-    {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
-  {}%
-  \IfStrEq{\led@pb@setting}{before}%
-    {\numdef{\next@absline}{\the\absline@num+\@ne}%
-    \xifinlist{\next@absline}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+  \ifnumberline%
+    \IfStrEq{\led@pb@setting}{after}%
+      {\xifinlist{\the\absline@num}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\@next@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
         }%
         {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
-    }%
+      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
     {}%
-  \IfStrEqCase{\led@pb@setting}%
-    {%
-    {before}{\relax}%
-    {after}{\relax}%
-  }[%
-    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
-  ]%
+    \IfStrEq{\led@pb@setting}{before}%
+      {\numdef{\next@absline}{\the\absline@num+\@ne}%
+      \xifinlist{\next@absline}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\nc@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+          }%
+          {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+        }%
+        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+      }%
+      {}%
+    \IfStrEqCase{\led@pb@setting}%
+      {%
+      {before}{\relax}%
+      {after}{\relax}%
+    }[%
+      \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+    ]%
+  \fi%
 }
 
 \newcommand{\l@the@c@page}{%
