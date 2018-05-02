@@ -330,6 +330,9 @@
 % \changes{v2.21.5}{2018/02/28}{Compatibility with reledmac v.~2.26.6}
 % \changes{v2.21.6}{2018/04/06}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option}
 % \changes{v2.21.7}{2018/04/07}{Compatibility with \protect\macpackage 2.26.7}
+% \changes{v2.21.8}{2018/05/02}{Fix bug with critical footnotes line number when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.21.8}{2018/05/02}{Fix bug with marginal line number in parallel typesetting when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.21.8}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1375,7 +1378,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/04/20 v2.21.7a reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/05/02 v2.21.8 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2990,7 +2993,9 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  \ifnumberline%
+    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -2999,7 +3004,9 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
+  \ifnumberline%
+    \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -3275,7 +3282,7 @@
 % While in \macpackage the footnotes are inserted at the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the \verb+PstartL+ and \verb+PstartR+ counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \protect\cs{pstart} and restore these at each \protect\cs{pstart} when calling \protect\cs{Columns} or \protect\cs{Pages}. 
-% We also dump and restore the value of the boolean \protect\cs{ifnumberpstart}.
+% We also dump and restore the value of the booleans \protect\cs{ifnumberpstart} and \protect\cs{ifnumberline}.
 
 % So, first step, creating the lists. 
 % Here, ``pc'' means ``public counters''.
@@ -3296,11 +3303,13 @@
 \def\dump@pstartL@pc{%
   \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
   \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
+  \global\cslet{numberline@L\the\l@dnumpstartsL}{\ifnumberline}%
 }%
 
 \def\dump@pstartR@pc{%
   \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
   \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
+  \global\cslet{numberline@R\the\l@dnumpstartsR}{\ifnumberline}%
 }%
 
 %    \end{macrocode}
@@ -3946,6 +3955,7 @@
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
+  \letcs{\ifnumberline}{numberline@L\the\l@dpscL}%
   \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
     {\vbadness=10000%
@@ -4135,6 +4145,7 @@
   \let\linenumrep\linenumrepR%
   \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
+  \letcs{\ifnumberline}{numberline@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%

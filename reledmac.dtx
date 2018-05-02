@@ -507,6 +507,9 @@
 % \changes{v2.26.6}{2018/02/28}{Fix bug with \protect\cs{lineation} by page and nexted \protect\cs{edtext} between two pages (added in v.~2.24.0)}
 % \changes{v2.26.7}{2018/04/07}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option of \protect\parpackage and typesetting critical text in single mode after critical text in double page mode}
 % \changes{v2.26.8}{2018/04/30}{Fix bug in some specific cases, introduced by v.2.27.7}
+% \changes{v2.26.9}{2018/05/02}{Fix bug with critical footnotes line number when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.26.9}{2018/05/02}{Fix bug with page number in footnote after \protect\cs{mainmatter} (bug introduced in v2.26.7)}
+% \changes{v2.26.9}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4185,7 +4188,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/04/30 v2.26.8 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/05/02 v2.26.9 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -7151,35 +7154,37 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
-  \IfStrEq{\led@pb@setting}{after}%
-    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
-      }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
-    }%
-    {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
-  {}%
-  \IfStrEq{\led@pb@setting}{before}%
-    {\numdef{\next@absline}{\the\absline@num+\@ne}%
-    \xifinlist{\next@absline}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+  \ifnumberline%
+    \IfStrEq{\led@pb@setting}{after}%
+      {\xifinlist{\the\absline@num}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\@next@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
         }%
         {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
-    }%
+      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
     {}%
-  \IfStrEqCase{\led@pb@setting}%
-    {%
-    {before}{\relax}%
-    {after}{\relax}%
-  }[%
-    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
-  ]%
+    \IfStrEq{\led@pb@setting}{before}%
+      {\numdef{\next@absline}{\the\absline@num+\@ne}%
+      \xifinlist{\next@absline}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\nc@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+          }%
+          {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+        }%
+        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+      }%
+      {}%
+    \IfStrEqCase{\led@pb@setting}%
+      {%
+      {before}{\relax}%
+      {after}{\relax}%
+    }[%
+      \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+    ]%
+  \fi%
 }
 
 \newcommand{\l@the@c@page}{%
