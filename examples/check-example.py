@@ -63,7 +63,6 @@ def one_file(filename):
     if ext != '.pdf':#only the .pdf file
         return
     export_png(filename,basename)
-    diff_png(basename)
 
 def _main_():
     create_repository("export")
