@@ -4453,10 +4453,22 @@
 % \end{macro}
 %
 % \begin{macro}{\led@err@edtextoutsidepstart}
+% \begin{macro}{\led@err@PstartInEdtext}
+% \begin{macro}{\led@err@PendInEdtext}
 %    \begin{macrocode}
 \newcommand*{\led@err@edtextoutsidepstart}{%
   \reledmac@error{\string\edtext\space outside numbered paragraph (\pstart\space …\space\pend)}{\@ehc}}%
+
+\newcommand{\led@err@PstartInEdtext}[1]{%
+  \reledmac@error{\string\pstart\space in \string\edtext\space #1 argument}{\@ehc}%
+}%
+
+\newcommand{\led@err@PendInEdtext}[1]{%
+  \reledmac@error{\string\pend\space in \string\edtext\space #1 argument}{\@ehc}%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\led@mess@NotesChanged}
 %    \begin{macrocode}
@@ -7729,7 +7741,11 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% we increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
+% Check the content of the arguments, to be certain there is no forbidden command inside.
+%    \begin{macrocode}%
+      \@check@edtext@args{#1}{#2}%
+%    \end{macrocode}
+% We increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
@@ -7890,8 +7906,22 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\@check@edtext@args}
+% A macro which just checks the arguments of the \cs{edtext} and let know
+% if there is some probleme, like, for example, \cs{pstart} inside.
+%    \begin{macrocode}
+\newcommand{\@check@edtext@args}[2]{%
+  \begingroup%
+    \noexpandarg%
+    \IfSubStr{#1}{\pstart}{\led@err@PstartInEdtext{first}}{}%
+    \IfSubStr{#1}{\pend}{\led@err@PendInEdtext{first}}{}%
+    \IfSubStr{#2}{\pstart}{\led@err@PstartInEdtext{second}}{}%
+    \IfSubStr{#2}{\pend}{\led@err@PendInEdtext{second}}{}%
+  \endgroup%
+}%
 % 
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\@beforeinsertofthisedtext}
 % \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage\ or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
 % Its content is \cs{let} equal to \cs{relax} at the end of every \cs{edtext}.
