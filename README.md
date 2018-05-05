@@ -97,8 +97,8 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 
 We maintain two collaborative bibliographies:
 
-- [Critical Editions Typeset with EDMAC, LEDMAC and eLEDMAC](https://www.zotero.org/groups/critical_editions_typeset_with_edmac_ledmac_and_eledmac/items)
-- [Articles and books about (r)(e)(l)edmac](https://www.zotero.org/groups/articles_and_books_about_reledmac/items)
+- [Critical Editions Typeset with EDMAC, LEDMAC and eLEDMAC](https://www.zotero.org/groups/209265/)
+- [Articles and books about (r)(e)(l)edmac](https://www.zotero.org/groups/1024519/)
 
 
 
