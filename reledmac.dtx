@@ -512,6 +512,7 @@
 % \changes{v2.26.9}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
 % \changes{v2.26.10}{2018/05/05}{Really fix bug with page number in footnote after \protect\cs{mainmatter} (bug introduced in v2.26.7)}
 % \changes{v2.26.10}{2018/05/05}{Add error message when insertion a \protect\cs{pstart} or \protect\cs{pend} inside \protect\cs{edtext} arguments}
+% \changes{v2.26.11}{2018/05/21}{Allow to use \cs{edtext} inside \cs{sameword}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4190,7 +4191,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/05/05 v2.26.10 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/05/21 v2.26.11 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8229,12 +8230,13 @@
 % \begin{macro}{\sw@noexpand}
 %    \begin{macrocode}
 \newcommand{\swnoexpands}{%
-    \let\sameword\@firstofone%Allow to have nested \sameword
+    \let\sameword\l@secondmandarg%Allow to have nested \sameword
     \let\emph\@firstofone%
     \let\textit\@firstofone%
     \let\textbf\@firstofone%
     \let\textsc\@firstofone%
     \let\framebox\@firstofone%
+    \let\edtext\dummy@edtext%
     \RenewExpandableDocumentCommand{\edindex}{om}{}%
     \ifdefined\index%
       \RenewExpandableDocumentCommand{\index}{om}{}%
@@ -18995,12 +18997,18 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l@dgobblearg}
+% \begin{macro}{\l@dgobbleoptarg}
 % \protect\cs{l@dgobbleoptarg}\oarg{arg}\marg{arg} replaces these two arguments (first is optional) by \protect\cs{relax}.
 % \changes{v1.12.5}{2014/08/28}{\protect\cs{l@dgobblearg} becomes \protect\cs{l@dgobbeloptarg}}
 %    \begin{macrocode}
 \newcommand*{\l@dgobbleoptarg}[2][]{\relax}%
 
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\l@secondmandarg}
+% \protect\cs{l@secondoptarg}\oarg{arg}\marg{arg} gobble the first (optional) argument, and expand to the second (mandatory) argument.
+%    \begin{macrocode}
+\NewExpandableDocumentCommand{\l@secondmandarg}{om}{#2}%
 %    \end{macrocode}
 % \end{macro}
 %
