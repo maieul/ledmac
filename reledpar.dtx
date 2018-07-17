@@ -333,6 +333,7 @@
 % \changes{v2.21.8}{2018/05/02}{Fix bug with critical footnotes line number when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
 % \changes{v2.21.8}{2018/05/02}{Fix bug with marginal line number in parallel typesetting when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
 % \changes{v2.21.8}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
+% \changes{v2.21.9}{2018/07/17}{Fix (little) bug when using \protect\package{calc} package.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1381,7 +1382,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/05/02 v2.21.8 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/07/17 v2.21.9 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -3384,13 +3385,13 @@
     \get@familiarfootnote@number%
   \fi%
   \save@section@number%
-  \setlength{\Lcolwidth}{\textwidth}%
-  \setlength{\Rcolwidth}{\textwidth}%
+  \Lcolwidth=\textwidth%
+  \Rcolwidth=\textwidth%
 }{%
   \l@dpairingfalse
   \l@dpagingfalse
-  \global\setlength{\Lcolwidth@pages}{\Lcolwidth}%
-  \global\setlength{\Rcolwidth@pages}{\Rcolwidth}%
+  \global\Lcolwidth@pages=\Lcolwidth%Does not use \setlength, in case of calc package redefiniton (cf. https://github.com/latex3/latex2e/issues/58)
+  \global\Rcolwidth@pages=\Rcolwidth%
 }
 
 %    \end{macrocode}
@@ -6384,8 +6385,8 @@
 % \changes{v2.3.0}{2015/09/05}{Fix a bug when calling \protect\cs{Columns} after a \protect\cs{Pages} (bug added in v1.13.0).}
 % \changes{v2.17.2}{2017/04/06}{Fix a bug when changing \protect\cs{Lcolwitdth} and \protect\cs{Rcolwitdth} in \protect\env{pages} environment.}
 %    \begin{macrocode}
-    \setlength{\Lcolwidth}{\Lcolwidth@pages}%
-    \setlength{\Rcolwidth}{\Rcolwidth@pages}%
+    \Lcolwidth=\Lcolwidth@pages%
+    \Rcolwidth=\Rcolwidth@pages%
 %    \end{macrocode}
 %    \begin{macrocode}
     \l@dzeropenalties%
