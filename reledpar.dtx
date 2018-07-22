@@ -5848,6 +5848,7 @@
 %    \begin{macrocode}
             \l@duselanguage{\theledlanguageL}%
             \do@lineL
+            \check@shiftedpstarts@columns@L%
             \xifinlist{\the\pstarts@typeset@L}{\eled@sections@@}%
                 {%
                 \ifdefstring{\@eledsectmark}{L}%
@@ -5859,6 +5860,7 @@
                 {}%
             \l@duselanguage{\theledlanguageR}%
             \do@lineR
+            \check@shiftedpstarts@columns@R%
             \xifinlist{\the\l@dpscR}{\eled@sectionsR@@}
                 {%
                 \ifdefstring{\@eledsectmark}{R}%
@@ -6144,6 +6146,37 @@
          \usebox{\@eledsectionL}%
       \fi%
     }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\check@shiftepstarts@columns@L}
+% \begin{macro}{\check@shiftepstarts@columns@R}
+% These two macros check the value of \cs{if@shiftedpstarts@columns}.
+% If this boolean is set to TRUE,  they check if the current line to be typeset in column is higher than 0pt, that is if there is content in this line.
+% If there is no content in this line, that means we are at the end of a chunck.
+% In this case, it switch to the next chunck and process the first line of this pstart. 
+%    \begin{macrocode}
+\newcommand{\check@shiftedpstarts@columns@L}{%
+  \ifshiftedpstarts@columns%
+    \ifdim\ht\l@dleftbox=\z@
+      \global\pstartnumtrue
+      \global\advance\l@dpscL \@ne
+      \global\advance\pstarts@typeset@L\@ne%
+      \restore@pstartL@pc%
+      \do@lineL
+    \fi%
+  \fi%
+}%
+\newcommand{\check@shiftedpstarts@columns@R}{%
+  \ifshiftedpstarts@columns%
+    \ifdim\ht\l@drightbox=\z@
+      \global\pstartnumRtrue
+      \global\advance\l@dpscR \@ne
+      \restore@pstartR@pc%
+      \do@lineR
+    \fi%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
