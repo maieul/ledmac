@@ -1250,6 +1250,14 @@
 % The file \href{examples/2-line_numbers_in_header.tex}{examples/2-line\_numbers\_in\_header.tex} provides
 % an example for printing the first and last line numbers of a page in the header.
 %
+% \section{Execution code at a specific line}
+% Some time, you want to execute code at a precise point of the flow of the text.
+% For example, if the current header of the page correspond to the position inside the text, you may want to use \cs{markboth} (or related) command.
+% The main problem is that you need to execute this command when the text is typeset by  \macpackage, and not when it is read, because it could created damage in vertical spacing.
+% 
+% \DescribeMacro{\doinsidethislinehook}
+% The \cs{doinsidethislinehook} macro allow you to differ the execution of the code at the time the text is typeset, in the good line.
+% 
 % \section{Apparatus commands}
 %
 % \subsection{Terminology}
@@ -8905,9 +8913,11 @@
 %    \begin{macrocode}
     \hb@xt@ \linewidth{%
 %    \end{macrocode}
-% User hook.
+% User hooks.
 %    \begin{macrocode}
         \do@insidelinehook%
+        \csuse{insidethis@\the\absline@num @\the\section@num}%
+        \global\csundef{insidethis@\the\absline@num @\the\section@num}%
 %    \end{macrocode}
 % Left line number
 %    \begin{macrocode}
@@ -9042,6 +9052,33 @@
 \newcommand*{\dolinehook}[1]{\gdef\do@linehook{#1}}%
 \newcommand*{\doinsidelinehook}[1]{\gdef\do@insidelinehook{#1}}%
 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\doinsidethislinehook}
+% \begin{macro}{\@insidethisline}
+% The \cs{doinsidethislinehook} can be called directly in the main flood of a text.
+% It will define a hook executed at a specific line, determined by the position of the command in the flood of the text.
+%    \begin{macrocode}
+\newcommand{\doinsidethislinehook}[1]{%
+  \leavevmode%In case it begins with a \pstart, ensure the \@insidethisline is written after \@nl
+  \ifledRcol%
+    \write\linenum@outR{\string\@insidethisline[\unexpanded{#1}]}%
+  \else%
+    \write\linenum@out{\string\@insidethisline[\unexpanded{#1}]}%
+  \fi%
+}%
+%    \end{macrocode}
+% The auxiliary files command just store the information to be executed 
+% when typesseting the specific line.
+%    \begin{macrocode}
+\newcommand{\@insidethisline}[1]{%
+  \ifledRcol%
+    \csgappto{insidethisR@\the\absline@numR @\the\section@numR}{#1}%
+  \else%
+    \csgappto{insidethis@\the\absline@num @\the\section@num}{#1}%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
