@@ -334,6 +334,7 @@
 % \changes{v2.21.8}{2018/05/02}{Fix bug with marginal line number in parallel typesetting when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
 % \changes{v2.21.8}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
 % \changes{v2.21.9}{2018/07/19}{Fix (little) bug when using \protect\package{calc} package.}
+% \changes{v2.22.0}{2018/09/13}{Compatibility with \protect\cs{doinsidethislinehook} macro.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -649,8 +650,8 @@
 % 
 % You must use \cs{endnumbering} in a right column in the following cases:
 % \begin{itemize}
-%  \item there is also a \cs{endnumbering} in the left column, because the line numbering ends with a two columns mode (for ex. at the end of a document);
-%  \item there will be a \cs{endnumbering} in a text after the columns, in a single column mode, because the ligne numbering finish with single column mode text.
+%  \item there is also a \cs{endnumbering} in the left column, because the line numbering ends with a two columns mode (e.g. at the end of a document);
+%  \item there will be a \cs{endnumbering} in a text after the columns, in a single column mode, because the ligne numbering finishes with single column mode text.
 % \end{itemize}
 % Without this, you will 
 % get wrong numbering when a right column reappears next time.
@@ -1382,7 +1383,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/07/19 v2.21.9 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/09/13 v2.22.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -4033,6 +4034,8 @@
     \add@apparatusL%
     \l@dlsn@te%
     \do@insidelineLhook%
+    \csuse{insidethis@\the\absline@num @\the\section@num}%
+    \global\csundef{insidethis@\the\absline@num @\the\section@num}%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
             \ifluatex%
               \textdir\l@luatextextdir@L%
@@ -4226,6 +4229,7 @@
     \add@apparatusR%
     \l@dlsn@te%
     \do@insidelineRhook%
+    \global\csundef{insidethisR@\the\absline@numR @\the\section@numR}%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
        \new@lineR%
        \inserthangingsymbolR%
