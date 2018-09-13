@@ -12,7 +12,7 @@ PACKAGE = *.dtx \
 .PHONY: all dist clean
 
 
-all: reledmac.sty reledmac.pdf  reledpar.sty reledpar.pdf migration.pdf dist
+all: reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
 
 doc: *.pdf
 
