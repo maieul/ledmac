@@ -506,6 +506,15 @@
 % \changes{v2.26.5}{2018/01/28}{Fix bug with \protect\option{continuousnumberingwithcolumns}}
 % \changes{v2.26.6}{2018/02/28}{Fix bug with \protect\cs{lineation} by page and nexted \protect\cs{edtext} between two pages (added in v.~2.24.0)}
 % \changes{v2.26.7}{2018/04/07}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option of \protect\parpackage and typesetting critical text in single mode after critical text in double page mode}
+% \changes{v2.26.8}{2018/04/30}{Fix bug in some specific cases, introduced by v.2.27.7}
+% \changes{v2.26.9}{2018/05/02}{Fix bug with critical footnotes line number when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.26.9}{2018/05/02}{Fix bug with page number in footnote after \protect\cs{mainmatter} (bug introduced in v2.26.7)}
+% \changes{v2.26.9}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
+% \changes{v2.26.10}{2018/05/05}{Really fix bug with page number in footnote after \protect\cs{mainmatter} (bug introduced in v2.26.7)}
+% \changes{v2.26.10}{2018/05/05}{Add error message when insertion a \protect\cs{pstart} or \protect\cs{pend} inside \protect\cs{edtext} arguments}
+% \changes{v2.26.11}{2018/05/21}{Allow to use \protect\cs{edtext} inside \protect\cs{sameword}}
+% \changes{v2.26.12}{2018/07/19}{Precise minimal version of xparse package required.}
+% \changes{v2.27.0}{2018/09/13}{Add \protect\cs{doinsidethislinehook}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -737,10 +746,10 @@
 % 
 % \subsection{Bibliography}
 % A collaborative list of works edited with (r)(e)(ledmac is available at
-% \url{https://www.zotero.org/groups/critical_editions_typeset_with_edmac_ledmac_and_eledmac/items}.
+% \url{https://www.zotero.org/groups/209265/critical_editions_typeset_with_edmac_ledmac_eledmac_and_reledmac/}.
 % Please add your own edition made with (r)(e)ledmac.
 %
-% If you write book or article about (r)(e)ledmac, please add it on the collaborative bibliography on \url{https://www.zotero.org/groups/articles_and_books_about_reledmac/items}.
+% If you write a book or an article about (r)(e)ledmac, please add it on the collaborative bibliography on \url{https://www.zotero.org/groups/1024519/}.
 % \section{How the package works --- the problem of the number of \LaTeX\ runs}\label{howto}
 % The \macpackage package is a three-pass package like \LaTeX\ itself. 
 % Although your textual apparatus and line
@@ -1242,6 +1251,29 @@
 % The file \href{examples/2-line_numbers_in_header.tex}{examples/2-line\_numbers\_in\_header.tex} provides
 % an example for printing the first and last line numbers of a page in the header.
 %
+% \section{Execution code at a specific line}
+% Sometime, you want to execute a code at a precise point in the flow of your text.
+% For example, if the current header of the page corresponds to the position inside the text, you may want to use \cs{markboth} (or similar) command.
+% The main problem is that you need to execute \cs{markboth} when \macpackage\ typesets the text, and not when it reads it, because that could create damage with vertical spacing.
+% 
+% \DescribeMacro{\doinsidethislinehook}
+% The \cs{doinsidethislinehook}\marg{code} macro allows \meta{code} to be executed when the text is typeset. The \meta{code} will be executed in the line equivalent to the position of \cs{doinsidethislinehook} in the flow of the text.
+%
+% For example, with the following code:
+% \begin{verbatim}
+% \beginnumbering
+% \pstart
+% …
+% 1.\doinsidelinehook{\markboth{1}{1}} a
+% \pend
+% \end{verbatim}
+% \verb+\markboth{1}{1}+ will be executed at the line the \verb+1.+ will be typeset.
+% The \meta{code} of \cs{doinsidethislinehook}  will be executed only at the second run of \LaTeX.
+%
+% See the file 
+% \href{examples/2-subdivision-number-in-header.tex}{examples/2-subdivision-number-in-header.tex} for an example.
+% Especially, the use of this command with \LaTeX\ counters is quite complex, but the example show you how to deal with this problem.
+% 
 % \section{Apparatus commands}
 %
 % \subsection{Terminology}
@@ -1348,9 +1380,9 @@
 % \DescribeMacro{\Cfootnote}
 % \DescribeMacro{\Dfootnote}
 % \DescribeMacro{\Efootnote}
-% Five separate series of the footnotes are maintained; each macro
+% Five separate series of footnotes are maintained; each macro
 % takes one argument like \protect\cs{Afootnote}\marg{text}. 
-% When all of the six
+% When all of the five 
 % are used, the \texttt{A} notes appear in a layer just below the main
 % text, followed by the rest in turn, down to the \texttt{E} notes at
 % the bottom.  
@@ -1365,8 +1397,8 @@
 % \label{fulllines}The available options are:
 % \begin{itemize}
 % \item \verb|fulllines| to disable \protect\cs{Xtwolines} and \protect\cs{Xmorethantwolines} features for this note (cf. \reff{Xtwolines}).
-% \item \verb|nonum| disables line numbering for this note. A horizontal blank space is added instead. You can use \cs{Xinplaceoflemmaseparator} to set it (\reff{Xinplaceoflemmaseparator}).
-% \item \verb|nosep| to disable the lemma separator for this note. 
+% \item \verb|nonum| disables line numbering for this note.  A horizontal blank space is added instead. You can use \cs{Xinplaceofnunber} to set it (\reff{Xinplaceofnumber}).
+% \item \verb|nosep| to disable the lemma separator for this note. A horizontal blank space is added instead. You can use \cs{Xinplaceoflemmaseparator} to set it (\reff{Xinplaceoflemmaseparator}).
 % \item \verb|linerangesep=|\meta{c} to change to \meta{c} the separator between start line and end line for this particular note.
 % \end{itemize}
 %
@@ -2266,7 +2298,7 @@
 % \cs{Xendbeforesymlinenum} and \cs{Xendaftersymlinenum} are the equivalents of \cs{Xbeforesymlinenum} and \cs{Xaftersymlinenum} for the endnotes.
 %
 % \subsubsection{Space in place of number}
-% \DescribeMacro{\Xinplaceofnumber}
+% \DescribeMacro{\Xinplaceofnumber}\label{Xinplaceofnumber}
 % If no number or symbolic line number is printed, you can add a space, with \cs{Xinplaceofnumber}\oarg{s}\marg{l}. The default value is 1~em. 
 %
 % \DescribeMacro{\Xendinplaceofnumber} \cs{Xendinplaceofnumber}\oarg{s}\marg{l} is the same, for critical endnotes. 
@@ -2899,7 +2931,6 @@
 % \item \DescribeMacro{\AtEveryStopStanza} Use \cs{AtEveryStopStanza} to automatically add content after the end of stanzas (not in the same paragraph).
 %
 % Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStopStanza}  to avoid this \cs{noindent}.
-% \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the end of stanza (in the same paragraph). 
 % \end{itemize}
 %
 % 
@@ -3106,10 +3137,10 @@
 % \DescribeMacro{\edlineref}
 % \DescribeMacro{\sublineref}
 % \DescribeMacro{\pstartref}
-% \DescribeMacro{\annotref}
+% \DescribeMacro{\annotationref}
 % Elsewhere in the text, either before or after the \protect\cs{edlabel},
 % you can refer to its location with \protect\cs{edpageref}\marg{lab},
-% \protect\cs{edlineref}\marg{lab}, \cs{edsublineref}\marg{lab}, \cs{pstartref}\marg{lab} or \cs{annotref}\marg{lab}, 
+% \protect\cs{edlineref}\marg{lab}, \cs{edsublineref}\marg{lab}, \cs{pstartref}\marg{lab} or \cs{annotationref}\marg{lab}, 
 % that
 % will produce, respectively, the page, line, sub-line,  pstart, the annotation,  on which
 % the \protect\cs{edlabel}\marg{lab} command occurred.
@@ -3146,7 +3177,7 @@
 % \DescribeMacro{\xlineref}
 % \DescribeMacro{\xsublineref}
 % \DescribeMacro{\xpstartref}
-% \DescribeMacro{\xannotref}
+% \DescribeMacro{\xannotationref}
 %
 % However, there are situations in which you will want \macpackage\ to
 % return a number without displaying any
@@ -4184,7 +4215,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/04/07 v2.26.7 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/09/13 v2.27.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4327,7 +4358,7 @@
 % Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
 %  \begin{macrocode}
 \RequirePackage{xargs}
-\RequirePackage{xparse}%
+\RequirePackage{xparse}[2017/03/07]%
 \RequirePackage{etoolbox}
 \@ifl@t@r\fmtversion{2015/10/01}
  {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
@@ -4449,10 +4480,22 @@
 % \end{macro}
 %
 % \begin{macro}{\led@err@edtextoutsidepstart}
+% \begin{macro}{\led@err@PstartInEdtext}
+% \begin{macro}{\led@err@PendInEdtext}
 %    \begin{macrocode}
 \newcommand*{\led@err@edtextoutsidepstart}{%
   \reledmac@error{\string\edtext\space outside numbered paragraph (\pstart\space …\space\pend)}{\@ehc}}%
+
+\newcommand{\led@err@PstartInEdtext}[1]{%
+  \reledmac@error{\string\pstart\space in \string\edtext\space #1 argument}{\@ehc}%
+}%
+
+\newcommand{\led@err@PendInEdtext}[1]{%
+  \reledmac@error{\string\pend\space in \string\edtext\space #1 argument}{\@ehc}%
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\led@mess@NotesChanged}
 %    \begin{macrocode}
@@ -7150,35 +7193,37 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
-  \IfStrEq{\led@pb@setting}{after}%
-    {\xifinlist{\the\absline@num}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\@next@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
-      }%
-      {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
-    }%
-    {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
-  {}%
-  \IfStrEq{\led@pb@setting}{before}%
-    {\numdef{\next@absline}{\the\absline@num+\@ne}%
-    \xifinlist{\next@absline}{\l@prev@nopb}%
-      {\xifinlist{\the\absline@num}{\normal@page@break}%
-        {\numgdef{\nc@page}{\c@par@page+\@ne}%
-        \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+  \ifnumberline%
+    \IfStrEq{\led@pb@setting}{after}%
+      {\xifinlist{\the\absline@num}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\@next@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
         }%
-        {\write\linenum@out{\string\@nl[\the\@c@par@page][\thepage]}}%
+        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
-    }%
+      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
     {}%
-  \IfStrEqCase{\led@pb@setting}%
-    {%
-    {before}{\relax}%
-    {after}{\relax}%
-  }[%
-    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
-  ]%
+    \IfStrEq{\led@pb@setting}{before}%
+      {\numdef{\next@absline}{\the\absline@num+\@ne}%
+      \xifinlist{\next@absline}{\l@prev@nopb}%
+        {\xifinlist{\the\absline@num}{\normal@page@break}%
+          {\numgdef{\nc@page}{\c@par@page+\@ne}%
+          \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
+          }%
+          {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+        }%
+        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+      }%
+      {}%
+    \IfStrEqCase{\led@pb@setting}%
+      {%
+      {before}{\relax}%
+      {after}{\relax}%
+    }[%
+      \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+    ]%
+  \fi%
 }
 
 \newcommand{\l@the@c@page}{%
@@ -7723,7 +7768,11 @@
 %    \begin{macrocode}
   \ifnumberedpar@%
 %    \end{macrocode}
-% we increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
+% Check the content of the arguments, to be certain there is no forbidden command inside.
+%    \begin{macrocode}%
+      \@check@edtext@args{#1}{#2}%
+%    \end{macrocode}
+% We increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
 %    \end{macrocode}
@@ -7743,15 +7792,15 @@
 %    \end{macrocode}
 % We get the next series of samewords data in the list of samewords data for the current edtext level. We push them inside \protect\cs{sw@inthisedtext}.
 %    \begin{macrocode}
-      \ifledRcol% 
-        \ifcsvoid{sw@list@edtextR@\the\@edtext@level}%
-              {\global\let\sw@inthisedtext\empty}%
-              {\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-      \else%
-        \ifcsvoid{sw@list@edtext@\the\@edtext@level}%
-              {\global\let\sw@inthisedtext\empty}%
-              {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
-      \fi%
+        \ifledRcol%
+          \ifcsvoid{sw@list@edtextR@\the\@edtext@level}%
+                {\global\let\sw@inthisedtext\empty}%
+                {\expandafter\gl@p\csname sw@list@edtextR@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+        \else%
+          \ifcsvoid{sw@list@edtext@\the\@edtext@level}%
+                {\global\let\sw@inthisedtext\empty}%
+                {\expandafter\gl@p\csname sw@list@edtext@\the\@edtext@level\endcsname\to\sw@inthisedtext}%
+        \fi%
 %    \end{macrocode}
 % \begin{macro}{\@tag}
 % \label{@tag}Our normal lemma is just argument \verb"#1"; but that argument could have
@@ -7768,7 +7817,7 @@
 %    \begin{macrocode}
         \global\renewcommand{\@tag}{%
           \no@expands #1%
-          }%
+        }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\l@d@nums}
@@ -7884,8 +7933,22 @@
 
 %    \end{macrocode}
 % \end{macro}
-%
+% \begin{macro}{\@check@edtext@args}
+% A macro which just checks the arguments of the \cs{edtext} and let know
+% if there is some probleme, like, for example, \cs{pstart} inside.
+%    \begin{macrocode}
+\newcommand{\@check@edtext@args}[2]{%
+  \begingroup%
+    \noexpandarg%
+    \IfSubStr{#1}{\pstart}{\led@err@PstartInEdtext{first}}{}%
+    \IfSubStr{#1}{\pend}{\led@err@PendInEdtext{first}}{}%
+    \IfSubStr{#2}{\pstart}{\led@err@PstartInEdtext{second}}{}%
+    \IfSubStr{#2}{\pend}{\led@err@PendInEdtext{second}}{}%
+  \endgroup%
+}%
 % 
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\@beforeinsertofthisedtext}
 % \cs{@beforeinsertofthisedtext} is an internal macro. \macpackage\ or \parpackage can add in this macro any content required to be executed before doing any \cs{insert} related to a \cs{edtext}.
 % Its content is \cs{let} equal to \cs{relax} at the end of every \cs{edtext}.
@@ -8191,12 +8254,13 @@
 % \begin{macro}{\sw@noexpand}
 %    \begin{macrocode}
 \newcommand{\swnoexpands}{%
-    \let\sameword\@firstofone%Allow to have nested \sameword
+    \let\sameword\l@secondmandarg%Allow to have nested \sameword
     \let\emph\@firstofone%
     \let\textit\@firstofone%
     \let\textbf\@firstofone%
     \let\textsc\@firstofone%
     \let\framebox\@firstofone%
+    \let\edtext\dummy@edtext%
     \RenewExpandableDocumentCommand{\edindex}{om}{}%
     \ifdefined\index%
       \RenewExpandableDocumentCommand{\index}{om}{}%
@@ -8864,9 +8928,11 @@
 %    \begin{macrocode}
     \hb@xt@ \linewidth{%
 %    \end{macrocode}
-% User hook.
+% User hooks.
 %    \begin{macrocode}
         \do@insidelinehook%
+        \csuse{insidethis@\the\absline@num @\the\section@num}%
+        \global\csundef{insidethis@\the\absline@num @\the\section@num}%
 %    \end{macrocode}
 % Left line number
 %    \begin{macrocode}
@@ -9001,6 +9067,33 @@
 \newcommand*{\dolinehook}[1]{\gdef\do@linehook{#1}}%
 \newcommand*{\doinsidelinehook}[1]{\gdef\do@insidelinehook{#1}}%
 
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\doinsidethislinehook}
+% \begin{macro}{\@insidethisline}
+% The \cs{doinsidethislinehook} can be called directly in the main flood of a text.
+% It will define a hook executed at a specific line, determined by the position of the command in the flood of the text.
+%    \begin{macrocode}
+\newcommand{\doinsidethislinehook}[1]{%
+  \leavevmode%In case it begins with a \pstart, ensure the \@insidethisline is written after \@nl
+  \ifledRcol%
+    \write\linenum@outR{\string\@insidethisline[\unexpanded{#1}]}%
+  \else%
+    \write\linenum@out{\string\@insidethisline[\unexpanded{#1}]}%
+  \fi%
+}%
+%    \end{macrocode}
+% The auxiliary files command just store the information to be executed 
+% when typesseting the specific line.
+%    \begin{macrocode}
+\newcommand{\@insidethisline}[1]{%
+  \ifledRcol%
+    \csgappto{insidethisR@\the\absline@numR @\the\section@numR}{#1}%
+  \else%
+    \csgappto{insidethis@\the\absline@num @\the\section@num}{#1}%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -15106,8 +15199,8 @@
 % It should provides better compatibility with other package which modify these commands
 
 %
-% \begin{macro}{\doxtrafeet}
-% \protect\cs{doxtrafeet} is the code extending \protect\cs{@makecol} to cater for
+% \begin{macro}{\l@ddoxtrafeet}
+% \protect\cs{l@ddoxtrafeet} is the code extending \protect\cs{@makecol} to cater for
 % the extra \macpackage\ feet. We have two categories of extra footnotes.
 % By default, we order the footnote inserts so that the regular footnotes of \LaTeX\ are first,
 % then familiar familiar footnotes and finally 
@@ -15476,14 +15569,7 @@
 }%
 
 \newcommand{\par@patch@pagenumbering}{%
-  \ifboolexpr{%
-    bool{sameparallelpagenumber}%
-    or bool{prevpgnotnumbered}%
-    }%
-    {%
-    \setcounter{par@page}{1}%
-    }%
-    {}%
+  \setcounter{par@page}{1}%
   \par@patch@thepage%
 }%
 
@@ -18964,12 +19050,18 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l@dgobblearg}
+% \begin{macro}{\l@dgobbleoptarg}
 % \protect\cs{l@dgobbleoptarg}\oarg{arg}\marg{arg} replaces these two arguments (first is optional) by \protect\cs{relax}.
 % \changes{v1.12.5}{2014/08/28}{\protect\cs{l@dgobblearg} becomes \protect\cs{l@dgobbeloptarg}}
 %    \begin{macrocode}
 \newcommand*{\l@dgobbleoptarg}[2][]{\relax}%
 
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\l@secondmandarg}
+% \protect\cs{l@secondoptarg}\oarg{arg}\marg{arg} gobble the first (optional) argument, and expand to the second (mandatory) argument.
+%    \begin{macrocode}
+\NewExpandableDocumentCommand{\l@secondmandarg}{om}{#2}%
 %    \end{macrocode}
 % \end{macro}
 %

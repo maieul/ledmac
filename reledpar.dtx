@@ -330,6 +330,11 @@
 % \changes{v2.21.5}{2018/02/28}{Compatibility with reledmac v.~2.26.6}
 % \changes{v2.21.6}{2018/04/06}{Fix page number in footnote and endnotes when using \protect\option{sameparallelpagenumber} option}
 % \changes{v2.21.7}{2018/04/07}{Compatibility with \protect\macpackage 2.26.7}
+% \changes{v2.21.8}{2018/05/02}{Fix bug with critical footnotes line number when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.21.8}{2018/05/02}{Fix bug with marginal line number in parallel typesetting when alternating between \protect\cs{numberlinefalse} and \protect\cs{numberlinetrue}.}
+% \changes{v2.21.8}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
+% \changes{v2.21.9}{2018/07/19}{Fix (little) bug when using \protect\package{calc} package.}
+% \changes{v2.22.0}{2018/09/13}{Compatibility with \protect\cs{doinsidethislinehook} macro.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -641,11 +646,14 @@
 % with \cs{resumenumbering} or not; this is because numbering in the right 
 % column has not been started yet. Then, for consecutive chunks of 
 % right-column text you should use \cs{pausenumbering}~…\ 
-% \cs{resumenumbering}. The important thing to remember is that you have 
-% to use \cs{endnumbering} in a right column before every 
-% \cs{endnumbering} in single-column text or in parallel with 
-% \cs{endnumbering} in a left-column text (the latter is the case when a 
-% document or a section ends in a two-columns mode). Without this, you will 
+% \cs{resumenumbering}. 
+% 
+% You must use \cs{endnumbering} in a right column in the following cases:
+% \begin{itemize}
+%  \item there is also a \cs{endnumbering} in the left column, because the line numbering ends with a two columns mode (e.g. at the end of a document);
+%  \item there will be a \cs{endnumbering} in a text after the columns, in a single column mode, because the ligne numbering finishes with single column mode text.
+% \end{itemize}
+% Without this, you will 
 % get wrong numbering when a right column reappears next time.
 %
 % The file 
@@ -714,7 +722,7 @@
 % Synchronization of left and right texts in parallel processing
 % requires some `numbered' auxiliary files to be written (namely \verb+.1+,
 %\verb+.1R+, \verb+.2+, \verb+.2R+, and so forth), the content of which may change as long
-%as synchronization is not complete. This usually requires LaTeX to be
+%as synchronization is not complete. This usually requires \LaTeX\ to be
 %run several times. Therefore, it is advised to use in conjunction
 %utilities such as latexmk to ensure that synchronization is complete.
 %
@@ -1375,7 +1383,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/04/07 v2.21.7 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2018/09/13 v2.22.0 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2990,7 +2998,9 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineL}{%
-  \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  \ifnumberline%
+    \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -2999,7 +3009,9 @@
 % line-list file, to mark the start of a new text line.
 %    \begin{macrocode}
 \newcommand*{\new@lineR}{%
-  \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
+  \ifnumberline%
+    \write\linenum@outR{\string\@nl[\the\c@par@page][\thepar@page]}%
+  \fi%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -3275,7 +3287,7 @@
 % While in \macpackage the footnotes are inserted at the same time as the \protect\cs{pstart}\ldots\protect\cs{pend} are read, in \parpackage they are inserted when the \protect\cs{Columns} or \protect\cs{Pages} commands are called.
 % Consequently, if we do nothing, the value of the \verb+PstartL+ and \verb+PstartR+ counters are not the same in the main text and in the notes.
 % To solve this problem, we dump the values in two list (one by side) when processing \protect\cs{pstart} and restore these at each \protect\cs{pstart} when calling \protect\cs{Columns} or \protect\cs{Pages}. 
-% We also dump and restore the value of the boolean \protect\cs{ifnumberpstart}.
+% We also dump and restore the value of the booleans \protect\cs{ifnumberpstart} and \protect\cs{ifnumberline}.
 
 % So, first step, creating the lists. 
 % Here, ``pc'' means ``public counters''.
@@ -3296,11 +3308,13 @@
 \def\dump@pstartL@pc{%
   \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
   \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
+  \global\cslet{numberline@L\the\l@dnumpstartsL}{\ifnumberline}%
 }%
 
 \def\dump@pstartR@pc{%
   \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
   \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
+  \global\cslet{numberline@R\the\l@dnumpstartsR}{\ifnumberline}%
 }%
 
 %    \end{macrocode}
@@ -3372,13 +3386,13 @@
     \get@familiarfootnote@number%
   \fi%
   \save@section@number%
-  \setlength{\Lcolwidth}{\textwidth}%
-  \setlength{\Rcolwidth}{\textwidth}%
+  \Lcolwidth=\textwidth%
+  \Rcolwidth=\textwidth%
 }{%
   \l@dpairingfalse
   \l@dpagingfalse
-  \global\setlength{\Lcolwidth@pages}{\Lcolwidth}%
-  \global\setlength{\Rcolwidth@pages}{\Rcolwidth}%
+  \global\Lcolwidth@pages=\Lcolwidth%Does not use \setlength, in case of calc package redefiniton (cf. https://github.com/latex3/latex2e/issues/58)
+  \global\Rcolwidth@pages=\Rcolwidth%
 }
 
 %    \end{macrocode}
@@ -3946,6 +3960,7 @@
 %    \begin{macrocode}
 \newcommand*{\do@lineL}{%
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
+  \letcs{\ifnumberline}{numberline@L\the\l@dpscL}%
   \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
     {\vbadness=10000%
@@ -4019,6 +4034,8 @@
     \add@apparatusL%
     \l@dlsn@te%
     \do@insidelineLhook%
+    \csuse{insidethis@\the\absline@num @\the\section@num}%
+    \global\csundef{insidethis@\the\absline@num @\the\section@num}%
     \hb@xt@ \Lcolwidth{\ledllfill\hb@xt@ \wd\one@line{%
             \ifluatex%
               \textdir\l@luatextextdir@L%
@@ -4135,6 +4152,7 @@
   \let\linenumrep\linenumrepR%
   \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
+  \letcs{\ifnumberline}{numberline@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
@@ -4211,6 +4229,7 @@
     \add@apparatusR%
     \l@dlsn@te%
     \do@insidelineRhook%
+    \global\csundef{insidethisR@\the\absline@numR @\the\section@numR}%
     \hb@xt@ \Rcolwidth{\ledllfill\hb@xt@ \wd\one@lineR{%
        \new@lineR%
        \inserthangingsymbolR%
@@ -6370,8 +6389,8 @@
 % \changes{v2.3.0}{2015/09/05}{Fix a bug when calling \protect\cs{Columns} after a \protect\cs{Pages} (bug added in v1.13.0).}
 % \changes{v2.17.2}{2017/04/06}{Fix a bug when changing \protect\cs{Lcolwitdth} and \protect\cs{Rcolwitdth} in \protect\env{pages} environment.}
 %    \begin{macrocode}
-    \setlength{\Lcolwidth}{\Lcolwidth@pages}%
-    \setlength{\Rcolwidth}{\Rcolwidth@pages}%
+    \Lcolwidth=\Lcolwidth@pages%
+    \Rcolwidth=\Rcolwidth@pages%
 %    \end{macrocode}
 %    \begin{macrocode}
     \l@dzeropenalties%
