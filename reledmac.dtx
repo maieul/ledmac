@@ -516,6 +516,7 @@
 % \changes{v2.26.12}{2018/07/19}{Precise minimal version of xparse package required.}
 % \changes{v2.27.0}{2018/09/13}{Add \protect\cs{doinsidethislinehook}.}
 % \changes{v2.27.1}{2018/10/12}{Fix spurious space in \protect\cs{hidenumbering}.}
+% \changes{v2.28.0}{2018/11/30}{Familiar footnotes can take an optional argument to manually define the footnote mark.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1931,7 +1932,11 @@
 % name whereas the critical footnotes have the series letter at the start
 % of the name.
 %
-%
+% The footnote can take a first optional argument to manually define the footnote number or footnote symbol.
+% For example:
+% \begin{verbatim}
+% \footnoteA[22]{This footnote will be numbered 22}
+% \end{verbatim}
 % \subsubsection{Customizing mark}
 % \DescribeMacro{\thefootnoteA}
 % \DescribeMacro{\bodyfootmarkA}
@@ -4216,7 +4221,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/10/12 v2.27.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2018/11/30 v2.28.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -12481,10 +12486,14 @@
 % \begin{macro}{\mpnormalvfootnoteX}
 % The minipage version.
 %    \begin{macrocode}
-\newcommand*{\mpnormalvfootnoteX}[2]{%
+\newcommand*{\mpnormalvfootnoteX}[3]{%
   \get@thisfootnoteX{#1}%
   \get@fnmarkX{#1}{\thisc@footnote}%
-  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
+  \ifstrempty{#3}{%
+    \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
+  }{%
+    \edef\this@footnoteX@reading{###3}%
+  }%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
@@ -12612,9 +12621,10 @@
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.7.0}{2005/02/18}{Removed extraneous space from \protect\cs{normalbfnoteX}}
 % \changes{v1.4.9}{2013/07/10}{Allow to redefine \protect\cs{thefootnoteX} with \c{alph} when some packages are loaded.}
+% \#1 = footnote series, \#2 = footnote content, \#3 manual footnote number
 %    \begin{macrocode}
 
-\newcommand{\normalbfnoteX}[2]{%
+\newcommand{\normalbfnoteX}[3]{%
   \get@thisfootnoteX{#1}%
     \ifledRcol%
       \ifluatex
@@ -12627,7 +12637,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -12644,7 +12654,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{3}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -12670,50 +12680,56 @@
 % \end{macro}
 % \begin{macro}{\vbfnoteX}
 % This command calls the correct footnote-inserting commands.
-%
+% \#1 footnote serie, \#2 footnote content,  \#3 footnote counter, \#4 manuel footnote mark
 %    \begin{macrocode}
-\newcommand{\vbfnoteX}[3]{%
-  \get@fnmarkX{#1}{#3}%
+\newcommand{\vbfnoteX}[4]{%
+  \get@fnmarkX{#1}{#3}{#4}\relax%
   \@nameuse{regvfootnote#1}{#1}{#2}%
 }%
-
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\get@fnmarkX}
 % This command gets the correct footnote number when typesetting parallel texts.
+% \#1 footnote series, \#2 footnote counter, \#3 manuel footnote number
 %    \begin{macrocode}
-\newcommand{\get@fnmarkX}[2]{%
-  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
-    {%
-      \stepcounter{footnote#1@typeset}%
-      \setcounter{footnote#1}{\value{footnote#1@typeset}}%
-      \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
-        \immediate\write\@mainaux{%
-          \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
-         }%
-    }%
-    {%
-      \setcounter{footnote#1}{#2}%
-      \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
-    }%
-}
+\newcommand{\get@fnmarkX}[3]{%
+  \ifstrempty{#3}{%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+      {%
+        \stepcounter{footnote#1@typeset}%
+        \setcounter{footnote#1}{\value{footnote#1@typeset}}%
+        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
+          \immediate\write\@mainaux{%
+            \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
+           }%
+      }%
+      {%
+        \setcounter{footnote#1}{#2}%
+        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
+      }%
+  }%
+  {%
+    \csdef{@thefnmark#1}{#3}%
+  }%
+}%
 %
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\vnumfootnoteX}
 % \changes{v0.7.0}{2005/02/18}{Removed extraneous space from \protect\cs{vnumfootnoteX}}
+% \#1 footnote series, \#2 footnote content, \#3 manual footnote mark
 %    \begin{macrocode}
-\newcommand{\vnumfootnoteX}[2]{%
+
+\newcommand{\vnumfootnoteX}[3]{%
   \ifnumberedpar@
-    \edtext{}{\normalbfnoteX{#1}{#2}}%
+    \edtext{}{\normalbfnoteX{#1}{#2}{#3}}%
   \else
     \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \get@thisfootnoteX{#1}%
-    \get@fnmarkX{#1}{\expandonce\thisc@footnote}%
+    \get@fnmarkX{#1}{\expandonce\thisc@footnote}{#3}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -14458,10 +14474,10 @@
 % Note the double \# in command: it is because a command is called inside another command.
 %    \begin{macrocode}
 
-      \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+      \global\expandafter\newcommand\csname footnote#1\endcsname[2][]{%
           \begingroup%
               \prepare@prenotesX{#1}%
-              \newcommand{\content}{##1}%
+              \newcommand{\content}{##2}%
 %    \end{macrocode}
 % If we use the \cs{csquotes} package, we reset the quotation level.
 %    \begin{macrocode}
@@ -14471,15 +14487,18 @@
 %    \end{macrocode}
 % If we are preparing parallel typesetting, we cannot just increase the footnote counter.
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
+% If we have manual footnote mark, use it.
 %    \begin{macrocode}
                \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
-               \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
-                  \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
-                    {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
-                    {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
-               }{%
-                  \stepcounter{footnote#1}%
-               }%
+               \ifstrempty{##1}{%
+                 \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
+                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
+                   {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
+                   {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
+                 }{%
+                   \stepcounter{footnote#1}%
+                 }%
+               }{}%
 %    \end{macrocode}
 % We also have to check consistency with \cs{onlysideX} setting.
 %    \begin{macrocode}
@@ -14491,7 +14510,9 @@
 %    \end{macrocode}
 % And now, the feature not depending of wether we are preparing parallel typesetting
 %    \begin{macrocode}
-              \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+              \ifstrempty{##1}%
+                {\protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}}%
+                {\protected@csxdef{@thefnmark#1}{##1}}%
               \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with \parpackage
                  {\csuse{@footnotemark#1}}%
                  {}%
@@ -14502,7 +14523,7 @@
               \if@ledgroup%
                 \led@set@index@fornote{#1}%
               \fi%
-              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+              \csuse{vfootnote#1}{#1}{\expandonce\content}{##1}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
