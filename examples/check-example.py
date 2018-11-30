@@ -49,7 +49,12 @@ def diff_png(basename):
 def export_png(filename,basename):
     ''' Export a png to pdf'''
     print ("Export " + filename + " to png")
-    os.system ("convert -density 400 " + filename + " export/" + basename + ".png")
+    result_convert = os.system ("convert -density 400 " + filename + " export/" + basename + ".png")
+    if result_convert != 0:
+        global erreurs
+        erreur = "\x1b[31mFile " + filename + " not exported to png. Maybe a bug in convert config. \x1b[0m"
+        erreurs.append(erreur)
+    return result_convert
 
 
 def create_repository(rep):
@@ -62,8 +67,8 @@ def one_file(filename):
     basename, ext = os.path.splitext(filename)
     if ext != '.pdf':#only the .pdf file
         return
-    export_png(filename,basename)
-    diff_png(basename)
+    if export_png(filename,basename) == 0:
+        diff_png(basename)
 
 def _main_():
     create_repository("export")
