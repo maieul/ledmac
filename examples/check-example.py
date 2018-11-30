@@ -7,10 +7,27 @@
 import os
 import subprocess
 import argparse
+import re
 parser = argparse.ArgumentParser()
 erreurs = []
 
 directory_files = os.listdir(".")
+
+def get_png_filenames(directory, basename):
+    '''In the directory, found all the png file which correspond
+    to the basename file
+    return set
+    '''
+    existing_files = os.listdir(directory)
+    regexp = re.compile(basename + "-" + "\d+" + ".png")
+    filenames = set()
+
+    for filename in existing_files:
+        if regexp.match(filename):
+            filenames.add(filename)
+
+    return filenames
+
 
 def diff_png(basename):
     '''Produce a diff between
@@ -18,8 +35,8 @@ def diff_png(basename):
     and the png in export folder (new)'''
     global erreurs
     print ("Check change for " + basename)
-    olders = set([x for x in os.listdir('png') if basename in x])
-    news = set([x for x in os.listdir('export') if basename in x])
+    olders = get_png_filenames('png', basename)
+    news = get_png_filenames('export', basename)
 
     # Check for new files
     files_created = news - olders
