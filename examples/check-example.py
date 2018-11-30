@@ -39,7 +39,7 @@ def diff_png(basename):
         if result !=0:
             if result == 1:
                 erreur = "\x1b[31mFile " + file + " has changed\x1b[0m"
-            else: 
+            else:
                 erreur = "\x1b[31mFile " + file + " bad result " + str(result) +"\x1b[0m"
 
             print (erreur)
