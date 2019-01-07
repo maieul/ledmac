@@ -1248,6 +1248,100 @@
 % \DescribeMacro{\hidenumberingonleftpage}
 % \cs{hidenumberingonleftpage} is like \protect{hidenumbering}, but is applied only on left page. \cs{hidenumberingonrightpage} is applied on right page.
 % They can be useful  if the position of the line number is depending of the position of the page, but the position of marginal note is fixed.
+% \subsubsection{Adding annotations to line numbers}\label{annotation}
+% You may want to have two or more numbers associated with a line of text.
+% Consider, for example, the following cases:
+% \begin{itemize}
+%  \item You want to split a line of verse into two parts depending upon some stylistic / rythmic / linguistic convention.
+%  \item You want to add the line number used by a previous edition of the work.
+%  \item You want to typeset biblical text, and use division in verse.
+% \end{itemize}
+% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
+%
+% \DescribeMacro{\linenumannotation}
+% To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
+% \begin{verbatim}
+% \linenumannotation{<annotation>}
+% \end{verbatim}
+%
+% The annotation can contain any textual value (whether number, text, or other) such as the line number from the older edition.
+% Here are some characteristics of line number annotation:
+% \begin{itemize}
+%  \item An annotation is associated with a line of text. It is reset with each new line of text, except if you use \option{noresetlinenumannotation} option of \macpackage.
+%  \item It is printed alongside the line number in the margin.
+%  \item It is printed following the line number in critical footnotes and endnotes.
+%  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
+%  \item If two or more annotations are called before an \cs{edtext}, the last one is used in associated notes.
+%  \item If an annotation is called within an \cs{edtext}, it is printed as an annotation for the end of the lemma.
+% \end{itemize}
+% Here is an example, supposing we are on line 1:
+% \begin{verbatim}
+% \edtext{first lemma}
+% \linenumannotation{A}
+% \edtext{second lemma}{…}
+% \edtext{third%
+%   \linenumannotation{B}
+%  lemma}{…}
+% \edtext{fourth lemma}&
+% \end{verbatim}
+% In the critical notes, the line number will be followed
+% \begin{itemize}
+%   \item by nothing in the first lemma, as  there is no annotation for this line;
+%   \item by \enquote{A} for the second lemma;
+%   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
+%   \item by \enquote{B} for the fourth lemma.
+% \end{itemize}
+% \paragraph{Modifying annotation associated with a specific note}\label{lineannot}
+%
+% The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
+% \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
+% It takes one argument, containing the beginnning and ending annotations separated by a pipe (\verb+|+).
+% As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
+% \begin{verbatim}
+% \lineannot{|b}% to change the ending annotation
+% \lineannot{a|}% to change the beginning annotation
+% \lineannot{a|b}% to change both
+% \lineannot{\empty|}% to delete the beginning annotation
+% \end{verbatim}
+% \paragraph{Changing the position of the annotation}\label{annotationposition}
+% By default, annotations are placed after line numbers in both margin and footnote.
+%
+% \DescribeMacro{\Xlinenumannotationposition}
+% \DescribeMacro{\Xendlinenumannotationposition}
+% To change this behaviour, one can use one of the following commands:
+% \begin{itemize}
+%  \item \cs{Xlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical footnotes with \meta{s} for the series of footnotes to which it applies, where \meta{s} may be a comma-separated list of series. When \meta{s} is empty, the change applies also to annotations at the sides of the page, alongside the line number.
+%  \item \cs{Xlinenumannotationpositionside}\marg{v} changes the position at the sides of the page, alongside the line numbers.
+%
+% Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
+%  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes,
+% \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
+% \end{itemize}
+% In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
+% \paragraph{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
+% By default, annotations are wrapped in the \cs{textsuperscript} macro.
+% You can modify this using one of the following:
+% \begin{itemize}
+%   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
+% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
+%   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
+% \end{itemize}
+% \meta{cmd} is a command which can take one argument; the backslash is required though.
+%
+% For example, if you do not wish to have annotations in the margins, but do want to have them in bold in the critical footnotes and endnotes, you say:\footnote{The \cs{@gobble} command takes one argument, and returns nothing.}
+% \begin{verbatim}
+% \makeatletter
+% \Xwraplinenumannotation{\textbf}
+% \Xendwraplinenumannotation{\textbf}
+% \Xwraplinenumannotationside{\@gobble}
+% \makeatother
+% \end{verbatim}
 % \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
@@ -2793,100 +2887,6 @@
 % formatted in the same way.
 %
 %
-% \section{Adding annotations to line numbers}\label{annotation}
-% You may want to have two or more numbers associated with a line of text.
-% Consider, for example, the following cases:
-% \begin{itemize}
-%  \item You want to split a line of verse into two parts depending upon some stylistic / rythmic / linguistic convention.
-%  \item You want to add the line number used by a previous edition of the work.
-%  \item You want to typeset biblical text, and use division in verse.
-% \end{itemize}
-% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
-%
-% \DescribeMacro{\linenumannotation}
-% To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
-% \begin{verbatim}
-% \linenumannotation{<annotation>}
-% \end{verbatim}
-%
-% The annotation can contain any textual value (whether number, text, or other) such as the line number from the older edition.
-% Here are some characteristics of line number annotation:
-% \begin{itemize}
-%  \item An annotation is associated with a line of text. It is reset with each new line of text, except if you use \option{noresetlinenumannotation} option of \macpackage.
-%  \item It is printed alongside the line number in the margin.
-%  \item It is printed following the line number in critical footnotes and endnotes.
-%  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
-%  \item If two or more annotations are called before an \cs{edtext}, the last one is used in associated notes.
-%  \item If an annotation is called within an \cs{edtext}, it is printed as an annotation for the end of the lemma.
-% \end{itemize}
-% Here is an example, supposing we are on line 1:
-% \begin{verbatim}
-% \edtext{first lemma}
-% \linenumannotation{A}
-% \edtext{second lemma}{…}
-% \edtext{third%
-%   \linenumannotation{B}
-%  lemma}{…}
-% \edtext{fourth lemma}&
-% \end{verbatim}
-% In the critical notes, the line number will be followed
-% \begin{itemize}
-%   \item by nothing in the first lemma, as  there is no annotation for this line;
-%   \item by \enquote{A} for the second lemma;
-%   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
-%   \item by \enquote{B} for the fourth lemma.
-% \end{itemize}
-% \subsection{Modifying annotation associated with a specific note}\label{lineannot}
-%
-% The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
-% \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
-% It takes one argument, containing the beginnning and ending annotations separated by a pipe (\verb+|+).
-% As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
-% \begin{verbatim}
-% \lineannot{|b}% to change the ending annotation
-% \lineannot{a|}% to change the beginning annotation
-% \lineannot{a|b}% to change both
-% \lineannot{\empty|}% to delete the beginning annotation
-% \end{verbatim}
-% \subsection{Changing the position of the annotation}\label{annotationposition}
-% By default, annotations are placed after line numbers in both margin and footnote.
-%
-% \DescribeMacro{\Xlinenumannotationposition}
-% \DescribeMacro{\Xendlinenumannotationposition}
-% To change this behaviour, one can use one of the following commands:
-% \begin{itemize}
-%  \item \cs{Xlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical footnotes with \meta{s} for the series of footnotes to which it applies, where \meta{s} may be a comma-separated list of series. When \meta{s} is empty, the change applies also to annotations at the sides of the page, alongside the line number.
-%  \item \cs{Xlinenumannotationpositionside}\marg{v} changes the position at the sides of the page, alongside the line numbers.
-%
-% Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
-%  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes,
-% \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
-% \end{itemize}
-% In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
-% \subsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
-% By default, annotations are wrapped in the \cs{textsuperscript} macro.
-% You can modify this using one of the following:
-% \begin{itemize}
-%   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
-% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
-%   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
-%
-% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
-%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
-%
-% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
-%   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
-% \end{itemize}
-% \meta{cmd} is a command which can take one argument; the backslash is required though.
-%
-% For example, if you do not wish to have annotations in the margins, but do want to have them in bold in the critical footnotes and endnotes, you say:\footnote{The \cs{@gobble} command takes one argument, and returns nothing.}
-% \begin{verbatim}
-% \makeatletter
-% \Xwraplinenumannotation{\textbf}
-% \Xendwraplinenumannotation{\textbf}
-% \Xwraplinenumannotationside{\@gobble}
-% \makeatother
-% \end{verbatim}
 % \section{Verse}\label{verse}
 %
 % \subsection{Basic}
