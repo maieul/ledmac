@@ -1346,7 +1346,8 @@
 % \paragraph{Not printing the second identical annotations}
 % If you print only line number annotation, you may get in critical notes something like \verb+6-6+,
 % because the starting and ending annotations are the same.
-%
+% \DescribeMacro{\Xnoidenticallinenumannotation}
+% \DescribeMacro{\Xendnoidenticallinenumannotation}
 % You can avoid that using \\
 % \cs{Xnoidenticallinenumannotation}\oarg{s}, for critical footnotes \\
 % or
@@ -9469,9 +9470,13 @@
 % The  \cs{Xwraplinenumannotation@ref} macro is applied to crossrefs made to line annotations. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
 % They must be modified by users using \cs{Xwraplinenumannotation}.
 % By default, they call \cs{textsuperscript}.
+%
+% We also define toggle \verb+Xnoidenticallinenumannotation@ref+ and \verb+Xnoidenticallinenumannotation@ref+
 %    \begin{macrocode}
 \def\Xwraplinenumannotation@ref{\textsuperscript}%
 \def\Xwraplinenumannotation@side{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@ref}%
+\newtoggle{Xnoidenticallinenumannotation@side}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -14330,6 +14335,7 @@
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
       \csgdef{Xlinenumannotationposition@#1}{after}%
+      \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -14758,6 +14764,7 @@
 
       \csgdef{Xendlinenumannotationposition@#1}{after}%
       \csgdef{Xendwraplinenumannotation@#1}{\textsuperscript}%
+      \newtoggle{Xendnoidenticallinenumannotation@#1}%
 
       \newtoggle{Xendpagenumberonlyfirst@#1}%
       \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
@@ -15080,6 +15087,7 @@
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
 \newhookcommand@series{Xlinenumannotationposition}[side,appref,SEref]%
 \newhookcommand@series{Xwraplinenumannotation}[side,ref,appref,SEref]%
+\newhooktoggle@series{Xnoidenticallinenumannotation}[side,ref,appref,SEref]%
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -15187,6 +15195,7 @@
 
 \newhookcommand@series{Xendlinenumannotationposition}[apprefwithpage,SErefwithpage]%
 \newhookcommand@series{Xendwraplinenumannotation}[apprefwithpage,SErefwithpage]%
+\newhooktoggle@series{Xendnoidenticallinenumannotation}[apprefwithpage,SErefwithpage]%
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -16302,6 +16311,8 @@
 
 \def\Xwraplinenumannotation@appref{\textsuperscript}%
 \def\Xwraplinenumannotation@SEref{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@appref}%
+\newtoggle{Xnoidenticallinenumannotation@SEref}%
 
 \def\Xendtwolines@apprefwithpage{}%
 \def\Xendtwolines@SErefwithpage{}%
@@ -16346,6 +16357,9 @@
 
 \def\Xendwraplinenumannotation@apprefwithpage{\textsuperscript}%
 \def\Xendwraplinenumannotation@SErefwithpage{\textsuperscript}%
+
+\newtoggle{Xendnoidenticallinenumannotation@apprefwithpage}%
+\newtoggle{Xendnoidenticallinenumannotation@SErefwithpage}%
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
