@@ -520,8 +520,10 @@
 % \changes{v2.28.1}{2018/12/22}{Fix bug with the alignment of the columns of two and three columns critical footnotes.}
 % \changes{v2.29.0}{2019/01/08}{Fix bug with  \protect\cs{linenumannotation} and  `nofamiliar` option.}
 % \changes{v2.29.0}{2019/01/08}{Really reset line number annotation at each line}
-% \changes{v2.29.0}{2018/01/08}{Add \protect\option{noresetlinenumannotation}}
-% \changes{v2.29.0}{2018/01/08}{Fix little bug with \protect\cs{msdata}}
+% \changes{v2.29.0}{2019/01/08}{Add \protect\option{noresetlinenumannotation}}
+% \changes{v2.29.0}{2019/01/08}{Fix little bug with \protect\cs{msdata}}
+% \changes{v2.30.0}{2019/01/22}{Add \protect\cs{Xnoidenticallinenumannotation} and \protect\cs{Xendnoidenticallinenumannotation} hooks}
+% \changes{v2.30.0}{2019/01/22}{Add separator between line number annotations in margin. Add \protect\cs{setlinenumannotationsep}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1249,7 +1251,7 @@
 % \DescribeMacro{\hidenumberingonleftpage}
 % \cs{hidenumberingonleftpage} is like \protect{hidenumbering}, but is applied only on left page. \cs{hidenumberingonrightpage} is applied on right page.
 % They can be useful  if the position of the line number is depending of the position of the page, but the position of marginal note is fixed.
-% \subsubsection{Adding annotations to line numbers}\label{annotation}
+% \subsection{Adding annotations to line numbers}\label{annotation}
 % You may want to have two or more numbers associated with a line of text.
 % Consider, for example, the following cases:
 % \begin{itemize}
@@ -1292,7 +1294,7 @@
 %   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
 %   \item by \enquote{B} for the fourth lemma.
 % \end{itemize}
-% \paragraph{Modifying annotation associated with a specific note}\label{lineannot}
+% \subsubsection{Modifying annotation associated with a specific note}\label{lineannot}
 %
 % The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
 % \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
@@ -1304,7 +1306,7 @@
 % \lineannot{a|b}% to change both
 % \lineannot{\empty|}% to delete the beginning annotation
 % \end{verbatim}
-% \paragraph{Changing the position of the annotation}\label{annotationposition}
+% \subsubsection{Changing the position of the annotation}\label{annotationposition}
 % By default, annotations are placed after line numbers in both margin and footnote.
 %
 % \DescribeMacro{\Xlinenumannotationposition}
@@ -1319,7 +1321,7 @@
 % \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
 % \end{itemize}
 % In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
-% \paragraph{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
+% \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
 % By default, annotations are wrapped in the \cs{textsuperscript} macro.
 % You can modify this using one of the following:
 % \begin{itemize}
@@ -1343,6 +1345,20 @@
 % \Xwraplinenumannotationside{\@gobble}
 % \makeatother
 % \end{verbatim}
+% \subsubsection{Not printing the second identical annotations}
+% If you print only line number annotation, you may get in critical notes something like \verb+6-6+,
+% because the starting and ending annotations are the same.
+% \DescribeMacro{\Xnoidenticallinenumannotation}
+% \DescribeMacro{\Xendnoidenticallinenumannotation}
+% You can avoid that using \\
+% \cs{Xnoidenticallinenumannotation}\oarg{s}, for critical footnotes \\
+% or
+% \cs{Xendnoidenticallinenumannotation}
+% \subsubsection{Separator between annotations}
+% \DescribeMacro{\setlinenumannotationsep}
+% If there an more than one annotation in the same line, there are separated by a comma.
+% If you want to change the separator, you can use \\
+% \cs{setlinenumannotationsep}\marg{sep}
 % \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
@@ -3362,6 +3378,7 @@
 %   \item \cs{Xtwolinesonlyinsamepage}
 %   \item \cs{Xlinenumannotationposition}
 %   \item \cs{Xwraplinenumannotation}
+%   \item \cs{Xnoidenticallinenumannotation}
 % \end{itemize}
 %
 % If you want to make settings specific  to \cs{appref} or \cs{SEref}, just call them with an optional argument containing a comma-separated list of command names (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
@@ -3382,6 +3399,7 @@
 %   \item\cs{Xendtwolinesonlyinsamepage}
 %   \item\cs{Xendlinenumannotationposition}
 %   \item\cs{Xendwraplinenumannotation}
+%   \item\cs{Xemdnoidenticallinenumannotation}
 % \end{itemize}
 % \paragraph{For one specific command}
 %
@@ -4228,7 +4246,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2019/01/08 v2.29.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2019/01/22 v2.30.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -6048,7 +6066,7 @@
 % action codes and the settings they invoke; it does not require an
 % entry in the action-code list for every line.
 % \item \cs{annot@list} stores line number annotations for the start and the end lines of each  \cs{edtext}, as \cs{line@list} does for line numbers.
-% We don't store that in the same list as line numbers as \cs{printlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
+% We don't store that in the same list as line numbers as \cs{Xprintlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
 % \end{itemize}
 % Here are the commands to create these lists:
 %
@@ -9458,12 +9476,16 @@
 % \end{macro}
 % \begin{macro}{\Xwraplinenumannotation@ref}
 % \begin{macro}{\Xwraplinenumannotation@side}
-% The  \cs{Xwraplinenumannotation@ref} macro is applied to crossrefs made to line annotations. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
+% The  \cs{Xwraplinenumannotation@ref} macro is applied to line annotations in crossref. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
 % They must be modified by users using \cs{Xwraplinenumannotation}.
 % By default, they call \cs{textsuperscript}.
+%
+% We also define toggle \verb+Xnoidenticallinenumannotation@ref+ and \verb+Xnoidenticallinenumannotation@ref+
 %    \begin{macrocode}
 \def\Xwraplinenumannotation@ref{\textsuperscript}%
 \def\Xwraplinenumannotation@side{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@ref}%
+\newtoggle{Xnoidenticallinenumannotation@side}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -9481,9 +9503,17 @@
 }%
 \newcommand{\store@annot@to@absline}[1]{%
   \ifledRcol%
-    \csgappto{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    \ifcsdef{annotR@\the\absline@numR @\the\section@numR}{%
+      \csgappto{annotR@\the\absline@numR @\the\section@numR}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    }%
   \else%
-    \csgappto{annot@\the\absline@num @\the\section@num}{#1}%
+    \ifcsdef{annot@\the\absline@num @\the\section@num}{%
+      \csgappto{annot@\the\absline@num @\the\section@num}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annot@\the\absline@num @\the\section@num}{#1}%
+    }%
   \fi%
 }%
 %    \end{macrocode}
@@ -9515,6 +9545,15 @@
   \gdef\annot@end{#2}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\}
+% \begin{macro}{\@linenumannotationsep}
+% The separator between the annotations and the way to redefine it.
+%    \begin{macrocode}
+\newcommand{\setlinenumannotationsep}[1]{\gdef\@linenumannotationsep{#1}}%
+\def\@linenumannotationsep{, }%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Line number printing}
 %
@@ -12006,6 +12045,18 @@
       }%
   \fi%
 %    \end{macrocode}
+% If the \cs{Xnoidenticallinenumannotation} is set for this series, we check if the ending annotation is identical to the starting.
+% If true, we don't print the ending annotation
+%    \begin{macrocode}
+  \iftoggle{Xnoidenticallinenumannotation@\@currentseries}{%
+    \ifx\annot@start\annot@end%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Dont print the dash if we don't print the line number
+        \l@d@dashfalse%
+      \fi%
+    \fi%
+  }{}%
+%    \end{macrocode}
 % End of \protect\cs{setprintlines}.
 %    \begin{macrocode}
 }%
@@ -14015,6 +14066,18 @@
       }%
   \fi%
 %    \end{macrocode}
+% If the \cs{Xendnoidenticallinenumannotation} is set for this series, we check if the ending annotation is identical to the starting.
+% If true, we don't print the ending annotation
+%    \begin{macrocode}
+  \iftoggle{Xendnoidenticallinenumannotation@\@currentseries}{%
+    \ifx\annot@start\annot@end%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Dont print the dash if we don't print the line number
+        \l@d@dashfalse%
+      \fi%
+    \fi%
+  }{}%
+%    \end{macrocode}
 % End of \protect\cs{setprintendlines}.
 %    \begin{macrocode}
 }%
@@ -14322,6 +14385,7 @@
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
       \csgdef{Xlinenumannotationposition@#1}{after}%
+      \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -14750,6 +14814,7 @@
 
       \csgdef{Xendlinenumannotationposition@#1}{after}%
       \csgdef{Xendwraplinenumannotation@#1}{\textsuperscript}%
+      \newtoggle{Xendnoidenticallinenumannotation@#1}%
 
       \newtoggle{Xendpagenumberonlyfirst@#1}%
       \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
@@ -15072,6 +15137,7 @@
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
 \newhookcommand@series{Xlinenumannotationposition}[side,appref,SEref]%
 \newhookcommand@series{Xwraplinenumannotation}[side,ref,appref,SEref]%
+\newhooktoggle@series{Xnoidenticallinenumannotation}[side,ref,appref,SEref]%
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -15179,6 +15245,7 @@
 
 \newhookcommand@series{Xendlinenumannotationposition}[apprefwithpage,SErefwithpage]%
 \newhookcommand@series{Xendwraplinenumannotation}[apprefwithpage,SErefwithpage]%
+\newhooktoggle@series{Xendnoidenticallinenumannotation}[apprefwithpage,SErefwithpage]%
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -16294,6 +16361,8 @@
 
 \def\Xwraplinenumannotation@appref{\textsuperscript}%
 \def\Xwraplinenumannotation@SEref{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@appref}%
+\newtoggle{Xnoidenticallinenumannotation@SEref}%
 
 \def\Xendtwolines@apprefwithpage{}%
 \def\Xendtwolines@SErefwithpage{}%
@@ -16338,6 +16407,9 @@
 
 \def\Xendwraplinenumannotation@apprefwithpage{\textsuperscript}%
 \def\Xendwraplinenumannotation@SErefwithpage{\textsuperscript}%
+
+\newtoggle{Xendnoidenticallinenumannotation@apprefwithpage}%
+\newtoggle{Xendnoidenticallinenumannotation@SErefwithpage}%
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
