@@ -523,6 +523,7 @@
 % \changes{v2.29.0}{2019/01/08}{Add \protect\option{noresetlinenumannotation}}
 % \changes{v2.29.0}{2019/01/08}{Fix little bug with \protect\cs{msdata}}
 % \changes{v2.30.0}{2019/01/22}{Add \protect\cs{Xnoidenticallinenumannotation} and \protect\cs{Xendnoidenticallinenumannotation} hooks}
+% \changes{v2.30.0}{2019/01/22}{Add separator between line number annotations in margin. Add \protect\cs{setlinenumannotationsep}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1353,6 +1354,11 @@
 % \cs{Xnoidenticallinenumannotation}\oarg{s}, for critical footnotes \\
 % or
 % \cs{Xendnoidenticallinenumannotation}
+% \paragraph{Separator between annotations}
+% \DescribeMacro{\setlinenumannotationsep}
+% If there an more than one annotation in the same line, there are separated by a comma.
+% If you want to change the separator, you can use \\
+% \cs{setlinenumannotationsep}\marg{sep}
 % \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
@@ -9497,9 +9503,17 @@
 }%
 \newcommand{\store@annot@to@absline}[1]{%
   \ifledRcol%
-    \csgappto{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    \ifcsdef{annotR@\the\absline@numR @\the\section@numR}{%
+      \csgappto{annotR@\the\absline@numR @\the\section@numR}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    }%
   \else%
-    \csgappto{annot@\the\absline@num @\the\section@num}{#1}%
+    \ifcsdef{annot@\the\absline@num @\the\section@num}{%
+      \csgappto{annot@\the\absline@num @\the\section@num}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annot@\the\absline@num @\the\section@num}{#1}%
+    }%
   \fi%
 }%
 %    \end{macrocode}
@@ -9531,6 +9545,15 @@
   \gdef\annot@end{#2}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\}
+% \begin{macro}{\@linenumannotationsep}
+% The separator between the annotations and the way to redefine it.
+%    \begin{macrocode}
+\newcommand{\setlinenumannotationsep}[1]{\gdef\@linenumannotationsep{#1}}%
+\def\@linenumannotationsep{, }%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Line number printing}
 %
