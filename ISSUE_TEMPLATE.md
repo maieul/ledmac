@@ -1,5 +1,5 @@
-Issues can be opened in English or French (I prefer French). Please fill out this form.
-Please open one issue per problem, and not a global issue for multiple problems.
+<!--Issues can be opened in English or French (I prefer French). Please fill out this form.
+Please open one issue per problem, and not a global issue for multiple problems.-->
 
 # Version
 
