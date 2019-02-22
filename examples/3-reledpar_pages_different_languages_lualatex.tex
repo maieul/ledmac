@@ -1,22 +1,33 @@
-\documentclass{article}
-\usepackage{fontspec}
+\documentclass{scrartcl}
+\usepackage[osf,p]{libertinus}
+\usepackage{microtype}
+\usepackage[pdfusetitle,hidelinks]{hyperref}
+
 \usepackage[series={},nocritical,noend,nofamiliar,noledgroup]{reledmac}
-\usepackage{reledpar,metalogo,hyperref}
-\setlength{\parindent}{0pt}
+\usepackage{reledpar}
 
-\newfontfamily\syriacfont[Script=Syriac,Scale=1.2]{estre.ttf}
+\usepackage{ifluatex}
+\ifluatex
+  \newcommand{\textsyriac}[1] % Syriac inside LTR
+             {\bgroup\textdir TRT\syriacfont #1\egroup}
+  \newenvironment{syriac}     % Syriac paragraph
+             {\textdir TRT\pardir TRT\syriacfont}{}
+\else
+  \usepackage{graphicx}
+  \usepackage{polyglossia}
+  \setmainlanguage{english}
+  \setotherlanguage{syriac}
+\fi
+\usepackage{metalogo}
 
-\newcommand{\textsyriac}[1] % Syriac inside LTR
-           {\bgroup\textdir TRT\syriacfont #1\egroup}
+\newfontfamily\syriacfont[Script=Syriac,Scale=1.2]{Estrangelo Edessa}
+
 \newcommand{\n}         [1] % for digits inside Arabic text
-           {\bgroup\textdir TLT #1\egroup}
+           {\bgroup\LTR  #1\egroup}
 \newcommand{\syriacfootnote} [1] % Syriac Footnotes
            {\footnote{\textsyriac{#1}}}
-\newenvironment{syriac}     % Syriac paragraph
-           {\textdir TRT\pardir TRT\syriacfont}{}
 
 \begin{document}
-
 \date{}
 \title{Using \LuaLaTeX\ to typeset RTL text with reledpar}
 \maketitle
@@ -28,16 +39,19 @@ It must be also called inside \verb+\eledsection+.
 
 For an example with \XeLaTeX, look at \href{./parallel-column-two-languages.tex}{parallel-column-two-languages.tex} file.
 \end{abstract}
+
 \begin{pages}
 \begin{Leftside}
 \begin{syriac}
 \beginnumbering
-   \pstart 
-       \eledsection*{\textsyriac{ܡܿܟܪܟܝ}}
+   \pstart
+       \eledsection*{\syriacfont{ܘܟܕ}}
    \pend
 
    \pstart
+
         1ܘܟܕ 2ܡܿܟܪܟܝ3ܢܢ ܐܪܟ4ܐܢܐ ܗ̄ 5ܡܘܪܐ6 ܗܿܝ ܩ7ܕܡܝܬܐ
+
    \pend
 \endnumbering
 \end{syriac}
@@ -54,7 +68,6 @@ For an example with \XeLaTeX, look at \href{./parallel-column-two-languages.tex}
    \pend
 \endnumbering
 \end{Rightside}
-
 
 \end{pages} 
 \Pages
