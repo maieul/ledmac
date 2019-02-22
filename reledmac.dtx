@@ -524,6 +524,7 @@
 % \changes{v2.29.0}{2019/01/08}{Fix little bug with \protect\cs{msdata}}
 % \changes{v2.30.0}{2019/01/22}{Add \protect\cs{Xnoidenticallinenumannotation} and \protect\cs{Xendnoidenticallinenumannotation} hooks}
 % \changes{v2.30.0}{2019/01/22}{Add separator between line number annotations in margin. Add \protect\cs{setlinenumannotationsep}}
+% \changes{v2.31.0}{2019/02/22}{Add \protect\option{noprefix} and \protect\option{prefixmore} to \protect\cs{appref} and \protect\cs{SEref}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -3408,6 +3409,17 @@
 % When calling \cs{appref} and \cs{SEref}, you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical footnotes (\reff{Xfootnoteopt}).
 %
 % When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical endnotes (\reff{Xendnoteopt}).
+%
+% \subsubsection{Combining multiple references}
+%
+% When combining multiple cross references into a list, it is possible to prevent prefixes reappearing by adding an optional argument to \cs{appref} and \cs{SEref}. The available options are:
+% \begin{itemize}
+% \item \option{noprefix} to remove any prefix set by \cs{setapprefprefixsingle} or the equivalent for a single reference;
+% \item \option{prefixmore} to force the plural version of a prefix.
+% \end{itemize}
+%
+% For example, a reference to `lines 65--66, 72, and 75' might use \verb|\SEref[prefixmore]{ref1}, \SEref[noprefix]{ref2}, and \SEref[noprefix]{ref3}| to achieve this result.
+%
 % \subsection{Compatibility with \protect\package{xr} package}
 % The \cs{externaldocument} command of the \cs{xr} package allows making cross-references from an external document, with the standard \LaTeX\ commands \cs{label} and \cs{ref} (and related).
 %
@@ -4248,7 +4260,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2019/01/22 v2.30.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2019/02/22 v2.31.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -15274,6 +15286,8 @@
 \newhooktoggle@specific{fulllines}%
 \newhooktoggle@specific{nonum}
 \newhooktoggle@specific{nosep}
+\newhooktoggle@specific{noprefix}%
+\newhooktoggle@specific{prefixmore}%
 \newhookarg@specific{linerangesep}
 %    \end{macrocode}
 % \begin{macro}{linerangesep@}
@@ -16496,13 +16510,19 @@
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
  \xdef\@currentseries{#3}%
- \ifcsempty{@#3prefixmore}%
-   {\@apprefprefixsingle}%
-   {%
-     \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
-       {\csuse{@#3prefixsingle}}%
-       {\csuse{@#3prefixmore}}%
-   }%
+ \iftoggle{noprefix@}{}%
+  {%
+    \ifcsempty{@#3prefixmore}%
+    {\@apprefprefixsingle}%
+    {%
+      \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
+      {\iftoggle{prefixmore@}%
+        {\csuse{@#3prefixmore}}%
+        {\csuse{@#3prefixsingle}}%
+      }%
+      {\csuse{@#3prefixmore}}%
+    }%
+  }%
  \ifboolexpr{%
    test{\ifcsundef{the@label#2:start}}%
    or test{\ifcsundef{the@label#2:end}}%
