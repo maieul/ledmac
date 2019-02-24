@@ -12242,6 +12242,8 @@
         }%
       }%
       {}%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hookarg@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
     \csxappto%
       {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
       {%
@@ -12260,6 +12262,8 @@
       {#1@forinserting@all}%
       {\hskip\csuse{Xafternote@#1}\relax}%
     }{}%
+  \add@hooktoggle@specific@to@cs{#1@forinserting@all}%
+  \add@hookarg@specific@to@cs{#1@forinserting@all}%
   \csxappto%
     {#1@forinserting@all}%
     {%
@@ -15272,6 +15276,7 @@
 %    \begin{macrocode}
 \newcommand{\newhooktoggle@specific}[1]{%
   \newtoggle{#1@}%
+  \listgadd{\hooktoggle@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
 }
@@ -15281,10 +15286,64 @@
 % \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
 \newcommand{\newhookarg@specific}[1]{%
+  \listgadd{\hookarg@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}{\csgdef{#1@}{##1}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}{\global\csundef{#1@}}%When disabling footnote option
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\hooktoggle@specific}
+% \begin{macro}{\add@hooktoggle@specific@to@cs}
+% The \cs{add@hooktoggle@specific@to@cs} macro stores to a macro
+% all the current values of hook toggle specific to a command.
+% It is useful for \cs{Xgroupbyline} option, which does not add immediately notes to the inserts list.
+% It uses the \cs{hooktoggle@specific} list.
+%    \begin{macrocode}
+\def\hooktoggle@specific{}%
+\newcommand{\add@hooktoggle@specific@to@cs}[1]{%
+  \def\do##1{%
+    \iftoggle{##1@}{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\toggletrue{##1@}}%
+      }{%
+        \csgdef{#1}{\toggletrue{##1@}}%
+      }%
+    }{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\togglefalse{##1@}}%
+      }{%
+        \csgdef{#1}{\togglefalse{##1@}}%
+      }%
+    }%
+  }%
+  \dolistloop{\hooktoggle@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\hookarg@specific}
+% \begin{macro}{\add@hookarg@specific@to@cs}
+% The same, but for optional argument of critical footnotes with assigned value.
+%    \begin{macrocode}
+\def\hookarg@specific{}%
+\newcommand{\add@hookarg@specific@to@cs}[1]{%
+  \def\do##1{%
+    \ifcsdef{#1}{%
+      \csxappto{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }{%
+      \csxdef{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }%
+  }%
+  \dolistloop{\hookarg@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % And now, we define some hooks specific to a note.
 %    \begin{macrocode}
