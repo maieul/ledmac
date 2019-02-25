@@ -10494,7 +10494,7 @@
 % \end{macro}
 %
 % \begin{macro}{\normalvfootnote@inserted}
-% The \cs{normalvfootnote@inserted} macro is expanded to the content to be add to a \cs{insert} for normal critical footnote.
+% The \cs{normalvfootnote@inserted} macro is expanded to the content to be added to a \cs{insert} for normal critical footnote.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote@inserted}[2]{%
   \nottoggle{Xgroupbyline@#1}{\noindent}{}\csuse{Xbhooknote@#1}%
@@ -12228,70 +12228,60 @@
 % \subsubsection{Footnote grouped by line}
 % \begin{macro}{\prepare@Xgroupbyline}
 % \cs{prepare@Xgroupbyline} is a macro called on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling \cs{insert} directly.
+% \#1 The series\\
+% \#2 The content of the footnote, that is also the line number indication\\
+% \#3 This macro which prepare the content of the insertion \\
 %    \begin{macrocode}
 \newcommand{\prepare@Xgroupbyline}[3]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
     \l@dparsefootspec#2%
     \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-    {%
-      \csxappto%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
-          \keep@this@crossref@forinserting%
-          \unexpanded{%
-            \ifcsempty{Xsymlinenum@#1}%
-              {\csuse{Xparafootsep@#1}}%
-              {}%
-            #3{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
+      {%
+        \csgappto{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}{%
+          \hskip\csuse{Xafternote@#1}\relax%
         }%
-    }%
-    {%
-      \csedef%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
-          \keep@this@crossref@forinserting%
-          \unexpanded{%
-            #3{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
+      }%
+      {}%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hookarg@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \csxappto%
+      {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+      {%
+        \keep@this@crossref@forinserting%
+        \unexpanded{%
+          \ifcsempty{Xsymlinenum@#1}%
+            {\csuse{Xparafootsep@#1}}%
+            {}%
+          #3{#1}{#2}%
         }%
-    }%
+      }%
     \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
   }{%
-    \ifcsdef{#1@forinserting@all}{%
-      \csxappto%
-        {#1@forinserting@all}%
-        {%
-          \keep@this@crossref@forinserting%
-          \unexpanded{%
-            \ifcsempty{Xsymlinenum@#1}%
-              {\csuse{Xparafootsep@#1}}%
-              {}%
-            #3{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-        }%
-    }%
+  \ifcsdef{#1@forinserting@all}{%
+    \csgappto%
+      {#1@forinserting@all}%
+      {\hskip\csuse{Xafternote@#1}\relax}%
+    }{}%
+  \add@hooktoggle@specific@to@cs{#1@forinserting@all}%
+  \add@hookarg@specific@to@cs{#1@forinserting@all}%
+  \csxappto%
+    {#1@forinserting@all}%
     {%
-      \csedef%
-        {#1@forinserting@all}%
-        {%
-          \keep@this@crossref@forinserting%
-          \unexpanded{%
-            #3{#1}{#2}%
-            \hskip\csuse{Xafternote@#1}\relax%
-          }%
-        }%
+      \keep@this@crossref@forinserting%
+      \unexpanded{%
+        \ifcsempty{Xsymlinenum@#1}%
+          {\csuse{Xparafootsep@#1}}%
+          {}%
+        #3{#1}{#2}%
+      }%
     }%
-    \listcsgadd{#1@forinserting}{all}%
   }%
+  \listcsgadd{#1@forinserting}{all}%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\keep@this@crossref@forinserting}
-% \cs{keep@this@crossref@forinserting} is called by \cs{prepare@Xgroupbyline}. It just ensure that \cs{@this@crossref@start} and \cs{this@crossref@end} value are kept in memory.
+% \cs{keep@this@crossref@forinserting} is called by \cs{prepare@Xgroupbyline}. It just ensures that \cs{@this@crossref@start} and \cs{this@crossref@end} value are kept in memory.
 %    \begin{macrocode}
 \newcommand{\keep@this@crossref@forinserting}{%
   \unexpanded{\gdef\@this@crossref@start}{\@this@crossref@start}%
@@ -15286,6 +15276,7 @@
 %    \begin{macrocode}
 \newcommand{\newhooktoggle@specific}[1]{%
   \newtoggle{#1@}%
+  \listgadd{\hooktoggle@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
 }
@@ -15295,10 +15286,64 @@
 % \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
 \newcommand{\newhookarg@specific}[1]{%
+  \listgadd{\hookarg@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}{\csgdef{#1@}{##1}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}{\global\csundef{#1@}}%When disabling footnote option
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\hooktoggle@specific}
+% \begin{macro}{\add@hooktoggle@specific@to@cs}
+% The \cs{add@hooktoggle@specific@to@cs} macro stores to a macro
+% all the current values of hook toggle specific to a command.
+% It is useful for \cs{Xgroupbyline} option, which does not add immediately notes to the inserts list.
+% It uses the \cs{hooktoggle@specific} list.
+%    \begin{macrocode}
+\def\hooktoggle@specific{}%
+\newcommand{\add@hooktoggle@specific@to@cs}[1]{%
+  \def\do##1{%
+    \iftoggle{##1@}{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\toggletrue{##1@}}%
+      }{%
+        \csgdef{#1}{\toggletrue{##1@}}%
+      }%
+    }{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\togglefalse{##1@}}%
+      }{%
+        \csgdef{#1}{\togglefalse{##1@}}%
+      }%
+    }%
+  }%
+  \dolistloop{\hooktoggle@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\hookarg@specific}
+% \begin{macro}{\add@hookarg@specific@to@cs}
+% The same, but for optional argument of critical footnotes with assigned value.
+%    \begin{macrocode}
+\def\hookarg@specific{}%
+\newcommand{\add@hookarg@specific@to@cs}[1]{%
+  \def\do##1{%
+    \ifcsdef{#1}{%
+      \csxappto{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }{%
+      \csxdef{#1}{%
+        \noexpand\csdef%
+          {##1@}{\csname##1@\endcsname}%
+        }%
+    }%
+  }%
+  \dolistloop{\hookarg@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % And now, we define some hooks specific to a note.
 %    \begin{macrocode}
