@@ -1,5 +1,5 @@
-<!--Issues can be opened in English or French (I prefer French). Please fill out this form.
-Please open one issue per problem, and not a global issue for multiple problems.-->
+<!-- Issues can be opened in English or French (I prefer French). Please fill out this form.
+Please open one issue per problem, and not a single issue for multiple problems. -->
 
 # Version
 
@@ -9,7 +9,7 @@ Please open one issue per problem, and not a global issue for multiple problems.
 
 # Regression
 
-<!-- If this is a newly introduced problem, please indicate the last working version of the reledmac/reledpar.-->
+<!-- If this is a newly introduced problem, please indicate the last working version of reledmac/reledpar. -->
 
 
 
@@ -17,7 +17,7 @@ Please open one issue per problem, and not a global issue for multiple problems.
 
 <!-- Include these details:
 Does the problem happen only when combined with certain packages?
-Does the problem happen both in parallel typesetting and normal typesetting?-->
+Does the problem happen both in parallel typesetting and normal typesetting? -->
 
 
 

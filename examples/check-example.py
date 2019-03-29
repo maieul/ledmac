@@ -14,9 +14,8 @@ erreurs = []
 directory_files = os.listdir(".")
 
 def get_png_filenames(directory, basename):
-    '''In the directory, found all the png file which correspond
-    to the basename file
-    return set
+    '''In the directory, find all the png file which correspond
+    to the basename file return set
     '''
     existing_files = os.listdir(directory)
     regexp = re.compile(basename + "-" + "\d+" + ".png")
