@@ -335,6 +335,8 @@
 % \changes{v2.21.8}{2018/05/02}{Workaround with a bug of \protect\LaTeX 2018/04/01 patch level 3 to generate the .sty file from a .ins file}
 % \changes{v2.21.9}{2018/07/19}{Fix (little) bug when using \protect\package{calc} package.}
 % \changes{v2.22.0}{2018/09/13}{Compatibility with \protect\cs{doinsidethislinehook} macro.}
+% \changes{v2.22.1}{2019/01/08}{Really reset line number annotation at each line}
+% \changes{v2.22.2}{2019/01/22}{Fix bug with \protect\cs{Xonlyside} and \protect\cs{onlysideX}}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1104,9 +1106,9 @@
 % Another usual case is when you have text in parallel columns and want to get line numbers only on the outer margin.
 % In this case, you need to get line numbers on the left side of the left column on left pages and on the right side of the right column on the right pages.
 %
-% Reciprocally, if you want to get line numbers only on the inner margin, you need to get line number on the right side of the right column on left pages and on the left side of the left column on the right pages.
+% Reciprocally, if you want line numbers only in the inner margin, you need to get line numbers on the right side of the right column on left pages and on the left side of the left column on the right pages.
 %
-% In the two cases, you need, for one column, to have line numbers only on one page of a double pages.
+% In both cases, you need, for one column, to have line numbers only on one page of a double page.
 %
 % You can use \cs{linenumOnlyPagesForColumns} and \cs{linenumOnlyPagesForColumnsR} to get this result:
 % \begin{verbatim}
@@ -1235,7 +1237,7 @@
 % treated as zero \protect\cs{sza@0@}' it is because you have forgotten to use
 % \protect\cs{setstanzaindents} to set the stanza indents.
 %
-% As \env{astanza} is a specify type \cs{pstart}\ldots\cs{pend} structure, you can:
+% As \env{astanza} is a specific type of \cs{pstart}\ldots\cs{pend} structure, you can:
 % \begin{itemize}
 % \item Add optional argument (in brackets) after \cs{begin}\arg{astanza}, as the optional argument of \cs{pstart}.
 % \item Use optional argument after the last \expandafter\cs\expandafter{\&} as optional argument of \cs{pend}.
@@ -1383,7 +1385,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2018/09/13 v2.22.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2019/01/22 v2.22.2 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2545,7 +2547,6 @@
 %    \begin{macrocode}
 \newcommand{\@nl@regR}{%
   \ifx\l@dchset@num\relax \else
-    \reset@current@annot%
     \advance\absline@numR \@ne
     \csgdef{l@dchset@num@R\the\absline@numR}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
@@ -2553,6 +2554,7 @@
     \advance\absline@numR \m@ne
     \advance\line@numR \m@ne%   % do we need this?
   \fi
+  \reset@current@annot%
   \advance\absline@numR \@ne
   \ifx\next@page@numR\relax \else
     \page@action
@@ -4835,8 +4837,10 @@
 
 % \subsection{Footnotes output specific to \protect\cs{Pages}}
 % \begin{macro}{\print@Xnotes@forpages}
+% \begin{macro}{\restore@Xnotes@settings}
 % \begin{macro}{\correct@Xfootins@box}
 % \begin{macro}{\print@notesX@forpages}
+% \begin{macro}{\restore@notesX@settings}
 % \begin{macro}{\correct@footinsX@box}
 % \changes{v1.13.1}{2015/03/12}{Correct \protect\cs{correct@footinsX@box} and \protect\cs{correct@Xfootins@box}}
 % \changes{v1.13.1}{2015/03/12}{Call \protect\cs{correct@footinsX@box} and \protect\cs{correct@Xfootins@box} directly in \protect\cs{print@notesX@forpages} and \protect\cs{print@Xnotes@forpages}.}
@@ -4893,24 +4897,30 @@
      }%
 %    \end{macrocode}
 % In case we are on a page where notes must NOT be printed.
-% First restore expected rooms for notes on the next page. Also reset expected vertical size allowed to notes.
+% We reset the settings of the notes for one side.
 %    \begin{macrocode}
        {%
-         \global\count\csuse{#1footins}=\csuse{default@#1footins}%
-         \global\skip\csuse{#1footins}=\csuse{Xbeforenotes@#1}%
-         \bgroup%
-            \csuse{Xnotefontsize@#1}%
-            \global\dimen\csuse{#1footins}=\csuse{Xmaxhnotes@#1}%
-         \egroup%
-%    \end{macrocode}
-%  Then, save the current insert box to a temporary insert box.
-%    \begin{macrocode}
-         \global\setnamebox{#1footins@kept}=\box\namebox{#1footins}%
+         \restore@Xnotes@settings{#1}%
        }%
 %    \end{macrocode}
 % End of \protect\cs{print@Xnotes@forpages}.
 %    \begin{macrocode}
      }%
+}%
+%    \end{macrocode}
+% The macro which restore the note settings.
+% \#1 = series
+%    \begin{macrocode}
+\newcommand{\restore@Xnotes@settings}[1]{%
+  \unless\ifnocritical@
+    \global\count\csuse{#1footins}=\csuse{default@#1footins}%
+    \global\skip\csuse{#1footins}=\csuse{Xbeforenotes@#1}%
+    \bgroup%
+      \csuse{Xnotefontsize@#1}%
+      \global\dimen\csuse{#1footins}=\csuse{Xmaxhnotes@#1}%
+    \egroup%
+    \global\setnamebox{#1footins@kept}=\box\namebox{#1footins}%
+  \fi
 }%
 %    \end{macrocode}
 % And now, the same for familiar footnotes.
@@ -4932,20 +4942,26 @@
          \global\count\csuse{footins#1}=\z@%
          \global\skip\csuse{footins#1}=\z@%
          \global\dimen\csuse{footins#1}=\maxdimen%
-
        }%
        {%
-         \global\count\csuse{footins#1}=\csuse{default@footins#1}%
-         \global\skip\csuse{footins#1}=\csuse{beforenotesX@#1}%
-         \bgroup%
-            \csuse{Xnotefontsize@#1}%
-            \global\dimen\csuse{footins#1}=\csuse{maxhnotesX@#1}%
-         \egroup%
-         \global\setnamebox{footins#1@kept}=\box\namebox{footins#1}%
+         \restore@notesX@settings{#1}%
        }%
      }%
 }%
+\newcommand{\restore@notesX@settings}[1]{%
+  \unless\ifnofamiliar@
+    \global\count\csuse{footins#1}=\csuse{default@footins#1}%
+    \global\skip\csuse{footins#1}=\csuse{beforenotesX@#1}%
+    \bgroup%
+      \csuse{Xnotefontsize@#1}%
+    \global\dimen\csuse{footins#1}=\csuse{maxhnotesX@#1}%
+    \egroup%
+    \global\setnamebox{footins#1@kept}=\box\namebox{footins#1}%
+  \fi
+}%
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -4963,6 +4979,7 @@
         \unvnamebox{##1footins@kept}%
       \egroup%
     \fi%
+    \restore@Xnotes@settings{##1}%
   \fi%
   \unless\ifnofamiliar@%
     \ifvoid\csuse{footins##1@kept}\else%
@@ -4971,6 +4988,7 @@
         \unvnamebox{footins##1@kept}%
       \egroup%
     \fi%
+    \restore@notesX@settings{##1}%
   \fi%
   }%
   \dolistloop{\@series}%
@@ -6711,6 +6729,11 @@
       \global\newnamebox{footins##1}%
     \fi
 %    \end{macrocode}
+% We must also restore the settings for the footnotes in case of using onlyside option.
+%    \begin{macrocode}
+      \restore@Xnotes@settings{##1}%
+      \restore@notesX@settings{##1}%
+%    \end{macrocode}
 % And now, add a \protect\cs{newpage} if there is no more footnote to print.
 %    \begin{macrocode}
     \ifvoid\csuse{##1footins}%
@@ -7615,6 +7638,7 @@
 %
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
+% \renewcommand{\thesubsection}{\oldthesection.\arabic{subsection}}
 % \section{Some things to do when changing version}
 % \input{doc-include/migrate-par.dtx}
 % \bibliographystyle{alpha}

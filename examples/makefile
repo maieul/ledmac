@@ -8,7 +8,7 @@ all:$(OBJ)
 
 PDF:$(OBJ)
 
-%.test: %.pdf 
+%.test: %.pdf
 	python3 check-example.py --filename=$<
 
 %.pdf: %.tex

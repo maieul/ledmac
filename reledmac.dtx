@@ -493,11 +493,11 @@
 % \changes{v2.25.0}{2017/11/05}{Add \protect\cs{Xendtxtbeforenotes} hook}
 % \changes{v2.26.0}{2017/11/11}{Fix bug in \protect\cs{xpstartref}}
 % \changes{v2.26.0}{2017/11/11}{Add a mechanism for annotation of stanza line numbering}
-% \changes{v2.26.1}{2017/11/26}{Fix bug with \protect\cs{linenumberannotation}}
+% \changes{v2.26.1}{2017/11/26}{Fix bug with \protect\cs{linenumannotation}}
 % \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} and optional argument of critical footnotes.}
 % \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} for the series after the first one.}
 % \changes{v2.26.2}{2017/12/22}{Fix bug with \protect\cs{Xgroupbyline} and \protect\cs{Xparafootsep}.}
-% \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumberannotation} in parallel typesetting}
+% \changes{v2.26.2}{2017/11/22}{Fix bug with \protect\cs{linenumannotation} in parallel typesetting}
 % \changes{v2.26.3}{2018/01/06}{Fix bug added by v2.26.0 with notes in parallel typesetting}
 % \changes{v2.26.4}{2018/01/18}{Fix bug when using \protect\cs{numberpstarttrue} and alterning between manual \protect\cs{pstart} and automatic \protect\cs{pstart} produced by \protect\cs{autopar}}
 % \changes{v2.26.5}{2018/01/18}{Fix bug with using \protect\cs{eledsection} and related when alternate normal typesetting and parallel typesetting}
@@ -515,6 +515,23 @@
 % \changes{v2.26.11}{2018/05/21}{Allow to use \protect\cs{edtext} inside \protect\cs{sameword}}
 % \changes{v2.26.12}{2018/07/19}{Precise minimal version of xparse package required.}
 % \changes{v2.27.0}{2018/09/13}{Add \protect\cs{doinsidethislinehook}.}
+% \changes{v2.27.1}{2018/10/12}{Fix spurious space in \protect\cs{hidenumbering}.}
+% \changes{v2.28.0}{2018/11/30}{Familiar footnotes can take an optional argument to manually define the footnote mark.}
+% \changes{v2.28.1}{2018/12/22}{Fix bug with the alignment of the columns of two and three columns critical footnotes.}
+% \changes{v2.29.0}{2019/01/08}{Fix bug with \protect\cs{linenumannotation} and `nofamiliar` option.}
+% \changes{v2.29.0}{2019/01/08}{Really reset line number annotation at each line}
+% \changes{v2.29.0}{2019/01/08}{Add \protect\option{noresetlinenumannotation}}
+% \changes{v2.29.0}{2019/01/08}{Fix little bug with \protect\cs{msdata}}
+% \changes{v2.30.0}{2019/01/22}{Add \protect\cs{Xnoidenticallinenumannotation} and \protect\cs{Xendnoidenticallinenumannotation} hooks}
+% \changes{v2.30.0}{2019/01/22}{Add separator between line number annotations in margin. Add \protect\cs{setlinenumannotationsep}}
+% \changes{v2.31.0}{2019/02/22}{Add \protect\option{noprefix} and \protect\option{prefixmore} to \protect\cs{appref} and \protect\cs{SEref}.}
+% \changes{v2.31.1}{2019/03/03}{Fix bug with \protect\cs{Xgroupbyline}, which could produce spurious blank lines.}
+% \changes{v2.31.1}{2019/03/03}{Fix bug with multiple footnote layer and \protect\cs{Xgroupbyline}.}
+% \changes{v2.31.1}{2019/03/03}{Fix incompatibility between \protect\cs{Xgroupbyline} and \protect\package{hyperref} package.}
+% \changes{v2.31.1}{2019/03/03}{Fix incompatibility between \protect\cs{Xgroupbyline} and optional argument of critical footnotes.}
+% \changes{v2.31.1}{2019/03/03}{Fix bug in vertical spacing with \protect\cs{Xgroupbyline}.}
+% \changes{v2.31.1}{2019/03/03}{Fix bug with indentation with \protect\cs{Xgroupbyline}.}
+% \changes{v2.31.1}{2019/03/03}{Fix bug with \protect\cs{Xhangindent} and \protect\cs{hangindentX} for right-to-left texts.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -587,7 +604,7 @@
 %
 % Any suggestions for new features are welcome.
 %
-% This manual contains a general description of how to use \macpackage followed by
+% This manual contains a general description of how to use \macpackage, followed by
 % the complete source code and its extensive documentation (in sections~\ref{overview} and following, enumerated with Roman numerals).
 % It ends with a list of actions to do when migrating from one version to other, a change history and an index to the
 % source code.
@@ -803,11 +820,12 @@
 %       \item The option does not change the default \LaTeX auxiliary files (.aux, .toc, \ldots).
 %    \end{enumerate}
 % \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
-% \item[swcaseinsensitive] make \cs{sameword} command case insensitive.
 % \item[nopenalties] must be called in some cases when using paragraphed endnotes (\reff{nopenalties)}
 % \item[nopbinverse] prevents page break within verse environment.
 % \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
+% \item[noresetlinenumannotation] Does not reset the annotations to line number at each line. See \reff{annotation}.
 % \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
+% \item[swcaseinsensitive] make \cs{sameword} command case insensitive.
 % \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
 % \item[xindy] and \verb|xindy+hyperref| select \verb+xindy+ as the index processor (\reff{xindy}).
 % \end{description}
@@ -941,7 +959,7 @@
 %
 % \subsubsection{Content before specific \protect\cs{pstart} and after specific \protect\cs{pend}}\label{pstart:optionalarg}
 % \changes{v1.12.0}{2014/08/05}{Optional arguments for \protect\cs{pstart} and \protect\cs{pend}.}
-% Both \protect\cs{pstart} and \protect\cs{pend} can take a optional argument in brackets.
+% Both \protect\cs{pstart} and \protect\cs{pend} can take an optional argument in brackets.
 % Its content will be printed before the beginning of \protect\cs{pstart} / after the end of  \protect\cs{pend} instead of the argument of \protect\cs{AtEveryPstart} / \protect\cs{AtEveryPend}.
 %
 % Note that a \cs{noindent} will be automatically added before this argument, and, consequently, a \cs{parskip} will be inserted.
@@ -985,10 +1003,10 @@
 % \setcounter{pstart}{value}
 % \end{verbatim}
 % On each \protect\cs{beginnumbering} the numbering restarts.
-% \changes{v0.15.0}{2012/06/11}{Possibility to print \protect\cs{pstart} number inside.}
+% \changes{v0.15.0}{2012/06/11}{Possibility to print \protect\cs{pstart} number at the sides of the text.}
 %
 % \DescribeMacro{\sidepstartnumtrue}
-% With the \protect\cs{sidepstartnumtrue} command, the number of \protect\cs{pstart} will be printed inside.
+% With the \protect\cs{sidepstartnumtrue} command, the number of \protect\cs{pstart} will be printed at the sides of the text.
 % In this case, the line number will be not printed.
 %
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{labelpstarttrue}.}
@@ -1056,14 +1074,30 @@
 % \DescribeMacro{\numberlinefalse} \DescribeMacro{\numberlinetrue}
 % Line numbering can be disabled with  \protect\cs{numberlinefalse}. It can be enabled again with \protect\cs{numberlinetrue}.
 %
+% \textfb{This feature must be used with caution.}
+% \begin{itemize}
+%   \item It should not be use if you have critical footnotes after \cs{numberlinefalse}.
+%   \item It could be used in the following cases:
+%      \begin{itemize}
+%         \item You want only familiar footnotes, not critical footnotes;
+%         \item You want only parallel typesetting (using \parpackage) but no critical footnotes.
+%         \item You disable, for a portion of text, line numbering
+%      \end{itemize}
+%   \item It must not be used if:
+%     \begin{itemize}
+%         \item You just not want to have the line number in the margins, but want to use critical footnote. In this case, set \label{firstlinenum} to a big value, such as 100,000 (\reff{firstlinenum}).
+%         \item You want to freeze the line numbering for some line, but still keep critical footnotes. In this case, use \cs{startlock} (\reff{startlock}).
+%     \end{itemize}
+% \end{itemize}
+% A successor to \reledmac\ may disable this feature.
 % \subsubsection{Setting lineation start and step}
-% \DescribeMacro{\firstlinenum}
+% \DescribeMacro{\firstlinenum}\label{firstlinenum}
 % \DescribeMacro{\linenumincrement}
 %  By default, \macpackage numbers every 5th line. There are two counters that control this behaviour:
 % \verb?firstlinenum? and \verb?linenumincrement?. They can be changed using \protect\cs{firstlinenum}\marg{num} and
 % \protect\cs{linenumincrement}\marg{num}. \protect\cs{firstlinenum} specifies the first
 % line that will have a printed number, and \protect\cs{linenumincrement} is
-% the difference between succesive numbered lines. For example, to start printing numbers at the first line
+% the difference between successive numbered lines. For example, to start printing numbers at the first line
 % and to have every other line numbered: \\
 % \verb?\firstlinenum{1} \linenumincrement{2}?
 %
@@ -1110,7 +1144,7 @@
 % The package's default setting is \\
 % \verb"\linenummargin{left}" \\
 % to typeset the numbers in the left hand margin.
-% You can change this whenever you're not in the  middle of
+% You can change this whenever you're not in the middle of
 % making a paragraph.
 %
 % More precisely, the value of
@@ -1160,7 +1194,7 @@
 % \DescribeMacro{Xsublinesep}
 % \DescribeMacro{Xsublinesepside}
 % You can change the separator between the line number and the subline number either by using \cs{Xsublinesep} without any optional argument (\reff{Xsublinesep}) or by using \cs{Xsublinesepside}. In the second case, it will change the separator only for line numbers in the margins, not in the footnotes.
-% \subsubsection{Locking lineation}
+% \subsubsection{Locking lineation}\label{startlock}
 % \DescribeMacro{\startlock}
 % \DescribeMacro{\endlock}
 % The \protect\cs{startlock} command, used in running text, locks the
@@ -1241,6 +1275,114 @@
 % \DescribeMacro{\hidenumberingonleftpage}
 % \cs{hidenumberingonleftpage} is like \protect{hidenumbering}, but is applied only on left page. \cs{hidenumberingonrightpage} is applied on right page.
 % They can be useful  if the position of the line number is depending of the position of the page, but the position of marginal note is fixed.
+% \subsection{Adding annotations to line numbers}\label{annotation}
+% You may want to have two or more numbers associated with a line of text.
+% Consider, for example, the following cases:
+% \begin{itemize}
+%  \item You want to split a line of verse into two parts depending upon some stylistic / rhythmic / linguistic convention.
+%  \item You want to add the line number used by a previous edition of the work.
+%  \item You want to typeset biblical text, and use division in verse.
+% \end{itemize}
+% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
+%
+% \DescribeMacro{\linenumannotation}
+% To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
+% \begin{verbatim}
+% \linenumannotation{<annotation>}
+% \end{verbatim}
+%
+% The annotation can contain any textual value (whether number, text, or other) such as the line number from the older edition.
+% Here are some characteristics of line number annotation:
+% \begin{itemize}
+%  \item An annotation is associated with a line of text. It is reset with each new line of text, unless you use the \option{noresetlinenumannotation} option of \macpackage.
+%  \item It is printed alongside the line number in the margin.
+%  \item It is printed following the line number in critical footnotes and endnotes.
+%  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
+%  \item If two or more annotations are called before an \cs{edtext}, the last one is used in associated notes.
+%  \item If an annotation is called within an \cs{edtext}, it is printed as an annotation for the end of the lemma.
+% \end{itemize}
+% Here is an example, supposing we are on line 1:
+% \begin{verbatim}
+% \edtext{first lemma}
+% \linenumannotation{A}
+% \edtext{second lemma}{…}
+% \edtext{third%
+%   \linenumannotation{B}
+%  lemma}{…}
+% \edtext{fourth lemma}&
+% \end{verbatim}
+% In the critical notes, the line number will be followed
+% \begin{itemize}
+%   \item by nothing in the first lemma, as  there is no annotation for this line;
+%   \item by \enquote{A} for the second lemma;
+%   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
+%   \item by \enquote{B} for the fourth lemma.
+% \end{itemize}
+% \subsubsection{Modifying annotation associated with a specific note}\label{lineannot}
+%
+% The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
+% \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
+% It takes one argument, containing the beginning and ending annotations separated by a pipe (\verb+|+).
+% As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
+% \begin{verbatim}
+% \lineannot{|b}% to change the ending annotation
+% \lineannot{a|}% to change the beginning annotation
+% \lineannot{a|b}% to change both
+% \lineannot{\empty|}% to delete the beginning annotation
+% \end{verbatim}
+% \subsubsection{Changing the position of the annotation}\label{annotationposition}
+% By default, annotations are placed after line numbers in both margin and footnote.
+%
+% \DescribeMacro{\Xlinenumannotationposition}
+% \DescribeMacro{\Xendlinenumannotationposition}
+% To change this behaviour, one can use one of the following commands:
+% \begin{itemize}
+%  \item \cs{Xlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical footnotes with \meta{s} for the series of footnotes to which it applies, where \meta{s} may be a comma-separated list of series. When \meta{s} is empty, the change applies also to annotations at the sides of the page, alongside the line number.
+%  \item \cs{Xlinenumannotationpositionside}\marg{v} changes the position at the sides of the page, alongside the line numbers.
+%
+% Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
+%  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes,
+% \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
+% \end{itemize}
+% In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
+% \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
+% By default, annotations are wrapped in the \cs{textsuperscript} macro.
+% You can modify this using one of the following:
+% \begin{itemize}
+%   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
+% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
+%   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
+%
+% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
+%   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
+% \end{itemize}
+% \meta{cmd} is a command which can take one argument; the backslash is required though.
+%
+% For example, if you do not wish to have annotations in the margins, but do want to have them in bold in the critical footnotes and endnotes, you say:\footnote{The \cs{@gobble} command takes one argument, and returns nothing.}
+% \begin{verbatim}
+% \makeatletter
+% \Xwraplinenumannotation{\textbf}
+% \Xendwraplinenumannotation{\textbf}
+% \Xwraplinenumannotationside{\@gobble}
+% \makeatother
+% \end{verbatim}
+% \subsubsection{Not printing the second identical annotations}
+% If you print only line number annotation, you may get in critical notes something like \verb+6-6+,
+% because the starting and ending annotations are the same.
+% \DescribeMacro{\Xnoidenticallinenumannotation}
+% \DescribeMacro{\Xendnoidenticallinenumannotation}
+% You can avoid that using \\
+% \cs{Xnoidenticallinenumannotation}\oarg{s}, for critical footnotes \\
+% or
+% \cs{Xendnoidenticallinenumannotation}\oarg{s}
+% \subsubsection{Separator between annotations}
+% \DescribeMacro{\setlinenumannotationsep}
+% If there an more than one annotation in the same line, there are separated by a comma.
+% If you want to change the separator, you can use \\
+% \cs{setlinenumannotationsep}\marg{sep}
 % \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
@@ -1251,7 +1393,7 @@
 % The file \href{examples/2-line_numbers_in_header.tex}{examples/2-line\_numbers\_in\_header.tex} provides
 % an example for printing the first and last line numbers of a page in the header.
 %
-% \section{Execution code at a specific line}
+% \subsection{Executing code at a specific line}
 % Sometime, you want to execute a code at a precise point in the flow of your text.
 % For example, if the current header of the page corresponds to the position inside the text, you may want to use \cs{markboth} (or similar) command.
 % The main problem is that you need to execute \cs{markboth} when \macpackage\ typesets the text, and not when it reads it, because that could create damage with vertical spacing.
@@ -1277,7 +1419,7 @@
 % \section{Apparatus commands}
 %
 % \subsection{Terminology}
-% We call ``critical notes'' notes which refer to both a lemma, that is a part of text and a line number.
+% We call ``critical notes'' notes which refer to both a lemma, that is a part of text, and a line number.
 % Critical notes are subdivided in critical footnotes and critical endnotes.
 %
 % We call ``familiar notes'' notes which refer to a footnote mark in the main text.
@@ -1310,7 +1452,7 @@
 % For example:
 % \egstart
 % \begin{verbatim}
-% I am happy :
+% I am happy:
 % I saw my friend \edtext{Smith}{
 % \Afootnote{Jones C, D.}}
 % on Tuesday.
@@ -1320,7 +1462,7 @@
 % \firstlinenum{1}
 % \linenumincrement{1}
 % \pstart
-% I am happy : I saw my friend \edtext{Smith}{
+% I am happy: I saw my friend \edtext{Smith}{
 % \Afootnote{Jones C, D.}}
 % on Tuesday.
 % \pend
@@ -1581,7 +1723,7 @@
 % \end{verbatim}
 %
 %
-% \subsection{Disambiguation of identical words in the apparatus}
+% \subsection{Disambiguation of identical words in the apparatus}\label{sameword}
 % \changes{v1.15.0}{2015/01/12}{New tools to prevent ambiguous references in lemma}
 % \changes{v1.23.0}{2015/05/18}{Fix a bug with \protect\cs{sameword} when the same lemma is used for multiple notes or for nested \protect\cs{edtext}s.}
 % \changes{v1.23.0}{2015/05/18}{Optional argument of \protect\cs{sameword} can be a comma-separated list of \protect\cs{edtext} depth.}
@@ -1930,7 +2072,11 @@
 % name whereas the critical footnotes have the series letter at the start
 % of the name.
 %
-%
+% The footnote can take a first optional argument to manually define the footnote number or footnote symbol.
+% For example:
+% \begin{verbatim}
+% \footnoteA[22]{This footnote will be numbered 22}
+% \end{verbatim}
 % \subsubsection{Customizing mark}
 % \DescribeMacro{\thefootnoteA}
 % \DescribeMacro{\bodyfootmarkA}
@@ -2916,10 +3062,10 @@
 % \stanza[][foo] % There is no \noindent inserted before foo.
 % \end{verbatim}
 %
-% \item \DescribeMacro{\AtEveryStanza} Use \cs{AtEveryStanza}\marg{arg} to automatically add content before the stanza (not in the same paragraph).
+% \item \DescribeMacro{\AtEveryStanza} Use \cs{AtEveryStanza}\marg{arg} to automatically add content before stanzas (not in the same paragraph).
 %
 % Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStanza} to avoid this \cs{noindent}.
-%  \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the beginning of stanza (in the same paragraph).
+%  \item \DescribeMacro{\AtStartEveryStanza} Use \cs{AtStartEveryStanza}  to automatically add content at the beginning of stanzas (in the same paragraph).
 %   \item \verb+&+ can be replaced by \protect\cs{newverse} with two optional arguments (in brackets). The first will be printed after the current verse, the second before the next verse.
 %
 % A \cs{noindent} is automatically inserted before the contents of these optional arguments.
@@ -2931,6 +3077,8 @@
 % \item \DescribeMacro{\AtEveryStopStanza} Use \cs{AtEveryStopStanza} to automatically add content after the end of stanzas (not in the same paragraph).
 %
 % Note that a \cs{noindent} will be inserted before the argument, and, consequently, a \cs{parskip}. You can use the starred version of \protect\cs{AtEveryStopStanza}  to avoid this \cs{noindent}.
+%
+%  \item \DescribeMacro{\BeforeEveryStopStanza} Use \cs{BeforeEveryStopStanza} to automatically add content at the end of stanzas (in the same paragraph).
 % \end{itemize}
 %
 %
@@ -2964,99 +3112,6 @@
 % \newcommand{\stanzanumwrapper}[1]{%
 %    \flagstanza{#1}%
 %}
-% \end{verbatim}
-% \subsection{Adding annotations to line numbers}\label{annotation}
-% You may want to have two or more numbers associated with a line of verse.
-% Consider, for example, the following cases:
-% \begin{itemize}
-%  \item You want to split a line of verse into two parts depending upon some stylistic / rythmic / linguistic convention.
-%  \item You want to add the line number used by a previous edition of the work.
-% \end{itemize}
-% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
-%
-% \DescribeMacro{\linenumannotation}
-% To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
-% \begin{verbatim}
-% \linenumannotation{<annotation>}
-% \end{verbatim}
-%
-% The annotation can contain any textual value (whether number, text, or other) such as the line number from the older edition.
-% Here are some characteristics of line number annotation:
-% \begin{itemize}
-%  \item An annotation is associated with a line of verse. It is reset with each new line of verse.
-%  \item It is printed alongside the line number in the margin.
-%  \item It is printed following the line number in critical footnotes and endnotes.
-%  \item And of particular interest: the annotation is printed in the critical note \emph{only} when the \cs{edtext} is issued after the \cs{linenumannotation}.
-%  \item If two or more annotations are called before an \cs{edtext}, the last one is used in associated notes.
-%  \item If an annotation is called within an \cs{edtext}, it is printed as an annotation for the end of the lemma.
-% \end{itemize}
-% Here is an example, supposing we are on line 1:
-% \begin{verbatim}
-% \edtext{first lemma}
-% \linenumannotation{A}
-% \edtext{second lemma}{…}
-% \edtext{third%
-%   \linenumannotation{B}
-%  lemma}{…}
-% \edtext{fourth lemma}&
-% \end{verbatim}
-% In the critical notes, the line number will be followed
-% \begin{itemize}
-%   \item by nothing in the first lemma, as  there is no annotation for this line;
-%   \item by \enquote{A} for the second lemma;
-%   \item by \enquote{A-B} for the third lemma, as it starts while annotation A is still in effect and it finishes after annotation B has already taken effect;
-%   \item by \enquote{B} for the fourth lemma.
-% \end{itemize}
-% \subsubsection{Modifying annotation associated with a specific note}
-%
-% The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
-% \DescribeMacro{\lineannot}The \cs{lineannot} macro does the same for the annotations.
-% It takes one argument, containing the beginnning and ending annotations separated by a pipe (\verb+|+).
-% As with \cs{linenum}, if one wishes to change some specific part of the annotation, one can use
-% \begin{verbatim}
-% \lineannot{|b}% to change the ending annotation
-% \lineannot{a|}% to change the beginning annotation
-% \lineannot{a|b}% to change both
-% \lineannot{\empty|}% to delete the beginning annotation
-% \end{verbatim}
-% \subsubsection{Changing the position of the annotation}\label{annotationposition}
-% By default, annotations are placed after line numbers in both margin and footnote.
-%
-% \DescribeMacro{\Xlinenumannotationposition}
-% \DescribeMacro{\Xendlinenumannotationposition}
-% To change this behaviour, one can use one of the following commands:
-% \begin{itemize}
-%  \item \cs{Xlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical footnotes with \meta{s} for the series of footnotes to which it applies, where \meta{s} may be a comma-separated list of series. When \meta{s} is empty, the change applies also to annotations at the sides of the page, alongside the line number.
-%  \item \cs{Xlinenumannotationpositionside}\marg{v} changes the position at the sides of the page, alongside the line numbers.
-%
-% Note that \cs{Xlinenumannotationposition} without any optional argument will override this setting.
-%  \item \cs{Xendlinenumannotationposition}\oarg{s}\marg{v} changes the position in critical endnotes,
-% \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
-% \end{itemize}
-% In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
-% \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
-% By default, annotations are wrapped in the \cs{textsuperscript} macro.
-% You can modify this using one of the following:
-% \begin{itemize}
-%   \item \cs{Xwraplinenumannotation}\oarg{s}\marg{cmd} for critical footnotes; \meta{s} indicates the series of notes to which it applies and may be a comma-separated list of series.
-% When \meta{s} is empty, the change applies to the annotations in the margins also---around the line number---as well as to the annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
-%   \item \cs{Xwraplinenumannotationside}\marg{cmd} for annotations in the margins only.
-%
-% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
-%   \item \cs{Xwraplinenumannotationref}\marg{cmd} for annotations referenced using the \cs{annotationref} command of the crossref mechanism (\reff{crossref}).
-%
-% Note that \cs{Xwraplinenumannotation} without any optional argument will override this setting.
-%   \item \cs{Xendwraplinenumannotation}\oarg{s}\marg{cmd} for critical endnotes, where \meta{s} indicates the series of notes to which it applies, which may be a comma-separated list.
-% \end{itemize}
-% \meta{cmd} is a command which can take one argument; the backslash is required though.
-%
-% For example, if you do not wish to have annotations in the margins, but do want to have them in bold in the critical footnotes and endnotes, you say:\footnote{The \cs{@gobble} command takes one argument, and returns nothing.}
-% \begin{verbatim}
-% \makeatletter
-% \Xwraplinenumannotation{\textbf}
-% \Xendwraplinenumannotation{\textbf}
-% \Xwraplinenumannotationside{\@gobble}
-% \makeatother
 % \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
@@ -3265,7 +3320,7 @@
 %
 % \DescribeMacro{\edlabelE}
 % Use \cs{edlabelE}\marg{label} to mark the end the end line of the passage.
-% These two commands just create to label which are named \meta{label}\verb+:start+ and \meta{label}\verb+:end+.
+% These two commands just create two labels which are named \meta{label}\verb+:start+ and \meta{label}\verb+:end+.
 %
 % \DescribeMacro{\edlabelSE}
 % Use \cs{edlabelSE}\marg{label} to mark just one location in the text. Contrary to a classical \cs{edlabel}, the \meta{label} could be use with \cs{SEref} and \cs{SErefwithpage}.
@@ -3349,6 +3404,7 @@
 %   \item \cs{Xtwolinesonlyinsamepage}
 %   \item \cs{Xlinenumannotationposition}
 %   \item \cs{Xwraplinenumannotation}
+%   \item \cs{Xnoidenticallinenumannotation}
 % \end{itemize}
 %
 % If you want to make settings specific  to \cs{appref} or \cs{SEref}, just call them with an optional argument containing a comma-separated list of command names (for example \verb+appref,SEref+) or with a suffix equal to the command name (for example \verb+appref+).
@@ -3369,12 +3425,24 @@
 %   \item\cs{Xendtwolinesonlyinsamepage}
 %   \item\cs{Xendlinenumannotationposition}
 %   \item\cs{Xendwraplinenumannotation}
+%   \item\cs{Xemdnoidenticallinenumannotation}
 % \end{itemize}
 % \paragraph{For one specific command}
 %
 % When calling \cs{appref} and \cs{SEref}, you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical footnotes (\reff{Xfootnoteopt}).
 %
 % When calling \cs{apprefwithpage}, \cs{SErefwithpage} or \cs{SErefonlypage} you can use as a first optional argument, in brackets (\verb+[]+), any optional argument which can be used for critical endnotes (\reff{Xendnoteopt}).
+%
+% \subsubsection{Combining multiple references}
+%
+% When combining multiple cross references into a list, it is possible to prevent prefixes reappearing by adding an optional argument to \cs{appref} and \cs{SEref}. The available options are:
+% \begin{itemize}
+% \item \option{noprefix} to remove any prefix set by \cs{setapprefprefixsingle} or the equivalent for a single reference;
+% \item \option{prefixmore} to force the plural version of a prefix.
+% \end{itemize}
+%
+% For example, a reference to `lines 65--66, 72, and 75' might use \verb|\SEref[prefixmore]{ref1}, \SEref[noprefix]{ref2}, and \SEref[noprefix]{ref3}| to achieve this result.
+%
 % \subsection{Compatibility with \protect\package{xr} package}
 % The \cs{externaldocument} command of the \cs{xr} package allows making cross-references from an external document, with the standard \LaTeX\ commands \cs{label} and \cs{ref} (and related).
 %
@@ -4153,7 +4221,7 @@
 %
 % We present the \macpackage\ code in roughly the order in which it is used
 % during a run of \TeX. The order is \emph{exactly} that in which
-% it is read when you load The \Eledmac{} package, because the same file
+% it is read when you load the \macpackage{} package, because the same file
 % is used to generate this manual and to generate the \LaTeX\ package file.
 %
 % Most of what follows consists of macro definitions, but there
@@ -4215,7 +4283,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2018/09/13 v2.27.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2019/03/03 v2.31.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4237,6 +4305,7 @@
 % \begin{macro}{\ifxindy@}
 % \begin{macro}{\ifxindyhyperref@}
 % \begin{macro}{\ifeledmaccompat@}
+% \begin{macro}{\ifnoresetlinenumannotation@}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % We use \protect\package{xkeyval} in order to manage options with argument.
@@ -4325,6 +4394,10 @@
 \DeclareOptionX{swcaseinsensitive}{%
   \sw@caseinsensitivetrue%
 }%
+\newif\ifnoresetlinenumannotation@
+\DeclareOptionX{noresetlinenumannotation}{%
+  \noresetlinenumannotation@true%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4335,6 +4408,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -6029,7 +6103,7 @@
 % action codes and the settings they invoke; it does not require an
 % entry in the action-code list for every line.
 % \item \cs{annot@list} stores line number annotations for the start and the end lines of each  \cs{edtext}, as \cs{line@list} does for line numbers.
-% We don't store that in the same list as line numbers as \cs{printlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
+% We don't store that in the same list as line numbers as \cs{Xprintlines} already have height arguments, and a \TeX\ macro can take at most nine arguments.
 % \end{itemize}
 % Here are the commands to create these lists:
 %
@@ -6360,7 +6434,6 @@
 }
 \newcommand*{\@nl@reg}{%
   \ifx\l@dchset@num\relax \else
-    \reset@current@annot%
     \advance\absline@num \@ne
     \csgdef{l@dchset@num@\the\absline@num}{}%To remember this line have been marked by a \setlinenum
     \set@line@action
@@ -6373,6 +6446,7 @@
 % First increment the absolute line-number, and perform
 % deferred actions relating to page starts and sub-lines.
 %    \begin{macrocode}
+  \reset@current@annot%
   \advance\absline@num \@ne
          \ifx\next@page@num\relax \else
              \page@action
@@ -6840,7 +6914,7 @@
 % \begin{macro}{\h@num}
 %    \begin{macrocode}
 \newif\ifl@dhidenumber
-\newcommand*{\hidenumbering}{
+\newcommand*{\hidenumbering}{%
   \ifledRcol%
     \write\linenum@outR{\string\hide@num}%
   \else%
@@ -9439,12 +9513,16 @@
 % \end{macro}
 % \begin{macro}{\Xwraplinenumannotation@ref}
 % \begin{macro}{\Xwraplinenumannotation@side}
-% The  \cs{Xwraplinenumannotation@ref} macro is applied to crossrefs made to line annotations. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
+% The  \cs{Xwraplinenumannotation@ref} macro is applied to line annotations in crossref. The \cs{Xwraplinenumannotation@side} macro is applied to line annotation in sides.
 % They must be modified by users using \cs{Xwraplinenumannotation}.
 % By default, they call \cs{textsuperscript}.
+%
+% We also define toggle \verb+Xnoidenticallinenumannotation@ref+ and \verb+Xnoidenticallinenumannotation@ref+
 %    \begin{macrocode}
 \def\Xwraplinenumannotation@ref{\textsuperscript}%
 \def\Xwraplinenumannotation@side{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@ref}%
+\newtoggle{Xnoidenticallinenumannotation@side}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -9462,9 +9540,17 @@
 }%
 \newcommand{\store@annot@to@absline}[1]{%
   \ifledRcol%
-    \csgappto{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    \ifcsdef{annotR@\the\absline@numR @\the\section@numR}{%
+      \csgappto{annotR@\the\absline@numR @\the\section@numR}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annotR@\the\absline@numR @\the\section@numR}{#1}%
+    }%
   \else%
-    \csgappto{annot@\the\absline@num @\the\section@num}{#1}%
+    \ifcsdef{annot@\the\absline@num @\the\section@num}{%
+      \csgappto{annot@\the\absline@num @\the\section@num}{\@linenumannotationsep#1}%
+    }{%
+      \csgdef{annot@\the\absline@num @\the\section@num}{#1}%
+    }%
   \fi%
 }%
 %    \end{macrocode}
@@ -9481,7 +9567,9 @@
 % It resets the annotation of line numbers at each line.
 %    \begin{macrocode}
 \newcommand{\reset@current@annot}{%
-  \let\current@annot\empty%
+  \unless\ifnoresetlinenumannotation@
+    \let\current@annot\empty%
+  \fi
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -9494,6 +9582,15 @@
   \gdef\annot@end{#2}%
 }%
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\setlinenumannotationsep}
+% \begin{macro}{\@linenumannotationsep}
+% The separator between the annotations and the way to redefine it.
+%    \begin{macrocode}
+\newcommand{\setlinenumannotationsep}[1]{\gdef\@linenumannotationsep{#1}}%
+\def\@linenumannotationsep{, }%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \section{Line number printing}
 %
@@ -9895,12 +9992,13 @@
 % \end{macro}
 %
 % \begin{macro}{\add@Xgroupbyline}
-% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, to be inserted in one block.
+% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, in order to be inserted later in one block.
 % This insertion in one block is made by \cs{add@Xgroupbyline}.
 %    \begin{macrocode}
 \newcommand{\add@Xgroupbyline}{%
   \unless\ifnocritical@%
     \def\do##1{%Looping on the series
+      \let\olddo\do%Save the old \do macro, that is this macro itself!
       \def\do####1{%Looping on the ##1@forinserting command
          \ifcsdef{##1@forinserting@####1}{%
            \X@beforeinsertion{##1}%
@@ -9910,6 +10008,7 @@
              \insert\csname ##1footins\endcsname%
            \fi%
            {%
+            \nottoggle{Xparindent@##1}{\parindent=\z@}{}%
              \ifcsdef{Xhsize\csuse{series@display##1}@##1}%
                {\hsize \csuse{Xhsize\csuse{series@display##1}@##1}}%
                {}%
@@ -9934,6 +10033,7 @@
         \dolistcsloop{##1@forinserting}%
       }{}%
       \global\csundef{##1@forinserting}%
+      \let\do\olddo%Restore old do
       }%
     \dolistloop{\@series}%
   \fi%
@@ -10416,11 +10516,12 @@
 % \end{macro}
 %
 % \begin{macro}{\normalvfootnote@inserted}
-% The \cs{normalvfootnote@inserted} macro is expanded to the content to be add to a \cs{insert} for normal critical footnote.
+% The \cs{normalvfootnote@inserted} macro is expanded to the content to be added to a \cs{insert} for normal critical footnote.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote@inserted}[2]{%
   \nottoggle{Xgroupbyline@#1}{\noindent}{}\csuse{Xbhooknote@#1}%
   \csuse{Xnotefontsize@#1}%
+  \iftoggle{Xgroupbyline@#1}{\strut}{}%
   \footsplitskips
   \ifl@dpairing\ifl@dpaging\else%
     \setXnoteswidthliketwocolumns@{#1}%
@@ -10509,8 +10610,7 @@
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
   \Xstorelineinfo{#1}{#4}%
   \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
-  \hangindent=\csuse{Xhangindent@#4}%
-  \everypar{\hangindent=\csuse{Xhangindent@#4}}%
+  \Xsethangindent{#4}%
   \nottoggle{Xgroupbyline@#4}{\rule\z@\splittopskip}{}%
   {\printlinefootnote{#1}{#4}}%
   \print@lemma{#1}{#2}{#4}%
@@ -11265,8 +11365,7 @@
     {}%
   \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
   \tolerance=5000%
-  \hangindent=\csuse{Xhangindent@#1}%
-  \everypar{\hangindent=\csuse{Xhangindent@#1}}%
+  \Xsethangindent{#1}%
   \@tempdima=\parindent%
   \csuse{Xcolalign@#1}%
   \parindent=\@tempdima%
@@ -11290,10 +11389,15 @@
 % \protect\cs{rigidbalance} directly, without any re-boxing.
 %    \begin{macrocode}
 \newcommand*{\threecolfootgroup}[1]{%
-  \csuse{Xbhookgroup@#1}\par%
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \Xrigidbalance\csname #1footins\endcsname \thr@@ \splittopskip}
+  \begingroup%
+    \csuse{Xbhookgroup@#1}%
+    \csuse{Xnotefontsize@#1}%
+    \par%
+    \splittopskip=\ht\strutbox%
+    \expandafter%
+    \Xrigidbalance\csname #1footins\endcsname \thr@@ \splittopskip%
+  \endgroup%
+}%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -11409,8 +11513,7 @@
   \hsize \csuse{Xhsizetwocol@#1}%
   \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
   \tolerance=5000%
-  \hangindent=\csuse{Xhangindent@#1}%
-  \everypar{\hangindent=\csuse{Xhangindent@#1}}%
+  \Xsethangindent{#1}%
   \@tempdima=\parindent%
   \csuse{Xcolalign@#1}%
   \parindent=\@tempdima%
@@ -11418,10 +11521,15 @@
 }%
 
 \newcommand*{\twocolfootgroup}[1]{%
-  \csuse{Xbhookgroup@#1}\par%
-  \splittopskip=\ht\strutbox
-  \expandafter
-  \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip}
+  \begingroup%
+    \csuse{Xbhookgroup@#1}%
+    \csuse{Xnotefontsize@#1}%
+    \par%
+    \splittopskip=\ht\strutbox%
+    \expandafter%
+    \Xrigidbalance\csname #1footins\endcsname \tw@ \splittopskip%
+  \endgroup%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -11468,6 +11576,32 @@
 % \end{macro}
 %
 %
+% \subsection{Footnote hanging indent}
+% \begin{macro}{\Xsethangindent}
+% \begin{macro}{\sethangindentX}
+% \cs{Xsethangindent} sets the hangindent for a critical footnote, while \cs{sethangindentX} does it for a familiar footnote.
+%    \begin{macrocode}
+\newcommand{\Xsethangindent}[1]{%
+  \if@RTL%
+    \hangindent=-\csuse{Xhangindent@#1}%
+    \everypar{\hangindent=-\csuse{Xhangindent@#1}}%
+  \else%
+    \hangindent=\csuse{Xhangindent@#1}%
+    \everypar{\hangindent=\csuse{Xhangindent@#1}}%
+  \fi%
+}%
+\newcommand{\sethangindentX}[1]{%
+  \if@RTL%
+    \hangindent=-\csuse{hangindentX@#1}%
+    \everypar{\hangindent=-\csuse{hangindentX@#1}}%
+  \else%
+    \hangindent=\csuse{hangindentX@#1}%
+    \everypar{\hangindent=\csuse{hangindentX@#1}}%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Critical notes presentation}
 % Here, we define some commons macro which are used in order to print a critical notes, that is a note with 1) line number 2) lemma 3) lemma separator 4) text associated to the lemma.
 
@@ -11576,7 +11710,7 @@
 % \begin{macro}{\Xstorelineinfo}
 % The \cs{Xstorelineinfo} macro is used to store some data about line number of the current critical footnote, data which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
 %
-% \#1 footnote specification for the current footnote ;
+% \#1 footnote specification for the current footnote;
 % \#2 footnote series.
 %    \begin{macrocode}
 \newcommand{\Xstorelineinfo}[2]{%
@@ -11975,6 +12109,18 @@
       }%
   \fi%
 %    \end{macrocode}
+% If the \cs{Xnoidenticallinenumannotation} is set for this series, we check if the ending annotation is identical to the starting.
+% If true, we don't print the ending annotation
+%    \begin{macrocode}
+  \iftoggle{Xnoidenticallinenumannotation@\@currentseries}{%
+    \ifx\annot@start\annot@end%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+        \l@d@dashfalse%
+      \fi%
+    \fi%
+  }{}%
+%    \end{macrocode}
 % End of \protect\cs{setprintlines}.
 %    \begin{macrocode}
 }%
@@ -12128,53 +12274,64 @@
 % \subsubsection{Footnote grouped by line}
 % \begin{macro}{\prepare@Xgroupbyline}
 % \cs{prepare@Xgroupbyline} is a macro called on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling \cs{insert} directly.
+% \#1 The series\\
+% \#2 The content of the footnote, which is also the line number indication\\
+% \#3 This macro, which prepares the contents of the insertion \\
 %    \begin{macrocode}
 \newcommand{\prepare@Xgroupbyline}[3]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
     \l@dparsefootspec#2%
     \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-    {%
-      \csgappto%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
+      {%
+        \csgappto{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}{%
+          \hskip\csuse{Xafternote@#1}\relax%
+        }%
+      }%
+      {}%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hookarg@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \csxappto%
+      {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+      {%
+        \keep@this@crossref@forinserting%
+        \unexpanded{%
           \ifcsempty{Xsymlinenum@#1}%
             {\csuse{Xparafootsep@#1}}%
             {}%
           #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
         }%
-    }%
-    {%
-      \csdef%
-        {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-        {%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
-    }%
+      }%
     \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
   }{%
-    \ifcsdef{#1@forinserting@all}{%
-      \csgappto%
-        {#1@forinserting@all}%
-        {%
-          \ifcsempty{Xsymlinenum@#1}%
-            {\csuse{Xparafootsep@#1}}%
-            {}%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
-    }%
+  \ifcsdef{#1@forinserting@all}{%
+    \csgappto%
+      {#1@forinserting@all}%
+      {\hskip\csuse{Xafternote@#1}\relax}%
+    }{}%
+  \add@hooktoggle@specific@to@cs{#1@forinserting@all}%
+  \add@hookarg@specific@to@cs{#1@forinserting@all}%
+  \csxappto%
+    {#1@forinserting@all}%
     {%
-      \csdef%
-        {#1@forinserting@all}%
-        {%
-          #3{#1}{#2}%
-          \hskip\csuse{Xafternote@#1}\relax%
-        }%
+      \keep@this@crossref@forinserting%
+      \unexpanded{%
+        \ifcsempty{Xsymlinenum@#1}%
+          {\csuse{Xparafootsep@#1}}%
+          {}%
+        #3{#1}{#2}%
+      }%
     }%
-    \listcsgadd{#1@forinserting}{all}%
   }%
+  \listcsgadd{#1@forinserting}{all}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\keep@this@crossref@forinserting}
+% \cs{keep@this@crossref@forinserting} is called by \cs{prepare@Xgroupbyline}. It just ensures that \cs{@this@crossref@start} and \cs{this@crossref@end} value are kept in memory.
+%    \begin{macrocode}
+\newcommand{\keep@this@crossref@forinserting}{%
+  \unexpanded{\gdef\@this@crossref@start}{\@this@crossref@start}%
+  \unexpanded{\gdef\@this@crossref@end}{\@this@crossref@end}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -12480,10 +12637,14 @@
 % \begin{macro}{\mpnormalvfootnoteX}
 % The minipage version.
 %    \begin{macrocode}
-\newcommand*{\mpnormalvfootnoteX}[2]{%
+\newcommand*{\mpnormalvfootnoteX}[3]{%
   \get@thisfootnoteX{#1}%
-  \get@fnmarkX{#1}{\thisc@footnote}%
-  \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
+  \get@fnmarkX{#1}{\thisc@footnote}{#3}%
+  \ifstrempty{#3}{%
+    \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
+  }{%
+    \edef\this@footnoteX@reading{###3}%
+  }%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
@@ -12510,8 +12671,7 @@
        \@nameuse{@thefnmark#1}%
    }%
   \ledsetnormalparstuffX{#1}%
-  \hangindent=\csuse{hangindentX@#1}%
-  \everypar{\hangindent=\csuse{hangindentX@#1}}%
+  \sethangindentX{#1}%
   \rule\z@\splittopskip%
   {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}%
     \csuse{wrapcontentX@#1}{#2}%
@@ -12611,9 +12771,10 @@
 % \begin{macro}{\normalbfnoteX}
 % \changes{v0.7.0}{2005/02/18}{Removed extraneous space from \protect\cs{normalbfnoteX}}
 % \changes{v1.4.9}{2013/07/10}{Allow to redefine \protect\cs{thefootnoteX} with \c{alph} when some packages are loaded.}
+% \#1 = footnote series, \#2 = footnote content, \#3 manual footnote number
 %    \begin{macrocode}
 
-\newcommand{\normalbfnoteX}[2]{%
+\newcommand{\normalbfnoteX}[3]{%
   \get@thisfootnoteX{#1}%
     \ifledRcol%
       \ifluatex
@@ -12626,7 +12787,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -12643,7 +12804,7 @@
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
-        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}%
+        \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
         \unexpanded{\advance\@edindex@fornote@\m@ne}%
       }%
@@ -12669,50 +12830,56 @@
 % \end{macro}
 % \begin{macro}{\vbfnoteX}
 % This command calls the correct footnote-inserting commands.
-%
+% \#1 footnote series, \#2 footnote content, \#3 footnote counter, \#4 manual footnote mark
 %    \begin{macrocode}
-\newcommand{\vbfnoteX}[3]{%
-  \get@fnmarkX{#1}{#3}%
+\newcommand{\vbfnoteX}[4]{%
+  \get@fnmarkX{#1}{#3}{#4}\relax%
   \@nameuse{regvfootnote#1}{#1}{#2}%
 }%
-
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\get@fnmarkX}
 % This command gets the correct footnote number when typesetting parallel texts.
+% \#1 footnote series, \#2 footnote counter, \#3 manual footnote number
 %    \begin{macrocode}
-\newcommand{\get@fnmarkX}[2]{%
-  \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
-    {%
-      \stepcounter{footnote#1@typeset}%
-      \setcounter{footnote#1}{\value{footnote#1@typeset}}%
-      \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
-        \immediate\write\@mainaux{%
-          \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
-         }%
-    }%
-    {%
-      \setcounter{footnote#1}{#2}%
-      \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
-    }%
-}
+\newcommand{\get@fnmarkX}[3]{%
+  \ifstrempty{#3}{%
+    \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+      {%
+        \stepcounter{footnote#1@typeset}%
+        \setcounter{footnote#1}{\value{footnote#1@typeset}}%
+        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
+          \immediate\write\@mainaux{%
+            \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
+           }%
+      }%
+      {%
+        \setcounter{footnote#1}{#2}%
+        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
+      }%
+  }%
+  {%
+    \csdef{@thefnmark#1}{#3}%
+  }%
+}%
 %
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\vnumfootnoteX}
 % \changes{v0.7.0}{2005/02/18}{Removed extraneous space from \protect\cs{vnumfootnoteX}}
+% \#1 footnote series, \#2 footnote content, \#3 manual footnote mark
 %    \begin{macrocode}
-\newcommand{\vnumfootnoteX}[2]{%
+
+\newcommand{\vnumfootnoteX}[3]{%
   \ifnumberedpar@
-    \edtext{}{\normalbfnoteX{#1}{#2}}%
+    \edtext{}{\normalbfnoteX{#1}{#2}{#3}}%
   \else
     \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \get@thisfootnoteX{#1}%
-    \get@fnmarkX{#1}{\expandonce\thisc@footnote}%
+    \get@fnmarkX{#1}{\expandonce\thisc@footnote}{#3}%
     \@nameuse{regvfootnote#1}{#1}{#2}%
   \fi}
-
 %    \end{macrocode}
 % \end{macro}
 %
@@ -12823,8 +12990,7 @@
        \@nameuse{@thefnmark#1}%
    }%
   \normal@pars%
-  \hangindent=\csuse{hangindentX@#1}%
-  \everypar{\hangindent=\csuse{hangindentX@#1}}%
+  \sethangindentX{#1}%
   \hsize \csuse{hsizetwocolX@#1}%
  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
   \tolerance=5000\relax%
@@ -12946,8 +13112,7 @@
    \protected@edef\@currentlabel{%
        \@nameuse{@thefnmark#1}%
    }%
-  \hangindent=\csuse{hangindentX@#1}%
-  \everypar{\hangindent=\csuse{hangindentX@#1}}%
+  \sethangindentX{#1}%
   \normal@pars%
   \hsize \csuse{hsizethreecolX@#1}%
   \nottoggle{parindentX@#1}{\parindent=\z@}{}%
@@ -13004,7 +13169,7 @@
 %
 %    The following macros set footnotes as one paragraph.
 %
-% \begin{macro}{\arrangementX@threecol}
+% \begin{macro}{\arrangementX@paragraph}
 % \changes{v1.15.0}{2015/01/12}{Correct bug with paragraphed familiar footnotes setting.}
 % \protect\cs{footparagraphX}\marg{series}
 %    \begin{macrocode}
@@ -13100,9 +13265,9 @@
     \box0
     \penalty0
   \egroup}
-\newcommand*{\mppara@vfootnoteX}[2]{%
+\newcommand*{\mppara@vfootnoteX}[3]{%
   \get@thisfootnoteX{#1}%
-  \get@fnmarkX{#1}{\thisc@footnote}%
+  \get@fnmarkX{#1}{\thisc@footnote}{#3}%
   \edef\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
   \global\setbox\@nameuse{mpfootins#1}\vbox{%
     \unvbox\@nameuse{mpfootins#1}
@@ -13631,8 +13796,6 @@
   \def\@this@crossref@end{#7:end}%
   \printlineendnote{#1}{#4}%
   \IfStrEq{#6}{R}{\ledRcol@false}{}%
-  \undef\@this@crossref@start%
-  \undef\@this@crossref@end%
   \nottoggle{Xendlemmadisablefontselection@#4}%
     {\select@lemmafont#1|}%
     {}%
@@ -13973,6 +14136,18 @@
       }%
   \fi%
 %    \end{macrocode}
+% If the \cs{Xendnoidenticallinenumannotation} is set for this series, we check if the ending annotation is identical to the starting.
+% If true, we don't print the ending annotation
+%    \begin{macrocode}
+  \iftoggle{Xendnoidenticallinenumannotation@\@currentseries}{%
+    \ifx\annot@start\annot@end%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+        \l@d@dashfalse%
+      \fi%
+    \fi%
+  }{}%
+%    \end{macrocode}
 % End of \protect\cs{setprintendlines}.
 %    \begin{macrocode}
 }%
@@ -14279,6 +14454,8 @@
       \csgdef{Xwraplemma@#1}{}
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
+      \csgdef{Xlinenumannotationposition@#1}{after}%
+      \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of \thetexbook\ by D. Knuth.
@@ -14331,8 +14508,6 @@
                        {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
                       \noexpand\Xnote@false%
                       \unexpanded{\advance\@edindex@fornote@\m@ne}%
-                      \unexpanded{\undef\@this@crossref@start}%
-                      \unexpanded{\undef\@this@crossref@end}%
                       \ifbool{indtl@innote}%
                         {\unexpanded{\let\index\orig@@index}}%
                         {}%
@@ -14371,8 +14546,6 @@
                       \noexpand\csuse{v#1footnote}%
                          {#1}%
                          {{\l@d@nums}{\expandonce\@tag}{\expandonce\content}}%
-                      \unexpanded{\undef\@this@crossref@start}%
-                      \unexpanded{\undef\@this@crossref@end}%
                       \noexpand\Xnote@false%
                       \unexpanded{\advance\@edindex@fornote@\m@ne}%
                       \ifbool{indtl@innote}%
@@ -14442,7 +14615,6 @@
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
-      \csgdef{Xlinenumannotationposition@#1}{after}%
 % End of for familiar footnotes.
 % \subsubsection{Create inserts, needed to add notes in foot}
 % As regards inserts, see chapter 15 of the TeXBook by D. Knuth.
@@ -14457,12 +14629,12 @@
 % Note the double \# in command: it is because a command is called inside another command.
 %    \begin{macrocode}
 
-      \global\expandafter\newcommand\csname footnote#1\endcsname[1]{%
+      \global\expandafter\newcommand\csname footnote#1\endcsname[2][]{%
           \begingroup%
               \prepare@prenotesX{#1}%
-              \newcommand{\content}{##1}%
+              \newcommand{\content}{##2}%
 %    \end{macrocode}
-% If we use the \cs{csquotes} package, we reset the quotation level.
+% If we are using the \cs{csquotes} package, we reset the quotation level.
 %    \begin{macrocode}
               \ifdefined\csq@qlevel%
                 \csq@qlevel=0\relax%
@@ -14470,15 +14642,18 @@
 %    \end{macrocode}
 % If we are preparing parallel typesetting, we cannot just increase the footnote counter.
 % Read \parpackage's handbook about that (\reff{reledpar-familiarfootnotenumber}).
+% If we have a manual footnote mark, use it.
 %    \begin{macrocode}
                \global\expandafter\advance\csname footnote#1@reading\endcsname by \@ne%
-               \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
-                  \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
-                    {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
-                    {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
-               }{%
-                  \stepcounter{footnote#1}%
-               }%
+               \ifstrempty{##1}{%
+                 \ifboolexpr{bool{l@dpairing} or bool{l@dprintingpages} or bool{l@dprintingcolumns}}{%
+                   \ifcsdef{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}%
+                   {\setcounter{footnote#1}{\csuse{footnote#1reading\the\csname footnote#1@reading\endcsname=typeset}}}%
+                   {\setcounter{footnote#1}{\the\csname footnote#1@reading\endcsname}}%
+                 }{%
+                   \stepcounter{footnote#1}%
+                 }%
+               }{}%
 %    \end{macrocode}
 % We also have to check consistency with \cs{onlysideX} setting.
 %    \begin{macrocode}
@@ -14490,7 +14665,9 @@
 %    \end{macrocode}
 % And now, the feature not depending of wether we are preparing parallel typesetting
 %    \begin{macrocode}
-              \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+              \ifstrempty{##1}%
+                {\protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}}%
+                {\protected@csxdef{@thefnmark#1}{##1}}%
               \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with \parpackage
                  {\csuse{@footnotemark#1}}%
                  {}%
@@ -14501,7 +14678,7 @@
               \if@ledgroup%
                 \led@set@index@fornote{#1}%
               \fi%
-              \csuse{vfootnote#1}{#1}{\expandonce\content}\m@mmf@prepare%
+              \csuse{vfootnote#1}{#1}{\expandonce\content}{##1}\m@mmf@prepare%
               \ifbool{indtl@innote}%
                 {\let\index\orig@@index}%
                 {}%
@@ -14528,7 +14705,7 @@
 %    \begin{macrocode}
       \expandafter\gappto\expandafter\no@expands\expandafter{\expandafter\let\csname footnote#1\endcsname\@gobble}%
 %    \end{macrocode}
-%    And now, define \cs{footnoteXmark} and \cs{footnoteXtext}, equivalent to classical\cs{footnotemark} and \cs{footnotetext}.
+%    And now, define \cs{footnoteXmark} and \cs{footnoteXtext}, equivalent to classical \cs{footnotemark} and \cs{footnotetext}.
 %    \begin{macrocode}
       \expandafter\newcommand\csname footnote#1mark\endcsname{%
          \begingroup%
@@ -14703,6 +14880,7 @@
 
       \csgdef{Xendlinenumannotationposition@#1}{after}%
       \csgdef{Xendwraplinenumannotation@#1}{\textsuperscript}%
+      \newtoggle{Xendnoidenticallinenumannotation@#1}%
 
       \newtoggle{Xendpagenumberonlyfirst@#1}%
       \newtoggle{Xendpagenumberonlyfirstifsingle@#1}%
@@ -14761,7 +14939,7 @@
 % \end{macro}
 % \subsection{Test series order}
 % \begin{macro}{\ifseriesbefore}
-% \protect\cs{ifseriesbefore}\marg{seriesA}\marg{seriesB}\marg{true}\marg{false} expands \meta{true} if \meta{seriesA} is printed before \meta{seriesB}, expands \meta{false} otherwise.
+% \protect\cs{ifseriesbefore}\marg{seriesA}\marg{seriesB}\marg{true}\marg{false} expands to \meta{true} if \meta{seriesA} is printed before \meta{seriesB}, or to \meta{false} otherwise.
 %    \begin{macrocode}
 \newcommand{\ifseriesbefore}[4]{%
  \StrPosition{\@series}{#1}[\@first]%
@@ -14839,7 +15017,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\setcommand@series}
-% \protect\cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to store hook's value into commands specific to some  series.
+% \protect\cs{setcommand@series}\marg{series}\marg{command}\marg{value} is a generic command to store a hook's value into commands specific to some  series.
 % The arguments are:
 % \begin{itemize}
 %   \item \verb+#1+ (mandatory): the series for which the hooks should be set. If empty, all the series will be affected.
@@ -15025,6 +15203,7 @@
 \newhookcommand@series{Xlinerangeseparator}[appref,SEref]
 \newhookcommand@series{Xlinenumannotationposition}[side,appref,SEref]%
 \newhookcommand@series{Xwraplinenumannotation}[side,ref,appref,SEref]%
+\newhooktoggle@series{Xnoidenticallinenumannotation}[side,ref,appref,SEref]%
 %    \end{macrocode}
 % \subsubsection{Options for familiar notes}
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
@@ -15132,6 +15311,7 @@
 
 \newhookcommand@series{Xendlinenumannotationposition}[apprefwithpage,SErefwithpage]%
 \newhookcommand@series{Xendwraplinenumannotation}[apprefwithpage,SErefwithpage]%
+\newhooktoggle@series{Xendnoidenticallinenumannotation}[apprefwithpage,SErefwithpage]%
 %    \end{macrocode}
 % \subsection{Hooks for a particular footnote}
 % \begin{macro}{\newhooktoggle@specific}
@@ -15139,6 +15319,7 @@
 %    \begin{macrocode}
 \newcommand{\newhooktoggle@specific}[1]{%
   \newtoggle{#1@}%
+  \listgadd{\hooktoggle@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}[]{\global\settoggle{#1@}{true}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}[]{\global\settoggle{#1@}{false}}
 }
@@ -15148,16 +15329,74 @@
 % \cs{newhookarg@specific} is a generic command to create argumen hook specific to a note.
 %    \begin{macrocode}
 \newcommand{\newhookarg@specific}[1]{%
+  \listgadd{\hookarg@specific}{#1}%
   \define@key[mac]{truefootnoteoption}{#1}{\csgdef{#1@}{##1}}%When enabling footnote option
   \define@key[mac]{falsefootnoteoption}{#1}{\global\csundef{#1@}}%When disabling footnote option
 }
 %    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\hooktoggle@specific}
+% \begin{macro}{\add@hooktoggle@specific@to@cs}
+% The \cs{add@hooktoggle@specific@to@cs} macro stores to a macro
+% all the current values of hook toggle specific to a command.
+% It is useful for the \cs{Xgroupbyline} option, which does not immediately add notes to the inserts list.
+% It uses the \cs{hooktoggle@specific} list.
+%    \begin{macrocode}
+\def\hooktoggle@specific{}%
+\newcommand{\add@hooktoggle@specific@to@cs}[1]{%
+  \def\do##1{%
+    \iftoggle{##1@}{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\toggletrue{##1@}}%
+      }{%
+        \csgdef{#1}{\toggletrue{##1@}}%
+      }%
+    }{%
+      \ifcsdef{#1}{%
+        \csgappto{#1}{\togglefalse{##1@}}%
+      }{%
+        \csgdef{#1}{\togglefalse{##1@}}%
+      }%
+    }%
+  }%
+  \dolistloop{\hooktoggle@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\hookarg@specific}
+% \begin{macro}{\add@hookarg@specific@to@cs}
+% The same, but for optional argument of critical footnotes with assigned value.
+%    \begin{macrocode}
+\def\hookarg@specific{}%
+\newcommand{\add@hookarg@specific@to@cs}[1]{%
+  \def\do##1{%
+    \ifcsvoid{##1@}{}{%
+      \ifcsdef{#1}{%
+        \csxappto{#1}{%
+          \noexpand\csdef%
+            {##1@}{\csname##1@\endcsname}%
+          }%
+      }{%
+        \csxdef{#1}{%
+          \noexpand\csdef%
+            {##1@}{\csname##1@\endcsname}%
+          }%
+      }%
+    }%
+  }%
+  \dolistloop{\hookarg@specific}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % And now, we define some hooks specific to a note.
 %    \begin{macrocode}
 \newhooktoggle@specific{fulllines}%
 \newhooktoggle@specific{nonum}
 \newhooktoggle@specific{nosep}
+\newhooktoggle@specific{noprefix}%
+\newhooktoggle@specific{prefixmore}%
 \newhookarg@specific{linerangesep}
 %    \end{macrocode}
 % \begin{macro}{linerangesep@}
@@ -15194,7 +15433,7 @@
 % \subsection{Extra footnotes output}
 %
 %    With luck we might only have to change \protect\cs{@makecol} and
-% \protect\cs{@reinserts} of the \LaTeX's kernel.
+% \protect\cs{@reinserts} of \LaTeX's kernel.
 % Since \reledmac, we use \protect\package{etoolbox}'s patching commands instead of overriding.
 % It should provides better compatibility with other package which modify these commands
 
@@ -15300,7 +15539,7 @@
 %
 %
 % \begin{macro}{\l@ddodoreinxtrafeet}
-% \protect\cs{l@ddodoreinxtrafeet} is the code for catering for the extra footnotes
+% \protect\cs{l@ddodoreinxtrafeet} is the code catering for the extra footnotes
 % within \protect\cs{@reinserts}.
 % We use the same category and ordering as in \protect\cs{l@ddoxtrafeet}.
 % \changes{v0.2.1}{203/09/13}{Renamed \protect\cs{dodoreinxtrafeet} to \protect\cs{l@ddodoreinxtrafeet}}
@@ -15361,7 +15600,7 @@
   \csuse{footgroup#1}{#1}%
 }%
 %    \end{macrocode}
-% We print all the series of notes by looping on them.
+% We print all the series of notes by looping over them.
 % We check before printing them that they are not voided.
 %    \begin{macrocode}
 \newcommand*{\do@feetX}{%
@@ -15421,7 +15660,7 @@
 %    \end{macrocode}
 % \protect\ltxclass{memoir} has not been loaded, so patch \protect\cs{@makecol} and
 % \protect\cs{@reinserts}.
-% If the \package{fancyhdr} package $<$ version 3.8 has been loaded, we patch the \cs{latex@makecol} command, because this package redefines the standard \cs{@makecol} in the preamble, to call \cs{latex@makecol} which have been \cs{let} to \cs{@makecol}.
+% If the \package{fancyhdr} package $<$ version 3.8 has been loaded, we patch the \cs{latex@makecol} command, because this package redefines the standard \cs{@makecol} in the preamble to call \cs{latex@makecol}, which has been \cs{let} to \cs{@makecol}.
 % If this package is not loaded, we directly patch \cs{@makecol}.
 % If the \package{fancyhdr} package $\geq$ version 3.8, we also directly patch \cs{@makecol}, because \package{fancyhdr} does its own patch \cs{AtBeginDocument}.
 %    \begin{macrocode}
@@ -15469,7 +15708,7 @@
 %    \begin{macrocode}
 \@ifclassloaded{memoir}{%
 %    \end{macrocode}
-% If the \protect\ltxclass{memoir} class is loaded we hook into its modified
+% If the \protect\ltxclass{memoir} class is loaded, we hook into its modified
 % \verb?\@doclearpage?.
 % \begin{macro}{\@mem@extranofeet}
 %    \begin{macrocode}
@@ -15770,7 +16009,7 @@
 % \changes{v1.4.1}{2012/11/16}{Fix a bug with \protect\cs{edlabel}.}
 %In cases where \protect\cs{edlabel} is the first element in a paragraph, we have a problem with line counts, because line counts change only at the first horizontal box of the paragraph.
 %Hence, we need to test \protect\cs{edlabel} if it occurs at the start of a paragraph.  To do so, we use \protect\cs{ifvmode}. If the test is true, we must advance by one unit the amount of text we write into the \verb].aux] file.
-% We do so using \protect\cs{advancelabel@refs} command.
+% We do so with the \protect\cs{advancelabel@refs} command.
 %    \begin{macrocode}
 \newcounter{line}%
 \newcounter{subline}%
@@ -15891,7 +16130,7 @@
      \expandafter\l@dp@rsefootspec\l@d@nums|%
      \expandafter\parse@annot\l@current@annot|%
 %    \end{macrocode}
-% Use the \LaTeX\  standard hack for label.
+% Use the \LaTeX\ standard hack for label.
 %    \begin{macrocode}
      \@bsphack%
 %    \end{macrocode}
@@ -16247,6 +16486,8 @@
 
 \def\Xwraplinenumannotation@appref{\textsuperscript}%
 \def\Xwraplinenumannotation@SEref{\textsuperscript}%
+\newtoggle{Xnoidenticallinenumannotation@appref}%
+\newtoggle{Xnoidenticallinenumannotation@SEref}%
 
 \def\Xendtwolines@apprefwithpage{}%
 \def\Xendtwolines@SErefwithpage{}%
@@ -16291,6 +16532,9 @@
 
 \def\Xendwraplinenumannotation@apprefwithpage{\textsuperscript}%
 \def\Xendwraplinenumannotation@SErefwithpage{\textsuperscript}%
+
+\newtoggle{Xendnoidenticallinenumannotation@apprefwithpage}%
+\newtoggle{Xendnoidenticallinenumannotation@SErefwithpage}%
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
@@ -16375,13 +16619,19 @@
   }%
  \notblank{#1}{\docsvlist{#1}}{}%
  \xdef\@currentseries{#3}%
- \ifcsempty{@#3prefixmore}%
-   {\@apprefprefixsingle}%
-   {%
-     \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
-       {\csuse{@#3prefixsingle}}%
-       {\csuse{@#3prefixmore}}%
-   }%
+ \iftoggle{noprefix@}{}%
+  {%
+    \ifcsempty{@#3prefixmore}%
+    {\@apprefprefixsingle}%
+    {%
+      \IfEq{\xlineref{#2:start}}{\xlineref{#2:end}}%
+      {\iftoggle{prefixmore@}%
+        {\csuse{@#3prefixmore}}%
+        {\csuse{@#3prefixsingle}}%
+      }%
+      {\csuse{@#3prefixmore}}%
+    }%
+  }%
  \ifboolexpr{%
    test{\ifcsundef{the@label#2:start}}%
    or test{\ifcsundef{the@label#2:end}}%
@@ -16393,8 +16643,6 @@
     \xdef\annot@start{\xannotationref{#2:start}}%
     \xdef\annot@end{\xannotationref{#2:end}}%
     \printlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
-    \undef\@this@crossref@end%
-    \undef\@this@crossref@start%
    }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -16417,8 +16665,6 @@
    \def\@this@crossref@start{#2:start}%
    \def\@this@crossref@end{#2:end}%
    \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
-    \undef\@this@crossref@end%
-    \undef\@this@crossref@start%
    }%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -16935,7 +17181,7 @@
 % \begin{macro}{\affixside@note}
 % This macro puts any moveable sidenote text into the left or right sidenote
 % box, depending on which margin it is meant to go in. It's a very much
-% stripped down version of \protect\cs{affixlin@num}.
+% stripped down version of \protect\cs{affixline@num}.
 %
 % Before do it, we concatenate all moveable sidenotes of the line, using \protect\cs{@sidenotesep} as separator.
 % It is the result that we put on the sidenote.
@@ -18498,6 +18744,10 @@
             \fi%
             \csdef{@this@crossref@start}{\add@msd@c:start:msdata}%
              \csdef{@this@crossref@end}{\add@msd@c:end:msdata}%
+             \unexpanded{%
+               \def\annot@start{}%
+               \def\annot@end{}%
+             }%
             \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
             \reset@msd@options@iffullpage%
          }%
@@ -18543,6 +18793,10 @@
             \fi%
             \csdef{@this@crossref@start}{\add@msd@cR:start:msdata}%
              \csdef{@this@crossref@end}{\add@msd@cR:end:msdata}%
+             \unexpanded{%
+               \def\annot@start{}%
+               \def\annot@end{}%
+             }%
             \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
             \reset@msd@options@iffullpage%
          }%
@@ -18604,6 +18858,10 @@
           \fi%
           \csdef{@this@crossref@start}{\add@msd@c:start:msdata}%
            \csdef{@this@crossref@end}{\add@msd@c:end:msdata}%
+           \unexpanded{%
+             \def\annot@start{}%
+             \def\annot@end{}%
+           }%
           \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
           \reset@msd@options@iffullpage%
         }%
@@ -18648,6 +18906,10 @@
            \fi%
           \csdef{@this@crossref@start}{\add@msd@cR:start:msdata}%
            \csdef{@this@crossref@end}{\add@msd@cR:end:msdata}%
+           \unexpanded{%
+             \def\annot@start{}%
+             \def\annot@end{}%
+           }%
            \noexpand\csuse{v\@msdata@series footnote}{\@msdata@series}{{\expandonce\l@d@nums}{\ms@data@label}{\expandonce\@data}}%
            \reset@msd@options@iffullpage%
         }%
@@ -20998,8 +21260,27 @@
 % \appendix
 % \let\oldthesection\thesection
 % \renewcommand{\thesection}{Appendix \oldthesection}
+% \renewcommand{\thesubsection}{\oldthesection.\arabic{subsection}}
 % \section{Things to do when changing versions}
 % \input{doc-include/migrate-mac.dtx}
+% \section{Auxiliary softwares}
+% This appendix lists some software and tools related to \package{reledmac} that may be useful.
+% \subsection{\emph{samewords}}
+% The \emph{samewords} program (Michael Stenskjær Christensen) automatically adds \cs{sameword} commands (\reff{sameword}) into a \verb+.tex+ file. \\
+% \url{https://samewords.readthedocs.io/en/latest/}
+% \subsection{critical-keys for \emph{Emacs}}
+% The \emph{Emacs} editor has a package to help inserting \macpackage's commands (Juan Manuel Macías Chaín).\\
+% \url{https://gitlab.com/maciaschain/critical-keys}
+% \subsection{Import from TEI}
+% There are multiple tools to convert from XML-TEI to \emph{reledmac}. Here is a non exhaustive-list:
+% \begin{itemize}
+% \item \url{http://ciham-digital.huma-num.fr/teicat/}
+% \item \url{https://github.com/fizzbucket/tei_transformer}
+% \item \url{https://github.com/TEIC/Stylesheets}
+% \item \url{http://lombardpress.org/print/}
+% \item \url{https://github.com/Jean-Baptiste-Camps/TEItoLaTeX}
+% \end{itemize}
+% Please, tell us if you know of other tools.
 % \clearpage
 % \bibliographystyle{alpha}
 % \phantomsection
