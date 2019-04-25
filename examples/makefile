@@ -25,4 +25,4 @@ PDF:$(OBJ)
 	latexmk --lualatex $<
 
 clean:
-	@$(RM) *pdf *toc *.1* *.2* *.3* *.eledsec* *.log *.fdb_latexmk *.aux *.end *.ilg *.ind *.idx *.out *.synctex.gz *.synctex.gz\(busy\)
+	@$(RM) *pdf *toc *.1* *.2* *.3* *.4* *.5* *.6* *.7* *.8* *.9* *.eledsec* *.Aend* *.Bend* *.fls* *.xdv* *.glg* *.glo* *.gls* *.ist* *.log *.fdb_latexmk *.aux *.end *.ilg *.ind *.idx *.out *.synctex.gz *.synctex.gz\(busy\)
