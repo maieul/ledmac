@@ -14,7 +14,7 @@ PACKAGE = *.dtx \
 .PHONY: all dist clean doc test
 
 
-all: reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist test
+all: test reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
 
 doc: *.pdf
 
