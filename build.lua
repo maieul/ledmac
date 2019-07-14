@@ -1,5 +1,6 @@
 #!/usr/bin/env texlua
 module="reledmac"
+testsuppdir = "examples"
 checkconfigs = {
 	"config-allengines-1",
 	"config-allengines-2",
