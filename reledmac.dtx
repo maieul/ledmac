@@ -14210,6 +14210,34 @@
     \fi%
   }{}%
 %    \end{macrocode}
+% Finally, we check for \cs{Xendlinenumannotationonlyfirst} and \cs{Xendlinenumannotationonlyfirstintwo}, and we redefine, if required, \cs{@annot@start@print} and \cs{annot@end@print}. We also store the current line number annotations.
+%    \begin{macrocode}
+  \iftoggle{Xendlinenumannotationonlyfirst@\@currentseries}{%
+    \ifboolexpr{%
+      (%
+        togl{Xendlinenumannotationonlyfirstintwo@\@currentseries}%
+        and test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+        and test{\ifcsequal{annot@end}{prevannot@end@\@currentseries}}%
+      )%
+      or%
+      (%
+        not togl{Xendlinenumannotationonlyfirstintwo@\@currentseries}%
+        test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+      )%
+    }{%
+      \def\@annot@start@print{%
+        \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\csuse{Xendsymlinenumannotation@\@currentseries}}%
+      }%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+        \l@d@dashfalse%
+      \fi%
+    }{}%
+    \global\cslet{prevannot@start@\@currentseries}{\annot@start}%
+    \global\cslet{prevannot@end@\@currentseries}{\annot@end}%
+  }%
+  {}%
+%    \end{macrocode}
 % End of \protect\cs{setprintendlines}.
 %    \begin{macrocode}
 }%
