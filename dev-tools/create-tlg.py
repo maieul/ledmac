@@ -25,14 +25,18 @@ for this_directory  in directories:
         basename, extension  = os.path.splitext(os.path.basename(this_file))
         if extension == ".lvt":
             run[4] = basename
-        #create the .tlg
-        if pdftex:
-            run[2] = "-epdftex"
-            subprocess.run(run)
-        if xetex:
-            run[2] = "-exetex"
-            subprocess.run(run)
-        if luatex:
-            run[2] = "-eluatex"
-            subprocess.run(run)
+            print ("*****")
+            print (this_file)
+            print ("*****")
+
+            #create the .tlg
+            if pdftex:
+                run[2] = "-epdftex"
+                subprocess.run(run)
+            if xetex:
+                run[2] = "-exetex"
+                subprocess.run(run)
+            if luatex:
+                run[2] = "-eluatex"
+                subprocess.run(run)
 
