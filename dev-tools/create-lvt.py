@@ -2,7 +2,6 @@
 # This file create the lvt file for testing regression on example file.
 # Use : create-lvt.py <file-tex>
 #
-from glob import glob
 from sys import argv
 import os.path
 
