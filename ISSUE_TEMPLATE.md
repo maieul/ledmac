@@ -1,20 +1,33 @@
-Issue can be opened in English or in French (I prefer in French). Please fill this form.
-Please open one issue by problem, and not a global issue for multiple problems. 
+<!-- Issues can be opened in English or French (I prefer French). Please fill out this form.
+Please open one issue per problem, and not a single issue for multiple problems. -->
 
-# Version of reledmac / reledpar (if that is a devellopement version, please precise the branch)
+# Version
 
-# If this is a newly introduced problem, please indicate the last working version of the package(s)
-# Does the problem happen only when combining with some packages?
+<!-- Provide the version of reledmac / reledpar that appears in your LaTeX .log file, such as 2019/01/22 v2.30.0. If you are using a development version, please specify the branch. -->
 
-# Does the problem happens both in parallel typesetting and normal typesetting?
 
-# Description of the problem
+
+# Regression
+
+<!-- If this is a newly introduced problem, please indicate the last working version of reledmac/reledpar. -->
+
+
+
+# Description
+
+<!-- Include these details:
+Does the problem happen only when combined with certain packages?
+Does the problem happen both in parallel typesetting and normal typesetting? -->
+
+
 
 # Minimal Working Example
 
-Please provide a [MWE](http://minimalbeispiel.de/mini-en.html). 
-In  case where the problem happens both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting (because your MWE must be _Minimal_). 
+<!-- Instructions for creating an MWE:
+https://tex.meta.stackexchange.com/questions/228/ive-just-been-asked-to-write-a-minimal-example-what-is-that
+You may find the MWE package useful: https://ctan.org/pkg/mwe
+If the problem occurs both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting. -->
 
-```` 
-Type your MWE HERE
-````
+```latex
+Type your MWE here
+```

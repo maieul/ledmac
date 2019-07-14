@@ -8,7 +8,7 @@ all:$(OBJ)
 
 PDF:$(OBJ)
 
-%.test: %.pdf 
+%.test: %.pdf
 	latexmk $*.tex
 
 %.pdf: %.tex
@@ -24,5 +24,11 @@ PDF:$(OBJ)
 3-reledpar_pages_different_languages_lualatex.pdf: 3-reledpar_pages_different_languages_lualatex.tex
 	latexmk --lualatex $<
 
+3-reledpar_columns_different_languages.pdf: 3-reledpar_columns_different_languages.tex
+	latexmk --xelatex $<
+
+2-reledmac-right-to-left.pdf: 2-reledmac-right-to-left.tex
+	latexmk --xelatex $<
+
 clean:
-	@$(RM) *pdf *toc *.1* *.2* *.3* *.eledsec* *.log *.fdb_latexmk *.aux *.end *.ilg *.ind *.idx *.out *.synctex.gz *.synctex.gz\(busy\)
+	@$(RM) *pdf *toc *.1* *.2* *.3* *.4* *.5* *.6* *.7* *.8* *.9* *.eledsec* *.Aend* *.Bend* *.fls* *.xdv* *.glg* *.glo* *.gls* *.ist* *.log *.fdb_latexmk *.aux *.end *.ilg *.ind *.idx *.out *.synctex.gz *.synctex.gz\(busy\)
