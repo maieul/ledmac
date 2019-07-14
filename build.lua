@@ -1,7 +1,5 @@
 #!/usr/bin/env texlua
 module="reledmac"
 stdengine="luatex"
-checkengines={"xetex","luatex"}
-checkruns=3
-kpse.set_program_name("kpsewhich")
-dofile(kpse.lookup("l3build.lua"))
+auxfiles={"*.aux","*.toc","*.1*","*.2*","*.3*", "*.4*","*.5*", "*.6*","*.7*","*.8*","*.9*"}
+checkruns=5
