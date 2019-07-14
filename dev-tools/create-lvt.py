@@ -14,7 +14,7 @@ modele = "\input regression-test\n\
 files_to_test = argv
 for f in files_to_test:
     basename, extension  = os.path.splitext(os.path.basename(f))
-    if extension == "tex":
+    if extension == ".tex":
         content = modele.format(filename = f)
         lvt = open("testfiles/"+basename+".lvt","w")
         lvt.write(content)
