@@ -534,6 +534,7 @@
 % \changes{v2.31.1}{2019/03/03}{Fix bug with \protect\cs{Xhangindent} and \protect\cs{hangindentX} for right-to-left texts.}
 % \changes{v2.31.2}{2019/04/03}{Fix bug with familiar footnote containing not default font (introduced with v.~2.20.0).}
 % \changes{v2.31.3}{2019/06/19}{Fix bug with paragraphed footnote in RTL context.}
+% \changes{v2.32.0}{2019/07/14}{Add \protect\cs{Xlinenumannotationonlyfirst}, \protect\cs{Xlinenumannotationonlyfirstintwo}, \protect\cs{Xsymlinenumannotation}, \protect\cs{Xendlinenumannotationonlyfirst}, \protect\cs{Xendlinenumannotationonlyfirstintwo} and \protect\cs{Xendsymlinenumannotation}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1385,6 +1386,8 @@
 % If there an more than one annotation in the same line, there are separated by a comma.
 % If you want to change the separator, you can use \\
 % \cs{setlinenumannotationsep}\marg{sep}
+% \subsubsection{Annotations in the apparatus}
+% Some others options for the annotation in the apparatus are described on \reff{annotation-inapparatus}
 % \subsection{Executing code at each line}\label{linehook}
 % \Macpackage provides an advanced feature for users.
 % \DescribeMacro{\dolinehook}\DescribeMacro{\doinsidelinehook}
@@ -2275,6 +2278,32 @@
 % \DescribeMacro{\Xendsymlinenum}
 % For endnotes, \cs{Xendnumberonlyfirstinline}; \cs{Xendnumberonlyfirstintwolines} and \cs{Xendsymlinenum} are the equivalents of
 % \\ \cs{Xnumberonlyfirstinline}; \cs{Xnumberonlyfirstintwolines} and \cs{Xsymlinenum}.
+%
+% \subsubsection{Print line number annotation only at first time}\label{annotation-inapparatus}
+% \DescribeMacro{\Xlinenumannotationonlyfirst}
+% By default, the line number annotation (\reff{annotion} is printed in every note. If you want to print it only the first time for a given annotation
+% you can use \cs{Xlinenumannotationonlyfirst}\oarg{s}.
+%
+% Note the two followings points:
+% \begin{itemize}
+% \item If you use \opt{noresetlinenumannotation} option of \macpackage, the \cs{Xlinenumannotationonlyfirst} won't take account of the official line number.
+% \item The \cs{Xlinenumannotationonlyfirst} works for consecutive lemma with the same annotation. That is, if you have for example a lemma with \verb+A+ annotation, then a lemma with \verb+B+ annotation, then a lemma with \verb+A+ annotation, all lemma will have its annotation in the apparatus.
+% \end{itemize}
+%
+% \DescribeMacro{\Xlinenumannotationonlyfirstintwo}
+% Suppose you have a lemma on annoation~1 and a lemma between annotation~1 and annotation~3.
+% With \cs{Xlinenumannotationonlyfirst}, the second lemma is considered to be with the same line annotation as the first lemma.
+% But if  you use both \cs{Xlinenumannotationonlyfirst}\oarg{s} and \cs{Xlinenumannotationonlyfirstintwo}\oarg{s}, a distinction is made.
+%
+%
+% \DescribeMacro{\Xsymlinenumannotation}
+% For setting a particular symbol in place of the line number annotation, you can use \protect\cs{Xsymlinenumannotation}\oarg{s}\marg{symbol} in combination with \protect\cs{Xlinenumannotationonlyfirst}\oarg{s}. From the second lemma with the same line number annotation, the symbol will be used instead of the annotation. Note that any command called in \meta{symbol} must be robust. Use \protect\cs{robustify} to robustify a non-robust command.
+%
+% \DescribeMacro{\Xendlinenumannotationonlyfirst}
+% \DescribeMacro{\Xendlinenumannotationonlyfirstintwo}
+% \DescribeMacro{\Xendsymlinenumannotation}
+% For endnotes, \cs{Xendlinenumannotationonlyfirst}; \cs{Xendlinenumannotationonlyfirstintwo} and \cs{Xendsymlinenumannotation} are the equivalents of
+% \\ \cs{Xlinenumannotationonlyfirst}; \cs{Xlinenumannotationonlyfirstintwo} and \cs{Xsymlinenumannotation}.
 %
 % \subsubsection{Print page number only at first time}
 % For endnotes, \reledmac\ provides a mechanism for printing the page number only the first time it is seen.
@@ -4285,7 +4314,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2019/06/19 v2.31.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2019/07/14 v2.32.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -12126,6 +12155,34 @@
     \fi%
   }{}%
 %    \end{macrocode}
+% Finally, we check for \cs{Xlinenumannotationonlyfirst} and \cs{Xlinenumannotationonlyfirstintwo}, and we redefine, if required, \cs{@annot@start@print} and \cs{annot@end@print}. We also store the current line number annotations.
+%    \begin{macrocode}
+  \iftoggle{Xlinenumannotationonlyfirst@\@currentseries}{%
+    \ifboolexpr{%
+      (%
+        togl{Xlinenumannotationonlyfirstintwo@\@currentseries}%
+        and test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+        and test{\ifcsequal{annot@end}{prevannot@end@\@currentseries}}%
+      )%
+      or%
+      (%
+        not togl{Xlinenumannotationonlyfirstintwo@\@currentseries}%
+        test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+      )%
+    }{%
+      \def\@annot@start@print{%
+        \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\csuse{Xsymlinenumannotation@\@currentseries}}%
+      }%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+        \l@d@dashfalse%
+      \fi%
+    }{}%
+    \global\cslet{prevannot@start@\@currentseries}{\annot@start}%
+    \global\cslet{prevannot@end@\@currentseries}{\annot@end}%
+  }%
+  {}%
+%    \end{macrocode}
 % End of \protect\cs{setprintlines}.
 %    \begin{macrocode}
 }%
@@ -14154,6 +14211,34 @@
     \fi%
   }{}%
 %    \end{macrocode}
+% Finally, we check for \cs{Xendlinenumannotationonlyfirst} and \cs{Xendlinenumannotationonlyfirstintwo}, and we redefine, if required, \cs{@annot@start@print} and \cs{annot@end@print}. We also store the current line number annotations.
+%    \begin{macrocode}
+  \iftoggle{Xendlinenumannotationonlyfirst@\@currentseries}{%
+    \ifboolexpr{%
+      (%
+        togl{Xendlinenumannotationonlyfirstintwo@\@currentseries}%
+        and test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+        and test{\ifcsequal{annot@end}{prevannot@end@\@currentseries}}%
+      )%
+      or%
+      (%
+        not togl{Xendlinenumannotationonlyfirstintwo@\@currentseries}%
+        test{\ifcsequal{annot@start}{prevannot@start@\@currentseries}}%
+      )%
+    }{%
+      \def\@annot@start@print{%
+        \l@wrapcs@ifnotemptybox{Xendwraplinenumannotation@\@currentseries}{\csuse{Xendsymlinenumannotation@\@currentseries}}%
+      }%
+      \let\@annot@end@print\relax%
+      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+        \l@d@dashfalse%
+      \fi%
+    }{}%
+    \global\cslet{prevannot@start@\@currentseries}{\annot@start}%
+    \global\cslet{prevannot@end@\@currentseries}{\annot@end}%
+  }%
+  {}%
+%    \end{macrocode}
 % End of \protect\cs{setprintendlines}.
 %    \begin{macrocode}
 }%
@@ -14415,10 +14500,15 @@
       \csgdef{Xboxendlinenum@#1}{0pt}%
 
       \csgdef{Xboxsymlinenum@#1}{0pt}%
-      \newtoggle{Xnumberonlyfirstinline@#1}%
       \newtoggle{Xgroupbyline@#1}%
       \newtoggle{Xgroupbylineseparetwolines@#1}%
+
+      \newtoggle{Xnumberonlyfirstinline@#1}%
       \newtoggle{Xnumberonlyfirstintwolines@#1}%
+
+      \newtoggle{Xlinenumannotationonlyfirst@#1}%
+      \newtoggle{Xlinenumannotationonlyfirstintwo@#1}%
+
       \csgdef{Xtwolines@#1}{}%
       \csgdef{Xmorethantwolines@#1}{}%
       \csgdef{Xsublinesep@#1}{\fullstop}%
@@ -14430,7 +14520,10 @@
       \newtoggle{Xpstart@#1}%
       \newtoggle{Xstanza@#1}%
       \csgdef{Xstanzaseparator@#1}{}%
+
       \csgdef{Xsymlinenum@#1}{}%
+      \csgdef{Xsymlinenumannotation@#1}{}%
+
       \newtoggle{Xnonumber@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
       \csgdef{Xtxtbeforenumber@#1}{}%
@@ -14860,12 +14953,19 @@
       \newtoggle{Xendnonumber@#1}%
 
       \csgdef{Xendhangindent@#1}{0pt}%
+
       \newtoggle{Xendnumberonlyfirstinline@#1}%
       \newtoggle{Xendnumberonlyfirstintwolines@#1}%
 
+      \newtoggle{Xendlinenumannotationonlyfirst@#1}%
+      \newtoggle{Xendlinenumannotationonlyfirstintwo@#1}%
+
       \csgdef{Xendbeforesymlinenum@#1}{\csuse{Xendbeforenumber@#1}}%
       \csgdef{Xendaftersymlinenum@#1}{\csuse{Xendafternumber@#1}}%
+
       \csgdef{Xendsymlinenum@#1}{}%
+      \csgdef{Xendsymlinenumannotation@#1}{}%
+
       \csgdef{Xendboxsymlinenum@#1}{0pt}%
 
       \csgdef{Xendbhooklinenumber@#1}{}%
@@ -15145,6 +15245,7 @@
   \newhookcommand@series@reload{Xbhookgroup}{critical}
   \newhookcommand@series{Xboxsymlinenum}%
   \newhookcommand@series{Xsymlinenum}
+  \newhookcommand@series{Xsymlinenumannotation}%
   \newhookcommand@series{Xbeforenumber}
   \newhookcommand@series{Xtxtbeforenumber}
   \newhookcommand@series{Xafternumber}
@@ -15160,6 +15261,8 @@
   \newhookcommand@series@reload{Xafterrule}{critical}
   \newhooktoggle@series{Xnumberonlyfirstinline}
   \newhooktoggle@series{Xnumberonlyfirstintwolines}
+  \newhooktoggle@series{Xlinenumannotationonlyfirst}%
+  \newhooktoggle@series{Xlinenumannotationonlyfirstintwo}%
   \newhooktoggle@series{Xgroupbyline}%
   \newhooktoggle@series{Xgroupbylineseparetwolines}%
   \newhooktoggle@series{Xnonumber}
@@ -15282,10 +15385,15 @@
   \newhooktoggle@series{Xendnumberonlyfirstinline}%
   \newhooktoggle@series{Xendnumberonlyfirstintwolines}%
 
+  \newhooktoggle@series{Xendlinenumannotationonlyfirst}%
+  \newhooktoggle@series{Xendlinenumannotationonlyfirstintwo}%
+
   \newhookcommand@series{Xendsymlinenum}%
   \newhookcommand@series{Xendbeforesymlinenum}%
   \newhookcommand@series{Xendaftersymlinenum}%
   \newhookcommand@series{Xendboxsymlinenum}%
+
+  \newhookcommand@series{Xendsymlinenumannotation}%
 
   \newhookcommand@series{Xendbhooklinenumber}%
   \newhookcommand@series{Xendahooklinenumber}%
@@ -16487,6 +16595,9 @@
 \newtoggle{Xlineflag@SEref}%
 \toggletrue{Xlineflag@SEref}%%Here exception
 
+\newtoggle{Xlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintlines
+\newtoggle{Xlinenumannotationonlyfirst@appref}%Idem
+
 \def\Xlinenumannotationposition@appref{after}%
 \def\Xlinenumannotationposition@SEref{after}%
 
@@ -16532,6 +16643,10 @@
 \toggletrue{Xendlineflag@apprefwithpage}%Here, exception
 \newtoggle{Xendlineflag@SErefwithpage}
 \toggletrue{Xendlineflag@SErefwithpage}%Here, exception
+
+
+\newtoggle{Xendlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintendlines
+\newtoggle{Xendlinenumannotationonlyfirst@appref}%Idem
 
 \def\Xendlinenumannotationposition@apprefwithpage{after}%
 \def\Xendlinenumannotationposition@apprefwithpage@SErefwithpage{after}%
