@@ -1,6 +1,4 @@
 PACKAGE = *.dtx \
-		  *.lua \
-			testfiles* \
 			*.ins \
 		  reledmac.pdf \
 		  reledpar.pdf \
