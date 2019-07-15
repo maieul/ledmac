@@ -6,4 +6,4 @@ checkconfigs = {
 	"config-allengines-3",
 	"config-allengines-4",
 	"config-luatex-3",
-	"config-utf8-engines-3"}
+	"config-xetex-3"}
