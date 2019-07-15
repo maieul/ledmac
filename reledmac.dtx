@@ -10039,7 +10039,7 @@
              \insert\csname ##1footins\endcsname%
            \fi%
            {%
-            \nottoggle{Xparindent@##1}{\parindent=\z@}{}%
+             \Xsetparindent{##1}%
              \ifcsdef{Xhsize\csuse{series@display##1}@##1}%
                {\hsize \csuse{Xhsize\csuse{series@display##1}@##1}}%
                {}%
@@ -10865,7 +10865,7 @@
 %    \begin{macrocode}
 \newcommand*{\parafootstart}[1]{%
   \rightskip=0pt \leftskip=0pt%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
     \ifdimequal{0pt}{\Xprenotes@}{}%
       {%
       \iftoggle{Xprenotes@}{%
@@ -11139,7 +11139,7 @@
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{Xbhookgroup@#1}%
   \csuse{Xnotefontsize@#1}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -11397,7 +11397,7 @@
   \nottoggle{Xgroupbyline@#1}%
     {\hsize \csuse{Xhsizethreecol@#1}}%
     {}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \tolerance=5000%
   \Xsethangindent{#1}%
   \@tempdima=\parindent%
@@ -11545,7 +11545,7 @@
 \newcommand{\twocol@begin@insert}[1]{%
   \normal@pars%
   \hsize \csuse{Xhsizetwocol@#1}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \tolerance=5000%
   \Xsethangindent{#1}%
   \@tempdima=\parindent%
@@ -11610,6 +11610,30 @@
 % \end{macro}
 %
 %
+% \subsection{Footnote paragraph indent}
+% \begin{macro}{\Xsetparindent}
+% \begin{macro}{\setparindentX}
+% These two commands set the paragraph indentation of the footnotes, depending of the settings of the user.
+%    \begin{macrocode}
+\newcommand{\Xsetparindent}[1]{%
+  \nottoggle{Xparindent@#1}{%
+    \parindent=\z@%
+  }%
+  {%
+    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+  }%
+}%
+\newcommand{\setparindentX}[1]{%
+  \nottoggle{parindentX@#1}{%
+    \parindent=\z@%
+  }%
+  {%
+    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Footnote hanging indent}
 % \begin{macro}{\Xsethangindent}
 % \begin{macro}{\sethangindentX}
@@ -13055,7 +13079,7 @@
   \normal@pars%
   \sethangindentX{#1}%
   \hsize \csuse{hsizetwocolX@#1}%
- \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \tolerance=5000\relax%
   \par%
  \@tempdima=\parindent%
@@ -13178,7 +13202,7 @@
   \sethangindentX{#1}%
   \normal@pars%
   \hsize \csuse{hsizethreecolX@#1}%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \tolerance=5000\relax%
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
@@ -13297,7 +13321,7 @@
       }%
   \leftskip=\z@
   \rightskip=\z@
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \vskip\skip\@nameuse{footins#1}%
   \setnoteswidthliketwocolumnsX@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
@@ -13426,7 +13450,7 @@
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{bhookgroupX@#1}%
   \csuse{notefontsizeX@#1}%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -13522,12 +13546,14 @@
 
 \newcommand*{\Xledsetnormalparstuff}[1]{%
   \ledsetnormalparstuff@common%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{\hspace{\parindent}}%
+  \Xsetparindent{#1}%
+  \hspace{\parindent}%
 }%
 
 \newcommand*{\ledsetnormalparstuffX}[1]{%
   \ledsetnormalparstuff@common%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{\hspace{\parindent}}%
+  \setparindentX{#1}%
+  \hspace{\parindent}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -18530,6 +18556,8 @@
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
+   \unexpanded{\newdimen\parindent@beforestanza%
+   \parindent@beforestanza=\parindent}%Keep in memory the standard \parindent
    \global\stanza@count\@ne\stanza@modulo\@ne
    \noexpand\ifnum\expandafter\noexpand
    \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
