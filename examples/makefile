@@ -4,12 +4,8 @@ SRC= $(wildcard *.tex)
 OBJ= $(SRC:.tex=.pdf)
 
 all:$(OBJ)
-	python3 check-example.py
 
 PDF:$(OBJ)
-
-%.test: %.pdf
-	python3 check-example.py --filename=$<
 
 %.pdf: %.tex
 	latexmk $<

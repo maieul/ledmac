@@ -1,5 +1,7 @@
 PACKAGE = *.dtx \
-		  *.ins \
+		  *.lua \
+			testfiles* \
+			*.ins \
 		  reledmac.pdf \
 		  reledpar.pdf \
 			migration.pdf \
@@ -9,12 +11,15 @@ PACKAGE = *.dtx \
 
 
 
-.PHONY: all dist clean
+.PHONY: all dist clean doc test
 
 
-all: reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
+all: test reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
 
 doc: *.pdf
+
+test: *dtx
+	l3build check
 
 migration.pdf: migration.dtx
 	pdflatex  $<
