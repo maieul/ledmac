@@ -13841,9 +13841,15 @@
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
+  \Xendstorelineinfo{#1}{#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}\relax%
-    \csuse{Xendsep@#4}%
+    \ifcsdef{prevendline#4}%
+      {\ifcsequal{prevendline#4}{lineinfo@}%
+        {\ifcsempty{Xendsymlinenum@#4}{\csuse{Xendsep@#4}}{}}%
+        {\csuse{Xendsep@#4}}%
+      }%
+      {\csuse{Xendsep@#4}}%
   \else%
     \iftoggle{Xendparagraph@#4}%
       {\global\Xendinsertsep@true}%
@@ -13890,17 +13896,27 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\Xendstorelineinfo}
+% The \cs{Xendstorelineinfo} macro is used to store some data about line number of the current critical endnote, data which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
+%
+% \#1 endnote specification for the current endnote;
+% \#2 endnote series.
+%    \begin{macrocode}
+\newcommand{\Xendstorelineinfo}[2]{%
+  \l@dp@rsefootspec#1|%
+  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
+    \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+  }%
+  {%
+    \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlineendnote}
 % This macro controls, in endnote, whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
 %    \begin{macrocode}
 \newcommand{\printlineendnote}[2]{%
-  \l@dp@rsefootspec#1|%
-  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
-       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
-       }%
-       {%
-       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
-       }%
   \ifboolexpr{%
     togl {nonum@}%
     or togl {Xendnonumber@#2}%
