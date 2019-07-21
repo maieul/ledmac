@@ -535,6 +535,8 @@
 % \changes{v2.31.2}{2019/04/03}{Fix bug with familiar footnote containing not default font (introduced with v.~2.20.0).}
 % \changes{v2.31.3}{2019/06/19}{Fix bug with paragraphed footnote in RTL context.}
 % \changes{v2.32.0}{2019/07/15}{Add \protect\cs{Xlinenumannotationonlyfirst}, \protect\cs{Xlinenumannotationonlyfirstintwo}, \protect\cs{Xsymlinenumannotation}, \protect\cs{Xendlinenumannotationonlyfirst}, \protect\cs{Xendlinenumannotationonlyfirstintwo} and \protect\cs{Xendsymlinenumannotation}.}
+% \changes{v2.32.1}{2019/07/21}{Do not print \protect\cs{Xendsep} if we print \protect\cs{Xendsymlinenum}.}
+% \changes{v2.32.1}{2019/07/21}{When using \protect\cs{parindentX} or \protect\cs{Xparindent} and stanza, use the normal indentation in the footnote, not the verse indentation.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -10039,7 +10041,7 @@
              \insert\csname ##1footins\endcsname%
            \fi%
            {%
-            \nottoggle{Xparindent@##1}{\parindent=\z@}{}%
+             \Xsetparindent{##1}%
              \ifcsdef{Xhsize\csuse{series@display##1}@##1}%
                {\hsize \csuse{Xhsize\csuse{series@display##1}@##1}}%
                {}%
@@ -10865,7 +10867,7 @@
 %    \begin{macrocode}
 \newcommand*{\parafootstart}[1]{%
   \rightskip=0pt \leftskip=0pt%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
     \ifdimequal{0pt}{\Xprenotes@}{}%
       {%
       \iftoggle{Xprenotes@}{%
@@ -11139,7 +11141,7 @@
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{Xbhookgroup@#1}%
   \csuse{Xnotefontsize@#1}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -11397,7 +11399,7 @@
   \nottoggle{Xgroupbyline@#1}%
     {\hsize \csuse{Xhsizethreecol@#1}}%
     {}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \tolerance=5000%
   \Xsethangindent{#1}%
   \@tempdima=\parindent%
@@ -11545,7 +11547,7 @@
 \newcommand{\twocol@begin@insert}[1]{%
   \normal@pars%
   \hsize \csuse{Xhsizetwocol@#1}%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{}%
+  \Xsetparindent{#1}%
   \tolerance=5000%
   \Xsethangindent{#1}%
   \@tempdima=\parindent%
@@ -11610,6 +11612,30 @@
 % \end{macro}
 %
 %
+% \subsection{Footnote paragraph indent}
+% \begin{macro}{\Xsetparindent}
+% \begin{macro}{\setparindentX}
+% These two commands set the paragraph indentation of the footnotes, depending of the settings of the user.
+%    \begin{macrocode}
+\newcommand{\Xsetparindent}[1]{%
+  \nottoggle{Xparindent@#1}{%
+    \parindent=\z@%
+  }%
+  {%
+    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+  }%
+}%
+\newcommand{\setparindentX}[1]{%
+  \nottoggle{parindentX@#1}{%
+    \parindent=\z@%
+  }%
+  {%
+    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Footnote hanging indent}
 % \begin{macro}{\Xsethangindent}
 % \begin{macro}{\sethangindentX}
@@ -13055,7 +13081,7 @@
   \normal@pars%
   \sethangindentX{#1}%
   \hsize \csuse{hsizetwocolX@#1}%
- \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \tolerance=5000\relax%
   \par%
  \@tempdima=\parindent%
@@ -13178,7 +13204,7 @@
   \sethangindentX{#1}%
   \normal@pars%
   \hsize \csuse{hsizethreecolX@#1}%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \tolerance=5000\relax%
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
@@ -13297,7 +13323,7 @@
       }%
   \leftskip=\z@
   \rightskip=\z@
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \vskip\skip\@nameuse{footins#1}%
   \setnoteswidthliketwocolumnsX@{#1}%
   \setnotesXpositionliketwocolumns@{#1}%
@@ -13426,7 +13452,7 @@
   \setbox0=\hbox{\unhbox0 \removehboxes}%
   \csuse{bhookgroupX@#1}%
   \csuse{notefontsizeX@#1}%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{}%
+  \setparindentX{#1}%
   \unhbox0\par}}
 
 %    \end{macrocode}
@@ -13522,12 +13548,14 @@
 
 \newcommand*{\Xledsetnormalparstuff}[1]{%
   \ledsetnormalparstuff@common%
-  \nottoggle{Xparindent@#1}{\parindent=\z@}{\hspace{\parindent}}%
+  \Xsetparindent{#1}%
+  \hspace{\parindent}%
 }%
 
 \newcommand*{\ledsetnormalparstuffX}[1]{%
   \ledsetnormalparstuff@common%
-  \nottoggle{parindentX@#1}{\parindent=\z@}{\hspace{\parindent}}%
+  \setparindentX{#1}%
+  \hspace{\parindent}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -13841,9 +13869,15 @@
   \csuse{Xendbhooknote@#4}%
   \csuse{Xendnotefontsize@#4}%
   \hangindent=\csuse{Xendhangindent@#4}%
+  \Xendstorelineinfo{#1}{#4}%
   \ifXendinsertsep@%
     \hskip\csuse{Xendafternote@#4}\relax%
-    \csuse{Xendsep@#4}%
+    \ifcsdef{prevendline#4}%
+      {\ifcsequal{prevendline#4}{lineinfo@}%
+        {\ifcsempty{Xendsymlinenum@#4}{\csuse{Xendsep@#4}}{}}%
+        {\csuse{Xendsep@#4}}%
+      }%
+      {\csuse{Xendsep@#4}}%
   \else%
     \iftoggle{Xendparagraph@#4}%
       {\global\Xendinsertsep@true}%
@@ -13890,17 +13924,27 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\Xendstorelineinfo}
+% The \cs{Xendstorelineinfo} macro is used to store some data about line number of the current critical endnote, data which will be reused later for the \cs{Xnumberonlyfirstinline} and related setting.
+%
+% \#1 endnote specification for the current endnote;
+% \#2 endnote series.
+%    \begin{macrocode}
+\newcommand{\Xendstorelineinfo}[2]{%
+  \l@dp@rsefootspec#1|%
+  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
+    \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
+  }%
+  {%
+    \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\printlineendnote}
 % This macro controls, in endnote, whether the line number is printed or not, according to the series options. Its first argument is the information about lines; its second is the series of the footnote.
 %    \begin{macrocode}
 \newcommand{\printlineendnote}[2]{%
-  \l@dp@rsefootspec#1|%
-  \iftoggle{Xendnumberonlyfirstintwolines@#2}{%
-       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub - \l@dparsedendpage - \l@dparsedendline - \l@dparsedendsub}%
-       }%
-       {%
-       \xdef\lineinfo@{\l@dparsedstartpage - \l@dparsedstartline - \l@dparsedstartsub}%
-       }%
   \ifboolexpr{%
     togl {nonum@}%
     or togl {Xendnonumber@#2}%
@@ -18530,6 +18574,8 @@
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
+   \unexpanded{\newdimen\parindent@beforestanza%
+   \parindent@beforestanza=\parindent}%Keep in memory the standard \parindent
    \global\stanza@count\@ne\stanza@modulo\@ne
    \noexpand\ifnum\expandafter\noexpand
    \csname sza@0@\endcsname=\z@\let\noexpand\stanza@hang\relax
@@ -18566,6 +18612,7 @@
       {\before@every@stop@stanza\pend[#1][#2]}%
   \endgroup%
   \instanzafalse%
+  \global\undef\parindent@beforestanza%
 }
 
 \newcommand{\AtEveryStopStanza}[1]{%
