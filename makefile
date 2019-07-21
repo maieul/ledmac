@@ -61,6 +61,7 @@ dist: $(PACKAGE) examples
 	ln doc-more/makefile reledmac/doc-more
 	ln doc-more/latexmkrc reledmac/doc-more
 	ln $(PACKAGE) reledmac
+	rm -rf build
 	@$(RM) ../reledmac.zip
 	zip -r ../reledmac.zip reledmac
 
