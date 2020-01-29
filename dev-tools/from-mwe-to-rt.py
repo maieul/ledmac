@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # This file create the lvt file for testing regression on example file.
-# Use : from-mwe-to-rt.py <file-tex>
+# Use : from-mwe-to-rt.py <file-tex> <config>
 #
 from sys import argv
 import os.path
