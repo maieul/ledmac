@@ -14850,18 +14850,22 @@
 %    \end{macrocode}
 %    And now, define \cs{footnoteXmark} and \cs{footnoteXtext}, equivalent to classical \cs{footnotemark} and \cs{footnotetext}.
 %    \begin{macrocode}
-      \expandafter\newcommand\csname footnote#1mark\endcsname{%
+      \expandafter\newcommand\csname footnote#1mark\endcsname[1][]{%
          \begingroup%
             \prepare@prenotesX{#1}%
-            \stepcounter{footnote#1}%
+            \ifstrempty{##1}{%
+              \stepcounter{footnote#1}%
+            }{%
+              \setcounter{footnote#1}{##1}%
+            }%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
             \csuse{@footnotemark#1}%
             \m@mmf@prepare%
          \endgroup%
       }%
-      \expandafter\newcommand\csname footnote#1text\endcsname[1]{%
+      \expandafter\newcommand\csname footnote#1text\endcsname[2][]{%
          \begingroup%
-            \csuse{vfootnote#1}{#1}{\expandonce{##1}}%
+           \csuse{vfootnote#1}{#1}{\expandonce{##2}}{##1}%
          \endgroup%
       }%
 %    \end{macrocode}
