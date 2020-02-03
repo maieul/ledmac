@@ -6481,6 +6481,7 @@
 % deferred actions relating to page starts and sub-lines.
 %    \begin{macrocode}
   \reset@current@annot%
+  \reset@sw@counters%
   \advance\absline@num \@ne
          \ifx\next@page@num\relax \else
              \page@action
@@ -7081,7 +7082,7 @@
     \let\set@line@action=\relax
     \let\@lab=\relax
     \let\@lemma=\relax%
-    \let\@sw\@gobblethree%
+    \let\@sw\@gobbletwo%
     \let\store@annot@to@absline\@gobble%
     #2
     \global\endpage@num=\page@num
@@ -7213,7 +7214,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them.
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{7}%
+\newcommand{\this@line@list@version}{8}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -8392,20 +8393,13 @@
      \leavevmode%
      \get@sw@txt{#2}%
 %    \end{macrocode}
-% Now, the real code. First, increment the counter corresponding to the argument.
+% Write the date into the numbered file.
 %    \begin{macrocode}
   \unless\ifledRcol%
-     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+\@ne}%
-%    \end{macrocode}
-% Then, write its value to the numbered file.
 %    \begin{macrocode}
-     \protected@write\linenum@out{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt}}{#1}}%
-%    \end{macrocode}
-% Do the same thing if we are in the right column.
-%    \begin{macrocode}
+     \protected@write\linenum@out{}{\string\@sw{\sw@txt}{#1}}%
   \else%
-     \csnumgdef{sw@\sw@txt}{\csuse{sw@\sw@txt}+\@ne}%
-     \protected@write\linenum@outR{}{\string\@sw{\sw@txt}{\csuse{sw@\sw@txt}}{#1}}%
+     \protected@write\linenum@outR{}{\string\@sw{\sw@txt}{#1}}%
   \fi%
 %    \end{macrocode}
 % And print the word.
@@ -8420,37 +8414,46 @@
 \newif\if@addsw%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\@sws@thisline}
+% \begin{macro}{\reset@sw@counters}
+% For each line, we store the list of the samewords, and we reset this list at each new line.
+%    \begin{macrocode}
+\def\@sws@thisline{}%
+\newcommand{\reset@sw@counters}{%
+  \def\do##1{%
+    \global\csundef{sw@num@##1}%
+  }%
+  \dolistloop{\@sws@thisline}%
+  \gdef\@sws@thisline{}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{macro}{\@sw}
 % The command printed in the auxiliary files.
 %    \begin{macrocode}
-\newcommand{\@sw}[3]{%
+\newcommand{\@sw}[2]{%
+%    \end{macrocode}
+% Get the word concerned, dealing with active characters, and store it in the list of the samewords for the current line.
+%    \begin{macrocode}
   \get@sw@txt{#1}%
+  \listxadd{\@sws@thisline}{\sw@txt}%
+%    \end{macrocode}
+% Calculate the position of the word in the current line.
+%    \begin{macrocode}
+  \ifcsundef{sw@num@\sw@txt}{%
+    \global\csnumdef{sw@num@\sw@txt}{1}%
+  }{%
+    \global\csnumdef{sw@num@\sw@txt}{1+\csuse{sw@num@\sw@txt}}%
+  }%
+  \letcs{\the@sw}{sw@num@\sw@txt}%
+%    \end{macrocode}
+% Store the total number of this word in the current line.
+%    \begin{macrocode}
   \unless\ifledRcol%
-%    \end{macrocode}
-% First, define a counter which store the second argument as value for a each paired absolute line number/first argument
-%    \begin{macrocode}
-    \csxdef{sw@\sw@txt @\the\absline@num @\the\section@num}{#2}%
-%    \end{macrocode}
-% If  such argument was not defined for the preceding line, define it.
-%    \begin{macrocode}
-    \numdef{\prev@line}{\the\absline@num-1}%
-    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@num}{%
-      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@num}{#2-1}%
-     }{}%
-%    \end{macrocode}
-% Then, calculate the position of the word in the line.
-%    \begin{macrocode}
-    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
-%    \end{macrocode}
-% And do the same thing for the right side.
-%    \begin{macrocode}
+   \global\cslet{sw@\sw@txt @\the\absline@num @\the\section@num}{\the@sw}%
   \else%
-    \csxdef{sw@\sw@txt @\the\absline@numR @\the\section@numR @R}{#2}%
-    \numdef{\prev@line}{\the\absline@numR-1}%
-    \ifcsundef{sw@\sw@txt @\prev@line @\the\section@numR @R}{%
-      \csnumgdef{sw@\sw@txt @\prev@line @\the\section@numR @R}{#2-1}%
-     }{}%
-    \numdef{\the@sw}{#2-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
+   \global\cslet{sw@\sw@txt @\the\absline@numR @\the\section@numR @R}{\the@sw}%
   \fi%
 %    \end{macrocode}
 %  And now, add it to the list of \protect\cs{@sw} for the current edtext, in all depth.
@@ -8462,7 +8465,7 @@
         \@addswfalse%
         \notbool{lemmacommand@\the\@tempcnta}%
           {\@addswtrue}%
-          {\IfStrEq{#3}{inlemma}%
+          {\IfStrEq{#2}{inlemma}%
             {\@addswtrue}%
             {%
              \def\do##1{%
@@ -8470,7 +8473,7 @@
                   {\@addswtrue\listbreak}%
                   {}%
              }%
-             \docsvlist{#3}%
+             \docsvlist{#2}%
             }%
           }%
           \if@addsw%
@@ -8513,8 +8516,7 @@
 % First, calculate the number of occurrences of the word in the current line
 %    \begin{macrocode}
       \ifcsdef{sw@\sw@txt @\this@absline @\the\section@num}{%
-        \numdef{\prev@line}{\this@absline-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@num}-\csuse{sw@\sw@txt @\prev@line @\the\section@num}}%
+        \letcs{\sw@atthisline}{sw@\sw@txt @\this@absline @\the\section@num}%
         }%
         {\numdef{\sw@atthisline}{0}}%
 %    \end{macrocode}
@@ -8536,8 +8538,7 @@
         \edef\this@absline{\expandafter\@secondoftwo\@tmp}%
       \fi%
       \ifcsdef{sw@\sw@txt @\this@absline @\the\section@numR @R}{%
-        \numdef{\prev@line}{\this@absline-1}%
-        \numdef{\sw@atthisline}{\csuse{sw@\sw@txt @\this@absline @\the\section@numR @R}-\csuse{sw@\sw@txt @\prev@line @\the\section@numR @R}}%
+        \letcs{\sw@atthisline}{sw@\sw@txt @\this@absline @\the\section@numR @R}%
         }%
         {\numdef{\sw@atthisline}{0}}%
         \ifnumgreater{\sw@atthisline}{1}%
