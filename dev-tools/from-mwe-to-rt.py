@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # This file create the lvt file for testing regression on example file.
-# Use : from-mwe-to-rt.py <file-tex>
+# Use : from-mwe-to-rt.py <file-tex> <config>
 #
 from sys import argv
 import os.path
@@ -17,7 +17,11 @@ if extension == ".tex":
     # create text from .tex file
     tex = open(f)
     text = tex.read()
-    text = text.replace('\\begin{document}','\\begin{document}Font initialisation\START')
+    text = text.replace('\\begin{document}','\\begin{document}
+\makeatletter
+\let\@bidi@pdfcustomproperties\\relax
+\makeatother
+            Font initialisation\START')
     tex.close()
 
     # create .lvt file
