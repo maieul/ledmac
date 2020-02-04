@@ -539,6 +539,8 @@
 % \changes{v2.32.1}{2019/07/21}{When using \protect\cs{parindentX} or \protect\cs{Xparindent} and stanza, use the normal indentation in the footnote, not the verse indentation.}
 % \changes{v2.32.2}{2019/11/28}{Fix spurious vertical space in familiar footnotes with \protect\LuaLaTeX.}
 % \changes{v2.32.3}{2019/12/09}{Fix bug with critical footnotes when typesetting arabic text with \protect\package{polyglossia}.}
+% \changes{v2.32.4}{2020/02/04}{Fix bug \protect\cs{footnoteXmark} and \protect\cs{footnoteXtext}.}
+% \changes{v2.32.4}{2020/01/04}{\protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} can now have an optional argument, setting the footnotenote number.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4317,7 +4319,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2019/12/09 v2.32.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/02/4 v2.32.4 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -14850,18 +14852,22 @@
 %    \end{macrocode}
 %    And now, define \cs{footnoteXmark} and \cs{footnoteXtext}, equivalent to classical \cs{footnotemark} and \cs{footnotetext}.
 %    \begin{macrocode}
-      \expandafter\newcommand\csname footnote#1mark\endcsname{%
+      \expandafter\newcommand\csname footnote#1mark\endcsname[1][]{%
          \begingroup%
             \prepare@prenotesX{#1}%
-            \stepcounter{footnote#1}%
+            \ifstrempty{##1}{%
+              \stepcounter{footnote#1}%
+            }{%
+              \setcounter{footnote#1}{##1}%
+            }%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
             \csuse{@footnotemark#1}%
             \m@mmf@prepare%
          \endgroup%
       }%
-      \expandafter\newcommand\csname footnote#1text\endcsname[1]{%
+      \expandafter\newcommand\csname footnote#1text\endcsname[2][]{%
          \begingroup%
-            \csuse{vfootnote#1}{#1}{\expandonce{##1}}%
+           \csuse{vfootnote#1}{#1}{\expandonce{##2}}{##1}%
          \endgroup%
       }%
 %    \end{macrocode}
