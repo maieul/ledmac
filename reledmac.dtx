@@ -542,6 +542,7 @@
 % \changes{v2.32.4}{2020/02/04}{Fix bug \protect\cs{footnoteXmark} and \protect\cs{footnoteXtext}.}
 % \changes{v2.32.4}{2020/01/04}{\protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} can now have an optional argument, setting the footnotenote number.}
 % \changes{v2.32.4}{2020/02/04}{Fix bug when using \protect\cs{Xgroupbyline} and twocol arrangement.}
+% \changes{v2.32.4}{2020/02/04}{Fix bug with three and two columns footnotes when using \protect\package{bidi}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -11355,6 +11356,7 @@
     \prepare@Xgroupbyline{#1}{#2}{\threecolvfootnote@inserted}%
   }%
   {%
+    \let\bidi@RTL@everypar\relax%
     \X@beforeinsertion{#1}%
     \insert\csname #1footins\endcsname{%
       \threecolvfootnote@inserted{#1}{#2}%
@@ -11520,6 +11522,7 @@
   \iftoggle{Xgroupbyline@#1}{%
     \prepare@Xgroupbyline{#1}{#2}{\twocolvfootnote@inserted}%
   }{%
+    \let\bidi@RTL@everypar\relax%
     \X@beforeinsertion{#1}%
     \insert\csname #1footins\endcsname{%
       \twocolvfootnote@inserted{#1}{#2}%
@@ -13065,6 +13068,7 @@
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnoteX}[2]{%
   \beforeinsertion@X{#1}%
+  \let\bidi@RTL@everypar\relax%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
     \noindent\csuse{bhooknoteX@#1}%
@@ -13188,6 +13192,7 @@
 % \protect\cs{threecolvfootnoteX}\marg{series}\marg{text}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnoteX}[2]{%
+  \let\bidi@RTL@everypar\relax%
   \beforeinsertion@X{#1}%
   \insert\csname footins#1\endcsname\bgroup%
     \hsize=\expandafter\dimexpr\csuse{widthX@#1}\relax%
