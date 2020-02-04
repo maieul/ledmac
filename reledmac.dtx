@@ -541,6 +541,7 @@
 % \changes{v2.32.3}{2019/12/09}{Fix bug with critical footnotes when typesetting arabic text with \protect\package{polyglossia}.}
 % \changes{v2.32.4}{2020/02/04}{Fix bug \protect\cs{footnoteXmark} and \protect\cs{footnoteXtext}.}
 % \changes{v2.32.4}{2020/01/04}{\protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} can now have an optional argument, setting the footnotenote number.}
+% \changes{v2.32.4}{2020/02/04}{Fix bug when using \protect\cs{Xgroupbyline} and twocol arrangement.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -10052,7 +10053,7 @@
                \unvbox\@nameuse{mp##1footins}%
              \fi%
              \X@atbegininsertion{##1}%
-             \ifcsstring{series@display##1}%
+             \ifcsstring{series@display##1}{normal}%
                {%
                   \Xledsetnormalparstuff{##1}%
                   \rule\z@\splittopskip%
@@ -11549,7 +11550,9 @@
 %    \begin{macrocode}
 \newcommand{\twocol@begin@insert}[1]{%
   \normal@pars%
-  \hsize \csuse{Xhsizetwocol@#1}%
+  \nottoggle{Xgroupbyline@#1}%
+    {\hsize \csuse{Xhsizetwocol@#1}}%
+    {}%
   \Xsetparindent{#1}%
   \tolerance=5000%
   \Xsethangindent{#1}%
