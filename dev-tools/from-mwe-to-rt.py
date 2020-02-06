@@ -17,11 +17,7 @@ if extension == ".tex":
     # create text from .tex file
     tex = open(f)
     text = tex.read()
-    text = text.replace('\\begin{document}','\\begin{document}
-\makeatletter
-\let\@bidi@pdfcustomproperties\\relax
-\makeatother
-            Font initialisation\START')
+    text = text.replace('\\begin{document}','\\begin{document}\makeatletter\let\@bidi@pdfcustomproperties\\relax\makeatother Font initialisation\START')
     tex.close()
 
     # create .lvt file
