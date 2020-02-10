@@ -7287,7 +7287,7 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\new@line}
-% \begin{macro}{\l@the@c@page}
+% \begin{macro}{\set@this@c@page}
 % The \protect\cs{new@line} macro sends the \protect\cs{@nl} command to the line-list
 % file, to mark the start of a new text line, and its page number.
 % \label{new@line@pagecounting}
@@ -7305,6 +7305,7 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
+  \set@this@c@page%
   \ifnumberline%
     \IfStrEq{\led@pb@setting}{after}%
       {\xifinlist{\the\absline@num}{\l@prev@nopb}%
@@ -7312,9 +7313,9 @@
           {\numgdef{\@next@page}{\c@par@page+\@ne}%
           \write\linenum@out{\string\@nl[\@next@page][\@next@page]}%
         }%
-        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+        {\write\linenum@out{\string\@nl[\the\@tmp][\thepage]}}%
       }%
-      {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}}%
+      {\write\linenum@out{\string\@nl[\the\@tmp][\thepage]}}}%
     {}%
     \IfStrEq{\led@pb@setting}{before}%
       {\numdef{\next@absline}{\the\absline@num+\@ne}%
@@ -7323,9 +7324,9 @@
           {\numgdef{\nc@page}{\c@par@page+\@ne}%
           \write\linenum@out{\string\@nl[\nc@page][\nc@page]}%
           }%
-          {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+          {\write\linenum@out{\string\@nl[\the\@this@c@page][\thepage]}}%
         }%
-        {\write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}}%
+        {\write\linenum@out{\string\@nl[\the\@this@c@page][\thepage]}}%
       }%
       {}%
     \IfStrEqCase{\led@pb@setting}%
@@ -7333,18 +7334,19 @@
       {before}{\relax}%
       {after}{\relax}%
     }[%
-      \write\linenum@out{\string\@nl[\the\c@par@page][\thepage]}%
+      \write\linenum@out{\string\@nl[\the\@this@c@page][\thepage]}%
     ]%
   \fi%
 }
 
-\newcommand{\l@the@c@page}{%
+\newcount\@this@c@page%%
+\newcommand{\set@this@c@page}{%
   \ifboolexpr{%
     bool{sameparallelpagenumber}%
     or bool{prevpgnotnumbered}%
   }%
-  {\the\c@par@page}%
-  {\the\c@page}%
+  {\global\@this@c@page=\c@par@page}%
+  {\global\@this@c@page=\c@page}%
 }%
 %    \end{macrocode}
 % \end{macro}
