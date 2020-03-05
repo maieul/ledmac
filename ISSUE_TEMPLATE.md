@@ -33,3 +33,7 @@ If the problem occurs both in parallel typesetting and normal typesetting, pleas
 ```latex
 Type your MWE here
 ```
+
+# Workaround
+
+<!-- If you know a workaround please describe it briefly for other users with the same issue. -->
