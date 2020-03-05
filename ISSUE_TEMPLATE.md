@@ -5,7 +5,9 @@ Please open one issue per problem, and not a single issue for multiple problems.
 
 <!-- Provide the version of reledmac / reledpar that appears in your LaTeX .log file, such as 2019/01/22 v2.30.0. If you are using a development version, please specify the branch. -->
 
+# TeX Engine
 
+<!-- Do you use pdfLaTeX, XeLateX or LuaLaTeX? Does changing the engine change anything? -->
 
 # Regression
 
