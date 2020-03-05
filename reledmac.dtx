@@ -8329,13 +8329,8 @@
 %   \end{itemize}
 % \end{itemize}
 % After theory, implementation.
+% First, getting a sanitized form of the argument of \cs{sameword}
 % \begin{macro}{\get@sw@txt}
-% As the argument of \protect\cs{sameword} can contain an active character if we
-% use \protect\package{inputenc} with \verb+utf8+ option instead of native UTF-8 engine,
-% we store its detokenized content in a macro in order to allow the dynamic name of macro with \protect\cs{csname}.\footnote{See \url{http://tex.stackexchange.com/q/244538/7712}.}
-%
-% Because there is a bug with \protect\cs{detokenize} and \XeTeX\ when using non BMP characters\footnote{\url{http://sourceforge.net/p/xetex/bugs/108/}},
-% we detokenize only for non-\XeTeX engines. In any case, in \XeTeX a \protect\cs{csname} construction can contain UTF-8 characters without a problem, as UTF-8 characters are not managed with category codes, but instead read directly as UTF-8 characters.
 %    \begin{macrocode}
 \newcommand{\get@sw@txt}[1]{%
   \begingroup%
@@ -8351,11 +8346,7 @@
 %    \end{macrocode}
 % And now, define \cs{sw@txt}.
 %   \begin{macrocode}
-    \ifxetex%
-      \@tmpa{\xdef\sw@txt{#1}}%
-    \else%
-      \@tmpa{\expandafter\xdef\expandafter\sw@txt\expandafter{\detokenize{#1}}}%
-    \fi%
+      \@tmpa{\protected@xdef\sw@txt{#1}}%
   \endgroup%
 }%
 %    \end{macrocode}
