@@ -339,6 +339,7 @@
 % \changes{v2.22.2}{2019/01/22}{Fix bug with \protect\cs{Xonlyside} and \protect\cs{onlysideX}}
 % \changes{v2.22.3}{2019/07/21}{When using \protect\cs{parindentX} or \protect\cs{Xparindent} and stanza, use the normal indentation in the footnote, not the verse indentation.}
 % \changes{v2.23.0}{2020/03/08}{Add \protect\cs{Leftpagehook} and \protect\cs{Rightpagehook}.}
+% \changes{v2.23.0}{2020/03/08}{Adds hangingsymbol into \protect\env{astanza}.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -3423,6 +3424,15 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{ifinastanzaL}
+% \begin{macro}{ifinastanzaR}
+% These boolean tests are switched by the \protect\env{astanza} environnement, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinastanzaL%
+ \newif\ifinastanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \begin{environment}{Leftside}
 % Within the \verb?pairs? and \verb?pages? environments the left and
 % right hand texts are within \verb?Leftside? and \verb?Rightside?
@@ -5332,6 +5342,9 @@
           \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
         \@hangingsymbol%
     \fi%
+    \ifinastanzaL%
+        \@hangingsymbol%
+    \fi%
   \fi%
 }%
 \newcommand{\inserthangingsymbolR}{%
@@ -5339,6 +5352,9 @@
     \ifinstanzaR%
         \hskip \@ifundefined{sza@0@}{0}{\expandafter%
            \noexpand\csname sza@0@\endcsname}\stanzaindentbase%
+        \@hangingsymbol%
+    \fi%
+    \ifinastanzaR%
         \@hangingsymbol%
     \fi%
   \fi%
@@ -5367,6 +5383,11 @@
 %
 %    \begin{macrocode}
 \newenvironmentx{astanza}[2][1,2,usedefault]{%
+  \ifledRcol%
+    \global\inastanzaRtrue%
+  \else%
+    \global\inastanzaLtrue%
+  \fi%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
   \newdimen\parindent@beforestanza%
@@ -6726,6 +6747,8 @@
   \global\l@dnumpstartsR=\z@%
     \global\instanzaLfalse%
     \global\instanzaRfalse%
+    \global\inastanzaLfalse%
+    \global\inastanzaRfalse%
   \global\l@dprintingpagesfalse%
 %    \end{macrocode}
 % Check the consistency of \cs{edtext@later} and \cs{edtext@now}
