@@ -543,6 +543,7 @@
 % \changes{v2.32.4}{2020/01/04}{\protect\cs{footnoteXmark} and \protect\cs{footnoteXtext} can now have an optional argument, setting the footnotenote number.}
 % \changes{v2.32.4}{2020/02/04}{Fix bug when using \protect\cs{Xgroupbyline} and twocol arrangement.}
 % \changes{v2.32.4}{2020/02/04}{Fix bug with three and two columns footnotes when using \protect\package{bidi}.}
+% \changes{v2.32.5}{2020/03/08}{Fix bug with \protect\cs{edindex} inside \cs{eledsection} and related.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -9129,6 +9130,7 @@
 % Because of how this prints, a vertical spacing correction is added.
 %    \begin{macrocode}
 \def\print@eledsection{%
+    \disable@edindex%
     \if@firstlineofpage%
       \set@Xtxtbeforenotes%
       \set@txtbeforenotesX%
@@ -9159,6 +9161,7 @@
     \fi%
     \vskip-\baselineskip%
     \continuousnumberingwithcolumns@sync@linenumber@singletext%
+    \restore@edindex%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -17999,6 +18002,8 @@
 {\led@error@fail@patch@makeindex}%
 \newcommand{\edindex}[1]{\@bsphack\@esphack}
 \newcommandx{\dummy@edindex}[2][1=\expandonce\jobname,usedefault]{}%
+\newcommand{\disable@edindex}{\let\old@edindex\edindex\let\edindex\dummy@edindex}%
+\newcommand{\restore@edindex}{\let\edindex\old@edindex}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
