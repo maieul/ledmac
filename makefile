@@ -1,5 +1,5 @@
 PACKAGE = *.dtx \
-		  *.ins \
+			*.ins \
 		  reledmac.pdf \
 		  reledpar.pdf \
 			migration.pdf \
@@ -9,40 +9,41 @@ PACKAGE = *.dtx \
 
 
 
-.PHONY: all dist clean
+.PHONY: all dist clean doc test
 
 
-all: reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
+all: test reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf dist
 
 doc: *.pdf
 
+test: *dtx
+	l3build check
+
 migration.pdf: migration.dtx
-	xelatex -no-pdf $<
-	xelatex -no-pdf $<
-	xelatex -no-pdf $<
-	xdvipdfmx migration.xdv
+	pdflatex  $<
+	pdflatex  $<
+	pdflatex  $<
 
 README: README.md
 	pandoc README.md -o README
 
 %.sty: %.ins %.dtx
-	rm -f $*.sty 
+	rm -f $*.sty
 	@pdflatex $*.ins
 
 %.pdf: %.sty %.dtx
-	@xelatex -no-pdf $*.dtx
+	@pdflatex $*.dtx
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
-	@xelatex -no-pdf $*.dtx
+	@pdflatex $*.dtx
 	@makeindex -s gind.ist -o $*.ind $*.idx
 	@makeindex -s gglo.ist -o $*.gls $*.glo
-	@xelatex -no-pdf $*.dtx
-	@xdvipdfmx $*.xdv
+	@pdflatex  $*.dtx
 
 dist: $(PACKAGE) examples
 	rm -rf reledmac
 	mkdir reledmac
-	@xelatex reledmac.dtx #We call it at last time because reledmac handbook can refer to page of reledpar handbook, and so we need to run reledmac.dtx a last time after reledpar.dtx has been run
+	@pdflatex reledmac.dtx #We call it at last time because reledmac handbook can refer to page of reledpar handbook, and so we need to run reledmac.dtx a last time after reledpar.dtx has been run
 	rm -f examples/*pdf
 	$(MAKE) -C examples all
 	mkdir reledmac/examples
@@ -60,6 +61,7 @@ dist: $(PACKAGE) examples
 	ln doc-more/makefile reledmac/doc-more
 	ln doc-more/latexmkrc reledmac/doc-more
 	ln $(PACKAGE) reledmac
+	rm -rf build
 	@$(RM) ../reledmac.zip
 	zip -r ../reledmac.zip reledmac
 
