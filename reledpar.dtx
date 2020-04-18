@@ -1571,6 +1571,15 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\led@err@polyglossiaTooOld}
+%    \begin{macrocode}
+\newcommand{\led@err@polyglossiaTooOld}{%
+  \reledpar@error{You use the polyglosia package.%
+  \MessageBreak However, reledpar requires version 2020/04/08 v1.49 or later of the polyglossia package.%
+  \MessageBreak Please update your reledpar version}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@err@BadLeftRightPstarts}
 %    \begin{macrocode}
 \newcommand*{\led@err@BadLeftRightPstarts}[2]{%
@@ -5602,22 +5611,18 @@
 % \changes{v2.22.4}{2019/11/04}{Provide compatibility with the latest version of polyglossia (v1.45).}
 % \changes{v2.23.0}{2020/03/08}{Restore compatibility with versions of polyglossia prior to v1.45.}
 % \begin{macrocode}
-  {    \let\old@otherlanguage\otherlanguage%
+  {%
+    \@ifpackagelater{polyglossia}{2020/04/08}{}{\led@err@polyglossiaTooOld}%
+    \let\old@otherlanguage\otherlanguage%
        \renewcommand{\otherlanguage}[2][]{%
-        \ifdefined\xpg@set@group@aux%
-          \xpg@set@group@aux%
-        \fi%
+        \xpg@set@group@aux%
         \selectlanguage[#1]{#2}%
         \ifledRcol  \gdef\theledlanguageR{#2}%
         \else      \gdef\theledlanguageL{#2}%
         \fi}%
       \renewcommand{\l@duselanguage}[1]{%
         \csuse{no\languagename @numbers}%
-        \ifdefined\@select@language%
-          \@select@language{#1}%
-        \else%
-          \select@language{#1}%
-        \fi%
+        \@select@language{#1}%
       }%
       \gdef\theledlanguageL{\xpg@main@language}%
       \gdef\theledlanguageR{\xpg@main@language}%
