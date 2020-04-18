@@ -18283,28 +18283,29 @@
       }%
     }%
     \dolistloop{\edglsom}%
-  }{}%
-}%
 %    \end{macrocode}
-% One command to avoid expanding glossaries macros in \cs{edtex} arguments.
+% \cs{l@noexpands@edgl} is a macro to avoid expanding glossaries macros in \cs{edtext} first argument. It is called by \cs{no@expands}.
+% Its definition is made dynamically.
 % \begin{macro}{\l@noexpands@edgl}
-%    \begin{macrocode}
-\AtEndPreamble{%
-  \@ifpackageloaded{glossaries}{%
-    \newcommand{\l@noexpands@edgl}{%
-      \renewcommand\do[1]{%
-        \expandafter\RenewDocumentCommand\csname ed##1\endcsname{omos}{}%
+    \def\l@noexpands@edgl{}%
+    \renewcommand\do[1]{%
+      \xappto\l@noexpands@edgl{%
+        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omos}{}%
       }%
-      \dolistloop{\edglsomo}%
-      \renewcommand\do[1]{%
-        \expandafter\RenewDocumentCommand\csname ed##1\endcsname{omms}{}%
-      }%
-      \dolistloop{\edglsomm}%
-      \renewcommand\do[1]{%
-        \expandafter\RenewDocumentCommand\csname ed##1\endcsname{oms}{}%
-      }%
-      \dolistloop{\edglsom}%
     }%
+    \dolistloop{\edglsomo}%
+    \renewcommand\do[1]{%
+      \xappto\l@noexpands@edgl{%
+        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omms}{}%
+      }%
+    }%
+    \dolistloop{\edglsomm}%
+    \renewcommand\do[1]{%
+      \xappto\l@noexpands@edgl{%
+        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{oms}{}%
+      }%
+    }%
+    \dolistloop{\edglsom}%
   }{\let\l@noexpands@edgl\relax}%
 }%
 %    \end{macrocode}
