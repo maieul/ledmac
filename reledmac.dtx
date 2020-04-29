@@ -8800,21 +8800,10 @@
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
-% We check if lineation is by pstart: in this case, we reset the line number, but only in the second line of the pstart.
-% We can't reset line number at the beginning of  \protect\cs{pstart}, as \protect\cs{setline} is parsed at the end of previous \protect\cs{pend}, and so, we must do it at the end of first line of pstart.
+% Output the lines.
 %    \begin{macrocode}
-  \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
-    \csnumdef{pstartline}{\pstartline+\@ne}%
     \do@line%
-    \ifbypstart@%
-     \ifnumequal{\pstartline}{1}{%
-       \bgroup%
-       \let\leavevmode\relax%
-       \setline{1}%
-       \egroup%
-     \resetprevline@}{}%
-    \fi%
   \repeat%
 %    \end{macrocode}
 % Deal with any leftover notes, and then end the group that was begun
@@ -8855,6 +8844,16 @@
   \ifautopar%
     \autopar%
   \fi%
+%    \end{macrocode}
+% At the very end, we check if the lineation is made by \cs{pstart}. In this case, we reset the line number, using \cs{setlinenum}, as we are, technically, already out of \cs{pstart}\cs{pend} structure.
+%    \begin{macrocode}
+    \ifbypstart@%
+       \begingroup%
+         \let\leavevmode\relax%
+         \setlinenum{0}%
+       \endgroup%
+       \resetprevline@%
+    \fi%
 }
 %    \end{macrocode}
 % \end{macro}
