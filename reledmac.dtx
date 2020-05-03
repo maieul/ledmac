@@ -548,6 +548,9 @@
 % \changes{v2.32.5}{2020/03/08}{Fix bug with macro inside \protect\cs{sameword} with no-\protect\XeTeX\ engines.}
 % \changes{v2.32.6}{2020/04/19}{Fix bug with glossary entries inside the first argument of \protect\cs{edtext}.}
 % \changes{v2.32.6}{2020/04/19}{Add hyperref link when inserting glossary entries.}
+% \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{parafootsepX}.}
+% \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{lineation}\arg{pstart} and \protect\cs{edtext} in the very first line of a \protect\cs{pstart}.}
+% \changes{v2.32.7}{2020/05/03}{Fix spurious spaces at the very first line of \protect\env{edtabular} environnments.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4331,7 +4334,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/04/19 v2.32.6 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/05/03 v2.32.7 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8800,21 +8803,10 @@
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
 %    \end{macrocode}
-% We check if lineation is by pstart: in this case, we reset the line number, but only in the second line of the pstart.
-% We can't reset line number at the beginning of  \protect\cs{pstart}, as \protect\cs{setline} is parsed at the end of previous \protect\cs{pend}, and so, we must do it at the end of first line of pstart.
+% Output the lines.
 %    \begin{macrocode}
-  \csnumdef{pstartline}{0}%
   \loop\ifvbox\raw@text%
-    \csnumdef{pstartline}{\pstartline+\@ne}%
     \do@line%
-    \ifbypstart@%
-     \ifnumequal{\pstartline}{1}{%
-       \bgroup%
-       \let\leavevmode\relax%
-       \setline{1}%
-       \egroup%
-     \resetprevline@}{}%
-    \fi%
   \repeat%
 %    \end{macrocode}
 % Deal with any leftover notes, and then end the group that was begun
@@ -8855,6 +8847,16 @@
   \ifautopar%
     \autopar%
   \fi%
+%    \end{macrocode}
+% At the very end, we check if the lineation is made by \cs{pstart}. In this case, we reset the line number, using \cs{setlinenum}, as we are, technically, already out of \cs{pstart}\cs{pend} structure.
+%    \begin{macrocode}
+    \ifbypstart@%
+       \begingroup%
+         \let\leavevmode\relax%
+         \setlinenum{0}%
+       \endgroup%
+       \resetprevline@%
+    \fi%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -13490,12 +13492,12 @@
 \newcommand{\insertparafootsepX}[1]{%
    \ifledRcol@%
      \ifnumequal{\csuse{prevpage#1@numR}}{\page@numR}%
-        {\csuse{Xparafootsep@#1}}%
+        {\csuse{parafootsepX@#1}}%
         {}%
      \global\csname prevpage#1@numR\endcsname=\page@numR%
    \else%
      \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
-        {\csuse{Xparafootsep@#1}}%
+        {\csuse{parafootsepX@#1}}%
         {}%
      \global\csname prevpage#1@num\endcsname=\page@num%
    \fi%
@@ -19238,7 +19240,13 @@
 %    \begin{macrocode}
 \newcommand{\addtol@denvbody}[1]{%
   \global\l@denvbody\expandafter{\the\l@denvbody#1}}
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\if@edtabular}
+% A boolean set to true inside a \macpackage' tabular environnment.
+%    \begin{macrocode}
+\newif\if@edtabular%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -19251,10 +19259,12 @@
 %
 %    \begin{macrocode}
 \newcommand{\l@dcollect@body}[1]{%
+  \\%Ensure that we don't have spurious indentation at the very first line, caused by some text before.
   \l@denvbody{\expandafter#1\expandafter{\the\l@denvbody}}%
   \edef\processl@denvbody{\the\l@denvbody\noexpand\end{\@currenvir}}%
   \l@denvbody\@emptytoks \def\l@dbegin@stack{b}%
   \begingroup
+    \@edtabulartrue%
     \expandafter\let\csname\@currenvir\endcsname\l@dcollect@@body
     \edef\processl@denvbody{\expandafter\noexpand\csname\@currenvir\endcsname}%
     \processl@denvbody%
