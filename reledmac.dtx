@@ -550,6 +550,7 @@
 % \changes{v2.32.6}{2020/04/19}{Add hyperref link when inserting glossary entries.}
 % \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{parafootsepX}.}
 % \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{lineation}\arg{pstart} and \protect\cs{edtext} in the very first line of a \protect\cs{pstart}.}
+% \changes{v2.32.7}{2020/05/03}{Fix spurious spaces at the very first line of \protect\env{edtabular} environnments.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -19239,7 +19240,13 @@
 %    \begin{macrocode}
 \newcommand{\addtol@denvbody}[1]{%
   \global\l@denvbody\expandafter{\the\l@denvbody#1}}
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\if@edtabular}
+% A boolean set to true inside a \macpackage' tabular environnment.
+%    \begin{macrocode}
+\newif\if@edtabular%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -19252,10 +19259,12 @@
 %
 %    \begin{macrocode}
 \newcommand{\l@dcollect@body}[1]{%
+  \\%Ensure that we don't have spurious indentation at the very first line, caused by some text before.
   \l@denvbody{\expandafter#1\expandafter{\the\l@denvbody}}%
   \edef\processl@denvbody{\the\l@denvbody\noexpand\end{\@currenvir}}%
   \l@denvbody\@emptytoks \def\l@dbegin@stack{b}%
   \begingroup
+    \@edtabulartrue%
     \expandafter\let\csname\@currenvir\endcsname\l@dcollect@@body
     \edef\processl@denvbody{\expandafter\noexpand\csname\@currenvir\endcsname}%
     \processl@denvbody%
