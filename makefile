@@ -3,7 +3,7 @@ PACKAGE = *.dtx \
 		  reledmac.pdf \
 		  reledpar.pdf \
 			migration.pdf \
-		  README \
+		  README.md \
 		  makefile \
 		  latexmkrc \
 
@@ -23,9 +23,6 @@ migration.pdf: migration.dtx
 	pdflatex  $<
 	pdflatex  $<
 	pdflatex  $<
-
-README: README.md
-	pandoc README.md -o README
 
 %.sty: %.ins %.dtx
 	rm -f $*.sty
