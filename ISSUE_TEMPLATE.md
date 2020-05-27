@@ -27,8 +27,12 @@ Does the problem happen both in parallel typesetting and normal typesetting? -->
 
 <!-- Instructions for creating an MWE:
 https://tex.meta.stackexchange.com/questions/228/ive-just-been-asked-to-write-a-minimal-example-what-is-that
-You may find the MWE package useful: https://ctan.org/pkg/mwe
-If the problem occurs both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting. -->
+If the problem occurs both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting.
+Please avoid:
+- custom commands: use standard reledmac command in your example;
+- unrequired package in your preamble;
+- blindtext and other false text packages.
+-->
 
 ```latex
 Type your MWE here
