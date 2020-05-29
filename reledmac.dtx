@@ -552,6 +552,7 @@
 % \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{lineation}\arg{pstart} and \protect\cs{edtext} in the very first line of a \protect\cs{pstart}.}
 % \changes{v2.32.7}{2020/05/03}{Fix spurious spaces at the very first line of \protect\env{edtabular} environnments.}
 % \changes{v2.32.8}{2020/05/24}{Add subline number in manuscript apparatus.}
+% \changes{v2.33.0}{2020/06/07}{Add startstanzaindentsrepetition feature.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -3049,7 +3050,20 @@
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{0}
 % \end{verbatim}
-% The macros make no restriction on the number of lines in a stanza.
+% The macro makes no restriction on the number of lines in a stanza.
+%
+% Sometime, it is useful to repeat the indents only after some lines of verse.
+% You can set the counter \verb+startstanzaindentsrepetition+ to do that.
+% Its default value is \verb+1+, that means the repetition starts with line of verse number~1.
+%
+% For example, you may want to have no indent for the first line, and all other lines been indented by 1.
+% So do
+% \begin{verbatim}
+% \setstanzaindents{1,0,1}
+% \setcounter{stanzaindentsrepetition}{1}
+% \setcounter{startstanzaindentsrepetition}{2}
+% \end{verbatim}
+% \subsection{Notes about the scope of the indent settings}
 % Stanza indentation values (and penalty values) obey \TeX's grouping
 % conventions, so if one stanza among several has a different structure,
 % its indentations (penalties) may be set within a group; the prior values
@@ -4335,7 +4349,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/05/24 v2.32.8 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/06/07 v2.33.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -18463,12 +18477,17 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\managestanza@modulo}
-% Since version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses.
-% The \protect\cs{managestanza@modulo} is a command which modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
+% Since the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every $n$ verses.
+%
+% The \verb+startstanzaindentsrepetition+ counter tells in which line of verse the repetition of indent starts.
+%
+% The \protect\cs{managestanza@modulo} macro modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
 %\changes{v0.13.0}{2011/11/08}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
 % % \changes{v1.5.1}{2013/08/16}{Correct stanzaindentsrepetition counter}
 %    \begin{macrocode}
 \newcounter{stanzaindentsrepetition}
+\newcounter{startstanzaindentsrepetition}%
+\setcounter{startstanzaindentsrepetition}{1}%
 \newcount\stanza@modulo
 
 \newcommand*{\managestanza@modulo}[0]{%
@@ -18579,6 +18598,7 @@
 % \subsection{Main work}
 % \begin{macro}{\stanza@line}
 % \begin{macro}{\stanza@hang}
+% \begin{macro}{\stanza@indent}
 % \begin{macro}{\sza@penalty}
 % Now we arrive at the main works. \protect\cs{stanza@line} sets the
 % indentation for the line and starts a numbered paragraph---each
@@ -18596,23 +18616,35 @@
 % places in the stanza for page breaking.
 %    \begin{macrocode}
 \newcommandx{\stanza@line}[2][1,2,usedefault]{%
-    \ifnum\value{stanzaindentsrepetition}=0
+  \stanza@indent%
+  \pstart[#1][#2]\stanza@hang\ignorespaces%
+}%
+\newcommand{\stanza@indent}{%
+    \ifboolexpr{%
+      test {\ifnumequal{\value{stanzaindentsrepetition}}{0}}%
+      or%
+      test {\ifnumless{\number\stanza@count}{\value{startstanzaindentsrepetition}}}%
+    }{%
         \ifcsdef{sza@\number\stanza@count @}%
           {%
           \parindent=\csname sza@\number\stanza@count  @\endcsname\stanzaindentbase%
           }{%
           \led@err@StanzaIndentNotDefined%
           }%
-    \else
+    }{%
         \ifcsdef{sza@\number\stanza@modulo @}{%
-          \parindent=\csname sza@\number\stanza@modulo @\endcsname\stanzaindentbase%
+          \count0=\numexpr%
+            \stanza@modulo%
+            - 1%
+            + \value{startstanzaindentsrepetition}%
+          \relax%
+          \parindent=\csname sza@\number\count0 @\endcsname\stanzaindentbase%
           \managestanza@modulo%
         }%
         {%
         \led@err@StanzaIndentNotDefined%
         }%
-    \fi
-    \pstart[#1][#2]\stanza@hang\ignorespaces%
+    }%
 }%
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
             \hangindent\expandafter
@@ -18622,6 +18654,7 @@
          \ifnum\count@>\@M\advance\count@-\@M\penalty-\else
          \penalty\fi\count@}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
