@@ -4805,6 +4805,13 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\led@warn@BadHookSeries}
+%    \begin{macrocode}
+\newcommand{\led@warn@BadHookSeries}[2]{%
+  \reledmac@warning{Bad series #1 for #2 hook. Skipped.}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@warn@BadSidenotemargin}
 %    \begin{macrocode}
 \newcommand*{\led@warn@BadSidenotemargin}{%
@@ -15199,13 +15206,17 @@
 %    \begin{macrocode}
 \newcommandx{\settoggle@series}[5][4,5,usedefault]{%
     \def\do##1{%
-      \global\settoggle{#2@##1}{#3}%
+      \ifcsdef{etb@tgl@#2@##1}{%
+        \global\settoggle{#2@##1}{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{
           \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
-      \ifstrequal{#4}{familiar}{
+      \ifstrequal{#4}{familiar}{%
           \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
-      }{}
+      }{}%
     }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
@@ -15233,7 +15244,11 @@
 %    \begin{macrocode}
 \newcommandx{\setcommand@series}[6][4,5,6=0,usedefault]{%
     \def\do##1{
-      \expandafter\global\expandafter\renewcommand\csname#2@##1\endcsname[#6]{#3}%
+      \ifcsdef{#2@#1}{%
+        \expandafter\global\expandafter\renewcommand\csname#2@##1\endcsname[#6]{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{%
             \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
