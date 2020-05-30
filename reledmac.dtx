@@ -12905,6 +12905,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -12922,6 +12923,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -14671,6 +14673,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -14708,6 +14711,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to \sw@list@inedtext when the notes are expanded.
@@ -17858,7 +17862,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{"^^J
+          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17868,7 +17872,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote{\@index@command}{"^^J
+          :open "\string\ledinnote{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17880,7 +17884,7 @@
 %    \begin{macrocode}
   \else%
     \gdef\@ledinnote@command{%
-       ledinnote[\edindexlab\thelabidx]{\@index@command}%
+      ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}%
     }%
   \fi%
 }
@@ -17915,16 +17919,23 @@
 % \begin{macro}{\ledinnotemark}
 % \changes{v1.21.0}{2015/04/13}{Add \protect\cs{ledinnotemark}.}
 % These macros are used to specify that an index reference points to a note.
-% Arguments of \protect\cs{ledinnote}  are: \verb+#1+ (optional): the label for the hyperlink, \verb+#2+: command applied to the number, \verb+#3+: the number itself.
+% Arguments of \protect\cs{ledinnote}  are:
+% \begin{itemize}
+% \item \verb+#1+ (optional): the label for the hyperlink;
+% \item \verb+#2+: command applied to the number;
+% \item \verb+#3+: the note series;
+% \item \verb+#4+: the type of note (critical/familiar).
+% \item \verb+#5+: the number itself.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\ledinnote}[3][1,usedefault]{%
+\newcommandx{\ledinnote}[5][1,usedefault]{%
   \ifboolexpr{%
     test{\ifdefequal{\iftrue}{\ifHy@hyperindex}}%
     or%
     bool {xindyhyperref@}%
     }%
     {%
-    \csuse{#2}{\hyperlink{#1}{\ledinnotemark{#3}}}%
+    \csuse{#2}{\hyperlink{#1}{\ledinnotemark{#5}}}%
     }%
     {%
     \csuse{#2}{\ledinnotemark{#3}}%
