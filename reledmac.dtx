@@ -5136,7 +5136,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{ifinstanzaL}
+% \begin{macro}{ifinstanzaR}
+% These boolean tests are switched by the \protect\cs{stanza} command, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinstanzaL%
+ \newif\ifinstanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{ifinastanzaL}
+% \begin{macro}{ifinastanzaR}
+% These boolean tests are switched by the \protect\env{astanza} environnement, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinastanzaL%
+ \newif\ifinastanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 %\section{Sectioning commands}
 %
@@ -18803,10 +18820,18 @@
 \ifantilabe@%
   \newdimen\firsthalf@antilabe@wd%
   \newcommand\get@firsthalf@antilabe@wd{%
-    \ifboolexpr{bool {instanza}}{%
+    \ifboolexpr{bool {instanza} or bool {inastanzaL} or bool {inastanzaR}}{%
       \vbadness=10000%
       \splittopskip=\z@%
-      \setbox0=\copy\raw@text%
+      \ifl@dpairing%
+        \ifledRcol%
+          \setbox0=\copy\csname l@dRcolrawbox\the\l@dnumpstartsR\endcsname%
+        \else%
+          \setbox0=\copy\csname l@dLcolrawbox\the\l@dnumpstartsL\endcsname%
+        \fi%
+      \else%
+        \setbox0=\copy\raw@text%
+      \fi%
       \dimen0=\dimexpr\ht0+\dp0-\baselineskip\relax%
       \ifdim\dimen0>0pt%
         \setbox1=\vsplit0 to \dimen0%
