@@ -14632,6 +14632,7 @@
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
       \csgdef{Xlinenumannotationposition@#1}{after}%
+      \expandafter\csgdef{Xinnotemark@#1}##1{\ledinnotemark{##1}}%
       \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
@@ -14791,6 +14792,7 @@
       \csgdef{parafootsepX@#1}{}%
       \csgdef{afternoteX@#1}{1em plus.4em minus.4em}
       \csgdef{widthX@#1}{\hsize}%
+      \expandafter\csgdef{innotemarkX@#1}##1{\ledinnotemark{##1}}%
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
@@ -15215,11 +15217,12 @@
 %   \item \verb+#3+ (mandatory): the new value of the hook/command.
 %   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \protect\cs{footnormal} or \protect\cs{footparagraph} or \ldots\ depending of the footnote display).
 %   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+%   \item \verb+#6+ (optional): the number of arguments of the hook.
 % \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\setcommand@series}[5][4,5,usedefault]{%
+\newcommandx{\setcommand@series}[6][4,5,6=0,usedefault]{%
     \def\do##1{
-        \csgdef{#2@##1}{#3}
+      \expandafter\global\expandafter\renewcommand\csname#2@##1\endcsname[#6]{#3}%
       \ifstrequal{#4}{critical}{%
             \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
@@ -15245,11 +15248,13 @@
 % The first argument is the name of the hook, the second a comma-separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \protect\cs{Xtwolines}.
 % The second argument is also used to create commands named \protect\cs{<hookname><pseudoseries>},
 % like \protect\cs{Xtwolinesappref}.
+% The third argument
+% \changes{v2.33.0}{2020/06/07}{\protect\cs{newhookcommand@series} can take an second optional argument (third argument).}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommandx{\newhookcommand@series}[2][2,usedefault]{%
+\newcommandx{\newhookcommand@series}[3][2,3=0,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}[][#2]%
+    \setcommand@series{##1}{#1}{##2}[][#2][#3]%
   }%
   \ifstrempty{#2}{}{%
     \def\do##1{%
@@ -15374,6 +15379,8 @@
   \newhookcommand@series{Xparafootsep}
   \newhookcommand@series@reload{Xwidth}{critical}%
 
+  \newhookcommand@series{Xinnotemark}[][1]%
+
   \ifundef{\Xhsize}%
     {%
       \newcommandx{\Xhsize}[2][1,usedefault]{%
@@ -15423,6 +15430,8 @@
   \newhookcommand@series{txtbeforenotesX}%
   \newhooktoggle@series{txtbeforenotesonlyonceX}%
   \newhookcommand@series@reload{widthX}{familiar}%
+  \newhookcommand@series{innotemarkX}[][1]%
+
   \ifundef{\hsizeX}%
     {%
       \newcommandx{\hsizeX}[2][1,usedefault]{%
@@ -17929,16 +17938,21 @@
 % \end{itemize}
 %    \begin{macrocode}
 \newcommandx{\ledinnote}[5][1,usedefault]{%
+  \IfStrEq{#4}{critical}{%
+    \def\tmp{Xinnotemark}%
+  }{%
+    \def\tmp{innotemarkX}%
+  }%
   \ifboolexpr{%
     test{\ifdefequal{\iftrue}{\ifHy@hyperindex}}%
     or%
     bool {xindyhyperref@}%
     }%
     {%
-    \csuse{#2}{\hyperlink{#1}{\ledinnotemark{#5}}}%
+      \csuse{#2}{\hyperlink{#1}{\csuse{\tmp @#3}{#5}}}%
     }%
     {%
-    \csuse{#2}{\ledinnotemark{#3}}%
+    \csuse{#2}{\csuse{\tmp @#3}{#5}}%
     }%
 }%
 \newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\ledinnotemark{\hyperpage{#2}}}}%
