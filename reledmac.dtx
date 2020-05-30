@@ -4358,6 +4358,7 @@
 % \begin{macro}{\ifxindyhyperref@}
 % \begin{macro}{\ifeledmaccompat@}
 % \begin{macro}{\ifnoresetlinenumannotation@}
+% \begin{macro}{\ifantilabe@}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % We use \protect\package{xkeyval} in order to manage options with argument.
@@ -4450,6 +4451,10 @@
 \DeclareOptionX{noresetlinenumannotation}{%
   \noresetlinenumannotation@true%
 }%
+\newif\ifantilabe@%
+\DeclareOptionX{antilabe}{%
+  \antilabe@true%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4460,6 +4465,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -8807,6 +8813,7 @@
   \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
+  \get@firsthalf@antilabe@wd%
 %    \end{macrocode}
 % Output the lines.
 %    \begin{macrocode}
@@ -18785,8 +18792,40 @@
   \setstanzavalues{szp}{0}
 
 %    \end{macrocode}
-%
-%
+% \subsection{Dealing with antilabe}
+% \begin{macro}{\firsthalf@antilabe@wd}
+% \begin{macro}{\get@firsthalf@antilabe@wd}
+% \begin{macro}{\antilabe}
+% If the \opt{antilabe} option is enabled, after having vboxded
+% the content of \cs{pstart}\ldots{pend} structure, we get
+% the width of the last line of the \cs{pend}.
+%    \begin{macrocode}
+\ifantilabe@%
+  \newdimen\firsthalf@antilabe@wd%
+  \newcommand\get@firsthalf@antilabe@wd{%
+    \ifboolexpr{bool {instanza}}{%
+      \vbadness=10000%
+      \splittopskip=\z@%
+      \setbox0=\copy\raw@text%
+      \dimen0=\dimexpr\ht0+\dp0-\baselineskip\relax%
+      \ifdim\dimen0>0pt%
+        \setbox1=\vsplit0 to \dimen0%
+      \fi%
+      \setbox0=\vbox{\unvbox0\global\setbox1=\lastbox}%
+      \setbox1=\hbox{\noindent\unhbox1}%
+      \global\firsthalf@antilabe@wd=\wd1%
+    }{}%
+  }%
+  \newcommand{\antilabe}[1]{%
+    \hbox to\firsthalf@antilabe@wd{#1}%
+  }%
+\else%
+  \let\get@firsthalf@antilabe@wd\relax%
+\fi%
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%    \end{macrocode}
 %
 % \section{Apparatus of Manuscripts}
 % \subsection{User level macro}
