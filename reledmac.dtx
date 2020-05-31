@@ -553,6 +553,7 @@
 % \changes{v2.32.7}{2020/05/03}{Fix spurious spaces at the very first line of \protect\env{edtabular} environnments.}
 % \changes{v2.32.8}{2020/05/24}{Add subline number in manuscript apparatus.}
 % \changes{v2.33.0}{2020/06/07}{Add startstanzaindentsrepetition feature.}
+% \changes{v2.33.0}{2020/06/07}{Add antilabe feature.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -841,14 +842,15 @@
 %       \item \TeX\ is not able to create folder. You should create it yourself.
 %       \item The option does not change the default \LaTeX auxiliary files (.aux, .toc, \ldots).
 %    \end{enumerate}
-% \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
-% \item[nopenalties] must be called in some cases when using paragraphed endnotes (\reff{nopenalties)}
-% \item[nopbinverse] prevents page break within verse environment.
-% \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
-% \item[noresetlinenumannotation] Does not reset the annotations to line number at each line. See \reff{annotation}.
-% \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
-% \item[swcaseinsensitive] make \cs{sameword} command case insensitive.
-% \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
+% \item[antilabe] enable \cs{antilabe} feature (see \reff{antilabe});
+% \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat});
+% \item[nopenalties] must be called in some cases when using paragraphed endnotes (see \reff{nopenalties)};
+% \item[nopbinverse] prevents page break within verse environment;
+% \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation});
+% \item[noresetlinenumannotation] does not reset the annotations to line number at each line (see \reff{annotation});
+% \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus;
+% \item[swcaseinsensitive] make \cs{sameword} command case insensitive;
+% \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting;
 % \item[xindy] and \verb|xindy+hyperref| select \verb+xindy+ as the index processor (\reff{xindy}).
 % \end{description}
 %
@@ -3180,6 +3182,32 @@
 %    \flagstanza{#1}%
 %}
 % \end{verbatim}
+% \DescribeMacro{\antilabe}
+% \subsection{Antilabe}\label{antilabe}
+% In dramatic text, it may happen that a line of verse is split between two speakers.
+% Thats is called \enquote{antilabe}.
+% In this case, the typesetting of the second half  must start at the horizontal position where the typesetting of the first half stops.
+%
+% \Reledmac\  provides tool for such problematic, but you must enable them with the \opt{antilabe} option when loading package, as this option is quite ressource consuming.
+%
+% The \cs{antilabe}\marg{name} must be called at the beginning of the second half of the line of verse.
+%
+% Its \meta{name} argument is the name of the speaker.
+% Because of the way \TeX\ expand argument, you can use one the following syntax:
+% \begin{itemize}
+%   \item \verb+\antilabe{name}+, if you typeset the character name;
+%   \item \verb+\antilabe\command+,  if the character name is defined in a command, like with the \package{thalie} package;
+%   \item \verb+\antilabe{}+, if you do not type the character name.
+% \end{itemize}
+% See the file  \href{examples/2-antilabe.tex}{examples/2-antilabe.tex} for an example of use.
+%
+% \DescribeMacro{\beforeantilabe}
+% \DescribeMacro{\afterantilabe}
+% You can execute any arbitrary code before or after \cs{antilabe} macro just with a redefinition of \cs{beforeantilabe} or \cs{afterantilabe}.
+% For example, to add more space, just do:
+% \begin{verbatim}
+% \renewcommand{\afterantilabe}{\hspace{1em}}
+% \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
 % If you need to print an \& symbol in a stanza, use the \verb?\ampersand?
@@ -4372,6 +4400,7 @@
 % \begin{macro}{\ifxindyhyperref@}
 % \begin{macro}{\ifeledmaccompat@}
 % \begin{macro}{\ifnoresetlinenumannotation@}
+% \begin{macro}{\ifantilabe@}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % We use \protect\package{xkeyval} in order to manage options with argument.
@@ -4464,6 +4493,10 @@
 \DeclareOptionX{noresetlinenumannotation}{%
   \noresetlinenumannotation@true%
 }%
+\newif\ifantilabe@%
+\DeclareOptionX{antilabe}{%
+  \antilabe@true%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4474,6 +4507,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -5144,7 +5178,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{ifinstanzaL}
+% \begin{macro}{ifinstanzaR}
+% These boolean tests are switched by the \protect\cs{stanza} command, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinstanzaL%
+ \newif\ifinstanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{ifinastanzaL}
+% \begin{macro}{ifinastanzaR}
+% These boolean tests are switched by the \protect\env{astanza} environnement, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinastanzaL%
+ \newif\ifinastanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 %\section{Sectioning commands}
 %
@@ -8821,6 +8872,7 @@
   \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
+  \get@firsthalf@antilabe@wd%
 %    \end{macrocode}
 % Output the lines.
 %    \begin{macrocode}
@@ -18818,8 +18870,50 @@
   \setstanzavalues{szp}{0}
 
 %    \end{macrocode}
-%
-%
+% \subsection{Dealing with antilabe}
+% \begin{macro}{\firsthalf@antilabe@wd}
+% \begin{macro}{\get@firsthalf@antilabe@wd}
+% \begin{macro}{\antilabe}
+% If the \opt{antilabe} option is enabled, after having vboxded
+% the content of \cs{pstart}\ldots{pend} structure, we get
+% the width of the last line of the \cs{pend}.
+%    \begin{macrocode}
+\ifantilabe@%
+  \newdimen\firsthalf@antilabe@wd%
+  \newcommand\get@firsthalf@antilabe@wd{%
+    \ifboolexpr{bool {instanza} or bool {inastanzaL} or bool {inastanzaR}}{%
+      \vbadness=10000%
+      \splittopskip=\z@%
+      \ifl@dpairing%
+        \ifledRcol%
+          \setbox0=\copy\csname l@dRcolrawbox\the\l@dnumpstartsR\endcsname%
+        \else%
+          \setbox0=\copy\csname l@dLcolrawbox\the\l@dnumpstartsL\endcsname%
+        \fi%
+      \else%
+        \setbox0=\copy\raw@text%
+      \fi%
+      \dimen0=\dimexpr\ht0+\dp0-\baselineskip\relax%
+      \ifdim\dimen0>0pt%
+        \setbox1=\vsplit0 to \dimen0%
+      \fi%
+      \setbox0=\vbox{\unvbox0\global\setbox1=\lastbox}%
+      \setbox1=\hbox{\noindent\unhbox1}%
+      \global\firsthalf@antilabe@wd=\wd1%
+    }{}%
+  }%
+  \def\beforeantilabe{}%
+  \def\afterantilabe{}%
+  \newcommand{\antilabe}[1]{%
+    \beforeantilabe\hbox to\firsthalf@antilabe@wd{#1}\afterantilabe%
+  }%
+\else%
+  \let\get@firsthalf@antilabe@wd\relax%
+\fi%
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%    \end{macrocode}
 %
 % \section{Apparatus of Manuscripts}
 % \subsection{User level macro}
