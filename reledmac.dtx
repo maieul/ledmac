@@ -554,6 +554,7 @@
 % \changes{v2.32.8}{2020/05/24}{Add subline number in manuscript apparatus.}
 % \changes{v2.33.0}{2020/06/07}{Add startstanzaindentsrepetition feature.}
 % \changes{v2.33.0}{2020/06/07}{Add antilabe feature.}
+% \changes{v2.33.0}{2020/06/07}{Add \protect\cs{Xinnotemark} and \protect\cs{innotemarkX} hooks.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -3664,12 +3665,23 @@
 %
 % If you add \protect\cs{edindex} inside some \protect\cs{Xfootnote} command,
 % it will refer to that note, and a suffix \emph{n} will be appended to the reference.
-% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}.
-% Its actual definition is:
+%
+% \DescribeMacro{\Xinnotemark}
+% \DescribeMacro{\innotemarkX}
+% You can redefine the way the reference is made using :
+% \begin{itemize}
+%  \item \cs{Xinnotemark}\oarg{series}\marg{definition} for critical notes;
+%  \item \cs{Xinnotemark}\oarg{series}\marg{definition} for familiar notes;
+% \end{itemize}
+% In the \meta{definition} argument, you can use the following codes:
+% \begin{itemize}
+%  \verb+#1+, which stands for footnote series;
+%  \verb+##1+, which stands for reference (ie. page+line)
+% \end{itemize}
+% For example:
 % \begin{verbatim}
-% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
+% \Xinnotemark{##1\textsuperscript{#1}}
 % \end{verbatim}
-% Where \verb+#1+ stands for the reference.
 % \subsection{Separator between page and line numbers}
 % \DescribeMacro{\pagelinesep}\label{pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
@@ -4844,6 +4856,13 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\led@warn@BadHookSeries}
+%    \begin{macrocode}
+\newcommand{\led@warn@BadHookSeries}[2]{%
+  \reledmac@warning{Bad series #1 for #2 hook. Skipped.}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@warn@BadSidenotemargin}
 %    \begin{macrocode}
 \newcommand*{\led@warn@BadSidenotemargin}{%
@@ -11898,6 +11917,7 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
+   \xdef\@currentseries{#2}%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}%
    }%
@@ -11994,7 +12014,6 @@
 % The previous \protect\cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
-  \xdef\@currentseries{#2}%
   \ifboolexpr{%
    (togl{Xpstart@#2} and bool{numberpstart})%
    or togl{Xpstarteverytime@#2}}%
@@ -12973,6 +12992,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -12990,6 +13010,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -14698,6 +14719,7 @@
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
       \csgdef{Xlinenumannotationposition@#1}{after}%
+      \expandafter\csgdef{Xinnotemark@#1}##1{\ledinnotemark{##1}}%
       \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
@@ -14739,6 +14761,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -14776,6 +14799,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to \sw@list@inedtext when the notes are expanded.
@@ -14855,6 +14879,7 @@
       \csgdef{parafootsepX@#1}{}%
       \csgdef{afternoteX@#1}{1em plus.4em minus.4em}
       \csgdef{widthX@#1}{\hsize}%
+      \expandafter\csgdef{innotemarkX@#1}##1{\ledinnotemark{##1}}%
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
@@ -15250,13 +15275,17 @@
 %    \begin{macrocode}
 \newcommandx{\settoggle@series}[5][4,5,usedefault]{%
     \def\do##1{%
-      \global\settoggle{#2@##1}{#3}%
+      \ifcsdef{etb@tgl@#2@##1}{%
+        \global\settoggle{#2@##1}{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{
           \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
-      \ifstrequal{#4}{familiar}{
+      \ifstrequal{#4}{familiar}{%
           \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
-      }{}
+      }{}%
     }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
@@ -15279,11 +15308,16 @@
 %   \item \verb+#3+ (mandatory): the new value of the hook/command.
 %   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \protect\cs{footnormal} or \protect\cs{footparagraph} or \ldots\ depending of the footnote display).
 %   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+%   \item \verb+#6+ (optional): the number of arguments of the hook.
 % \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\setcommand@series}[5][4,5,usedefault]{%
+\newcommandx{\setcommand@series}[6][4,5,6=0,usedefault]{%
     \def\do##1{
-        \csgdef{#2@##1}{#3}
+      \ifcsdef{#2@##1}{%
+        \expandafter\global\expandafter\renewcommand\csname#2@##1\endcsname[#6]{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{%
             \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
@@ -15309,11 +15343,13 @@
 % The first argument is the name of the hook, the second a comma-separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \protect\cs{Xtwolines}.
 % The second argument is also used to create commands named \protect\cs{<hookname><pseudoseries>},
 % like \protect\cs{Xtwolinesappref}.
+% The third argument
+% \changes{v2.33.0}{2020/06/07}{\protect\cs{newhookcommand@series} can take an second optional argument (third argument).}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommandx{\newhookcommand@series}[2][2,usedefault]{%
+\newcommandx{\newhookcommand@series}[3][2,3=0,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}[][#2]%
+    \setcommand@series{##1}{#1}{##2}[][#2][#3]%
   }%
   \ifstrempty{#2}{}{%
     \def\do##1{%
@@ -15438,6 +15474,8 @@
   \newhookcommand@series{Xparafootsep}
   \newhookcommand@series@reload{Xwidth}{critical}%
 
+  \newhookcommand@series{Xinnotemark}[][1]%
+
   \ifundef{\Xhsize}%
     {%
       \newcommandx{\Xhsize}[2][1,usedefault]{%
@@ -15487,6 +15525,8 @@
   \newhookcommand@series{txtbeforenotesX}%
   \newhooktoggle@series{txtbeforenotesonlyonceX}%
   \newhookcommand@series@reload{widthX}{familiar}%
+  \newhookcommand@series{innotemarkX}[][1]%
+
   \ifundef{\hsizeX}%
     {%
       \newcommandx{\hsizeX}[2][1,usedefault]{%
@@ -17926,7 +17966,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{"^^J
+          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17936,7 +17976,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote{\@index@command}{"^^J
+          :open "\string\ledinnote{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17948,7 +17988,7 @@
 %    \begin{macrocode}
   \else%
     \gdef\@ledinnote@command{%
-       ledinnote[\edindexlab\thelabidx]{\@index@command}%
+      ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}%
     }%
   \fi%
 }
@@ -17979,29 +18019,39 @@
 % \subsection{Code for the formatted index}
 % \begin{macro}{\ledinnote}
 % \changes{v1.22.0}{2015/04/25}{\protect\cs{ledinnote} takes a first optional argument, which is the label for hyperlinks.}
-% \begin{macro}{\ledinnotehyperpage}
 % \begin{macro}{\ledinnotemark}
 % \changes{v1.21.0}{2015/04/13}{Add \protect\cs{ledinnotemark}.}
+% \changes{v2.33.0}{2020/06/07}{\protect\cs{ledinnotemark} redefinition is deprecated, use \protect\cs{Xinnotemark} and \protect\cs{innotemarkX} instead.}
 % These macros are used to specify that an index reference points to a note.
-% Arguments of \protect\cs{ledinnote}  are: \verb+#1+ (optional): the label for the hyperlink, \verb+#2+: command applied to the number, \verb+#3+: the number itself.
+% Arguments of \protect\cs{ledinnote}  are:
+% \begin{itemize}
+% \item \verb+#1+ (optional): the label for the hyperlink;
+% \item \verb+#2+: command applied to the number;
+% \item \verb+#3+: the note series;
+% \item \verb+#4+: the type of note (critical/familiar).
+% \item \verb+#5+: the number itself.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\ledinnote}[3][1,usedefault]{%
+\newcommandx{\ledinnote}[5][1,usedefault]{%
+  \IfStrEq{#4}{critical}{%
+    \def\tmp{Xinnotemark}%
+  }{%
+    \def\tmp{innotemarkX}%
+  }%
   \ifboolexpr{%
     test{\ifdefequal{\iftrue}{\ifHy@hyperindex}}%
     or%
     bool {xindyhyperref@}%
     }%
     {%
-    \csuse{#2}{\hyperlink{#1}{\ledinnotemark{#3}}}%
+      \csuse{#2}{\hyperlink{#1}{\csuse{\tmp @#3}{#5}}}%
     }%
     {%
-    \csuse{#2}{\ledinnotemark{#3}}%
+    \csuse{#2}{\csuse{\tmp @#3}{#5}}%
     }%
 }%
-\newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\ledinnotemark{\hyperpage{#2}}}}%
 \newcommand{\ledinnotemark}[1]{#1\emph{n}}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \subsection{Main code}
