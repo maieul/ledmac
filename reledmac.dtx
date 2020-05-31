@@ -552,6 +552,9 @@
 % \changes{v2.32.7}{2020/05/03}{Fix bug with \protect\cs{lineation}\arg{pstart} and \protect\cs{edtext} in the very first line of a \protect\cs{pstart}.}
 % \changes{v2.32.7}{2020/05/03}{Fix spurious spaces at the very first line of \protect\env{edtabular} environnments.}
 % \changes{v2.32.8}{2020/05/24}{Add subline number in manuscript apparatus.}
+% \changes{v2.33.0}{2020/05/31}{Add startstanzaindentsrepetition feature.}
+% \changes{v2.33.0}{2020/05/31}{Add antilabe feature.}
+% \changes{v2.33.0}{2020/05/31}{Add \protect\cs{Xinnotemark} and \protect\cs{innotemarkX} hooks.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -787,6 +790,8 @@
 % Please add your own edition made with (r)(e)ledmac.
 %
 % If you write a book or an article about (r)(e)ledmac, please add it on the collaborative bibliography on \url{https://www.zotero.org/groups/1024519/}.
+% \subsection{Acknowledgements}
+% Maïeul Rouquette may thank his predecessor, and all the \macpackage\ communauty. Especially, he may thanks all the people who checks English spell and grammar for the handbook.
 % \section{How the package works --- the problem of the number of \LaTeX\ runs}\label{howto}
 % The \macpackage package is a three-pass package like \LaTeX\ itself.
 % Although your textual apparatus and line
@@ -840,14 +845,15 @@
 %       \item \TeX\ is not able to create folder. You should create it yourself.
 %       \item The option does not change the default \LaTeX auxiliary files (.aux, .toc, \ldots).
 %    \end{enumerate}
-% \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat}).
-% \item[nopenalties] must be called in some cases when using paragraphed endnotes (\reff{nopenalties)}
-% \item[nopbinverse] prevents page break within verse environment.
-% \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation}).
-% \item[noresetlinenumannotation] Does not reset the annotations to line number at each line. See \reff{annotation}.
-% \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus.
-% \item[swcaseinsensitive] make \cs{sameword} command case insensitive.
-% \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting.
+% \item[antilabe] enable \cs{antilabe} feature (see \reff{antilabe});
+% \item[eledmac-compat] help to migrate from \eledmac to \reledmac (see \reff{eledmac-compat});
+% \item[nopenalties] must be called in some cases when using paragraphed endnotes (see \reff{nopenalties)};
+% \item[nopbinverse] prevents page break within verse environment;
+% \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation});
+% \item[noresetlinenumannotation] does not reset the annotations to line number at each line (see \reff{annotation});
+% \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus;
+% \item[swcaseinsensitive] make \cs{sameword} command case insensitive;
+% \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting;
 % \item[xindy] and \verb|xindy+hyperref| select \verb+xindy+ as the index processor (\reff{xindy}).
 % \end{description}
 %
@@ -3049,7 +3055,20 @@
 % \begin{verbatim}
 % \setcounter{stanzaindentsrepetition}{0}
 % \end{verbatim}
-% The macros make no restriction on the number of lines in a stanza.
+% The macro makes no restriction on the number of lines in a stanza.
+%
+% Sometime, it is useful to repeat the indents only after some lines of verse.
+% You can set the counter \verb+startstanzaindentsrepetition+ to do that.
+% Its default value is \verb+1+, that means the repetition starts with line of verse number~1.
+%
+% For example, you may want to have no indent for the first line, and all other lines been indented by 1.
+% So do
+% \begin{verbatim}
+% \setstanzaindents{1,0,1}
+% \setcounter{stanzaindentsrepetition}{1}
+% \setcounter{startstanzaindentsrepetition}{2}
+% \end{verbatim}
+% \subsection{Notes about the scope of the indent settings}
 % Stanza indentation values (and penalty values) obey \TeX's grouping
 % conventions, so if one stanza among several has a different structure,
 % its indentations (penalties) may be set within a group; the prior values
@@ -3165,6 +3184,32 @@
 % \newcommand{\stanzanumwrapper}[1]{%
 %    \flagstanza{#1}%
 %}
+% \end{verbatim}
+% \DescribeMacro{\antilabe}
+% \subsection{Antilabe}\label{antilabe}
+% In dramatic text, it may happen that a line of verse is split between two speakers.
+% Thats is called \enquote{antilabe}.
+% In this case, the typesetting of the second half  must start at the horizontal position where the typesetting of the first half stops.
+%
+% \Reledmac\  provides tool for such problematic, but you must enable them with the \option{antilabe} option when loading package, as this option is quite ressource consuming.
+%
+% The \cs{antilabe}\marg{name} must be called at the beginning of the second half of the line of verse.
+%
+% Its \meta{name} argument is the name of the speaker.
+% Because of the way \TeX\ expand argument, you can use one the following syntax:
+% \begin{itemize}
+%   \item \verb+\antilabe{name}+, if you typeset the character name;
+%   \item \verb+\antilabe\command+,  if the character name is defined in a command, like with the \package{thalie} package;
+%   \item \verb+\antilabe{}+, if you do not type the character name.
+% \end{itemize}
+% See the file  \href{examples/2-antilabe.tex}{examples/2-antilabe.tex} for an example of use.
+%
+% \DescribeMacro{\beforeantilabe}
+% \DescribeMacro{\afterantilabe}
+% You can execute any arbitrary code before or after \cs{antilabe} macro just with a redefinition of \cs{beforeantilabe} or \cs{afterantilabe}.
+% For example, to add more space, just do:
+% \begin{verbatim}
+% \renewcommand{\afterantilabe}{\hspace{1em}}
 % \end{verbatim}
 % \subsection{Various tools}
 % \DescribeMacro{\ampersand}
@@ -3620,12 +3665,23 @@
 %
 % If you add \protect\cs{edindex} inside some \protect\cs{Xfootnote} command,
 % it will refer to that note, and a suffix \emph{n} will be appended to the reference.
-% You can redefine this suffix by redefining the command \protect\cs{ledinnotemark}.
-% Its actual definition is:
+%
+% \DescribeMacro{\Xinnotemark}
+% \DescribeMacro{\innotemarkX}
+% You can redefine the way the reference is made using :
+% \begin{itemize}
+%  \item \cs{Xinnotemark}\oarg{series}\marg{definition} for critical notes;
+%  \item \cs{innotemarkX}\oarg{series}\marg{definition} for familiar notes;
+% \end{itemize}
+% In the \meta{definition} argument, you can use the following codes:
+% \begin{itemize}
+% \item \verb+#1+, which stands for footnote series;
+% \item \verb+##1+, which stands for reference (ie. page+line)
+% \end{itemize}
+% For example:
 % \begin{verbatim}
-% \newcommand{\ledinnotemark}[1]{#1\emph{n}}
+% \Xinnotemark{##1\textsuperscript{#1}}
 % \end{verbatim}
-% Where \verb+#1+ stands for the reference.
 % \subsection{Separator between page and line numbers}
 % \DescribeMacro{\pagelinesep}\label{pagelinesep}
 % The page \& linenumber combination is written as |page\pagelinesep line|,
@@ -4335,7 +4391,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/05/24 v2.32.8 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/05/31 v2.33.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -4358,6 +4414,7 @@
 % \begin{macro}{\ifxindyhyperref@}
 % \begin{macro}{\ifeledmaccompat@}
 % \begin{macro}{\ifnoresetlinenumannotation@}
+% \begin{macro}{\ifantilabe@}
 % Use this to remember which option is used, set and execute the options
 % with final as the default.
 % We use \protect\package{xkeyval} in order to manage options with argument.
@@ -4450,6 +4507,10 @@
 \DeclareOptionX{noresetlinenumannotation}{%
   \noresetlinenumannotation@true%
 }%
+\newif\ifantilabe@%
+\DeclareOptionX{antilabe}{%
+  \antilabe@true%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4460,6 +4521,7 @@
 \ProcessOptionsX*\relax
 
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -4794,6 +4856,13 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\led@warn@BadHookSeries}
+%    \begin{macrocode}
+\newcommand{\led@warn@BadHookSeries}[2]{%
+  \reledmac@warning{Bad series #1 for #2 hook. Skipped.}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@warn@BadSidenotemargin}
 %    \begin{macrocode}
 \newcommand*{\led@warn@BadSidenotemargin}{%
@@ -5130,7 +5199,24 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-
+% \begin{macro}{ifinstanzaL}
+% \begin{macro}{ifinstanzaR}
+% These boolean tests are switched by the \protect\cs{stanza} command, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinstanzaL%
+ \newif\ifinstanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{ifinastanzaL}
+% \begin{macro}{ifinastanzaR}
+% These boolean tests are switched by the \protect\env{astanza} environnement, using either the left or right side.
+%    \begin{macrocode}
+ \newif\ifinastanzaL%
+ \newif\ifinastanzaR%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 %\section{Sectioning commands}
 %
@@ -8807,6 +8893,7 @@
   \@at@end@every@pend%
   \endgraf\global\num@lines=\prevgraf\egroup%
   \global\par@line=0%
+  \get@firsthalf@antilabe@wd%
 %    \end{macrocode}
 % Output the lines.
 %    \begin{macrocode}
@@ -11830,6 +11917,7 @@
 % \changes{v1.18.0}{2015/02/23}{Code refactoring in \protect\cs{printlinefootnote}: the printing of the numbers are factorized in  \protect\cs{printlinefootnotearea}}
 %  \begin{macrocode}
 \newcommand{\printlinefootnote}[2]{%
+   \xdef\@currentseries{#2}%
    \iftoggle{nonum@}{%Try if the line number must printed for this specific not (by default, yes)
    \hspace{\csuse{Xinplaceofnumber@#2}}%
    }%
@@ -11926,7 +12014,6 @@
 % The previous \protect\cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
-  \xdef\@currentseries{#2}%
   \ifboolexpr{%
    (togl{Xpstart@#2} and bool{numberpstart})%
    or togl{Xpstarteverytime@#2}}%
@@ -12905,6 +12992,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -12922,6 +13010,7 @@
       \xright@appenditem{%
         \noexpand\led@set@index@fornote{#1}%
         \noexpand\prepare@edindex@fornote{\l@d@nums}%
+        \unexpanded{\gdef\@currentnotetype{familiar}}%
         \unexpanded{\def\this@footnoteX@reading}{\the\csname footnote#1@reading\endcsname}%
         \noexpand\vbfnoteX{#1}{#2}{\thisc@footnote}{#3}%
         \noexpand\led@reinit@index@fornote%
@@ -14630,6 +14719,7 @@
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
       \csgdef{Xlinenumannotationposition@#1}{after}%
+      \expandafter\csgdef{Xinnotemark@#1}##1{\ledinnotemark{##1}}%
       \newtoggle{Xnoidenticallinenumannotation@#1}%
 %    \end{macrocode}
 % \subsubsection{Create inserts, needed to add notes in foot}
@@ -14671,6 +14761,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current \edtext will be pushed to  \sw@list@inedtext when the notes are expanded.
@@ -14708,6 +14799,7 @@
                         {\unexpanded{\let\index\nindex}}%There is no note number... so
                         {}%
                       \noexpand\Xnote@true%
+                      \unexpanded{\gdef\@currentnotetype{critical}}%
                       \noexpand\prepare@Xprenotes{#1}%
                       \noexpand\prepare@edindex@fornote{\l@d@nums}%
                       \unexpanded{\def\sw@list@inedtext}{\expandafter\unexpanded\expandafter{\sw@inthisedtext}}%The value of the \sw@inthisedtext of current edtext will be pushed to \sw@list@inedtext when the notes are expanded.
@@ -14787,6 +14879,7 @@
       \csgdef{parafootsepX@#1}{}%
       \csgdef{afternoteX@#1}{1em plus.4em minus.4em}
       \csgdef{widthX@#1}{\hsize}%
+      \expandafter\csgdef{innotemarkX@#1}##1{\ledinnotemark{##1}}%
       \csgdef{txtbeforenotesX@#1}{}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
@@ -15182,13 +15275,17 @@
 %    \begin{macrocode}
 \newcommandx{\settoggle@series}[5][4,5,usedefault]{%
     \def\do##1{%
-      \global\settoggle{#2@##1}{#3}%
+      \ifcsdef{etb@tgl@#2@##1}{%
+        \global\settoggle{#2@##1}{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{
           \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
-      \ifstrequal{#4}{familiar}{
+      \ifstrequal{#4}{familiar}{%
           \csuse{arrangementX@\csuse{series@displayX##1}}{##1}%
-      }{}
+      }{}%
     }%
     \ifstrempty{#1}{%
               \dolistloop{\@series}%
@@ -15211,11 +15308,16 @@
 %   \item \verb+#3+ (mandatory): the new value of the hook/command.
 %   \item \verb+#4+ (optional): if equal to \verb+reload+, reload the footnote setting (call \protect\cs{footnormal} or \protect\cs{footparagraph} or \ldots\ depending of the footnote display).
 %   \item \verb+#5+ (optional): if not empty, and if \verb+#1+ is empty, change the hook setting for pseudo-series, as \verb+appref+.
+%   \item \verb+#6+ (optional): the number of arguments of the hook.
 % \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\setcommand@series}[5][4,5,usedefault]{%
+\newcommandx{\setcommand@series}[6][4,5,6=0,usedefault]{%
     \def\do##1{
-        \csgdef{#2@##1}{#3}
+      \ifcsdef{#2@##1}{%
+        \expandafter\global\expandafter\renewcommand\csname#2@##1\endcsname[#6]{#3}%
+      }{%
+        \led@warn@BadHookSeries{##1}{#2}%
+      }%
       \ifstrequal{#4}{critical}{%
             \csuse{Xarrangement@\csuse{series@display##1}}{##1}%
       }{}
@@ -15241,11 +15343,13 @@
 % The first argument is the name of the hook, the second a comma-separated list of pseudo-series where the hook can be used, like \verb+appref+ in the case of \protect\cs{Xtwolines}.
 % The second argument is also used to create commands named \protect\cs{<hookname><pseudoseries>},
 % like \protect\cs{Xtwolinesappref}.
+% The third argument
+% \changes{v2.33.0}{2020/05/31}{\protect\cs{newhookcommand@series} can take an second optional argument (third argument).}
 % \changes{v1.21.0}{2015/04/13}{\protect\cs{newhookcommand@series} can take an optional argument.}
 %    \begin{macrocode}
-\newcommandx{\newhookcommand@series}[2][2,usedefault]{%
+\newcommandx{\newhookcommand@series}[3][2,3=0,usedefault]{%
   \global\expandafter\newcommand\expandafter*\csname #1\endcsname[2][]{%
-    \setcommand@series{##1}{#1}{##2}[][#2]%
+    \setcommand@series{##1}{#1}{##2}[][#2][#3]%
   }%
   \ifstrempty{#2}{}{%
     \def\do##1{%
@@ -15370,6 +15474,8 @@
   \newhookcommand@series{Xparafootsep}
   \newhookcommand@series@reload{Xwidth}{critical}%
 
+  \newhookcommand@series{Xinnotemark}[][1]%
+
   \ifundef{\Xhsize}%
     {%
       \newcommandx{\Xhsize}[2][1,usedefault]{%
@@ -15419,6 +15525,8 @@
   \newhookcommand@series{txtbeforenotesX}%
   \newhooktoggle@series{txtbeforenotesonlyonceX}%
   \newhookcommand@series@reload{widthX}{familiar}%
+  \newhookcommand@series{innotemarkX}[][1]%
+
   \ifundef{\hsizeX}%
     {%
       \newcommandx{\hsizeX}[2][1,usedefault]{%
@@ -17858,7 +17966,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{"^^J
+          :open "\string\ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17868,7 +17976,7 @@
         (define-attributes ("ledinnote\thelabidx"))^^J
         \space\space(markup-locref^^J
           \eledmacmarkuplocrefdepth^^J
-          :open "\string\ledinnote{\@index@command}{"^^J
+          :open "\string\ledinnote{\@index@command}{\@currentseries}{\@currentnotetype}{"^^J
           :close "}"^^J
           :attr "ledinnote\thelabidx"^^J
           )
@@ -17880,7 +17988,7 @@
 %    \begin{macrocode}
   \else%
     \gdef\@ledinnote@command{%
-       ledinnote[\edindexlab\thelabidx]{\@index@command}%
+      ledinnote[\edindexlab\thelabidx]{\@index@command}{\@currentseries}{\@currentnotetype}%
     }%
   \fi%
 }
@@ -17911,29 +18019,39 @@
 % \subsection{Code for the formatted index}
 % \begin{macro}{\ledinnote}
 % \changes{v1.22.0}{2015/04/25}{\protect\cs{ledinnote} takes a first optional argument, which is the label for hyperlinks.}
-% \begin{macro}{\ledinnotehyperpage}
 % \begin{macro}{\ledinnotemark}
 % \changes{v1.21.0}{2015/04/13}{Add \protect\cs{ledinnotemark}.}
+% \changes{v2.33.0}{2020/05/31}{\protect\cs{ledinnotemark} redefinition is deprecated, use \protect\cs{Xinnotemark} and \protect\cs{innotemarkX} instead.}
 % These macros are used to specify that an index reference points to a note.
-% Arguments of \protect\cs{ledinnote}  are: \verb+#1+ (optional): the label for the hyperlink, \verb+#2+: command applied to the number, \verb+#3+: the number itself.
+% Arguments of \protect\cs{ledinnote}  are:
+% \begin{itemize}
+% \item \verb+#1+ (optional): the label for the hyperlink;
+% \item \verb+#2+: command applied to the number;
+% \item \verb+#3+: the note series;
+% \item \verb+#4+: the type of note (critical/familiar).
+% \item \verb+#5+: the number itself.
+% \end{itemize}
 %    \begin{macrocode}
-\newcommandx{\ledinnote}[3][1,usedefault]{%
+\newcommandx{\ledinnote}[5][1,usedefault]{%
+  \IfStrEq{#4}{critical}{%
+    \def\tmp{Xinnotemark}%
+  }{%
+    \def\tmp{innotemarkX}%
+  }%
   \ifboolexpr{%
     test{\ifdefequal{\iftrue}{\ifHy@hyperindex}}%
     or%
     bool {xindyhyperref@}%
     }%
     {%
-    \csuse{#2}{\hyperlink{#1}{\ledinnotemark{#3}}}%
+      \csuse{#2}{\hyperlink{#1}{\csuse{\tmp @#3}{#5}}}%
     }%
     {%
-    \csuse{#2}{\ledinnotemark{#3}}%
+    \csuse{#2}{\csuse{\tmp @#3}{#5}}%
     }%
 }%
-\newcommand{\ledinnotehyperpage}[2]{\csuse{#1}{\ledinnotemark{\hyperpage{#2}}}}%
 \newcommand{\ledinnotemark}[1]{#1\emph{n}}%
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 % \subsection{Main code}
@@ -18463,12 +18581,17 @@
 % \end{macro}
 % \end{macro}
 % \begin{macro}{\managestanza@modulo}
-% Since version 0.13, the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every n verses.
-% The \protect\cs{managestanza@modulo} is a command which modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
+% Since the \verb+stanzaindentsrepetition+ counter  can be used when the indentation is repeated every $n$ verses.
+%
+% The \verb+startstanzaindentsrepetition+ counter tells in which line of verse the repetition of indent starts.
+%
+% The \protect\cs{managestanza@modulo} macro modifies the counter stanza@modulo. The command adds 1 to stanza@modulo, but if stanza@modulo is equal to the stanzaindentsrepetition counter, the command restarts it.
 %\changes{v0.13.0}{2011/11/08}{New stanzaindentsrepetition counter to repeat stanza indents every \emph{n} verses.}
 % % \changes{v1.5.1}{2013/08/16}{Correct stanzaindentsrepetition counter}
 %    \begin{macrocode}
 \newcounter{stanzaindentsrepetition}
+\newcounter{startstanzaindentsrepetition}%
+\setcounter{startstanzaindentsrepetition}{1}%
 \newcount\stanza@modulo
 
 \newcommand*{\managestanza@modulo}[0]{%
@@ -18579,6 +18702,7 @@
 % \subsection{Main work}
 % \begin{macro}{\stanza@line}
 % \begin{macro}{\stanza@hang}
+% \begin{macro}{\stanza@indent}
 % \begin{macro}{\sza@penalty}
 % Now we arrive at the main works. \protect\cs{stanza@line} sets the
 % indentation for the line and starts a numbered paragraph---each
@@ -18596,23 +18720,35 @@
 % places in the stanza for page breaking.
 %    \begin{macrocode}
 \newcommandx{\stanza@line}[2][1,2,usedefault]{%
-    \ifnum\value{stanzaindentsrepetition}=0
+  \stanza@indent%
+  \pstart[#1][#2]\stanza@hang\ignorespaces%
+}%
+\newcommand{\stanza@indent}{%
+    \ifboolexpr{%
+      test {\ifnumequal{\value{stanzaindentsrepetition}}{0}}%
+      or%
+      test {\ifnumless{\number\stanza@count}{\value{startstanzaindentsrepetition}}}%
+    }{%
         \ifcsdef{sza@\number\stanza@count @}%
           {%
           \parindent=\csname sza@\number\stanza@count  @\endcsname\stanzaindentbase%
           }{%
           \led@err@StanzaIndentNotDefined%
           }%
-    \else
+    }{%
         \ifcsdef{sza@\number\stanza@modulo @}{%
-          \parindent=\csname sza@\number\stanza@modulo @\endcsname\stanzaindentbase%
+          \count0=\numexpr%
+            \stanza@modulo%
+            - 1%
+            + \value{startstanzaindentsrepetition}%
+          \relax%
+          \parindent=\csname sza@\number\count0 @\endcsname\stanzaindentbase%
           \managestanza@modulo%
         }%
         {%
         \led@err@StanzaIndentNotDefined%
         }%
-    \fi
-    \pstart[#1][#2]\stanza@hang\ignorespaces%
+    }%
 }%
 \xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
             \hangindent\expandafter
@@ -18622,6 +18758,7 @@
          \ifnum\count@>\@M\advance\count@-\@M\penalty-\else
          \penalty\fi\count@}
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -18785,8 +18922,50 @@
   \setstanzavalues{szp}{0}
 
 %    \end{macrocode}
-%
-%
+% \subsection{Dealing with antilabe}
+% \begin{macro}{\firsthalf@antilabe@wd}
+% \begin{macro}{\get@firsthalf@antilabe@wd}
+% \begin{macro}{\antilabe}
+% If the \option{antilabe} option is enabled, after having vboxded
+% the content of \cs{pstart}\ldots{pend} structure, we get
+% the width of the last line of the \cs{pend}.
+%    \begin{macrocode}
+\ifantilabe@%
+  \newdimen\firsthalf@antilabe@wd%
+  \newcommand\get@firsthalf@antilabe@wd{%
+    \ifboolexpr{bool {instanza} or bool {inastanzaL} or bool {inastanzaR}}{%
+      \vbadness=10000%
+      \splittopskip=\z@%
+      \ifl@dpairing%
+        \ifledRcol%
+          \setbox0=\copy\csname l@dRcolrawbox\the\l@dnumpstartsR\endcsname%
+        \else%
+          \setbox0=\copy\csname l@dLcolrawbox\the\l@dnumpstartsL\endcsname%
+        \fi%
+      \else%
+        \setbox0=\copy\raw@text%
+      \fi%
+      \dimen0=\dimexpr\ht0+\dp0-\baselineskip\relax%
+      \ifdim\dimen0>0pt%
+        \setbox1=\vsplit0 to \dimen0%
+      \fi%
+      \setbox0=\vbox{\unvbox0\global\setbox1=\lastbox}%
+      \setbox1=\hbox{\noindent\unhbox1}%
+      \global\firsthalf@antilabe@wd=\wd1%
+    }{}%
+  }%
+  \def\beforeantilabe{}%
+  \def\afterantilabe{}%
+  \newcommand{\antilabe}[1]{%
+    \beforeantilabe\hbox to\firsthalf@antilabe@wd{#1}\afterantilabe%
+  }%
+\else%
+  \let\get@firsthalf@antilabe@wd\relax%
+\fi%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 %
 % \section{Apparatus of Manuscripts}
 % \subsection{User level macro}
