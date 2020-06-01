@@ -68,7 +68,7 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 # Help
 
 - [Users list](http://geekographie.maieul.net/146)
-- [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags 
+- [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags
     (https://tex.stackexchange.com/questions/tagged/eledmac) and (https://tex.stackexchange.com/questions/tagged/ledmac)
 
 # Debug and feature requests
@@ -80,7 +80,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 - Go to the [issues page](https://github.com/maieul/ledmac/issues).
 - Open *one issue for each problem*, even if problems are similar.
 - You can write in English, or better in French if it is your native language.
-- Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
+- Add a [minimal working example](https://texfaq.org/FAQ-minxampl.html).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.
 - Once the problem has a possible solution, Maïeul Rouquette will ask you to test the new branch:
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
