@@ -12017,23 +12017,73 @@
 % The previous \protect\cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
+  \get@pstartcounter%
   \ifboolexpr{%
    (togl{Xpstart@#2} and bool{numberpstart})%
-   or togl{Xpstarteverytime@#2}}%
+   or togl{Xpstarteverytime@#2}%
+   and not (%
+      togl{Xpstartonlyfirst@#2}%
+      and test {\ifnumequal{\csuse{Xprevpstart@#2}}{\current@pstart}}%
+   )%
+  }%
   {\printpstart}{}%
+  \global\cslet{Xprevpstart@#2}{\current@pstart}%
+  \get@stanzacounter%
   \ifboolexpr{%
     togl{Xstanza@#2}%
-    and bool{numberstanza}%
+    and bool {numberstanza}%
+    and not (%
+      togl{Xpstartonlyfirst@#2}%
+      and test {\ifnumequal{\csuse{Xprevstanza@#2}}{\current@stanza}}%
+    )%
   }{%
     \printstanza%
     \csuse{Xstanzaseparator@#2}%
   }{}%
+  \global\cslet{Xprevstanza@#2}{\current@stanza}%
   \iftoggle{Xonlypstart@#2}{}{%
     \csuse{Xtxtbeforenumber@#2}%
     \printlines#1|\ifledRcol@\@Rlineflag\fi|}%
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\get@pstartcounter}
+% A single macro to get the current pstart counter.
+%    \begin{macrocode}
+\newcommand{\get@pstartcounter}[0]{%
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  {%
+    \ifledRcol%
+      \global\numdef\current@pstart{\the\c@pstartR}%
+    \else%
+      \global\numdef\current@pstart{\the\c@pstartL}%
+    \fi%
+  }%
+  {%
+    \global\numdef\current@pstart{\the\c@pstart}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\get@stanzacounter}
+% The same to get the current stanza counter.
+%    \begin{macrocode}
+\newcommand{\get@stanzacounter}[0]{%
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  {%
+    \ifledRcol%
+      \global\numdef\current@stanza{\the\c@stanzaR}%
+    \else%
+      \global\numdef\current@stanza{\the\c@stanzaL}%
+    \fi%
+  }%
+  {%
+    \global\numdef\current@stanza{\the\c@stanza}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\printXbeforenumber}
 % This macro prints a space (before the line number) in footnote.
 % It is called by \protect\cs{printlinefootnotearea}.
@@ -14689,9 +14739,11 @@
 
       \newtoggle{Xpstart@#1}%
       \newtoggle{Xpstartonlyfirst@#1}%
+      \csdef{Xprevpstart@#1}{0}%Not a hook, but a tool for the hook Xpstartonlyfirst
 
       \newtoggle{Xstanza@#1}%
       \newtoggle{Xstanzaonlyfirst@#1}%
+      \csdef{Xprevstanza@#1}{0}%Not a hook, but a tool for the hook Xstanzaonlyfirst
 
       \csgdef{Xstanzaseparator@#1}{}%
 
