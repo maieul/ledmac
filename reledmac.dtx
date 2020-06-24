@@ -556,6 +556,8 @@
 % \changes{v2.33.0}{2020/05/31}{Add antilabe feature.}
 % \changes{v2.33.0}{2020/05/31}{Add \protect\cs{Xinnotemark} and \protect\cs{innotemarkX} hooks.}
 % \changes{v2.33.1}{2020/06/06}{Fix a spacing bug when the argument of \protect\cs{antilabe} contains more than one word.}
+% \changes{v2.34.0}{2020/06/24}{Add \protect\cs{Xpstartonlyfirst} and \protect\cs{Xstanzaonlyfirst}.}
+% \changes{v2.34.0}{2020/06/24}{Add \protect\cs{Xpstartseparator}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2446,6 +2448,10 @@
 % \DescribeMacro{\Xonlypstart}
 % In combination with \protect\cs{Xpstart}, you can use \protect\cs{Xonlypstart}\oarg{s} if you want to print only the pstart number in the footnote, and not the line and subline number.
 %
+% \DescribeMacro{Xpstartonlyfirst} You can use \cs{Xpstartonlyfirst}\oarg{s} to print the pstart number only the first time it appears in the apparatus.
+% \DescribeMacro{\Xpstartseparator}
+% When using \cs{Xpstart}, you can use \cs{Xpstartseparator}\oarg{s}\marg{text} to print \meta{text} after the pstart number.
+% Default value is empty.
 % \subsubsection{Printing stanza number}
 %
 % \DescribeMacro{\Xstanza}\label{Xstanza}
@@ -2454,10 +2460,10 @@
 % Of course the stanza number is printed only when you use \cs{numberstanza}
 %
 % \DescribeMacro{\Xstanzaseparator}
-%
 % When using \cs{Xstanza}, you can use \cs{Xstanzaseparator}\oarg{s}\marg{text} to print \meta{text} after the stanza number.
 % Default value is empty.
 %
+% \DescribeMacro{Xstanzaonlyfirst} You can use \cs{Xstanzaonlyfirst}\oarg{s} to print the stanza number only the first time it appears in the apparatus.
 % \subsubsection{Separator between line and subline numbers}\label{Xsublinesep}
 % \DescribeMacro{\Xsublinesep}
 % \cs{Xsublinesep}\oarg{s}\marg{txt} changes the separator between line and subline in footnotes.
@@ -4392,7 +4398,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/06/06 v2.33.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/06/24 v2.34.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -12015,22 +12021,76 @@
 % The previous \protect\cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
+  \get@pstartcounter%
   \ifboolexpr{%
    (togl{Xpstart@#2} and bool{numberpstart})%
-   or togl{Xpstarteverytime@#2}}%
-  {\printpstart}{}%
-  \iftoggle{Xstanza@#2}{%
-    \ifnumberstanza%
-      \printstanza%
-      \csuse{Xstanzaseparator@#2}%
-    \fi%
+   or togl{Xpstarteverytime@#2}%
+   and not (%
+      togl{Xpstartonlyfirst@#2}%
+      and test {\ifnumequal{\csuse{Xprevpstart@#2}}{\current@pstart}}%
+   )%
+  }%
+  {%
+    \printpstart%
+    \csuse{Xpstartseparator@#2}%
   }{}%
+  \global\cslet{Xprevpstart@#2}{\current@pstart}%
+  \get@stanzacounter%
+  \ifboolexpr{%
+    togl{Xstanza@#2}%
+    and bool {numberstanza}%
+    and not (%
+      togl{Xpstartonlyfirst@#2}%
+      and test {\ifnumequal{\csuse{Xprevstanza@#2}}{\current@stanza}}%
+    )%
+  }{%
+    \printstanza%
+    \csuse{Xstanzaseparator@#2}%
+  }{}%
+  \global\cslet{Xprevstanza@#2}{\current@stanza}%
   \iftoggle{Xonlypstart@#2}{}{%
     \csuse{Xtxtbeforenumber@#2}%
     \printlines#1|\ifledRcol@\@Rlineflag\fi|}%
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\get@pstartcounter}
+% A single macro to get the current pstart counter.
+%    \begin{macrocode}
+\newcommand{\get@pstartcounter}[0]{%
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  {%
+    \ifledRcol%
+      \global\numdef\current@pstart{\the\c@pstartR}%
+    \else%
+      \global\numdef\current@pstart{\the\c@pstartL}%
+    \fi%
+  }%
+  {%
+    \global\numdef\current@pstart{\the\c@pstart}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\get@stanzacounter}
+% The same to get the current stanza counter.
+%    \begin{macrocode}
+\newcommand{\get@stanzacounter}[0]{%
+  \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns}}%
+  {%
+    \ifledRcol%
+      \global\numdef\current@stanza{\the\c@stanzaR}%
+    \else%
+      \global\numdef\current@stanza{\the\c@stanzaL}%
+    \fi%
+  }%
+  {%
+    \global\numdef\current@stanza{\the\c@stanza}%
+  }%
+}%
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\printXbeforenumber}
 % This macro prints a space (before the line number) in footnote.
 % It is called by \protect\cs{printlinefootnotearea}.
@@ -14683,8 +14743,16 @@
       \newtoggle{Xtwolinesonlyinsamepage@#1}%
       \newtoggle{Xonlypstart@#1}%
       \newtoggle{Xpstarteverytime@#1}%
+
       \newtoggle{Xpstart@#1}%
+      \newtoggle{Xpstartonlyfirst@#1}%
+      \csdef{Xprevpstart@#1}{0}%Not a hook, but a tool for the hook Xpstartonlyfirst
+      \csgdef{Xpstartseparator@#1}{}%
+
       \newtoggle{Xstanza@#1}%
+      \newtoggle{Xstanzaonlyfirst@#1}%
+      \csdef{Xprevstanza@#1}{0}%Not a hook, but a tool for the hook Xstanzaonlyfirst
+
       \csgdef{Xstanzaseparator@#1}{}%
 
       \csgdef{Xsymlinenum@#1}{}%
@@ -15451,10 +15519,14 @@
   \newhooktoggle@series{Xgroupbyline}%
   \newhooktoggle@series{Xgroupbylineseparetwolines}%
   \newhooktoggle@series{Xnonumber}
+
   \newhooktoggle@series{Xpstart}
+  \newhooktoggle@series{Xpstartonlyfirst}%
   \newhooktoggle@series{Xpstarteverytime}%
+  \newhookcommand@series{Xpstartseparator}%
 
   \newhooktoggle@series{Xstanza}%
+  \newhooktoggle@series{Xstanzaonlyfirst}%
   \newhookcommand@series{Xstanzaseparator}%
 
   \newhooktoggle@series{Xonlypstart}
