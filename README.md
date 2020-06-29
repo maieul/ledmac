@@ -58,7 +58,7 @@ The distribution consists of the following files:
 
 # Installation
 
-- run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledmac.sty`)
+- run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledpar.sty`)
 - move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ).
 
 To generate a second copy of the manual (which is already supplied as a PDF file):
