@@ -558,6 +558,7 @@
 % \changes{v2.33.1}{2020/06/06}{Fix a spacing bug when the argument of \protect\cs{antilabe} contains more than one word.}
 % \changes{v2.34.0}{2020/06/24}{Add \protect\cs{Xpstartonlyfirst} and \protect\cs{Xstanzaonlyfirst}.}
 % \changes{v2.34.0}{2020/06/24}{Add \protect\cs{Xpstartseparator}.}
+% \changes{v2.34.1}{Fix bug with page number when using stanazindentsrepetition, bug introduced in v2.33.0}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4398,7 +4399,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/06/24 v2.34.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/06/30 v2.34.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -18810,12 +18811,13 @@
           }%
     }{%
         \ifcsdef{sza@\number\stanza@modulo @}{%
-          \count0=\numexpr%
+          \parindent=\csname sza@%
+          \the\numexpr%
             \stanza@modulo%
             - 1%
             + \value{startstanzaindentsrepetition}%
           \relax%
-          \parindent=\csname sza@\number\count0 @\endcsname\stanzaindentbase%
+          @\endcsname\stanzaindentbase%
           \managestanza@modulo%
         }%
         {%
