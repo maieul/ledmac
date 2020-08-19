@@ -343,6 +343,8 @@
 % \changes{v2.23.1}{2020/04/19}{Fix bug when using \protect\package{polyglossia} v1.45 or later.}
 % \changes{v2.24.0}{2020/05/31}{Add startstanzaindentsrepetition feature.}
 % \changes{v2.24.0}{2020/05/31}{Add antilabe feature.}
+% \changes{v2.24.1}{2020/08/19}{Makes \protect\cs{numberstantzatrue} working with \protect\env{astanza}.}
+% \changes{v2.24.1}{2020/08/19}{Fixes incompatibility between lineation by \protect\cs{pstart} and (a)stanza.}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1398,7 +1400,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2020/05/31 v2.24.0 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2020/08/19 v2.24.1 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -2897,11 +2899,21 @@
 %
 %    \begin{macrocode}
 \renewcommand*{\@pend}[1]{%
-  \ifbypstart@\global\line@num=0\fi%
-  \xright@appenditem{#1}\to\linesinpar@listL}
+  \ifbypstart@%
+    \unless\ifinstanza%
+      \global\line@num=0%
+    \fi%
+  \fi%
+  \xright@appenditem{#1}\to\linesinpar@listL%
+}%
 \renewcommand*{\@pendR}[1]{%
-  \ifbypstart@R\global\line@numR=0\fi
-  \xright@appenditem{#1}\to\linesinpar@listR}
+  \ifbypstart@R%
+    \unless\ifinstanzaR%
+      \global\line@numR=0%
+    \fi%
+  \fi%
+  \xright@appenditem{#1}\to\linesinpar@listR%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -5386,6 +5398,7 @@
   \fi%
   \catcode`\&\active
   \global\stanza@count\@ne\stanza@modulo\@ne
+  \@advancestanzanumber%
   \newdimen\parindent@beforestanza%
   \parindent@beforestanza=\parindent%Keep in memory the standard \parindent
   \ifnum\usenamecount{sza@0@}=\z@
@@ -5410,6 +5423,7 @@
     {\pstart[][\at@every@stanza]\at@start@every@stanza}%
     {\pstart[#1][#2]\at@start@every@stanza}%
   \@astanza@line
+  \@insertstanzanumber%
   \let\par\relax\ignorespaces%No paragraph in verses
 }{%
   \global\undef\parindent@beforestanza%
@@ -5935,12 +5949,16 @@
       \@writelinesinparR
       \check@pstarts
         \ifbypstart@%
-           \write\linenum@out{\string\@set[1]}
-           \resetprevline@
+           \unless\ifinstanza%
+             \write\linenum@out{\string\@set[1]}%
+             \resetprevline@%
+           \fi%
         \fi
        \ifbypstart@R
-           \write\linenum@outR{\string\@set[1]}
-           \resetprevline@
+           \unless\ifinstanza%
+             \write\linenum@outR{\string\@set[1]}%
+             \resetprevline@%
+          \fi%
         \fi
         \Columns@print@after@pend%
     \repeat
@@ -7343,8 +7361,10 @@
       \ifnum\l@dnumpstartsR>\l@dpscR
         \writtenlinesRfalse
         \ifbypstart@R
+          \unless\ifinstanzaR%
              \global\line@numR=0%
              \resetprevline@%
+          \fi%
         \fi
         \csuse{after@pendR@\the\l@dpscR}%
         \global\csundef{after@pendR@\the\l@dpscR}%
