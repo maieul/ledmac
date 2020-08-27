@@ -5026,6 +5026,20 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@error@fail@patch@setcounter}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@setcounter}{%
+  \reledmac@error{Failed to patch the \string\setcounter\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@addtocounter}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@addtocounter}{%
+  \reledmac@error{Failed to patch the \string\addtocounter\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@warn@edinde@outsidenumbering}
 %    \begin{macrocode}
 \newcommand{\led@warn@edinde@outsidenumbering}{%
@@ -7432,7 +7446,6 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
-  \set@this@c@page%
   \ifnumberline%
     \IfStrEq{\led@pb@setting}{after}%
       {\xifinlist{\the\absline@num}{\l@prev@nopb}%
@@ -16224,9 +16237,10 @@
 % \end{macro}
 % \begin{macro}{\@outputpage}
 % As its name says, \cs{@outputpage} is a \LaTeX\ macro called in the output routine. It is this macro which increases the \verb+page+ counter.
-% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter, and to set correctly the page number send to the auxiliaries file (\verb+.1+, \verb+.2+, etc.).
 %    \begin{macrocode}
 \AtBeginDocument{%
+  \set@this@c@page%
   \apptocmd{\@outputpage}{%
     \ifsameparallelpagenumber%
       \ifl@dprintingpages%
@@ -16243,6 +16257,16 @@
     {}%
     {\led@error@fail@patch@@outputpage}%
 }%
+\apptocmd{\setcounter}{%
+  \IfStrEq{#1}{page}{\set@this@c@page}{}%
+  }%
+  {}%
+  {\led@error@fail@patch@setcounter}%
+\apptocmd{\addtocounter}{%
+  \IfStrEq{#1}{page}{\set@this@c@page}{}%
+  }%
+  {}%
+  {\led@error@fail@patch@addtocounter}%
 %    \end{macrocode}
 % \end{macro}
 %
