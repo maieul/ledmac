@@ -13667,11 +13667,14 @@
           {\csuse{parafootsepX@#1}}%
           {}%
        \global\csname prevpage#1@num\endcsname=\page@num%
-    \else%
-       \ifnumequal{\csuse{prevpage#1@num}}{\c@page}%
+    \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
+      \edef\@tmpa{parafootsepX@#1@\the\csuse{c@footnote#1}}%
+      \expandafter\edlabel\expandafter{\@tmpa}%
+      \edef\@tmpb{\expandafter\xpageref\expandafter{\@tmpa}}%
+      \IfStrEq{\csuse{prevpage#1@num}}{\@tmpb}%
           {\csuse{parafootsepX@#1}}%
           {}%
-       \global\csname prevpage#1@num\endcsname=\c@page%
+          \global\cslet{prevpage#1@num}{\@tmpb}%
     \fi%
    \fi%
 }
