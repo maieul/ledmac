@@ -58,8 +58,9 @@ The distribution consists of the following files:
 
 # Installation
 
+This package is included in the two main TeX's distribution : TeXLive (and MacTeX) and MikTeX. However, if you want to install it manually :
 - run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledpar.sty`)
-- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ).
+- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ of your distribution).
 
 To generate a second copy of the manual (which is already supplied as a PDF file):
 
