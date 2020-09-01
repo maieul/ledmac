@@ -86,7 +86,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
-		- Choose "Download zip" in the "Clone or download" menu, on the right side.
+		- Choose "Download zip" in the "Code" (green) menu, on the right side.
 		- Unzip the file
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).
