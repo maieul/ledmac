@@ -564,6 +564,7 @@
 % \changes{v2.34.3}{2020/08/19}{Fixes incompatibility  between Fixes incompatibility between lineation by \protect\cs{pstart} and (a)stanza.}
 % \changes{v2.34.3}{2020/08/19}{Makes command like \protect\cs{hidenumbering} working at the very beginning of a verse when the first argument of \protect\cs{setstanzaindents} is equal to 0.}
 % \changes{v2.34.4}{2020/09/16}{Fix some bugs with lineation by page, when a numbered section starts at the very beginning of page.}
+% \changes{v2.34.4}{2020/09/16}{Fix bugs with \protect\cs{parafootsepX} outside of numbered section.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -13681,11 +13682,15 @@
           {\csuse{parafootsepX@#1}}%
           {}%
        \global\csname prevpage#1@num\endcsname=\page@num%
-    \else%
-       \ifnumequal{\csuse{prevpage#1@num}}{\c@page}%
+    \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
+      \global\expandafter\advance\csname footnote#1@parafootsepX\endcsname by 1%
+      \edef\@tmpa{parafootsepX@#1@\the\csname footnote#1@parafootsepX\endcsname}%
+      \expandafter\edlabel\expandafter{\@tmpa}%
+      \edef\@tmpb{\expandafter\xpageref\expandafter{\@tmpa}}%
+      \IfStrEq{\csuse{prevpage#1@num}}{\@tmpb}%
           {\csuse{parafootsepX@#1}}%
           {}%
-       \global\csname prevpage#1@num\endcsname=\c@page%
+          \global\cslet{prevpage#1@num}{\@tmpb}%
     \fi%
    \fi%
 }
@@ -15069,6 +15074,7 @@
 %    \begin{macrocode}
       \expandafter\newcount\csname prevpage#1@num\endcsname%
       \expandafter\newcount\csname prevpage#1@numR\endcsname%
+      \expandafter\newcount\csname footnote#1@parafootsepX\endcsname%For the case we use \parafootsepX outside of numbered section
 %    \end{macrocode}
 % Add \cs{let}\cs{footnoteX}\cs{@gobble} to \cs{no@expands}.
 %    \begin{macrocode}
