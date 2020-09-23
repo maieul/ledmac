@@ -565,6 +565,7 @@
 % \changes{v2.34.3}{2020/08/19}{Makes command like \protect\cs{hidenumbering} working at the very beginning of a verse when the first argument of \protect\cs{setstanzaindents} is equal to 0.}
 % \changes{v2.34.4}{2020/09/16}{Fix some bugs with lineation by page, when a numbered section starts at the very beginning of page.}
 % \changes{v2.34.4}{2020/09/16}{Fix bugs with \protect\cs{parafootsepX} outside of numbered section.}
+% \changes{v2.34.5}{2020/09/23}{Fix incompatibility between \protect\cs{apprefwithpage} / \protect\cs{SErefwithpage} and line number annotation mechanism.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4405,7 +4406,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/09/16 v2.34.4 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/09/23 v2.34.5 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -16955,8 +16956,8 @@
 \toggletrue{Xendlineflag@SErefwithpage}%Here, exception
 
 
-\newtoggle{Xendlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintendlines
-\newtoggle{Xendlinenumannotationonlyfirst@appref}%Idem
+\def\Xendlinenumannotationposition@apprefwithpage{after}%
+\def\Xendlinenumannotationposition@SErefwithpage{after}%
 
 \def\Xendlinenumannotationposition@apprefwithpage{after}%
 \def\Xendlinenumannotationposition@apprefwithpage@SErefwithpage{after}%
@@ -16969,6 +16970,11 @@
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
+
+\newtoggle{Xendlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintendlines
+\newtoggle{Xendlinenumannotationonlyfirst@SErefwithpage}%Idem
+\newtoggle{Xendlinenumannotationonlyfirst@appref}%Idem
+\newtoggle{Xendlinenumannotationonlyfirst@apprefwithpage}%Idem
 
 \gdef\Xboxstartlinenum@appref{0pt}
 \gdef\Xboxstartlinenum@SEref{0pt}
@@ -17095,6 +17101,8 @@
    {%
    \def\@this@crossref@start{#2:start}%
    \def\@this@crossref@end{#2:end}%
+   \xdef\annot@start{\xannotationref{#2:start}}%
+   \xdef\annot@end{\xannotationref{#2:end}}%
    \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
    }%
   \def\do##1{%
