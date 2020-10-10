@@ -566,6 +566,7 @@
 % \changes{v2.34.4}{2020/09/16}{Fix some bugs with lineation by page, when a numbered section starts at the very beginning of page.}
 % \changes{v2.34.4}{2020/09/16}{Fix bugs with \protect\cs{parafootsepX} outside of numbered section.}
 % \changes{v2.34.5}{2020/09/23}{Fix incompatibility between \protect\cs{apprefwithpage} / \protect\cs{SErefwithpage} and line number annotation mechanism.}
+% \changes{v2.34.6}{2020/09/23}{Fix incompatibility with \protect\package{calc} package (add with v.2.34.4}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4406,7 +4407,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/09/23 v2.34.5 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/10/10 v2.34.6 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5040,6 +5041,11 @@
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@addtocounter}{%
   \reledmac@error{Failed to patch the \string\addtocounter\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@stepcounter}{%
+  \reledmac@error{Failed to patch the \string\stepcounter\space command}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -16265,16 +16271,27 @@
     {}%
     {\led@error@fail@patch@@outputpage}%
 }%
-\apptocmd{\setcounter}{%
-  \IfStrEq{#1}{page}{\set@this@c@page}{}%
-  }%
-  {}%
-  {\led@error@fail@patch@setcounter}%
-\apptocmd{\addtocounter}{%
-  \IfStrEq{#1}{page}{\set@this@c@page}{}%
-  }%
-  {}%
-  {\led@error@fail@patch@addtocounter}%
+\catcode`\#=12%
+\AtBeginDocument{%
+    \apptocmd{\setcounter}{%
+    \IfStrEq{#1}{page}{\set@this@c@page}{}%
+    }%
+    {}%
+    {\led@error@fail@patch@setcounter}%
+  \apptocmd{\addtocounter}{%
+    \IfStrEq{#1}{page}{\set@this@c@page}{}%
+    }%
+    {}%
+    {\led@error@fail@patch@addtocounter}%
+  \@ifpackageloaded{calc}{%
+    \apptocmd{\stepcounter}{%Because calc.sty does not use addtocounter in stepcounter
+      \IfStrEq{#1}{page}{\set@this@c@page}{}%
+      }%
+      {}%
+      {\led@error@fail@patch@steptocounter}%
+  }{}%
+}%
+\catcode`\#=6%
 %    \end{macrocode}
 % \end{macro}
 %
