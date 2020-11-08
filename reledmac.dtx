@@ -2480,6 +2480,13 @@
 % Default value is empty.
 %
 % \DescribeMacro{Xstanzaonlyfirst} You can use \cs{Xstanzaonlyfirst}\oarg{s} to print the stanza number only the first time it appears in the apparatus.
+% \subsubsection{Disabling line number printing}
+% Sometime, we want to print only the stanza or pstart number, but not the line number.
+% \DescribeMacro{\Xnolinenumber}
+% \DescribeMacro{\Xendnolinenumber}
+% The macro \cs{Xnolinenumber}\oarg{s} disable line number printing for critical footnotes.
+%
+% The macro \cs{Xendnolinenumber} do it for endnotes.
 % \subsubsection{Separator between line and subline numbers}\label{Xsublinesep}
 % \DescribeMacro{\Xsublinesep}
 % \cs{Xsublinesep}\oarg{s}\marg{txt} changes the separator between line and subline in footnotes.
@@ -12552,12 +12559,16 @@
     \csuse{Xpagelinesep@\@currentseries}%
   \fi%
   \wrap@edcrossref{\@this@crossref@start}{%
-    \linenumrep{#2}%
-    \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+    \nottoggle{Xnolinenumber@\@currentseries}{%
+      \linenumrep{#2}%
+      \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+    }{}%
   }%
   \ifl@d@ssub%
-    \csuse{Xsublinesep@\@currentseries}%
-    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
+    \nottoggle{Xnolinenumber@\@currentseries}{%
+      \csuse{Xsublinesep@\@currentseries}%
+      \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
+    }{}%
   \fi
   \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
     {\@annot@start@print}%
@@ -12573,11 +12584,13 @@
     {\bgroup}%
     {\hbox to \csuse{Xboxendlinenum@\@currentseries}\bgroup}%
   \ifl@d@Xtwolines%
-    \ifl@d@Xmorethantwolines%
-      \csuse{Xmorethantwolines@\@currentseries}%
-    \else%
-      \csuse{Xtwolines@\@currentseries}%
-    \fi%
+    \nottoggle{Xnolinenumber@\@currentseries}{%
+      \ifl@d@Xmorethantwolines%
+        \csuse{Xmorethantwolines@\@currentseries}%
+      \else%
+        \csuse{Xtwolines@\@currentseries}%
+      \fi%
+    }{}%
   \else%
     \ifl@d@dash%
       \ifdefined\linerangesep@%
@@ -12594,16 +12607,20 @@
        \csuse{Xpagelinesep@\@currentseries}%
     \fi%
     \ifl@d@elin%
-      \wrap@edcrossref{\@this@crossref@end}{%
-        \linenumrep{#5}%
-        \iftoggle{Xlineflag@\@currentseries}{#8}{}%
-       }%
+      \nottoggle{Xnolinenumber@\@currentseries}{%
+        \wrap@edcrossref{\@this@crossref@end}{%
+          \linenumrep{#5}%
+          \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+         }%
+       }{}%
     \fi%
     \ifl@d@esl%
-       \ifl@d@elin%
-         \csuse{Xsublinesep@\@currentseries}%
-       \fi%
-       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
+      \nottoggle{Xnolinenumber@\@currentseries}{%
+        \ifl@d@elin%
+           \csuse{Xsublinesep@\@currentseries}%
+         \fi%
+         \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
+       }{}%
     \fi%
     \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
       {\@annot@end@print}%
@@ -14849,6 +14866,7 @@
       \csgdef{Xsymlinenumannotation@#1}{}%
 
       \newtoggle{Xnonumber@#1}%
+      \newtoggle{Xnolinenumber@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
       \csgdef{Xtxtbeforenumber@#1}{}%
       \csgdef{Xafternumber@#1}{0.5em}%
@@ -15284,6 +15302,7 @@
 
       \csgdef{Xendinplaceofnumber@#1}{0pt}%
       \newtoggle{Xendnonumber@#1}%
+      \newtoggle{Xendnolinenumber@#1}%
 
       \csgdef{Xendhangindent@#1}{0pt}%
 
@@ -15610,6 +15629,7 @@
   \newhooktoggle@series{Xgroupbyline}%
   \newhooktoggle@series{Xgroupbylineseparetwolines}%
   \newhooktoggle@series{Xnonumber}
+  \newhooktoggle@series{Xnolinenumber}%
 
   \newhooktoggle@series{Xpstart}
   \newhooktoggle@series{Xpstartonlyfirst}%
@@ -15733,6 +15753,7 @@
 
   \newhookcommand@series{Xendinplaceofnumber}%
   \newhooktoggle@series{Xendnonumber}%
+  \newhooktoggle@series{Xendnolinenumber}%
 
   \newhooktoggle@series{Xendnumberonlyfirstinline}%
   \newhooktoggle@series{Xendnumberonlyfirstintwolines}%
