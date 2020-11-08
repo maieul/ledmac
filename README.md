@@ -58,8 +58,9 @@ The distribution consists of the following files:
 
 # Installation
 
+This package is included in the two main TeX's distribution : TeXLive (and MacTeX) and MikTeX. However, if you want to install it manually :
 - run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledpar.sty`)
-- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ).
+- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ of your distribution).
 
 To generate a second copy of the manual (which is already supplied as a PDF file):
 
@@ -86,7 +87,7 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
-		- Choose "Download zip" in the "Clone or download" menu, on the right side.
+		- Choose "Download zip" in the "Code" (green) menu, on the right side.
 		- Unzip the file
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).

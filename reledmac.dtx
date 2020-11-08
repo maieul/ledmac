@@ -563,6 +563,10 @@
 % \changes{v2.34.3}{2020/08/19}{Fix bug with \protect\cs{parafootsepX} when the footnotes are called outside of a numbered section.}
 % \changes{v2.34.3}{2020/08/19}{Fixes incompatibility  between Fixes incompatibility between lineation by \protect\cs{pstart} and (a)stanza.}
 % \changes{v2.34.3}{2020/08/19}{Makes command like \protect\cs{hidenumbering} working at the very beginning of a verse when the first argument of \protect\cs{setstanzaindents} is equal to 0.}
+% \changes{v2.34.4}{2020/09/16}{Fix some bugs with lineation by page, when a numbered section starts at the very beginning of page.}
+% \changes{v2.34.4}{2020/09/16}{Fix bugs with \protect\cs{parafootsepX} outside of numbered section.}
+% \changes{v2.34.5}{2020/09/23}{Fix incompatibility between \protect\cs{apprefwithpage} / \protect\cs{SErefwithpage} and line number annotation mechanism.}
+% \changes{v2.34.6}{2020/09/23}{Fix incompatibility with \protect\package{calc} package (add with v.2.34.4}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -1318,7 +1322,7 @@
 %  \item You want to add the line number used by a previous edition of the work.
 %  \item You want to typeset biblical text, and use division in verse.
 % \end{itemize}
-% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}
+% In such instances, you must add the second number manually, as \macpackage\  can't determine a general pattern for such numbering, which depends too heavily upon the edited text.\footnote{However, you may create your own commands dealing with such patterns which will in turn call \macpackage\ commands.}.
 %
 % \DescribeMacro{\linenumannotation}
 % To resolve this issue, \macpackage\ allows you to annotate line numbers using the following command:
@@ -4404,7 +4408,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/08/19 v2.34.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/10/10 v2.34.6 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5024,6 +5028,25 @@
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@makeindex}{%
   \reledmac@error{Failed to patch the \string\makeindex\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@setcounter}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@setcounter}{%
+  \reledmac@error{Failed to patch the \string\setcounter\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@fail@patch@addtocounter}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@addtocounter}{%
+  \reledmac@error{Failed to patch the \string\addtocounter\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@stepcounter}{%
+  \reledmac@error{Failed to patch the \string\stepcounter\space command}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -6697,9 +6720,9 @@
         \fi%
       \fi
       \page@numR=#1%
-      \this@section@page@numR=#1%
+      \global\this@section@page@numR=#1%
       \last@page@numR=#1%
-      \this@section@last@page@numR=#1%
+      \global\this@section@last@page@numR=#1%
       \def\next@page@numR{#1}%
       \gdef\this@section@next@page@numR{#1}%
     \fi
@@ -7347,7 +7370,7 @@
 % It is written in the file list.
 % If we process a line-list file which used a older version, that means the commands used inside are deprecated, and we can't use them.
 %    \begin{macrocode}
-\newcommand{\this@line@list@version}{7}%
+\newcommand{\this@line@list@version}{8}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\line@list@stuff}
@@ -7435,7 +7458,6 @@
 % \changes{v0.6.0}{2004/11/16}{Extended \protect\cs{new@line} to output page numbers}
 %    \begin{macrocode}
 \newcommand*{\new@line}{%
-  \set@this@c@page%
   \ifnumberline%
     \IfStrEq{\led@pb@setting}{after}%
       {\xifinlist{\the\absline@num}{\l@prev@nopb}%
@@ -13670,11 +13692,15 @@
           {\csuse{parafootsepX@#1}}%
           {}%
        \global\csname prevpage#1@num\endcsname=\page@num%
-    \else%
-       \ifnumequal{\csuse{prevpage#1@num}}{\c@page}%
+    \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
+      \global\expandafter\advance\csname footnote#1@parafootsepX\endcsname by 1%
+      \edef\@tmpa{parafootsepX@#1@\the\csname footnote#1@parafootsepX\endcsname}%
+      \expandafter\edlabel\expandafter{\@tmpa}%
+      \edef\@tmpb{\expandafter\xpageref\expandafter{\@tmpa}}%
+      \IfStrEq{\csuse{prevpage#1@num}}{\@tmpb}%
           {\csuse{parafootsepX@#1}}%
           {}%
-       \global\csname prevpage#1@num\endcsname=\c@page%
+          \global\cslet{prevpage#1@num}{\@tmpb}%
     \fi%
    \fi%
 }
@@ -15058,6 +15084,7 @@
 %    \begin{macrocode}
       \expandafter\newcount\csname prevpage#1@num\endcsname%
       \expandafter\newcount\csname prevpage#1@numR\endcsname%
+      \expandafter\newcount\csname footnote#1@parafootsepX\endcsname%For the case we use \parafootsepX outside of numbered section
 %    \end{macrocode}
 % Add \cs{let}\cs{footnoteX}\cs{@gobble} to \cs{no@expands}.
 %    \begin{macrocode}
@@ -16227,9 +16254,10 @@
 % \end{macro}
 % \begin{macro}{\@outputpage}
 % As its name says, \cs{@outputpage} is a \LaTeX\ macro called in the output routine. It is this macro which increases the \verb+page+ counter.
-% We patch it in order to increase, conditionally, the \verb+par@page+ counter.
+% We patch it in order to increase, conditionally, the \verb+par@page+ counter, and to set correctly the page number send to the auxiliaries file (\verb+.1+, \verb+.2+, etc.).
 %    \begin{macrocode}
 \AtBeginDocument{%
+  \set@this@c@page%
   \apptocmd{\@outputpage}{%
     \ifsameparallelpagenumber%
       \ifl@dprintingpages%
@@ -16246,6 +16274,27 @@
     {}%
     {\led@error@fail@patch@@outputpage}%
 }%
+\catcode`\#=12%
+\AtBeginDocument{%
+    \apptocmd{\setcounter}{%
+    \IfStrEq{#1}{page}{\set@this@c@page}{}%
+    }%
+    {}%
+    {\led@error@fail@patch@setcounter}%
+  \apptocmd{\addtocounter}{%
+    \IfStrEq{#1}{page}{\set@this@c@page}{}%
+    }%
+    {}%
+    {\led@error@fail@patch@addtocounter}%
+  \@ifpackageloaded{calc}{%
+    \apptocmd{\stepcounter}{%Because calc.sty does not use addtocounter in stepcounter
+      \IfStrEq{#1}{page}{\set@this@c@page}{}%
+      }%
+      {}%
+      {\led@error@fail@patch@steptocounter}%
+  }{}%
+}%
+\catcode`\#=6%
 %    \end{macrocode}
 % \end{macro}
 %
@@ -16927,8 +16976,8 @@
 \toggletrue{Xendlineflag@SErefwithpage}%Here, exception
 
 
-\newtoggle{Xendlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintendlines
-\newtoggle{Xendlinenumannotationonlyfirst@appref}%Idem
+\def\Xendlinenumannotationposition@apprefwithpage{after}%
+\def\Xendlinenumannotationposition@SErefwithpage{after}%
 
 \def\Xendlinenumannotationposition@apprefwithpage{after}%
 \def\Xendlinenumannotationposition@apprefwithpage@SErefwithpage{after}%
@@ -16941,6 +16990,11 @@
 %    \end{macrocode}
 % Note that some of these hooks are declared but no user command can change their values. Such hooks are not pertinent for \verb+appref+ and \verb+apprefwithpage+ pseudo-series, but their values are nonetheless tested in some  macros.
 %    \begin{macrocode}
+
+\newtoggle{Xendlinenumannotationonlyfirst@SEref}%Never changed, just for the test in \setprintendlines
+\newtoggle{Xendlinenumannotationonlyfirst@SErefwithpage}%Idem
+\newtoggle{Xendlinenumannotationonlyfirst@appref}%Idem
+\newtoggle{Xendlinenumannotationonlyfirst@apprefwithpage}%Idem
 
 \gdef\Xboxstartlinenum@appref{0pt}
 \gdef\Xboxstartlinenum@SEref{0pt}
@@ -17067,6 +17121,8 @@
    {%
    \def\@this@crossref@start{#2:start}%
    \def\@this@crossref@end{#2:end}%
+   \xdef\annot@start{\xannotationref{#2:start}}%
+   \xdef\annot@end{\xannotationref{#2:end}}%
    \printendlines\xpageref{#2:start}|\xlineref{#2:start}|\xsublineref{#2:start}|\xpageref{#2:end}|\xlineref{#2:end}|\xsublineref{#2:end}|\relax|\xflagref{#2:start}|%
    }%
   \def\do##1{%
