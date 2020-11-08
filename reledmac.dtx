@@ -1385,6 +1385,10 @@
 % \meta{s} for the series of endnotes to which it applies, where \meta{s} may once again be a comma-separated list of series.
 % \end{itemize}
 % In each of these three commands, \meta{v} can be \option{after} or \option{before} to indicate position with regards to the line number.
+%
+% \DescribeMacro{\linenumannotationothersidetrue}
+% With the \cs{linenumannotationothersidetrue}, the annotation will appear on the margin side opposite to the line number.
+%
 % \subsubsection{Changing the macro in which annotations are wrapped}\label{wraplinenumannotation}
 % By default, annotations are wrapped in the \cs{textsuperscript} macro.
 % You can modify this using one of the following:
@@ -6033,11 +6037,13 @@
     \textdir TLT%
   \fi%
   \numlabfont%
-  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-      }%
-  }{}%
+  \unless\iflinenumannotationotherside%
+    \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+      \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+        \csuse{annot@\the\absline@num @\the\section@num}%
+        }%
+    }{}%
+  \fi%
   \linenumrep{\line@num}%
   \ifsublines@
     \ifnum\subline@num>0\relax
@@ -6046,11 +6052,13 @@
       \sublinenumrep{\subline@num}%
     \fi
   \fi%
-  \ifdefstring{\Xlinenumannotationposition@side}{after}{%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-      }%
-  }{}%
+  \unless\iflinenumannotationotherside%
+    \ifdefstring{\Xlinenumannotationposition@side}{after}{%
+      \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+        \csuse{annot@\the\absline@num @\the\section@num}%
+        }%
+    }{}%
+  \fi%
   \egroup%
 }%
 
@@ -6070,6 +6078,29 @@
 % \end{macro}
 % \end{macro}
 %
+% \begin{macro}{\leftlinenumannotation}%
+% \begin{macro}{\rightlinenumannotation}%
+% The \cs{leftlinenumannotation} and \cs{rightlinenumannotation} print the line number annotation in the case we define it must be printed in the opposite side regarding of the main line number.
+%    \begin{macrocode}
+\newcommand*{\leftlinenumannotation}{%
+  \iflinenumannotationotherside%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@num @\the\section@num}%
+      }%
+    \kern\linenumsep%
+  \fi%
+}%
+\newcommand*{\rightlinenumannotation}{%
+  \iflinenumannotationotherside%
+    \kern\linenumsep%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@num @\the\section@num}%
+    }%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Line number counters and lists}
 %
 % Footnote references using line numbers rather than symbols can't be
@@ -9723,6 +9754,12 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\iflinenumannotationotherside}
+% The \cs{iflinenumannotationotherside} boolean allows to print the annotation in the other side regarding to the main number.
+%    \begin{macrocode}
+\newif\iflinenumannotationotherside%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\@annot}
 % \begin{macro}{\store@annot@to@absline}
 % Then, the numbered files command \cs{@annot}, which
@@ -9928,8 +9965,10 @@
              \if@twocolumn
                 \if@firstcolumn
                    \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+                   \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
                 \else
                    \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+                   \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
                 \fi
              \else
                 \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columns}{\m@ne}}}%
@@ -9954,8 +9993,10 @@
                 {%
 	                \ifodd\@l@dtempcntb%
 	                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
+	                   \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
 	                 \else%
 	                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
+	                   \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
 	                \fi%
 	            }%
              \fi

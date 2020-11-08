@@ -2408,30 +2408,55 @@
 
 \newcommand*{\l@dlinenumR}{%
   \numlabfont%
-  \ifdefstring{\Xlinenumannotationposition@side}{before}{%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annotR@\the\absline@numR @\the\section@numR}%
-      }%
-  }{}%
+  \unless\iflinenumannotationotherside%
+    \ifdefstring{\Xlinenumannotationposition@side}{before}{%
+      \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+        \csuse{annotR@\the\absline@numR @\the\section@numR}%
+        }%
+    }{}%
+  \fi%
   \linenumrepR{\line@numR}\@Rlineflag%
   \ifsublines@R
     \ifnum\subline@numR>\z@
       \unskip\fullstop\sublinenumrepR{\subline@numR}%
     \fi
   \fi%
-  \ifdefstring{\Xlinenumannotationposition@side}{after}{%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annotR@\the\absline@numR @\the\section@numR}%
-      }%
-  }{}%
+  \unless\iflinenumannotationotherside%
+    \ifdefstring{\Xlinenumannotationposition@side}{after}{%
+      \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+        \csuse{annotR@\the\absline@numR @\the\section@numR}%
+        }%
+    }{}%
+  \fi%
 }%
 
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
-%
-%
+% \begin{macro}{\leftlinenumannotationR}
+% \begin{macro}{\rightlinenumannotationR}
+% \cs{rightlinenumannotationR} and \cs{leftlinenumannotationR} are the same as not suffixed version, but for right side.
+%    \begin{macrocode}
+\newcommand*{\leftlinenumannotationR}{%
+  \iflinenumannotationotherside%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@numR @\the\section@numR}%
+      }%
+    \kern\linenumsep%
+  \fi%
+}%
+\newcommand*{\rightlinenumannotationR}{%
+  \iflinenumannotationotherside%
+    \kern\linenumsep%
+    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+      \csuse{annot@\the\absline@numR @\the\section@numR}%
+    }%
+  \fi%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \subsection{Line-number counters and lists}
 % \subsubsection{Correspond to those in \macpackage for regular or left text}
 % We need another set of counters and lists for the right text,
@@ -3352,12 +3377,14 @@
   \xright@appenditem{\the\c@pstartL}\to\list@pstartL@pc%
   \global\cslet{numberpstart@L\the\l@dnumpstartsL}{\ifnumberpstart}%
   \global\cslet{numberline@L\the\l@dnumpstartsL}{\ifnumberline}%
+  \global\cslet{linenumannotationotherside@L\the\l@dnumpstartsL}{\iflinenumannotationotherside}%
 }%
 
 \def\dump@pstartR@pc{%
   \xright@appenditem{\the\c@pstartR}\to\list@pstartR@pc%
   \global\cslet{numberpstart@R\the\l@dnumpstartsR}{\ifnumberpstart}%
   \global\cslet{numberline@R\the\l@dnumpstartsR}{\ifnumberline}%
+  \global\cslet{linenumannotationotherside@R\the\l@dnumpstartsR}{\iflinenumannotationotherside}%
 }%
 
 %    \end{macrocode}
@@ -4006,6 +4033,7 @@
 \newcommand*{\do@lineL}{%
   \letcs{\ifnumberpstart}{numberpstart@L\the\l@dpscL}%
   \letcs{\ifnumberline}{numberline@L\the\l@dpscL}%
+  \letcs{\iflinenumannotationotherside}{linenumannotationotherside@L\the\l@dpscL}%
   \advance\countLline \@ne%
   \ifvbox\namebox{l@dLcolrawbox\the\l@dpscL}%
     {\vbadness=10000%
@@ -4200,6 +4228,7 @@
   \let\sublinenumrep\sublinenumrepR%
   \letcs{\ifnumberpstart}{numberpstart@R\the\l@dpscR}%
   \letcs{\ifnumberline}{numberline@R\the\l@dpscR}%
+  \letcs{\iflinenumannotationotherside}{linenumannotationotherside@R\the\l@dpscR}%
   \ledRcol@true%
   \advance\countRline \@ne%
   \ifvbox\namebox{l@dRcolrawbox\the\l@dpscR}%
@@ -4618,8 +4647,10 @@
       \if@twocolumn
         \if@firstcolumn
           \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+          \gdef\l@drd@ta{\rlap{{\rightlinenumannotationR}}}%
         \else
           \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+          \gdef\l@dld@ta{\llap{{\leftlinenumannotationR}}}%
         \fi
       \else
         \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columnsR}{\m@ne}}}%
@@ -4644,8 +4675,10 @@
         {%
           \ifodd\@l@dtempcntb%
             \gdef\l@drd@ta{\rlap{{\rightlinenumR}}}%
+            \gdef\l@dld@ta{\llap{{\leftlinenumannotationR}}}%
           \else%
             \gdef\l@dld@ta{\llap{{\leftlinenumR}}}%
+            \gdef\l@drd@ta{\rlap{{\rightlinenumannotationR}}}%
           \fi%
         }%
       \fi
