@@ -12229,11 +12229,15 @@
 % \item \protect\cs{ifl@d@esl} for ending sub-line; and
 % \item \protect\cs{ifl@d@dash} for the dash between the starting and ending groups.
 % \end{itemize}
-% There is no boolean for the line number because it is always printed.
+% There was no boolean for the line number because it was always printed.
 %
-% Maïeul Rouquette has added \protect\cs{ifl@d@Xtwolines} and \protect\cs{ifl@d@Xmorethantwolines}
-% to print a symbol which stands for ``and subsequent`` when there are two, three or more lines.
-% Is also defines \cs{@annot@start@print} and \cs{@annot@end@print} which define annotations associated with the starting and ending line numbers in critical footnotes.
+% Maïeul Rouquette has added:
+% \begin{itemize}
+% \item \protect\cs{ifl@d@Xtwolines} and \protect\cs{ifl@d@Xmorethantwolines}  to print a symbol which stands for ``and subsequent`` when there are two, three or more lines;
+% \item \cs{@annot@start@print} and \cs{@annot@end@print} which define annotations associated with the starting and ending line numbers in critical footnotes;
+% \item \cs{ifl@d@Xlinenumber}, which values define of the configuration of \cs{Xnolinenumber} and \cs{Xnolinenumberifannotation}.
+% \end{itemize}
+%
 % \begin{macro}{\ifl@d@pnum}
 % \begin{macro}{\ifl@d@ssub}
 % \begin{macro}{\ifl@d@elin}
@@ -12241,6 +12245,7 @@
 % \begin{macro}{\ifl@d@dash}
 % \begin{macro}{\ifl@d@Xtwolines}
 % \begin{macro}{\ifl@d@Xmorethantwolines}
+% \begin{macro}{\ifl@d@Xlinenumber}
 % \begin{macro}{\@annot@start@print}
 % \begin{macro}{\@annot@end@print}
 %    \begin{macrocode}
@@ -12253,7 +12258,9 @@
 \newif\ifl@d@Xmorethantwolines%
 \let\@annot@start@print\relax%
 \let\@annot@end@print\relax%
+\newif\ifl@d@Xlinenumber%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
@@ -12328,6 +12335,19 @@
   \l@d@dashfalse%
   \l@d@elinfalse%
 %    \end{macrocode}
+% Should we print the line number? It depends on hooks and annotations.
+%    \begin{macrocode}
+  \l@d@Xlinenumbertrue%
+  \ifboolexpr{togl{Xnolinenumber@\@currentseries}%
+    or (%
+      togl{Xnolinenumberifannotation@\@currentseries}%
+      and not test{\ifdefvoid{\annot@start}}%
+      and not test{\ifdefvoid{\annot@end}}%
+      )%
+  }{%
+    \l@d@Xlinenumberfalse%
+  }{}%
+%    \end{macrocode}
 % We print the page numbers only if\/: 1)~we are doing
 % the lineation by page, and 2)~the ending page number is different
 % from the starting page number.
@@ -12340,13 +12360,19 @@
   \fi
 %    \end{macrocode}
 %
-% We print the ending line number if\/: (1)~we are printing the ending
-% page number, or (2)~the ending line number is different from the starting line number.
+% We print the ending line number if:
+% \begin{enumerate}
+% \item we are printing the ending
+% \item or the ending line number is different from the starting line number and we didn't disable the line number printing
+% \end{enumerate}
 % If either of these conditions is true, we also print the annotation linked to the ending line number annotations.
 %    \begin{macrocode}
   \ifboolexpr{%
     bool{l@d@pnum}%
-    or not test{\ifnumequal{#2}{#5}}%
+    or (%
+      not test{\ifnumequal{#2}{#5}}%
+      and bool{l@d@Xlinenumber}%
+    )%
    }{%
     \l@d@elintrue%
     \l@d@dashtrue%
@@ -12357,7 +12383,6 @@
     \fi%
     }{}%
 %    \end{macrocode}
-%
 % We define the starting line number annotation as a merge of the starting annotation and ending annotation if we don't print the ending line number.
 % Otherwise, it is only the starting annotation.
 %    \begin{macrocode}
@@ -12401,7 +12426,6 @@
       \l@d@ssubtrue
   \fi
 %    \end{macrocode}
-%
 % We print the ending sub-line if it is nonzero and: (1)~it is different
 % from the starting sub-line number, or (2)~the ending line number is
 % being printed.
@@ -12459,9 +12483,12 @@
   \iftoggle{Xnoidenticallinenumannotation@\@currentseries}{%
     \ifx\annot@start\annot@end%
       \let\@annot@end@print\relax%
-      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+      \ifboolexpr{%Don't print the dash if we're not printing the line number
+        test {\ifdefempty{\linenumrep}}%
+        or not bool {l@d@Xlinenumber}%
+      }{%
         \l@d@dashfalse%
-      \fi%
+      }{}%
     \fi%
   }{}%
 %    \end{macrocode}
@@ -12484,9 +12511,12 @@
         \l@wrapcs@ifnotemptybox{Xwraplinenumannotation@\@currentseries}{\csuse{Xsymlinenumannotation@\@currentseries}}%
       }%
       \let\@annot@end@print\relax%
-      \ifx\linenumrep\@gobble%Don't print the dash if we're not printing the line number
+      \ifboolexpr{%Don't print the dash if we're not printing the line number
+        test {\ifdefempty{\linenumrep}}%
+        or not bool {l@d@Xlinenumber}%
+      }{%
         \l@d@dashfalse%
-      \fi%
+      }{}%
     }{}%
     \global\cslet{prevannot@start@\@currentseries}{\annot@start}%
     \global\cslet{prevannot@end@\@currentseries}{\annot@end}%
@@ -12568,16 +12598,20 @@
     {}%
   \ifl@d@pnum%
     \wrap@edcrossref{\@this@crossref@start}{#1}%
-    \csuse{Xpagelinesep@\@currentseries}%
+    \ifl@d@Xlinenumber%
+      \csuse{Xpagelinesep@\@currentseries}%
+    \fi%
   \fi%
-  \wrap@edcrossref{\@this@crossref@start}{%
-    \linenumrep{#2}%
-    \iftoggle{Xlineflag@\@currentseries}{#8}{}%
-  }%
-  \ifl@d@ssub%
-    \csuse{Xsublinesep@\@currentseries}%
-    \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
-  \fi
+  \ifl@d@Xlinenumber%
+    \wrap@edcrossref{\@this@crossref@start}{%
+      \linenumrep{#2}%
+      \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+    }%
+    \ifl@d@ssub%
+      \csuse{Xsublinesep@\@currentseries}%
+      \wrap@edcrossref{\@this@crossref@start}{\sublinenumrep{#3}}%
+    \fi%
+  \fi%
   \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
     {\@annot@start@print}%
     {}%
@@ -12592,10 +12626,12 @@
     {\bgroup}%
     {\hbox to \csuse{Xboxendlinenum@\@currentseries}\bgroup}%
   \ifl@d@Xtwolines%
-    \ifl@d@Xmorethantwolines%
-      \csuse{Xmorethantwolines@\@currentseries}%
-    \else%
-      \csuse{Xtwolines@\@currentseries}%
+    \ifl@d@Xlinenumber%
+      \ifl@d@Xmorethantwolines%
+        \csuse{Xmorethantwolines@\@currentseries}%
+      \else%
+        \csuse{Xtwolines@\@currentseries}%
+      \fi%
     \fi%
   \else%
     \ifl@d@dash%
@@ -12612,17 +12648,19 @@
        \wrap@edcrossref{\@this@crossref@end}{#4}%
        \csuse{Xpagelinesep@\@currentseries}%
     \fi%
-    \ifl@d@elin%
-      \wrap@edcrossref{\@this@crossref@end}{%
-        \linenumrep{#5}%
-        \iftoggle{Xlineflag@\@currentseries}{#8}{}%
-       }%
-    \fi%
-    \ifl@d@esl%
-       \ifl@d@elin%
-         \csuse{Xsublinesep@\@currentseries}%
-       \fi%
-       \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
+    \ifl@d@Xlinenumber%
+      \ifl@d@elin%
+        \wrap@edcrossref{\@this@crossref@end}{%
+          \linenumrep{#5}%
+          \iftoggle{Xlineflag@\@currentseries}{#8}{}%
+         }%
+      \fi%
+      \ifl@d@esl%
+         \ifl@d@elin%
+           \csuse{Xsublinesep@\@currentseries}%
+         \fi%
+         \wrap@edcrossref{\@this@crossref@end}{\sublinenumrep{#6}}%
+      \fi%
     \fi%
     \ifcsstring{Xlinenumannotationposition@\@currentseries}{after}%
       {\@annot@end@print}%
