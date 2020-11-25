@@ -1367,6 +1367,8 @@
 % \edtext{\linenumannotation{A}something...\linenumannotation{B}}{\Afootnote{foo}}
 % \end{verbatim}
 % won't.
+% \subsubsection{Resetting annotation}
+% You can reset manually annotation using \cs{resetlinenumannotation}\verb+{}+. Note that this macro does not take any argument, but you may use empty brackets or \textbackslash in order to avoid gobbling spaces.\footnote{As for all \TeX's macro without argument.}
 % \subsubsection{Modifying annotation associated with a specific note}\label{lineannot}
 %
 % The \cs{linenum} (\reff{linenum}) macro changes the line number passed to a note.
@@ -9749,7 +9751,8 @@
 % \item to crossref commands which refer to line numbers (to be completed when I will have resolved this issue).
 % \end{itemize}
 % \begin{macro}{\linenumannotation}
-% First, the user-level command, which only writes commands to the numbered files, storing the annotation.
+% \begin{macro}{\resetlinenumannotation}
+% First, the user-level commands, which only write commands to the numbered files, storing the annotation.
 %    \begin{macrocode}
 \newcommand{\linenumannotation}[1]{%
   \leavevmode%In case it begins with a \pstart, ensure the \@annot is written after \@nl
@@ -9759,7 +9762,18 @@
     \write\linenum@out{\string\@annot[#1]}%
   \fi%
 }%
+
+\newcommand{\resetlinenumannotation}[0]{%
+  \leavevmode%In case it begins with a \pstart, ensure the \@resetannot is written after \@nl
+  \ifledRcol%
+    \write\linenum@outR{\string\@resetannot}%
+  \else%
+    \write\linenum@out{\string\@resetannot}%
+  \fi%
+}%
+
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\Xlinenumannotationposition@side}
 % The \cs{Xlinenumannotationposition@side} macro, to determine the position of line number annotations in lines printed in the side, relative to the line number position.
@@ -9826,15 +9840,22 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\reset@current@annot}
+% \begin{macro}{\@resetannot}
 % \cs{reset@current@annot} is called at each \cs{@nl} in numbered auxiliary files.
 % It resets the annotation of line numbers at each line.
+%
+% The \cs{@resetannot} macro is written in the auxiliary files with \cs{resetlinenumannotation} macro. It resets the annotation.
 %    \begin{macrocode}
 \newcommand{\reset@current@annot}{%
   \unless\ifnoresetlinenumannotation@
     \let\current@annot\empty%
   \fi
 }%
+\newcommand{\@resetannot}{%
+  \let\current@annot\empty%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\parse@annot}
 % In the \cs{annot@list} list, each individual \cs{edtext} is associated with a starting and an ending line number annotation, which is stored this way: \verb+start annotation|end annotation+
