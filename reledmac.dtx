@@ -6114,20 +6114,16 @@
 % The \cs{leftlinenumannotation} and \cs{rightlinenumannotation} print the line number annotation in the case we define it must be printed in the opposite side regarding of the main line number.
 %    \begin{macrocode}
 \newcommand*{\leftlinenumannotation}{%
-  \iflinenumannotationotherside%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-      }%
-    \kern\linenumsep%
-  \fi%
+  \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+    \csuse{annot@\the\absline@num @\the\section@num}%
+    }%
+  \kern\linenumsep%
 }%
 \newcommand*{\rightlinenumannotation}{%
-  \iflinenumannotationotherside%
-    \kern\linenumsep%
-    \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
-      \csuse{annot@\the\absline@num @\the\section@num}%
-    }%
-  \fi%
+  \kern\linenumsep%
+  \l@wrap@ifnotemptybox{\Xwraplinenumannotation@side}{%
+    \csuse{annot@\the\absline@num @\the\section@num}%
+  }%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -10015,10 +10011,14 @@
              \if@twocolumn
                 \if@firstcolumn
                    \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-                   \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
+                   \iflinenumannotationotherside%
+                     \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
+                   \fi%
                 \else
                    \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-                   \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
+                   \iflinenumannotationotherside%
+                     \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
+                   \fi%
                 \fi
              \else
                 \ifboolexpr{bool {l@dprintingcolumns} and test {\ifnumgreater{\line@margin@columns}{\m@ne}}}%
@@ -10043,10 +10043,14 @@
                 {%
 	                \ifodd\@l@dtempcntb%
 	                   \gdef\l@drd@ta{\rlap{{\rightlinenum}}}%
-	                   \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
+                     \iflinenumannotationotherside%
+                       \gdef\l@dld@ta{\llap{{\leftlinenumannotation}}}%
+                     \fi%
 	                 \else%
 	                   \gdef\l@dld@ta{\llap{{\leftlinenum}}}%
-	                   \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
+                     \iflinenumannotationotherside%
+                       \gdef\l@drd@ta{\rlap{{\rightlinenumannotation}}}%
+                     \fi%
 	                \fi%
 	            }%
              \fi
