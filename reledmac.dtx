@@ -566,7 +566,8 @@
 % \changes{v2.34.4}{2020/09/16}{Fix some bugs with lineation by page, when a numbered section starts at the very beginning of page.}
 % \changes{v2.34.4}{2020/09/16}{Fix bugs with \protect\cs{parafootsepX} outside of numbered section.}
 % \changes{v2.34.5}{2020/09/23}{Fix incompatibility between \protect\cs{apprefwithpage} / \protect\cs{SErefwithpage} and line number annotation mechanism.}
-% \changes{v2.34.6}{2020/09/23}{Fix incompatibility with \protect\package{calc} package (add with v.2.34.4}
+% \changes{v2.34.6}{2020/09/23}{Fix incompatibility with \protect\package{calc} package (added with v2.34.4).}
+% \changes{v2.34.7}{2020/11/19}{Fix bug with \protect\cs{parafootsepX} in some circumstances (add with v2.34.4).}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2249,7 +2250,8 @@
 % \label{displayoptions}
 % \subsection{Introduction}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
-% Some commands can be used to change the display of the footnotes.
+% \subsection{Introduction}
+% Some commands can be used to change the display of the footnotes.\footnote{In the code of reledmac, these commands are called \enquote{hooks}.}
 % All can have an optional argument \oarg{s}, which is the letter of the series\,---\,or
 % a list of letters separated by comma\,---\,depending on which option is applied.
 % If the optional argument is omitted or empty, the setting will apply to the entire series.
@@ -4443,7 +4445,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2020/10/10 v2.34.6 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2020/11/19 v2.34.7 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -13825,16 +13827,16 @@
           {\csuse{parafootsepX@#1}}%
           {}%
        \global\csname prevpage#1@num\endcsname=\page@num%
-    \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
-      \global\expandafter\advance\csname footnote#1@parafootsepX\endcsname by 1%
-      \edef\@tmpa{parafootsepX@#1@\the\csname footnote#1@parafootsepX\endcsname}%
-      \expandafter\edlabel\expandafter{\@tmpa}%
-      \edef\@tmpb{\expandafter\xpageref\expandafter{\@tmpa}}%
-      \IfStrEq{\csuse{prevpage#1@num}}{\@tmpb}%
-          {\csuse{parafootsepX@#1}}%
-          {}%
-          \global\cslet{prevpage#1@num}{\@tmpb}%
-    \fi%
+     \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
+       \global\expandafter\advance\csname footnote#1@parafootsepX\endcsname by 1%
+       \edef\@tmpa{parafootsepX@#1@\the\csname footnote#1@parafootsepX\endcsname}%
+       \expandafter\edlabel\expandafter{\@tmpa}%
+       \edef\@tmpb{\expandafter\xpageref\expandafter{\@tmpa}}%
+       \IfStrEq{\csuse{prevpage#1@num@outnumbering}}{\@tmpb}%
+           {\csuse{parafootsepX@#1}}%
+           {}%
+       \global\cslet{prevpage#1@num@outnumbering}{\@tmpb}%
+     \fi%
    \fi%
 }
 %    \end{macrocode}
