@@ -17,7 +17,7 @@ all: test reledmac.sty reledpar.sty reledmac.pdf   reledpar.pdf migration.pdf di
 doc: *.pdf
 
 test: *dtx
-	l3build check
+	l3build check -H --show-log-on-error
 
 migration.pdf: migration.dtx
 	pdflatex  $<

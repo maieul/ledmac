@@ -11,11 +11,11 @@ PDF:$(OBJ)
 	latexmk $<
 
 2-glossaries.pdf: 2-glossaries.tex
-	xelatex 2-glossaries
-	xelatex 2-glossaries
-	xelatex 2-glossaries
+	pdflatex 2-glossaries
+	pdflatex 2-glossaries
+	pdflatex 2-glossaries
 	makeglossaries 2-glossaries
-	xelatex 2-glossaries
+	pdflatex 2-glossaries
 
 3-reledpar_pages_different_languages_lualatex.pdf: 3-reledpar_pages_different_languages_lualatex.tex
 	latexmk --lualatex $<

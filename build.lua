@@ -5,4 +5,4 @@ checkconfigs = {
 	"config-pdftex-3",
 	"config-pdftex-4",
 	"config-luatex-3",
-	"config-xetex-3"}
+	"config-xetex-4"}

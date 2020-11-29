@@ -58,8 +58,9 @@ The distribution consists of the following files:
 
 # Installation
 
-- run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledmac.sty`)
-- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ).
+This package is included in the two main TeX distributions: TeXLive (and MacTeX) and MikTeX. However, if you want to install it manually:
+- run: `latex reledmac.ins` (which will generate `reledmac.sty`) and `latex reledpar.ins` (which will generate `reledpar.sty`)
+- move `reledmac.sty` and `reledpar.sty` to a location where LaTeX will find it (for more information on this see the FAQ of your distribution).
 
 To generate a second copy of the manual (which is already supplied as a PDF file):
 
@@ -68,7 +69,7 @@ To generate a second copy of the manual (which is already supplied as a PDF file
 # Help
 
 - [Users list](http://geekographie.maieul.net/146)
-- [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags 
+- [StackExchange](https://tex.stackexchange.com/questions/tagged/reledmac), see also the older tags
     (https://tex.stackexchange.com/questions/tagged/eledmac) and (https://tex.stackexchange.com/questions/tagged/ledmac)
 
 # Debug and feature requests
@@ -80,13 +81,13 @@ Maïeul Rouquette is the only one maintainer. To help him in his work, please fo
 - Go to the [issues page](https://github.com/maieul/ledmac/issues).
 - Open *one issue for each problem*, even if problems are similar.
 - You can write in English, or better in French if it is your native language.
-- Add a [minimal working example](http://www.tex.ac.uk/cgi-bin/texfaq2html?label=minxampl).
+- Add a [minimal working example](https://texfaq.org/FAQ-minxampl.html).
 - If your report is really a bug, Maïeul Rouquette will open a "branch" to solve your problem. This branch will be called "issueXXX", where "XXX" is the issue number.
 - Once the problem has a possible solution, Maïeul Rouquette will ask you to test the new branch:
 	- Download the zip file of the branch (or, if you know Git, go to the branch there):
 		- Go to [the project page](https://github.com/maieul/ledmac/).
 		- Choose the correct branch in the "branch" menu.
-		- Choose "Download zip" in the "Clone or download" menu, on the right side.
+		- Choose "Download zip" in the "Code" (green) menu, on the right side.
 		- Unzip the file
 	- Run the `.ins` files with pdflatex, to obtain the `.sty` files.
 	- Put the `.sty` files with your test files (in the same folder).
