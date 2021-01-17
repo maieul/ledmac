@@ -31,7 +31,15 @@ If the problem occurs both in parallel typesetting and normal typesetting, pleas
 Please avoid:
 - custom commands: use standard reledmac command in your example;
 - unrequired package in your preamble;
-- blindtext and other false text packages.
+- blindtext and other false text packages;
+Please prefer examples in the following languages
+- French
+- Latin
+- Latin
+- Greek
+If your problem is absolutly linked to some other language, you can use it, but please add very explicit explanation.
+
+Please avoid not standard font. If required, please provide a link to the font used.
 -->
 
 ```latex
