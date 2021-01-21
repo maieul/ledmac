@@ -572,6 +572,7 @@
 % \changes{v2.35.0}{2020/11/29}{Add new hooks: \protect\cs{Xnolinenumber}, \protect\cs{Xendnolinenumber}, \protect\cs{Xnolinenumberifannotation}, \protect\cs{Xendnolinenumberifannotation}.}
 % \changes{v2.35.1}{2020/12/20}{Fix a bug when printing ending page number in endnotes and using the \protect\package{hyperref} package.}
 % \changes{v2.36.0}{2020/01/21}{Fix bug with sublineation on right side of parallel typesetting.}
+% \changes{v2.36.0}{2020/01/21}{Add \protect\cs{Xnonote} and \protect\cs{nonoteX}.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2256,7 +2257,6 @@
 % \label{displayoptions}
 % \subsection{Introduction}
 % \changes{v1.0.0}{2012/09/15}{New generic commands to customize footnote display.}
-% \subsection{Introduction}
 % Some commands can be used to change the way the footnotes are displayed.\footnote{In the code of \macpackage, these commands are called \enquote{hooks}.}
 % All can have an optional argument \oarg{s}, which is the letter of the series\,---\,or
 % a list of letters separated by comma\,---\,depending on which option is applied.
@@ -2321,6 +2321,14 @@
 % change the \protect\cs{hsize} within the document, call
 % the arrangement macro again afterwards to take account of the new
 % value.
+% \subsection{Disabling footnote}
+% \DescribeMacro{Xnonote}\DescribeMacro{nonoteX}
+% Some time, you may want to export your edition without notes, but don't want to modify globally your code.
+%
+% \cs{Xnonote}\oarg{s} allow to disable critical notes for the series \meta{s}.
+%
+% \cs{nonoteX}\orags{s} is the same for familiar notes.
+%
 % \subsection{Control number printing}
 % \subsubsection{Print line number only at first time}
 % \DescribeMacro{\Xnumberonlyfirstinline}\label{Xnumberonlyfirstinline}
@@ -10493,7 +10501,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\set@txtbeforenotesX}
-% The \cs{set@txtbeforenotesX} does the same for the \cs{textbeforenotesX}.
+% The \cs{set@txtbeforenotesX} does the same for the \cs{txtbeforenotesX}.
 %    \begin{macrocode}
 \newcommand{\set@txtbeforenotesX}{%
   \unless\ifnofamiliar@%
@@ -15010,6 +15018,8 @@
       \csgdef{Xsymlinenum@#1}{}%
       \csgdef{Xsymlinenumannotation@#1}{}%
 
+      \newtoggle{Xnonote@#1}%
+
       \newtoggle{Xnonumber@#1}%
       \newtoggle{Xnolinenumber@#1}%
       \newtoggle{Xnolinenumberifannotation@#1}%
@@ -15059,6 +15069,7 @@
 % \changes{v1.23.0}{2015/04/29}{Prevent spurious spaces when \protect\cs{Afootnote} and similar commands are followed by spaces (bug added on 1.0.0!).}
 %    \begin{macrocode}
       \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
+          \nottoggle{Xnonote@#1}{%
           \if@edtext@secondarg@%
             \ifledRcol%
               \ifcsstring{Xonlyside@#1}{L}{\led@error@note@called@onrightside{#1footnote}}{}%
@@ -15155,6 +15166,7 @@
           \else%
             \led@err@FootnoteNotInSecondArgEdtext{#1}%
           \fi%
+        }{\@noneed@Footnotetrue}% End of \nottoggle{Xnonote@#1}{%
    \ignorespaces%
           }
 %    \end{macrocode}
@@ -15204,6 +15216,7 @@
       \csgdef{widthX@#1}{\hsize}%
       \expandafter\csgdef{innotemarkX@#1}##1{\ledinnotemark{##1}}%
       \csgdef{txtbeforenotesX@#1}{}%
+      \newtoggle{nonoteX@#1}%
       \newtoggle{txtbeforesnotesX@#1@typeset}%Not directly used by user, but internal
       \newtoggle{txtbeforenotesonlyonceX@#1}%
 % End of for familiar footnotes.
@@ -15221,6 +15234,7 @@
 %    \begin{macrocode}
 
       \global\expandafter\newcommand\csname footnote#1\endcsname[2][]{%
+        \nottoggle{nonoteX@#1}{%
           \begingroup%
               \prepare@prenotesX{#1}%
               \newcommand{\content}{##2}%
@@ -15277,6 +15291,7 @@
                 {\let\index\orig@@index}%
                 {}%
           \endgroup%
+        }{}%End of the notoggleX@#1
       }
 %    \end{macrocode}
 % Then define the counters.
@@ -15788,6 +15803,8 @@
   \newhooktoggle@series{Xstanzaonlyfirst}%
   \newhookcommand@series{Xstanzaseparator}%
 
+  \newhooktoggle@series{Xnonote}%
+
   \newhooktoggle@series{Xonlypstart}
   \newhooktoggle@series{Xnonbreakableafternumber}
   \newhooktoggle@series{Xlemmadisablefontselection}
@@ -15858,7 +15875,7 @@
   \newhooktoggle@series{txtbeforenotesonlyonceX}%
   \newhookcommand@series@reload{widthX}{familiar}%
   \newhookcommand@series{innotemarkX}[][1]%
-
+  \newhooktoggle@series{nonoteX}%
   \ifundef{\hsizeX}%
     {%
       \newcommandx{\hsizeX}[2][1,usedefault]{%
