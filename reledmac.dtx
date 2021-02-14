@@ -573,6 +573,7 @@
 % \changes{v2.35.1}{2020/12/20}{Fix a bug when printing ending page number in endnotes and using the \protect\package{hyperref} package.}
 % \changes{v2.36.0}{2021/01/21}{Fix bug with sublineation on right side of parallel typesetting.}
 % \changes{v2.36.0}{2021/01/21}{Add \protect\cs{Xnonote} and \protect\cs{nonoteX}.}
+% \changes{v2.36.0}{2021/02/14}{Fix bug with crossreferecing in parallel typesetting (added in v2.34.4)}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4459,7 +4460,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/01/21 v2.36.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/02/14 v2.36.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -13868,12 +13869,12 @@
         {}%
      \global\csname prevpage#1@numR\endcsname=\page@numR%
    \else%
-     \ifnumbering%
+     \ifboolexpr{bool{l@dprintingpages} or bool{l@dprintingcolumns} or bool{numbering}}{%
        \ifnumequal{\csuse{prevpage#1@num}}{\page@num}%
           {\csuse{parafootsepX@#1}}%
           {}%
        \global\csname prevpage#1@num\endcsname=\page@num%
-     \else%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
+     }{%We can't use directly the page counter, see https://tex.stackexchange.com/a/239457/7712
        \global\expandafter\advance\csname footnote#1@parafootsepX\endcsname by 1%
        \edef\@tmpa{parafootsepX@#1@\the\csname footnote#1@parafootsepX\endcsname}%
        \expandafter\edlabel\expandafter{\@tmpa}%
@@ -13882,7 +13883,7 @@
            {\csuse{parafootsepX@#1}}%
            {}%
        \global\cslet{prevpage#1@num@outnumbering}{\@tmpb}%
-     \fi%
+     }%
    \fi%
 }
 %    \end{macrocode}
