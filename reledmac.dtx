@@ -5020,10 +5020,10 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{\led@err@EdtextWithoutFootnote}
+% \begin{macro}{\led@err@EdtextWithoutNote}
 %    \begin{macrocode}
-\newcommand{\led@err@EdtextWithoutFootnote}{%
-  \reledmac@error{edtext without Xfootnote. Check syntaxis}{\@ehc}%
+\newcommand{\led@err@EdtextWithoutNote}[1]{%
+  \reledmac@error{edtext \unexpanded{#1} without Xfootnote or Xendnote. Check syntaxis.}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -7594,8 +7594,6 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-% \begin{macro}{\if@noneed@Footnote}
-% \protect\cs{if@noneed@Footnote} is a boolean to check if we have to print a error message when a \protect\cs{edtext} is called without any critical notes.
 %
 % \begin{macro}{\flag@start}
 % \begin{macro}{\flag@end}
@@ -7608,35 +7606,29 @@
 % setting the value of \protect\cs{insert@count} appropriately; it
 % actually gets done by the various footnote macros.
 %    \begin{macrocode}
-\newif\if@noneed@Footnote%
 
 \newcommand*{\flag@start}{%
-  \ifledRcol%
-    \edef\next{\write\linenum@outR{%
-                  \string\@ref[\the\insert@countR][}}%
-    \next%
-    \ifnum\insert@countR<1%
-      \if@noneed@Footnote\else%
-        \led@err@EdtextWithoutFootnote%
-      \fi%
+  \unless\ifnum\edtext@notes=\edtext@notes@start%
+    \ifledRcol%
+      \edef\next{\write\linenum@outR{%
+                    \string\@ref[\the\insert@countR][}}%
+    \else%
+      \edef\next{\write\linenum@out{%
+                    \string\@ref[\the\insert@count][}}%
     \fi%
-  \else%
-    \edef\next{\write\linenum@out{%
-                  \string\@ref[\the\insert@count][}}%
     \next%
-    \ifnum\insert@count<1%
-      \if@noneed@Footnote\else%
-        \led@err@EdtextWithoutFootnote%
-      \fi%
-    \fi%
-  \fi}%
+  \fi%
+}%
 
 \newcommand*{\flag@end}{%
-  \ifledRcol%
-    \write\linenum@outR{]}%
-  \else%
-    \write\linenum@out{]}%
-  \fi}%
+  \unless\ifnum\edtext@notes=\edtext@notes@start%
+    \ifledRcol%
+      \write\linenum@outR{]}%
+    \else%
+      \write\linenum@out{]}%
+    \fi%
+  \fi%
+}%
 
 
 %    \end{macrocode}
@@ -8134,6 +8126,24 @@
 \renewcommand{\theedtext}{edtxt@\the\c@edtext}%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\edtext@notes}
+% \begin{macro}{\edtext@notes@start}
+% The \cs{edtext@notes} is increased each time we have a footnote required in the second argument of \cs{edtext}, that is a \cs{Xfootnote} or a \cs{Xendfootnote}.
+%
+% The \cs{edtext@notes@start} is let to \cs{edtext@notes} at the beginning of a \cs{edtext}
+%
+%    \begin{macrocode}
+\newcount\edtext@notes%
+\newcount\edtext@notes@start%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\if@noneed@notes}
+% The \cs{if@noneed@notes} macro is (locally) set to true when we read a critical note for a series with \Xnonote set to true.
+%    \begin{macrocode}
+\newif\if@noneed@notes%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\edtext}
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{showlemma} to \protect\cs{edtext}}
 % \changes{v1.4.0}{2012/11/16}{Compatibility of \protect\cs{edtext} with the right-to-left direction (with Polyglossia).}
@@ -8154,6 +8164,10 @@
 % We increment the \cs{@edtext@level} \TeX\ counter to know in which level of \protect\cs{edtext} we are.
 %    \begin{macrocode}
       \global\advance\@edtext@level by 1%
+%    \end{macrocode}
+% We let \cs{edtext@notes@start} equal to \cs{edtext@notes} to check later the number of notes associated to the edtext.
+%    \begin{macrocode}
+      \global\edtext@notes@start=\edtext@notes%
 %    \end{macrocode}
 % We also increase the \verb+edtext+ \LaTeX\ counter to insert a hypertarget if the \package{hyperref} package is loaded, and also works with \cs{edtext} on right-to-left typesetting with \XeLaTeX.
 %
@@ -8228,6 +8242,14 @@
         \ignorespaces #2\relax%
         \@edtext@secondarg@false%
 %    \end{macrocode}
+% Check if we inded insert footnotes or critical notes.
+%    \begin{macrocode}
+        \ifnum\edtext@notes=\edtext@notes@start%
+          \unless\if@noneed@notes%
+            \led@err@EdtextWithoutNote{#1}%
+          \fi%
+        \fi%
+%    \end{macrocode}
 % With \XeLaTeX, you must track whether the language reads left to right (English) or right to left (Arabic). \reledmac defines an \cs{if@RTL} boolean test is not already defined.
 %    \begin{macrocode}
         \if@RTL%
@@ -8293,7 +8315,6 @@
 %    \item The one that says we are inside a \protect\cs{@lemma}.
 % \end{itemize}
 %    \begin{macrocode}
-      \global\@noneed@Footnotefalse%
       \global\advance\@edtext@level by -1%
       \global\@lemmacommand@false%
 %    \end{macrocode}
@@ -12924,7 +12945,10 @@
 %    \begin{macrocode}
 \pretocmd{\@footnotetext}{%
   \ifnumberedpar@
-    \edtext{}{\l@dbfnote{#1}}%
+    \edtext{}{%
+      \advance \edtext@notes by 1%
+      \l@dbfnote{#1}%
+    }%
   \else
   }{}{}
 \apptocmd{\@footnotetext}{\fi}{}{}%
@@ -13361,7 +13385,10 @@
 
 \newcommand{\vnumfootnoteX}[3]{%
   \ifnumberedpar@
-    \edtext{}{\normalbfnoteX{#1}{#2}{#3}}%
+    \edtext{}{%
+      \advance\edtext@notes by 1%
+      \normalbfnoteX{#1}{#2}{#3}%
+    }%
   \else
     \def\this@footnoteX@reading{\the\csname footnote#1@reading\endcsname}%
     \get@thisfootnoteX{#1}%
@@ -15075,6 +15102,7 @@
 %    \begin{macrocode}
       \global\notbool{parapparatus@}{\expandafter\newcommand\expandafter *}{\expandafter\newcommand}\csname #1footnote\endcsname[2][]{%
           \nottoggle{Xnonote@#1}{%
+          \advance \edtext@notes by 1%
           \if@edtext@secondarg@%
             \ifledRcol%
               \ifcsstring{Xonlyside@#1}{L}{\led@error@note@called@onrightside{#1footnote}}{}%
@@ -15171,7 +15199,7 @@
           \else%
             \led@err@FootnoteNotInSecondArgEdtext{#1}%
           \fi%
-        }{\@noneed@Footnotetrue}% End of \nottoggle{Xnonote@#1}{%
+        }{\@noneed@notestrue}% End of \nottoggle{Xnonote@#1}{%
    \ignorespaces%
           }
 %    \end{macrocode}
@@ -15378,9 +15406,9 @@
 %    \begin{macrocode}
 
       \global\expandafter\newcommandx\csname #1endnote\endcsname[2][1,usedefault]{%
+         \advance \edtext@notes by 1%
          \bgroup%
          \newlinechar='40%
-         \global\@noneed@Footnotetrue%
          \newcommand{\content}{##2}%
          \stepcounter{labidx}%
          \expandafter\immediate\expandafter\write\csname l@d@#1end\endcsname{%
@@ -17620,17 +17648,37 @@
 % \begin{macro}{\ledinnernote}
 % \begin{macro}{\ledouternote}
 % \begin{macro}{\ledsidenote}
+% \begin{macro}{\ledsidenote@}
 % \protect\cs{ledleftnote}, \protect\cs{ledrightnote}, \protect\cs{ledinnernote}, \protect\cs{ledouternote} are the
 % user commands for left, right, inner and outer sidenotes.
 % The two last ones are just alias for the two first ones, depending on the page number.
 % \protect\cs{ledsidenote}\marg{text} is the command for a moveable sidenote.
+%
+% All these macro call the macro \cs{ledsidenote@}, as they have the same structure.
 %    \begin{macrocode}
-\newcommand*{\ledleftnote}[1]{\edtext{}{\l@dlsnote{#1}}}
-\newcommand*{\ledrightnote}[1]{\edtext{}{\l@drsnote{#1}}}
-\newcommand*{\ledsidenote}[1]{\edtext{}{\l@dcsnote{#1}}}%
-\newcommand*{\ledinnernote}[1]{\edtext{}{\l@disnote{#1}}}%
-\newcommand*{\ledouternote}[1]{\edtext{}{\l@dosnote{#1}}}%
+\newcommand*{\ledleftnote}[1]{%
+  \ledsidenote@{\l@dlsnote{#1}}%
+}%
+\newcommand*{\ledrightnote}[1]{%
+  \ledsidenote@{\l@drsnote{#1}}%
+}%
+\newcommand*{\ledsidenote}[1]{%
+  \ledsidenote@{\l@dcsnote{#1}}%
+}%
+\newcommand*{\ledinnernote}[1]{%
+  \ledsidenote@{\l@disnote{#1}}%
+}%
+\newcommand*{\ledouternote}[1]{%
+  \ledsidenote@{\l@dosnote{#1}}%
+}%
+\newcommand*{\ledsidenote@}[1]{%
+  \edtext{}{%
+    \advance\edtext@notes@start by 1%
+    #1%
+  }%+
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
