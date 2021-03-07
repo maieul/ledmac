@@ -18760,6 +18760,7 @@
 %    \begin{macrocode}
 \AtBeginDocument{%
   \@ifpackageloaded{glossaries}{%
+    \newif\ifl@noexpands@edgl%A boolean switched to true in \no@expands
 %    \end{macrocode}
 % First those which arguments are \oarg{options}\marg{label}\oarg{insert}.
 %    \begin{macrocode}
@@ -18811,17 +18812,25 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,3,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}[##3]%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}[##3]%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}[##3]%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,3,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}[##3]%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}[##3]%
+        \else%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}[##3]%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsomo}%
@@ -18834,17 +18843,25 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}{##3}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}{##3}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}{##3}%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}{##3}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}{##3}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}{##3}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsomm}%
@@ -18856,44 +18873,34 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[2][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[2][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsom}%
 %    \end{macrocode}
-% \cs{l@noexpands@edgl} is a macro to avoid expanding glossaries macros in \cs{edtext} first argument. It is called by \cs{no@expands}.
+% \cs{l@noexpands@edgl} is a macro to switch \cs{ifl@noexpands@edgl} to true in \cs{no@expands}.
 % Its definition is made dynamically.
 % \begin{macro}{\l@noexpands@edgl}
 %    \begin{macrocode}
-    \def\l@noexpands@edgl{}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omos}{}%
-      }%
-    }%
-    \dolistloop{\edglsomo}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omms}{}%
-      }%
-    }%
-    \dolistloop{\edglsomm}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{oms}{}%
-      }%
-    }%
-    \dolistloop{\edglsom}%
+    \def\l@noexpands@edgl{\l@noexpands@edgltrue}%
   }{\let\l@noexpands@edgl\relax}%
 }%
 %    \end{macrocode}
