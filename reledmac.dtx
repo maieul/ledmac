@@ -577,6 +577,7 @@
 % \changes{v2.37.0}{2021/02/28}{Fix incompatibility between \protect\cs{eledsection} (and related) and \protect\package{hyperref}. Incompatibility was introduced by some changes in \protect\package{hyperref} package.}
 % \changes{v2.37.0}{2021/02/28}{Fix bug with \protect\cs{Xnonote}}
 % \changes{v2.37.0}{2021/02/28}{Improve syntaxis check.}
+% \changes{v2.37.1}{2021/03/08}{Fix bug with \protect\cs{edgls} and related in \cs{edtext} argument. Require \protect\package{glossaries-extra} is \protect\package{glossaries} is loaded.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -3820,6 +3821,8 @@
 % \section{Glossary}
 % \Macpackage\ provides mechanism to make glossaries with the \package{glossaries} package, refering not to the page, but to the page and line.
 % \subsection{Preamble setting}
+% When using \macpackage\ with \package{glossaries}, you must use also \package{glossaries-extra}.
+%
 % The standard compositor between page and line number in \macpackage\  is a dash, while \package{glossaries} uses, by default, a dot.
 % Consequently, you must:
 % \begin{itemize}
@@ -4465,7 +4468,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/02/28 v2.37.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/03/08 v2.37.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5042,6 +5045,13 @@
 %    \begin{macrocode}
 \newcommand{\led@error@PackageAfterEledmac}[1]{%
   \reledmac@error{#1 must be loaded before reledmac}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\led@error@require@glossariesextra}
+%    \begin{macrocode}
+\newcommand{\led@error@require@glossariesextra}{%
+  \reledmac@error{When using both reledmac and glossaries, you must also use glossaries-extra}{\@ehc}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -18762,6 +18772,8 @@
 %    \begin{macrocode}
 \AtBeginDocument{%
   \@ifpackageloaded{glossaries}{%
+    \@ifpackageloaded{glossaries-extra}{}{\led@error@require@glossariesextra}%
+    \newif\ifl@noexpands@edgl%A boolean switched to true in \no@expands
 %    \end{macrocode}
 % First those which arguments are \oarg{options}\marg{label}\oarg{insert}.
 %    \begin{macrocode}
@@ -18813,17 +18825,25 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,3,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}[##3]%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}[##3]%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}[##3]%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,3,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}[##3]%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}[##3]%
+        \else%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}[##3]%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsomo}%
@@ -18836,17 +18856,25 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[3][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}{##3}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}{##3}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}{##3}%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[3][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}{##3}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}{##3}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}{##3}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsomm}%
@@ -18858,44 +18886,34 @@
     \renewcommand{\do}[1]{%
       \expandafter\DeclareRobustCommandx\csname ed#1\endcsname[2][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname[counter=pageline,##1]{##2}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname[counter=pageline,noindex,##1]{##2}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname[counter=pageline,##1]{##2}%
+        \fi%
       }%
       \expandafter\WithSuffix\expandafter\DeclareRobustCommandx\csname ed#1\endcsname*[2][1,usedefault]{%
         \doedindexlabel%
-        \ifdef{\hypertarget}{%
-          \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
-        }{}%
-        \csname#1\endcsname*[counter=pageline,##1]{##2}%
+        \ifl@noexpands@edgl%
+          \csname#1\endcsname*[counter=pageline,noindex,##1]{##2}%
+        \else%
+          \ifdef{\hypertarget}{%
+            \Hy@raisedlink@left{\hypertarget{pageline.\thepageline}{}}%
+          }{}%
+          \csname#1\endcsname*[counter=pageline,##1]{##2}%
+        \fi%
       }%
     }%
     \dolistloop{\edglsom}%
 %    \end{macrocode}
-% \cs{l@noexpands@edgl} is a macro to avoid expanding glossaries macros in \cs{edtext} first argument. It is called by \cs{no@expands}.
+% \cs{l@noexpands@edgl} is a macro to switch \cs{ifl@noexpands@edgl} to true in \cs{no@expands}.
 % Its definition is made dynamically.
 % \begin{macro}{\l@noexpands@edgl}
 %    \begin{macrocode}
-    \def\l@noexpands@edgl{}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omos}{}%
-      }%
-    }%
-    \dolistloop{\edglsomo}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{omms}{}%
-      }%
-    }%
-    \dolistloop{\edglsomm}%
-    \renewcommand\do[1]{%
-      \xappto\l@noexpands@edgl{%
-        \noexpand\RenewDocumentCommand\csname ed#1\endcsname{oms}{}%
-      }%
-    }%
-    \dolistloop{\edglsom}%
+    \def\l@noexpands@edgl{\l@noexpands@edgltrue}%
   }{\let\l@noexpands@edgl\relax}%
 }%
 %    \end{macrocode}
