@@ -9358,10 +9358,10 @@
         \ifdefstring{\ms@data@position}{msdata-regular}{%
           \insert@msdata%
           \add@inserts%
-          \add@Xgroupbyline%
+          \add@Xgroupby{line}%
         }{%
           \add@inserts%
-          \add@Xgroupbyline%
+          \add@Xgroupby{line}%
           \insert@msdata%
         }%
 %    \end{macrocode}
@@ -9427,10 +9427,10 @@
     \ifdefstring{\ms@data@position}{msdata-regular}{%
       \insert@msdata%
       \add@inserts%
-      \add@Xgroupbyline%
+      \add@Xgroupby{line}%
     }{%
       \add@inserts%
-      \add@Xgroupbyline%
+      \add@Xgroupby{line}%
       \insert@msdata%
     }%
     \affixside@note%
@@ -10363,16 +10363,17 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\add@Xgroupbyline}
-% If you use \cs{Xgroupbyline}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, in order to be inserted later in one block.
-% This insertion in one block is made by \cs{add@Xgroupbyline}.
+% \begin{macro}{\add@Xgroupby}
+% If you use \cs{Xgroupbyline} or \cs{Xgroupbystanza}, the insertion of the critical footnotes are not made immediately in \cs{add@inserts}, but the content to be inserted is stored, in order to be inserted later in one block.
+% This insertion in one block is made by \cs{add@Xgroupby}.
+% His argument indicate if we need to insert the notes of the lines or the notes of the stanza.
 %    \begin{macrocode}
-\newcommand{\add@Xgroupbyline}{%
+\newcommand{\add@Xgroupby}[1]{%
   \unless\ifnocritical@%
     \def\do##1{%Looping on the series
       \let\olddo\do%Save the old \do macro, that is this macro itself!
-      \def\do####1{%Looping on the ##1@forinserting command
-         \ifcsdef{##1@forinserting@####1}{%
+      \def\do####1{%Looping on the ##1@forinserting@#1 command
+         \ifcsdef{##1@forinserting@#1@####1}{%
            \X@beforeinsertion{##1}%
            \if@ledgroup%
              \global\setbox\@nameuse{mp##1footins}=\vbox%
@@ -10394,17 +10395,17 @@
                   \rule\z@\splittopskip%
                }%
                {}%
-             \csuse{##1@forinserting@####1}%
+             \csuse{##1@forinserting@#1@####1}%
              \strut\par\allowbreak%
            }%
-           \global\csundef{##1@forinserting@####1}%
+           \global\csundef{##1@forinserting@#1@####1}%
            }%
            {}%
          }%
-      \ifcsdef{##1@forinserting}{%
-        \dolistcsloop{##1@forinserting}%
+      \ifcsdef{##1@forinserting@#1}{%
+        \dolistcsloop{##1@forinserting@#1}%
       }{}%
-      \global\csundef{##1@forinserting}%
+      \global\csundef{##1@forinserting@#1}%
       \let\do\olddo%Restore old do
       }%
     \dolistloop{\@series}%
@@ -10874,8 +10875,12 @@
 % this note series to format the text of the note.
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalvfootnote}[2]{%
-  \iftoggle{Xgroupbyline@#1}{%In the case we use \Xgroupbyline, the insertion is done later, in \add@Xgroupbyline.
-    \prepare@Xgroupbyline{#1}{#2}{\normalvfootnote@inserted}%
+  \ifboolexpr{togl{Xgroupbyline@#1} or togl{Xgroupbystanza@#1}}{%In the case we use \Xgroupbyline or \Xgroupbyszanza, the insertion is done later, in \add@Xgroupby{}.
+    \iftoggle{Xgroupbyline@#1}{%
+      \prepare@Xgroupby{#1}{#2}{\normalvfootnote@inserted}{line}%
+		}{%
+      \prepare@Xgroupby{#1}{#2}{\normalvfootnote@inserted}{stanza}%
+		}%
   }{%In the case we don't use \Xgroupbyline, the insertion is made directly
     \X@beforeinsertion{#1}%
     \insert\csname #1footins\endcsname{%
@@ -10936,10 +10941,13 @@
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{mpnormalvfootnote}}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\mpnormalvfootnote}[2]{%
-  \iftoggle{Xgroupbyline@#1}{%
-    \prepare@Xgroupbyline{#1}{#2}{\mpnormalvfootnote@inserted}%
-  }%
-  {%
+  \ifboolexpr{togl{Xgroupbyline@#1} or togl{Xgroupbystanza@#1}}{%In the case we use \Xgroupbyline or \Xgroupbyszanza, the insertion is done later, in \add@Xgroupby{}.
+    \iftoggle{Xgroupbyline@#1}{%
+      \prepare@Xgroupby{#1}{#2}{\mpnormalvfootnote@inserted}{line}%
+    }{%
+      \prepare@Xgroupby{#1}{#2}{\mpnormalvfootnote@inserted}{stanza}%
+    }%
+  }{%
       \global\setbox\@nameuse{mp#1footins}%
       \vbox{%
         \unvbox\@nameuse{mp#1footins}%
@@ -11686,10 +11694,13 @@
 % of the note (including numbers, lemma and text).
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\threecolvfootnote}[2]{%
-  \iftoggle{Xgroupbyline@#1}{%
-    \prepare@Xgroupbyline{#1}{#2}{\threecolvfootnote@inserted}%
-  }%
-  {%
+  \ifboolexpr{togl{Xgroupbyline@#1} or togl{Xgroupbystanza@#1}}{%In the case we use \Xgroupbyline or \Xgroupbyszanza, the insertion is done later, in \add@Xgroupby{}.
+    \iftoggle{Xgroupbyline@#1}{%
+      \prepare@Xgroupby{#1}{#2}{\threecolvfootnote@inserted}{line}%
+		}{%
+      \prepare@Xgroupby{#1}{#2}{\threecolvfootnote@inserted}{stanza}%
+		}%
+  }{%
     \let\bidi@RTL@everypar\relax%
     \X@beforeinsertion{#1}%
     \insert\csname #1footins\endcsname{%
@@ -11853,8 +11864,12 @@
 %    \end{macrocode}
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\twocolvfootnote}[2]{%
-  \iftoggle{Xgroupbyline@#1}{%
-    \prepare@Xgroupbyline{#1}{#2}{\twocolvfootnote@inserted}%
+  \ifboolexpr{togl{Xgroupbyline@#1} or togl{Xgroupbystanza@#1}}{%In the case we use \Xgroupbyline or \Xgroupbyszanza, the insertion is done later, in \add@Xgroupby{}.
+    \iftoggle{Xgroupbyline@#1}{%
+      \prepare@Xgroupby{#1}{#2}{\twocolvfootnote@inserted}{line}%
+		}{%
+      \prepare@Xgroupby{#1}{#2}{\twocolvfootnote@inserted}{stanza}%
+		}%
   }{%
     \let\bidi@RTL@everypar\relax%
     \X@beforeinsertion{#1}%
@@ -12787,27 +12802,28 @@
 }%
 %    \end{macrocode}
 % \end{macro}
-% \subsubsection{Footnote grouped by line}
-% \begin{macro}{\prepare@Xgroupbyline}
-% \cs{prepare@Xgroupbyline} is a macro called on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling \cs{insert} directly.
+% \subsubsection{Footnote grouped by line or by stanza}
+% \begin{macro}{\prepare@Xgroupby}
+% \cs{prepare@Xgroupby} is a macro called on the \cs{meta{XXX}vfootnote} if \cs{Xgroupbyline} is set to true, instead of calling \cs{insert} directly.
 % \#1 The series\\
 % \#2 The content of the footnote, which contains also the line number indication\\
 % \#3 A footnote formating macro, which prepares the contents of the insertion \\
+% \#4 The type of group : line or stanza\\
 %    \begin{macrocode}
-\newcommand{\prepare@Xgroupbyline}[3]{%
+\newcommand{\prepare@Xgroupby}[4]{%
   \iftoggle{Xgroupbylineseparetwolines@#1}{%
     \l@dparsefootspec#2%
-    \ifcsdef{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \ifcsdef{#1@forinserting@#4@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
       {%
-        \csgappto{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}{%
+        \csgappto{#1@forinserting@#4@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}{%
           \hskip\csuse{Xafternote@#1}\relax%
         }%
       }%
       {}%
-    \add@hooktoggle@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
-    \add@hookarg@specific@to@cs{#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hooktoggle@specific@to@cs{#1@forinserting@#4@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \add@hookarg@specific@to@cs{#1@forinserting@#4@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
     \csxappto%
-      {#1@forinserting@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+      {#1@forinserting@#4@\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
       {%
         \keep@this@crossref@forinserting%
         \unexpanded{%
@@ -12817,17 +12833,17 @@
           #3{#1}{#2}%
         }%
       }%
-    \listcsxadd{#1@forinserting}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
+    \listcsxadd{#1@forinserting@#4}{\l@dparsedendpage-\l@dparsedendline-\l@dparsedendsub}%
   }{%
-  \ifcsdef{#1@forinserting@all}{%
+  \ifcsdef{#1@forinserting@#4@all}{%
     \csgappto%
-      {#1@forinserting@all}%
+      {#1@forinserting@#4@all}%
       {\hskip\csuse{Xafternote@#1}\relax}%
     }{}%
-  \add@hooktoggle@specific@to@cs{#1@forinserting@all}%
-  \add@hookarg@specific@to@cs{#1@forinserting@all}%
+  \add@hooktoggle@specific@to@cs{#1@forinserting@#4@all}%
+  \add@hookarg@specific@to@cs{#1@forinserting@#4@all}%
   \csxappto%
-    {#1@forinserting@all}%
+    {#1@forinserting@#4@all}%
     {%
       \keep@this@crossref@forinserting%
       \unexpanded{%
@@ -12838,12 +12854,12 @@
       }%
     }%
   }%
-  \listcsgadd{#1@forinserting}{all}%
+  \listcsgadd{#1@forinserting@#4}{all}%
 }%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\keep@this@crossref@forinserting}
-% \cs{keep@this@crossref@forinserting} is called by \cs{prepare@Xgroupbyline}. It just ensures that \cs{@this@crossref@start} and \cs{this@crossref@end} value are kept in memory.
+% \cs{keep@this@crossref@forinserting@line} is called by \cs{prepare@Xgroupby}. It just ensures that \cs{@this@crossref@start} and \cs{this@crossref@end} value are kept in memory.
 %    \begin{macrocode}
 \newcommand{\keep@this@crossref@forinserting}{%
   \unexpanded{\gdef\@this@crossref@start}{\@this@crossref@start}%
