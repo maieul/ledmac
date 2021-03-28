@@ -9359,9 +9359,11 @@
           \insert@msdata%
           \add@inserts%
           \add@Xgroupby{line}%
+          \add@Xgroupbystanza%
         }{%
           \add@inserts%
           \add@Xgroupby{line}%
+          \add@Xgroupbystanza%
           \insert@msdata%
         }%
 %    \end{macrocode}
@@ -9428,9 +9430,11 @@
       \insert@msdata%
       \add@inserts%
       \add@Xgroupby{line}%
+      \add@Xgroupbystanza%
     }{%
       \add@inserts%
       \add@Xgroupby{line}%
+      \add@Xgroupbystanza%
       \insert@msdata%
     }%
     \affixside@note%
@@ -10413,6 +10417,16 @@
 }%
 
 
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\add@Xgroupbystanza}
+% \cs{add@Xgroupbystanza} calls \cs{add@Xgroupbystanza}\verb+{stanza}+ if we are at the last line of the current stanza. It requires at least one previous run.
+%    \begin{macrocode}
+\newcommand{\add@Xgroupbystanza}{%
+  \if@stopstanza%
+    \add@Xgroupby{stanza}%
+  \fi%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \subsection{Penalties}
@@ -19303,6 +19317,7 @@
 }
 
 \newcommandx{\stanza}[2][1,2,usedefault]{%
+  \global\@stopstanzafalse%
   \ifboolexpr{%
     not test{\ifdefvoid{\at@every@stanza}}%
     and test{\ifstrempty{#1}}%
@@ -19311,7 +19326,9 @@
     {\@startstanza[#1][#2]\at@start@every@stanza}%
 }%
 
+\newif\if@stopstanza%
 \newcommandx{\@stopstanza}[2][1,2,usedefault]{%
+  \global\@stopstanzatrue%
   \unskip%
   \endlock%
   \ifboolexpr{%
