@@ -578,6 +578,9 @@
 % \changes{v2.37.0}{2021/02/28}{Fix bug with \protect\cs{Xnonote}}
 % \changes{v2.37.0}{2021/02/28}{Improve syntaxis check.}
 % \changes{v2.37.1}{2021/03/08}{Fix bug with \protect\cs{edgls} and related in \protect\cs{edtext} argument. Require \protect\package{glossaries-extra} is \protect\package{glossaries} is loaded.}
+% \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\cs{Xstanzaonlyfirst}.}
+% \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\option{parapparatus} option and nested \protect\cs{edtext}.}
+% \changes{v2.37.1}{2021/04/04}{Fix bug with \protect\cs{Xgroupbyline} and two or three columns notes.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4468,7 +4471,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/03/08 v2.37.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/04/04 v2.37.2 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -5201,9 +5204,9 @@
 % \changes{v0.4.0}{2004/02/29}{Added \protect\cs{showlemma}}
 %    \begin{macrocode}
 \ifledfinal
-  \newcommand*{\showlemma}[1]{#1}
+  \global\notbool{parapparatus@}{\newcommand*}{\newcommand}{\showlemma}[1]{#1}%
 \else
-  \newcommand*{\showlemma}[1]{\textbf{#1}}%
+  \global\notbool{parapparatus@}{\newcommand*}{\newcommand}{\showlemma}[1]{\textbf{#1}}%
 \fi
 
 %    \end{macrocode}
@@ -10395,7 +10398,7 @@
                }%
                {}%
              \csuse{##1@forinserting@####1}%
-             \strut\par%
+             \strut\par\allowbreak%
            }%
            \global\csundef{##1@forinserting@####1}%
            }%
@@ -12251,7 +12254,7 @@
     togl{Xstanza@#2}%
     and bool {numberstanza}%
     and not (%
-      togl{Xpstartonlyfirst@#2}%
+      togl{Xstanzaonlyfirst@#2}%
       and test {\ifnumequal{\csuse{Xprevstanza@#2}}{\current@stanza}}%
     )%
   }{%
@@ -15120,6 +15123,9 @@
             \fi%
             \begingroup%
             \newcommand{\content}{##2}%
+            \ifcsstring{series@display#1}{paragraph}{%
+              \patchcmd{\@tag}{\par}{\relax}{}{}%
+            }{}%
             \ifnumberedpar@%
                 \ifledRcol%
                    \ifluatex%
