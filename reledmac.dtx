@@ -8266,21 +8266,33 @@
 % With \XeLaTeX, you must track whether the language reads left to right (English) or right to left (Arabic). \reledmac defines an \cs{if@RTL} boolean test is not already defined.
 %    \begin{macrocode}
         \if@RTL%
+          \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+            {000}%
+            {}%
+            {%
+            \ifnumequal%
+              {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+              {}%
+              {\write@lemma}%
+            }%
           \flag@start@RTL%
+          \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+            {000}%
+            {}%
+            {%
+            \ifnumequal%
+              {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\write@lemma}%
+              {}%
+            }%
         \else%
           \flag@start%
+          \write@lemma%
         \fi%
 %    \end{macrocode}
 % We write in the numbered file wether the current \protect\cs{edtext} has a \protect\cs{lemma} in the the second argument.
-%    \begin{macrocode}
-       \if@lemmacommand@%
-         \ifledRcol%
-           \write\linenum@outR{\string\@lemma}%
-         \else%
-           \write\linenum@out{\string\@lemma}%
-         \fi%
-       \fi%
-%    \end{macrocode}
 % Finally, we are ready to admit the first argument into the current
 % paragraph.
 %
@@ -8459,13 +8471,24 @@
 % \end{macro}
 %
 % \begin{macro}{\@lemma}
+% \begin{macro}{\write@lemma}
 % The \protect\cs{@lemma} is written in the numbered file to set which \protect\cs{edtext} has an
 % \protect\cs{lemma} as second argument.
 %    \begin{macrocode}
 \newcommand{\@lemma}{%
   \booltrue{lemmacommand@\the\@edtext@level}%
 }%
+\newcommand{\write@lemma}{%
+  \if@lemmacommand@%
+   \ifledRcol%
+     \write\linenum@outR{\string\@lemma}%
+   \else%
+     \write\linenum@out{\string\@lemma}%
+   \fi%
+  \fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\if@lemmacommand@}
 % \changes{v1.15.0}{2015/01/12}{New boolean \protect\cs{iflemmacommand@}.}
