@@ -2397,6 +2397,8 @@
 % \paragraph{For critical notes}
 % \DescribeMacro{\Xtxtbeforenumber}
 % \cs{Xtxtbeforenumber}\oarg{s}\marg{txt} allows the insertion of \meta{txt} before the line number only when the line number is printed, so taking into account \cs{Xnumberonlyfirstinline} and the like.
+% \DescribeMacro{\Xbeforepagenumber}
+% \cs{Xbeforepagenumber}\oarg{s}\marg{txt} allows the insertion of \meta{txt} before the page number only when the page number is printed, so when a note spans across two or more pages and the lineation is by page.
 % \paragraph{For endnotes}\label{pagelineendnotes}
 % \DescribeMacro{\Xendbeforepagenumber}
 % \cs{Xendbeforepagenumber}\oarg{s}\marg{text} defines the text before the page number in endnotes. Default value is \verb+p.+ (\enquote{p} followed by a dot).
@@ -12738,7 +12740,10 @@
     {\@annot@start@print}%
     {}%
   \ifl@d@pnum%
-    \wrap@edcrossref{\@this@crossref@start}{#1}%
+    \csuse{Xbeforepagenumber@\@currentseries}%
+    \wrap@edcrossref{\@this@crossref@start}{%
+      #1%
+    }%
     \ifl@d@Xlinenumber%
       \csuse{Xpagelinesep@\@currentseries}%
     \fi%
@@ -12786,8 +12791,11 @@
       {\@annot@end@print}%
       {}%
     \ifl@d@pnum%
-       \wrap@edcrossref{\@this@crossref@end}{#4}%
-       \csuse{Xpagelinesep@\@currentseries}%
+       \csuse{Xbeforepagenumber@\@currentseries}%
+       \wrap@edcrossref{\@this@crossref@end}{%
+         #4%
+      }%
+      \csuse{Xpagelinesep@\@currentseries}%
     \fi%
     \ifl@d@Xlinenumber%
       \ifl@d@elin%
@@ -15094,6 +15102,7 @@
       \newtoggle{Xnolinenumberifannotation@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
       \csgdef{Xtxtbeforenumber@#1}{}%
+      \csgdef{Xbeforepagenumber@#1}{}%
       \csgdef{Xafternumber@#1}{0.5em}%
       \newtoggle{Xnonbreakableafternumber@#1}%
       \csgdef{Xbeforesymlinenum@#1}{\csuse{Xbeforenumber@#1}}%
@@ -15846,6 +15855,7 @@
   \newhookcommand@series{Xsymlinenumannotation}%
   \newhookcommand@series{Xbeforenumber}
   \newhookcommand@series{Xtxtbeforenumber}
+  \newhookcommand@series{Xbeforepagenumber}%
   \newhookcommand@series{Xafternumber}
   \newhookcommand@series{Xbeforesymlinenum}
   \newhookcommand@series{Xaftersymlinenum}
