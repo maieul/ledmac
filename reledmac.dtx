@@ -581,6 +581,7 @@
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\cs{Xstanzaonlyfirst}.}
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\option{parapparatus} option and nested \protect\cs{edtext}.}
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\cs{Xgroupbyline} and two or three columns notes.}
+% \changes{v2.38.0}{2021/05/30}{Fix indent's bugs with stanza and right-to-left typesetting.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4471,7 +4472,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/04/22 v2.37.2a typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/05/30 v2.38.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -9572,11 +9573,10 @@
 % \begin{macro}{\ledllfill}
 % \begin{macro}{\ledrlfill}
 %  These macros are called at the left (\protect\cs{ledllfill}) and the right
-% (\protect\cs{ledllfill}) of each numbered line. The initial definitions
-% correspond to the original code for \protect\cs{do@line}.
+% (\protect\cs{ledllfill}) of each numbered line.
 %    \begin{macrocode}
-\newcommand*{\ledllfill}{\hfil}
-\newcommand*{\ledrlfill}{}
+\newcommand*{\ledllfill}{\unless\if@RTL\hfil\fi}%
+\newcommand*{\ledrlfill}{\if@RTL\hfil\fi}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -19219,10 +19219,14 @@
         }%
     }%
 }%
-\xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
-            \hangindent\expandafter
-            \noexpand\csname sza@0@\endcsname\stanzaindentbase
-            \hangafter\@ne}
+
+\def\stanza@hang{%
+  \leavevmode\startlock%
+  \hangindent\if@RTL-\fi\expandafter%
+  \csname sza@0@\endcsname\stanzaindentbase%
+  \hangafter\@ne%
+}%
+
 \def\sza@penalty{\count@\csname szp@\number\stanza@count @\endcsname
          \ifnum\count@>\@M\advance\count@-\@M\penalty-\else
          \penalty\fi\count@}
@@ -19273,8 +19277,14 @@
       \def\noexpand\stanza@hang{\unexpanded{\leavevmode\null}}%
       \let\noexpand\endlock\relax%
    \noexpand\else%
-     \interlinepenalty%
-     \@M\rightskip\z@ plus 1fil\relax%
+     \interlinepenalty\@M%
+     \unexpanded{%
+       \ifboolexpr{bool {@RTL} and bool{xetex}}{%
+         \leftskip\z@ plus 1fil\relax%
+       }{%
+         \rightskip\z@ plus 1fil\relax%
+       }%
+     }%
    \noexpand\fi%
    \noexpand\ifnum\expandafter\noexpand\csname szp@0@\endcsname=\z@%
      \let\noexpand\sza@penalty%
