@@ -581,6 +581,11 @@
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\cs{Xstanzaonlyfirst}.}
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\option{parapparatus} option and nested \protect\cs{edtext}.}
 % \changes{v2.37.2}{2021/04/04}{Fix bug with \protect\cs{Xgroupbyline} and two or three columns notes.}
+% \changes{v2.38.0}{2021/05/30}{Fix indent bugs with stanza and right-to-left typesetting.}
+% \changes{v2.38.0}{2021/05/30}{Fix bug with \protect\cs{lemma} and right-to-left typesetting with \protect\XeLaTeX.}
+% \changes{v2.38.0}{2021/05/30}{Add hyperlinks between footnote and lemma when using abbreviated line range.}
+% \changes{v2.38.0}{2021/05/30}{Add \protect\cs{Xnopagenumberifcurrent} hook.}
+% \changes{v2.38.0}{2021/05/30}{Add \protect\cs{Xbeforepagenumber} hook.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2394,6 +2399,8 @@
 % \paragraph{For critical notes}
 % \DescribeMacro{\Xtxtbeforenumber}
 % \cs{Xtxtbeforenumber}\oarg{s}\marg{txt} allows the insertion of \meta{txt} before the line number only when the line number is printed, so taking into account \cs{Xnumberonlyfirstinline} and the like.
+% \DescribeMacro{\Xbeforepagenumber}
+% \cs{Xbeforepagenumber}\oarg{s}\marg{txt} allows the insertion of \meta{txt} before the page number only when the page number is printed, so when a note spans across two or more pages and the lineation is by page.
 % \paragraph{For endnotes}\label{pagelineendnotes}
 % \DescribeMacro{\Xendbeforepagenumber}
 % \cs{Xendbeforepagenumber}\oarg{s}\marg{text} defines the text before the page number in endnotes. Default value is \verb+p.+ (\enquote{p} followed by a dot).
@@ -2457,6 +2464,13 @@
 %
 % \DescribeMacro{\Xendnonumber} \protect\cs{Xendnonumber}\oarg{s} is the same for endnotes.
 %
+% \subsubsection{Disabling page number printing}
+% \DescribeMacro{\Xnopagenumberifcurrent}%
+% When we use a lineation by page, \macpackage checks if a lemma spans across two page. In this case, it prints the starting end ending page number.
+%
+% Many times, one of these two page numbers is also the current page number.
+%
+% In this case, it is possible to disable page number printing, using \cs{Xnopagenumberifcurrent}\oarg{s}.
 % \subsubsection{Printing pstart number}
 % \changes{v1.1.0}{2012/09/25}{Add \protect\cs{Xpstart} and \protect\cs{Xonlypstart}}
 % \changes{v1.18.0}{2015/02/23}{Add \protect\cs{Xpstarteverytime}}
@@ -2494,16 +2508,6 @@
 % Default value is empty.
 %
 % \DescribeMacro{Xstanzaonlyfirst} You can use \cs{Xstanzaonlyfirst}\oarg{s} to print the stanza number only the first time it appears in the apparatus.
-% \subsubsection{Disabling line number printing}
-% Sometime, we want to print only the stanza or pstart number, but not the line number.
-% \DescribeMacro{\Xnolinenumber}
-% \DescribeMacro{\Xendnolinenumber}
-% The \cs{Xnolinenumber}\oarg{s} macro  disables line number printing for critical footnotes.
-%
-% The \cs{Xendnolinenumber} macro  does the same for endnotes.
-%
-% Note that contrary to \cs{Xnonumber} and \cs{Xnoendnum}, the page/pstartannotation will be printed, if required.
-%
 % \subsubsection{Options for line number annotations}\label{annotation-inapparatus}
 % \DescribeMacro{\Xlinenumannotationonlyfirst}
 % By default, the line number annotation (\reff{annotation}) is printed in every note. If you want to print it only the first time for a given annotation
@@ -4471,7 +4475,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/04/22 v2.37.2a typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/05/30 v2.38.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8265,21 +8269,33 @@
 % With \XeLaTeX, you must track whether the language reads left to right (English) or right to left (Arabic). \reledmac defines an \cs{if@RTL} boolean test is not already defined.
 %    \begin{macrocode}
         \if@RTL%
+          \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+            {000}%
+            {}%
+            {%
+            \ifnumequal%
+              {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+              {}%
+              {\write@lemma}%
+            }%
           \flag@start@RTL%
+          \IfStrEq{\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+            {000}%
+            {}%
+            {%
+            \ifnumequal%
+              {\xabslineref{edtext:start:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\xabslineref{edtext:end:\csuse{thisedtext@\the\@edtext@level}}}%
+              {\write@lemma}%
+              {}%
+            }%
         \else%
           \flag@start%
+          \write@lemma%
         \fi%
 %    \end{macrocode}
 % We write in the numbered file wether the current \protect\cs{edtext} has a \protect\cs{lemma} in the the second argument.
-%    \begin{macrocode}
-       \if@lemmacommand@%
-         \ifledRcol%
-           \write\linenum@outR{\string\@lemma}%
-         \else%
-           \write\linenum@out{\string\@lemma}%
-         \fi%
-       \fi%
-%    \end{macrocode}
 % Finally, we are ready to admit the first argument into the current
 % paragraph.
 %
@@ -8458,13 +8474,24 @@
 % \end{macro}
 %
 % \begin{macro}{\@lemma}
+% \begin{macro}{\write@lemma}
 % The \protect\cs{@lemma} is written in the numbered file to set which \protect\cs{edtext} has an
 % \protect\cs{lemma} as second argument.
 %    \begin{macrocode}
 \newcommand{\@lemma}{%
   \booltrue{lemmacommand@\the\@edtext@level}%
 }%
+\newcommand{\write@lemma}{%
+  \if@lemmacommand@%
+   \ifledRcol%
+     \write\linenum@outR{\string\@lemma}%
+   \else%
+     \write\linenum@out{\string\@lemma}%
+   \fi%
+  \fi%
+}%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \begin{macro}{\if@lemmacommand@}
 % \changes{v1.15.0}{2015/01/12}{New boolean \protect\cs{iflemmacommand@}.}
@@ -9572,11 +9599,10 @@
 % \begin{macro}{\ledllfill}
 % \begin{macro}{\ledrlfill}
 %  These macros are called at the left (\protect\cs{ledllfill}) and the right
-% (\protect\cs{ledllfill}) of each numbered line. The initial definitions
-% correspond to the original code for \protect\cs{do@line}.
+% (\protect\cs{ledllfill}) of each numbered line.
 %    \begin{macrocode}
-\newcommand*{\ledllfill}{\hfil}
-\newcommand*{\ledrlfill}{}
+\newcommand*{\ledllfill}{\unless\if@RTL\hfil\fi}%
+\newcommand*{\ledrlfill}{\if@RTL\hfil\fi}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -12669,7 +12695,7 @@
       {\numdef{\tmp}{0}}%
     \istwofollowinglines@false%
     \ifnumequal{#4-#2}{1}%
-    {\istwofollowinglines@true}%
+    {\istwofollowinglines@true}%%
     {\ifbypage@%
       \ifnumequal{#3-#1}{1}%
       {%
@@ -12685,6 +12711,7 @@
 % \end{macro}
 %
 % \begin{macro}{\printlines}
+% \begin{macro}{\printlines@count}
 % \changes{v2.5.0}{2015/11/13}{\protect\cs{printlines} takes an eighth argument: the line flag}
 % So, we have decided which part of line number sets will be printed depending on these values.
 % Now we are ready to print them.
@@ -12692,7 +12719,9 @@
 % \changes{v0.15.0}{2012/06/11}{Line numbering can be reset at each pstart.}
 % Arguments are 1) start page number 2) start line number 3) start subline number 4) end page number 5) end line number 6) end subline number 7) font specification 8) side flag
 %    \begin{macrocode}
+\newcount\printlines@count%
 \def\printlines#1|#2|#3|#4|#5|#6|#7|#8|{%
+  \global\advance\printlines@count by 1%
   \begingroup%
 %    \end{macrocode}
 % Decide which part of line number components we will print.
@@ -12712,11 +12741,28 @@
   \ifcsstring{Xlinenumannotationposition@\@currentseries}{before}%
     {\@annot@start@print}%
     {}%
+%    \end{macrocode}
+% Sometime, we need to print the page number.
+% However, if both the current page is equal to the page number and we use \cs{Xnopagenumberifcurrent}, we do not want to print it.
+% To determine the current page, we need to use crossref mechanism. See \url{https://tex.stackexchange.com/a/239457/7712} for explanation.
+%    \begin{macrocode}
   \ifl@d@pnum%
-    \wrap@edcrossref{\@this@crossref@start}{#1}%
-    \ifl@d@Xlinenumber%
-      \csuse{Xpagelinesep@\@currentseries}%
-    \fi%
+    \iftoggle{Xnopagenumberifcurrent@\@currentseries}{%
+      \edlabel{printlines@\the\printlines@count}%
+    }{}%
+    \ifboolexpr{%
+      not test{\ifnumequal{\xpageref{printlines@\the\printlines@count}}{#1}}%
+      or not togl{Xnopagenumberifcurrent@\@currentseries}%
+      }%
+      {%
+        \csuse{Xbeforepagenumber@\@currentseries}%
+        \wrap@edcrossref{\@this@crossref@start}{%
+          #1%
+        }%
+        \ifl@d@Xlinenumber%
+          \csuse{Xpagelinesep@\@currentseries}%
+        \fi%
+      }{}%
   \fi%
   \ifl@d@Xlinenumber%
     \wrap@edcrossref{\@this@crossref@start}{%
@@ -12744,9 +12790,9 @@
   \ifl@d@Xtwolines%
     \ifl@d@Xlinenumber%
       \ifl@d@Xmorethantwolines%
-        \csuse{Xmorethantwolines@\@currentseries}%
+        \wrap@edcrossref{\@this@crossref@end}{\csuse{Xmorethantwolines@\@currentseries}}%
       \else%
-        \csuse{Xtwolines@\@currentseries}%
+        \wrap@edcrossref{\@this@crossref@end}{\csuse{Xtwolines@\@currentseries}}%
       \fi%
     \fi%
   \else%
@@ -12761,8 +12807,16 @@
       {\@annot@end@print}%
       {}%
     \ifl@d@pnum%
-       \wrap@edcrossref{\@this@crossref@end}{#4}%
-       \csuse{Xpagelinesep@\@currentseries}%
+      \ifboolexpr{%
+        not test{\ifnumequal{\xpageref{printlines@\the\printlines@count}}{#4}}%
+        or not togl{Xnopagenumberifcurrent@\@currentseries}%
+        }{%
+           \csuse{Xbeforepagenumber@\@currentseries}%
+           \wrap@edcrossref{\@this@crossref@end}{%
+             #4%
+          }%
+         \csuse{Xpagelinesep@\@currentseries}%
+       }{}%
     \fi%
     \ifl@d@Xlinenumber%
       \ifl@d@elin%
@@ -12789,6 +12843,7 @@
   \endgroup%
 }%
 %    \end{macrocode}
+% \end{macro}
 % \end{macro}
 % \subsubsection{Footnote grouped by line}
 % \begin{macro}{\prepare@Xgroupbyline}
@@ -14870,9 +14925,9 @@
   \ifl@d@Xtwolines%
     \ifl@d@Xendlinenumber%
       \ifl@d@Xmorethantwolines%
-        \csuse{Xendmorethantwolines@\@currentseries}%
+        \wrap@edcrossref{\@this@crossref@end}{\csuse{Xendmorethantwolines@\@currentseries}}%
       \else%
-        \csuse{Xendtwolines@\@currentseries}%
+        \wrap@edcrossref{\@this@crossref@end}{\csuse{Xendtwolines@\@currentseries}}%
       \fi%
     \fi%
   \else%
@@ -15069,6 +15124,8 @@
       \newtoggle{Xnolinenumberifannotation@#1}%
       \csgdef{Xbeforenumber@#1}{0pt}%
       \csgdef{Xtxtbeforenumber@#1}{}%
+      \newtoggle{Xnopagenumberifcurrent@#1}%
+      \csgdef{Xbeforepagenumber@#1}{}%
       \csgdef{Xafternumber@#1}{0.5em}%
       \newtoggle{Xnonbreakableafternumber@#1}%
       \csgdef{Xbeforesymlinenum@#1}{\csuse{Xbeforenumber@#1}}%
@@ -15821,6 +15878,8 @@
   \newhookcommand@series{Xsymlinenumannotation}%
   \newhookcommand@series{Xbeforenumber}
   \newhookcommand@series{Xtxtbeforenumber}
+  \newhooktoggle@series{Xnopagenumberifcurrent}%
+  \newhookcommand@series{Xbeforepagenumber}%
   \newhookcommand@series{Xafternumber}
   \newhookcommand@series{Xbeforesymlinenum}
   \newhookcommand@series{Xaftersymlinenum}
@@ -19219,10 +19278,14 @@
         }%
     }%
 }%
-\xdef\stanza@hang{\noexpand\leavevmode\noexpand\startlock
-            \hangindent\expandafter
-            \noexpand\csname sza@0@\endcsname\stanzaindentbase
-            \hangafter\@ne}
+
+\def\stanza@hang{%
+  \leavevmode\startlock%
+  \hangindent\if@RTL-\fi\expandafter%
+  \csname sza@0@\endcsname\stanzaindentbase%
+  \hangafter\@ne%
+}%
+
 \def\sza@penalty{\count@\csname szp@\number\stanza@count @\endcsname
          \ifnum\count@>\@M\advance\count@-\@M\penalty-\else
          \penalty\fi\count@}
@@ -19273,8 +19336,14 @@
       \def\noexpand\stanza@hang{\unexpanded{\leavevmode\null}}%
       \let\noexpand\endlock\relax%
    \noexpand\else%
-     \interlinepenalty%
-     \@M\rightskip\z@ plus 1fil\relax%
+     \interlinepenalty\@M%
+     \unexpanded{%
+       \ifboolexpr{bool {@RTL} and bool{xetex}}{%
+         \leftskip\z@ plus 1fil\relax%
+       }{%
+         \rightskip\z@ plus 1fil\relax%
+       }%
+     }%
    \noexpand\fi%
    \noexpand\ifnum\expandafter\noexpand\csname szp@0@\endcsname=\z@%
      \let\noexpand\sza@penalty%
