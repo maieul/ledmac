@@ -8318,6 +8318,16 @@
         \showlemma{#1}%
         }%
 %    \end{macrocode}
+% If using \package{hyperref} package, we put the final hypertarget for \cs{applabel}.
+%    \begin{macrocode}
+            \ifdef{\hypertarget}%
+              {%
+                \def\do##1{\Hy@raisedlink{\hypertarget{##1:end}{}}}%
+                \dolistcsloop{applabel@thisedtext@\the\@edtext@level}%
+                \global\cslet{applabel@thisedtext@\the\@edtext@level}{\relax}%
+              }%
+              {}%
+%    \end{macrocode}
 %
 % Finally, we add any insertions that are
 % associated with the \emph{end} of
@@ -16950,6 +16960,15 @@
 % Use the \LaTeX\ standard hack for label.
 %    \begin{macrocode}
       \@esphack%
+%    \end{macrocode}
+% If using \package{hyperref}, store the label in a list for the current edtext, to call later an hypertarget for the end of the lemma.
+%    \begin{macrocode}
+            \ifdef{\hypertarget}%
+            {%
+              \ifcsundef{applabel@thisedtext@\the\@edtext@level}{\global\cslet{applabel@thisedtext@\the\@edtext@level}{\relax}}{}%
+              \listcsgadd{applabel@thisedtext@\the\@edtext@level}{#1}%
+            }%
+            {}%
 %    \end{macrocode}
 % Warning if \protect\cs{applabel} is called outside of \protect\cs{edtext}.
 %    \begin{macrocode}
