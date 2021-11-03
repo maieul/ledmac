@@ -587,6 +587,7 @@
 % \changes{v2.38.0}{2021/05/30}{Add \protect\cs{Xnopagenumberifcurrent} hook.}
 % \changes{v2.38.0}{2021/05/30}{Add \protect\cs{Xbeforepagenumber} hook.}
 % \changes{v2.38.1}{2021/09/27}{Fix incompatibility between \protect\parpackage's option \protect\option{continuousnumberingwithcolumns} and lineation by page.}
+% \changes{v2.38.2}{2021/11/03}{Fix bug when using \protect\cs{applabel} in conjunction with \protect\package{hyperref} package.}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4476,7 +4477,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2021/09/27 v2.38.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2021/11/03 v2.38.2 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Package options}
@@ -8317,6 +8318,16 @@
         {%
         \showlemma{#1}%
         }%
+%    \end{macrocode}
+% If using \package{hyperref} package, we put the final hypertarget for \cs{applabel}.
+%    \begin{macrocode}
+            \ifdef{\hypertarget}%
+              {%
+                \def\do##1{\Hy@raisedlink{\hypertarget{##1:end}{}}}%
+                \dolistcsloop{applabel@thisedtext@\the\@edtext@level}%
+                \global\cslet{applabel@thisedtext@\the\@edtext@level}{\empty}%
+              }%
+              {}%
 %    \end{macrocode}
 %
 % Finally, we add any insertions that are
@@ -16950,6 +16961,15 @@
 % Use the \LaTeX\ standard hack for label.
 %    \begin{macrocode}
       \@esphack%
+%    \end{macrocode}
+% If using \package{hyperref}, store the label in a list for the current edtext, to call later an hypertarget for the end of the lemma.
+%    \begin{macrocode}
+            \ifdef{\hypertarget}%
+            {%
+              \ifcsundef{applabel@thisedtext@\the\@edtext@level}{\global\cslet{applabel@thisedtext@\the\@edtext@level}{\relax}}{}%
+              \listcsgadd{applabel@thisedtext@\the\@edtext@level}{#1}%
+            }%
+            {}%
 %    \end{macrocode}
 % Warning if \protect\cs{applabel} is called outside of \protect\cs{edtext}.
 %    \begin{macrocode}
