@@ -349,7 +349,8 @@
 % \changes{v2.24.3}{2020/11/08}{Fix bug with hanging verse in parallel typesetting.}
 % \changes{v2.25.0}{2020/11/29}{Add compatibility with \protect\cs{linenumannotationothersidetrue} of \protect\macpackage.}.
 % \changes{v2.25.1}{2021/01/21}{\protect\cs{ifsublines@R} migrated to \protect\macpackage}
-% \changes{v2.25.2}{2021/09/27}{Fix incompatibility with \protect\package{babel} v.3.61}
+% \changes{v2.25.2}{2021/09/27}{Fix incompatibility with \protect\package{babel} v3.61}
+% \changes{v2.25.3}{2022/04/22}{Fix incompatibility with \protect\package{polyglossia} v1.55}
 % ^^A PW added following as the definitions are at some unknown elsewhere
 %
 % \newcommand{\egstart}{%
@@ -1406,7 +1407,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledpar}[2021/09/27 v2.25.2 reledmac extension for parallel texts]%
+\ProvidesPackage{reledpar}[2022/04/22 v2.25.3 reledmac extension for parallel texts]%
 
 %    \end{macrocode}
 % \subsection{Package's requirement}
@@ -1586,7 +1587,7 @@
 %    \begin{macrocode}
 \newcommand{\led@err@polyglossiaTooOld}{%
   \reledpar@error{You use the polyglosia package.%
-  \MessageBreak However, reledpar requires version 2020/04/08 v1.49 or later of the polyglossia package.%
+  \MessageBreak However, reledpar requires version 2022/04/10 v1.55 or later of the polyglossia package.%
   \MessageBreak Please update your polyglossia version}{\@ehc}%
 }%
 %    \end{macrocode}
@@ -5638,24 +5639,25 @@
 % \changes{v2.23.0}{2020/03/08}{Restore compatibility with versions of polyglossia prior to v1.45.}
 % \begin{macrocode}
   {%
-    \@ifpackagelater{polyglossia}{2020/04/08}{}{\led@err@polyglossiaTooOld}%
+    \@ifpackagelater{polyglossia}{2022/04/10}{}{\led@err@polyglossiaTooOld}%
     \let\old@otherlanguage\otherlanguage%
        \renewcommand{\otherlanguage}[2][]{%
-        \xpg@set@group@aux%
         \selectlanguage[#1]{#2}%
+        \xpg@set@language@only@aux[#1]{#2}%
         \ifledRcol  \gdef\theledlanguageR{#2}%
         \else      \gdef\theledlanguageL{#2}%
         \fi}%
       \renewcommand{\l@duselanguage}[1]{%
         \csuse{no\languagename @numbers}%
-        \@select@language{#1}%
+        \expandafter\@select@language\expandafter{#1}%
       }%
-      \gdef\theledlanguageL{\xpg@main@language}%
-      \gdef\theledlanguageR{\xpg@main@language}%
+      \xdef\theledlanguageL{\xpg@main@language}%
+      \xdef\theledlanguageR{\xpg@main@language}%
 %    \end{macrocode}
 % That is it.
 %    \begin{macrocode}
-}}
+  }%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
