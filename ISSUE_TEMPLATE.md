@@ -37,7 +37,7 @@ Please prefer examples in the following languages
 - Latin
 - Latin
 - Greek
-If your problem is absolutly linked to some other language, you can use it, but please add very explicit explanation.
+If your problem is absolutely linked to some other language, you can use it, but please add very explicit explanation.
 
 Please avoid not standard font. If required, please provide a link to the font used.
 -->
