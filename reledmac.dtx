@@ -9491,6 +9491,7 @@
 %    \begin{macrocode}
 \def\print@eledsection{%
     \disable@edindex%
+    \disable@edlabel%
     \if@firstlineofpage%
       \set@Xtxtbeforenotes%
       \set@txtbeforenotesX%
@@ -9522,6 +9523,7 @@
     \vskip-\baselineskip%
     \continuousnumberingwithcolumns@sync@linenumber@singletext%
     \restore@edindex%
+    \restore@edlabel%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -20340,16 +20342,20 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\EDLABEL}
-% \begin{macro}{\xedlabel}
+% \begin{macro}{\disable@edlabel}
+% \begin{macro}{\restore@edlabel}
 % We need to be able to modify and restore the \protect\cs{edlabel} macro.
 %    \begin{macrocode}
-\let\EDLABEL=\edlabel
-\newcommand*{\xedlabel}[1]{\EDLABEL{#1}}
+\newcommand{\disable@edlabel}{%
+  \global\let\old@edlabel\edlabel%
+  \global\let\edlabel\@gobble%
+}%
+\newcommand{\restore@edlabel}{%
+  \global\let\edlabel\old@edlabel%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
-%
 %
 % \begin{macro}{\xedindex}
 % \begin{macro}{\nulledindex}
@@ -20403,7 +20409,8 @@
   \let\edtext\relax
   \def\do##1{\global\csletcs{##1footnote}{l@dgobbleoptarg}}%
   \dolistloop{\@series}%
-  \let\edindex\nulledindex
+  \let\edindex\nulledinde%
+  \disable@edlabel%
   \let\linenum\@gobble}
 \newcommand{\l@drestoreforedtext}{%
   \def\do##1{\global\csletcs{##1footnote}{##1@@footnote}}
@@ -20441,8 +20448,8 @@
   \let\linenum\@line@@num
   \hilfsskip=\l@dcolwidth%
   \advance\hilfsskip by -\wd\hilfsbox
-  \def\edlabel##1{\xedlabel{##1}}}
-
+  \restore@edlabel%
+}%
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\disablel@dtabfeet}
