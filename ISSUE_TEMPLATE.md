@@ -28,18 +28,19 @@ Does the problem happen both in parallel typesetting and normal typesetting? -->
 <!-- Instructions for creating an MWE:
 https://tex.meta.stackexchange.com/questions/228/ive-just-been-asked-to-write-a-minimal-example-what-is-that
 If the problem occurs both in parallel typesetting and normal typesetting, please make your MWE in normal typesetting.
+Please use the optimization options when calling the relemac/reledpar package
 Please avoid:
 - custom commands: use standard reledmac command in your example;
 - unrequired package in your preamble;
-- blindtext and other false text packages;
+- unrequired font and language selection in your preamble; especially, avoid not standard font ; if required, please provide a link to the font used
+- unrequired reledmac/reledmac settings to reproduce your problem;
+- blindtext, lipsum and other false text packages;
 Please prefer examples in the following languages
 - French
 - Latin
-- Latin
+- English
 - Greek
 If your problem is absolutly linked to some other language, you can use it, but please add very explicit explanation.
-
-Please avoid not standard font. If required, please provide a link to the font used.
 -->
 
 ```latex
