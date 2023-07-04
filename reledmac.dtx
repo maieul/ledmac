@@ -592,6 +592,8 @@
 % \changes{v2.39.0}{2021/01/11}{Add \protect\cs{Xnotboxingsubline} and \protect\cs{Xendnotboxingsubline} hooks.}
 % \changes{v2.39.1}{2021/02/04}{Fix bug with index in familiar and critical footnotes.}
 % \changes{v2.39.2}{2023/07/04}{Fix bug with \protect\cs{edlabel} in \protect\cs{eledsection} and related.}
+% \changes{v2.39.2}{2022/07/04}{Fix bug with with \protect\opt{continuousnumberingwithcolumns} when right column starts a new page and we use lineation by page.}
+% \changes{v2.39.2}{2022/07/04}{Tools for \protect\parpackage v2.25.4}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -6746,6 +6748,7 @@
   \@page{#1}%
   \ifledRcol%
     \@nl@regR%
+    \csnumgdef{@page@forlineR@\the\section@numR @\the\absline@numR}{#1}%
   \else%
     \@nl@reg%
   \fi%
@@ -6835,10 +6838,16 @@
       \csnumgdef{@lastline@forpageR@\the\page@numR}{\the\line@numR}%
       \csnumgdef{@lastsubline@forpageR@\the\page@numR}{\the\subline@numR}%
       \ifbypage@R
+        \letcs{\prevsection@last@page@num}{last@page@num@\the\numexpr\section@num-1\relax}%
+        \ifundef{\prevsection@last@page@num}{\def\prevsection@last@page@num{-999}}{}%
         \ifx\l@dchset@num\relax%Not resetting if preceded by a \setlinenum
           \ifboolexpr{%
             (bool{continuousnumberingwithcolumns} or bool{resumenumberingR@start})%
             and test {\ifnumequal{\last@page@numR}{-10000}}%
+            and not (%
+              bool{continuousnumberingwithcolumns}%
+              and test {\ifnumcomp{\prevsection@last@page@num}{<}{#1}}%
+            )%
           }%
           {}%
           {%
@@ -6872,7 +6881,8 @@
       \global\this@section@page@num=#1%
       \last@page@num=#1%
       \global\this@section@last@page@num=#1%
-      \def\next@page@num{#1}%
+      \global\csdef{last@page@num@\the\section@num}{#1}%
+      \gdef\next@page@num{#1}%
 %    \end{macrocode}
 % And we set a flag that tells \cs{@nl} that a new page number is
 % to be set, because other associated actions shouldn't occur until the
