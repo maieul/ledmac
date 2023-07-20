@@ -5144,6 +5144,13 @@
 }%
 %    \end{macrocode}
 % \end{macro}
+% \begin{macro}{\led@error@fail@patch@stpelt}
+%    \begin{macrocode}
+\newcommand{\led@error@fail@patch@stpelt}{%
+  \reledmac@error{Failed to patch the \string\@stpelt\space command}{\@ehc}%
+}%
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\led@error@fail@patch@addtocounter}
 %    \begin{macrocode}
 \newcommand{\led@error@fail@patch@addtocounter}{%
@@ -13477,7 +13484,8 @@
 %
 % \begin{macro}{\get@fnmarkX}
 % This command gets the correct footnote number when typesetting parallel texts.
-% \#1 footnote series, \#2 footnote counter, \#3 manual footnote number
+% \#1 footnote series, \#2 footnote counter, \#3 manual footnote number.
+% It also gets, if required, a hyperref (almost) unique identifier for the footnote.
 %    \begin{macrocode}
 \newcommand{\get@fnmarkX}[3]{%
   \ifstrempty{#3}{%
@@ -13485,18 +13493,19 @@
       {%
         \stepcounter{footnote#1@typeset}%
         \setcounter{footnote#1}{\value{footnote#1@typeset}}%
-        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
           \immediate\write\@mainaux{%
             \csgdef{footnote#1reading#2=typeset}{\the\csname c@footnote#1@typeset\endcsname}%
            }%
       }%
       {%
         \setcounter{footnote#1}{#2}%
-        \@namedef{@thefnmark#1}{\csuse{thefootnote#1}}%
       }%
+      \csdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+      \csdef{hr@thefnmark#1}{\the\value{footnote#1}@\the\csname footnote#1@series\endcsname}%
   }%
   {%
     \csdef{@thefnmark#1}{#3}%
+    \csdef{hr@thefnmark#1}{#3@\the\csname footnote#1@series\endcsname}%
   }%
 }%
 %
@@ -14047,11 +14056,11 @@
 \newcommand{\wrapped@footfootmarkX}[1]{%
   \ifdefined\hypertarget%
     \hyperlink%
-        {@bodyfootmark#1@\this@footnoteX@reading}%
+        {@bodyfootmark#1@\csuse{hr@thefnmark#1}}%
         {\@nameuse{footfootmark#1}}%
     \Hy@raisedlink{%
       \hypertarget%
-        {@footnotemark#1@\this@footnoteX@reading}%
+        {@footnotemark#1@\csuse{hr@thefnmark#1}}%
         {}%
       }%
   \else%
@@ -14066,13 +14075,17 @@
 \newcommand{\wrapped@bodyfootmarkX}[1]{%
   \ifdefined\hypertarget%
     \hyperlink%
-        {@footnotemark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
+        {@footnotemark#1@\csuse{hr@thefnmark#1}}%
         {\@nameuse{bodyfootmark#1}}%
-    \Hy@raisedlink{%
-      \hypertarget%
-        {@bodyfootmark#1@\expandafter\the\csname footnote#1@reading\endcsname}%
-        {}%
+    \ifcsundef{hr@bodyfootmark#1@\csuse{hr@thefnmark#1}}{%
+      \Hy@raisedlink{%
+        \hypertarget%
+          {@bodyfootmark#1@\csuse{hr@thefnmark#1}}%
+          {}%
+        }%
+        \global\csdef{hr@bodyfootmark#1@\csuse{hr@thefnmark#1}}{}%Avoid duplicate body footmark
       }%
+      {}%
   \else%
     \@nameuse{bodyfootmark#1}%
   \fi%
@@ -15439,6 +15452,7 @@
               \ifstrempty{##1}%
                 {\protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}}%
                 {\protected@csxdef{@thefnmark#1}{##1}}%
+              \protected@csxdef{hr@thefnmark#1}{\the\value{footnote#1}@\the\csname footnote#1@series\endcsname}%
               \nottoggle{nomk@}%Nomk is set to true when using \footnoteXnomk with \parpackage
                  {\csuse{@footnotemark#1}}%
                  {}%
@@ -15462,11 +15476,16 @@
 %    \end{macrocode}
 % Then define the counters.
 % The \LaTeX\ counter \verb+footnoteX+ is the only one manipulated by the user. This is the one which is printed.
-% The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used for hyperlinks,  for using \package{hyperlink} package, and for getting the correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
+%
+% The \TeX\ counter \cs{footnoteX@reading} is increased at each footnote. It is used to get the correct footnote number when using parallel typesetting (\reff{reledpar-familiarfootnotenumber}).
+%
+% The \TeX\ counter \cs{footnoteX@series} is increased each time we reset the \LaTeX counter \verb+footnoteX+, either using +\verb\setcounter{footnoteX}{0}+ or because of \cs{@addtoreset}.
 %    \begin{macrocode}
       \newcounter{footnote#1}
         \global\expandafter\renewcommand\csname thefootnote#1\endcsname{\arabic{footnote#1}}
       \expandafter\newcount\csname footnote#1@reading\endcsname%
+      \expandafter\newcount\csname footnote#1@series\endcsname%
+      \global\expandafter\csname footnote#1@series\endcsname=1%
 %    \end{macrocode}
 % Create counter used to determine on which page the previous note was called.
 %    \begin{macrocode}
@@ -15489,6 +15508,7 @@
               \setcounter{footnote#1}{##1}%
             }%
             \protected@csxdef{@thefnmark#1}{\csuse{thefootnote#1}}%
+            \protected@csxdef{hr@thefnmark#1}{\the\value{footnote#1}@\the\csname footnote#1@series\endcsname}%
             \csuse{@footnotemark#1}%
             \m@mmf@prepare%
          \endgroup%
@@ -22256,6 +22276,34 @@
 }
 %    \end{macrocode}
 % \end{macro}
+% To deal with \verb+footnotemarkX+ and \verb+\footnoteXtext+ commandes in relation with hyperref, we need to generate unique identfier for footnote, called \verb+hr@thefnmarkX+ (where X stands for the footnote series letter).
+%
+% But to generate this unique number, we need to know when the footnoteX counter is reset.
+% So we need to patch both \cs{setcounter} and \cs{@stpelt} macros.
+%    \begin{macrocode}
+
+\apptocmd{\setcounter}{%
+  \ifboolexpr{%
+    test {\ifnumequal{#2}{0}}%
+    and%
+    test {\ifcsdef{#1@series}}%
+  }%
+  {%
+    \global\advance\expandafter\csname #1@series\endcsname by 1%
+  }%
+  {}%
+}%
+  {}%
+  {\led@error@fail@patch@setcounter}%
+\apptocmd{\@stpelt}{%
+  \ifcsdef{#1@series}{%
+    \global\advance\expandafter\csname #1@series\endcsname by 1%
+    }%
+    {}%
+  }%
+  {}%
+  {\led@error@fail@patch@stpelt}%
+%    \end{macrocode}
 % \section{Compatibility with \eledmac}
 %
 % Here, we define some commands for the \verb+eledmac-compat+ option.
