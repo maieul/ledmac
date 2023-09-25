@@ -4656,6 +4656,11 @@
 \DeclareOptionX{antilabe}{%
   \antilabe@true%
 }%
+
+\newtoggle{onlyonerule@}%
+\DeclareOptionX{onlyonerule}{%
+  \toggletrue{onlyonerule@}%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -14264,7 +14269,11 @@
 %    \begin{macrocode}
 \newtoggle{Xfirstfootnoterule@printed}%
 \newcommand{\print@Xfootnoterule}[1]{%
-  \ifboolexpr{not togl{Xonlyonerule@} or not togl{Xfirstfootnoterule@printed}}{%
+  \ifboolexpr{%
+    (not togl{Xonlyonerule@} or not togl{Xfirstfootnoterule@printed})%
+    and%
+    not (togl{onlyonerule@} and (togl{firstfootnoteruleX@printed} or togl{Xfirstfootnoterule@printed}))%
+  }{%
     \vskip-\csuse{Xafterrule@#1}%Because count in \dimen\csuse{#1footins}%
     \nointerlineskip%
     \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
@@ -14276,7 +14285,11 @@
 
 \newtoggle{firstfootnoteruleX@printed}%
 \newcommand{\print@footnoteXrule}[1]{%
-  \ifboolexpr{not togl{onlyoneruleX@} or not togl{firstfootnoteruleX@printed}}{%
+  \ifboolexpr{%
+    (not togl{onlyoneruleX@} or not togl{firstfootnoteruleX@printed})%
+    and%
+    not (togl{onlyonerule@} and (togl{firstfootnoteruleX@printed} or togl{Xfirstfootnoterule@printed}))%
+  }{%
     \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}%
     \nointerlineskip%
     \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
