@@ -4515,6 +4515,30 @@
 \ProvidesPackage{reledmac}[2023/08/21 v2.39.7 typesetting critical editions]%
 %    \end{macrocode}
 %
+% \subsection{Loading packages}
+% Loading package \protect\package{xargs} to declare commands with optional arguments.
+% Loading package \package{xparse} to declare fully expandable commands with optional argument. Ideally, we should use only \package{xparse} and not \package{xargs}. For historical reasons, we use both.
+% \protect\package{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \protect\cs{csname} etc.).
+% Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
+%    \begin{macrocode}
+\RequirePackage{xargs}%
+\RequirePackage{xparse}[2017/03/07]%
+\RequirePackage{etoolbox}%
+\@ifl@t@r\fmtversion{2015/10/01}%
+ {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
+   {\PackageWarning{reledmac}{You are using a LaTeX version older than 2016/03/31 patch 3.%
+   \MessageBreak You are strongly encouraged to use a newer version.}}%
+   {}%
+ }%
+ {\RequirePackage{etex}%
+ \csname reserveinserts\endcsname{32}%
+ }%
+\RequirePackage{suffix}%
+\RequirePackage{xstring}%
+\RequirePackage{ifluatex}%
+\RequirePackage{ragged2e}%
+\RequirePackage{ifxetex}%
+%    \end{macrocode}
 % \subsection{Package options}
 % \changes{v0.4.0}{2004/02/29}{Added final/draft options}
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
@@ -4660,30 +4684,6 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \subsection{Loading packages}
-% Loading package \protect\package{xargs} to declare commands with optional arguments.
-% Loading package \package{xparse} to declare fully expandable commands with optional argument. Ideally, we should use only \package{xparse} and not \package{xargs}. For historical reasons, we use both.
-% \protect\package{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \protect\cs{csname} etc.).
-% Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
-%  \begin{macrocode}
-\RequirePackage{xargs}
-\RequirePackage{xparse}[2017/03/07]%
-\RequirePackage{etoolbox}
-\@ifl@t@r\fmtversion{2015/10/01}
- {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
-   {\PackageWarning{reledmac}{You are using a LaTeX version older than 2016/03/31 patch 3.%
-   \MessageBreak You are strongly encouraged to use a newer version.}}%
-   {}%
- }%
- {\RequirePackage{etex}%
- \csname reserveinserts\endcsname{32}%
- }%
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifluatex}
-\RequirePackage{ragged2e}
-\RequirePackage{ifxetex}%
-%    \end{macrocode}
 %
 % \subsection{Compatibility with \LuaTeX}
 % Here, we enable some primitives for \LuaTeX.
