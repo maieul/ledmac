@@ -14229,29 +14229,66 @@
 % \end{macro}
 % \end{macro}
 % \section{Footnotes' rule}
+% \subsection{Printing only one footnote rule}
+% The \cs{Xonlyonerule} and \cs{onlyoneruleX} macros allow to print only one footnote rule in each page for, respectevly, critical and familiar footnotes series. They just switch the low level \cs{Xonlyonerule@} and \cs{onlyoneruleX@} toggle.
+% \begin{macro}{Xonlyonerule}
+% \begin{macro}{Xonlyonerule@}
+% \begin{macro}{onlyoneruleX}
+% \begin{macro}{onlyoneruleX@}
+%    \begin{macrocode}
+\unless\ifnocritical@%
+  \newtoggle{Xonlyonerule@}%
+  \newcommandx{\Xonlyonerule}[1][1=true]{%
+    \settoggle{Xonlyonerule@}{#1}%
+  }%
+\fi%
+\unless\ifnofamiliar@%
+  \newtoggle{onlyoneruleX@}%
+  \newcommandx{\onlyoneruleX}[1][1=true]{%
+    \settoggle{onlyoneruleX@}{#1}%
+  }%
+\fi%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \subsection{Dealing with multiple columns}
 % Because the footnotes' rules can be shifted to the right when footnotes are set like two columns, we do not print them directly, but we put them in a \protect\cs{vbox}.
 %
 % \begin{macro}{\print@Xfootnoterule}
 % \begin{macro}{\print@footnoteXrule}
+% \begin{macro}{Xfirstfootnoterule@printed}
+% \begin{macro}{firstfootnoteruleX@printed}
 % \changes{v1.21.0}{2015/04/13}{Code refactoring: the spaces after the footnote rules are directly managed in \protect\cs{print@Xfootnoterule} and \protect\cs{print@footnoteXrule}}
 %    \begin{macrocode}
+\newtoggle{Xfirstfootnoterule@printed}%
 \newcommand{\print@Xfootnoterule}[1]{%
-  \vskip-\csuse{Xafterrule@#1}%Because count in \dimen\csuse{#1footins}
-  \nointerlineskip%
-  \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
-  \nointerlineskip%
-  \vskip\csuse{Xafterrule@#1}%
+  \ifboolexpr{not togl{Xonlyonerule@} or not togl{Xfirstfootnoterule@printed}}{%
+    \vskip-\csuse{Xafterrule@#1}%Because count in \dimen\csuse{#1footins}%
+    \nointerlineskip%
+    \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
+    \nointerlineskip%
+    \vskip\csuse{Xafterrule@#1}%
+  }{}%
+  \global\toggletrue{Xfirstfootnoterule@printed}%
 }%
 
+\newtoggle{firstfootnoteruleX@printed}%
 \newcommand{\print@footnoteXrule}[1]{%
-  \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}
-  \nointerlineskip%
-  \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
-  \nointerlineskip%
-  \vskip\csuse{afterruleX@#1}%
+  \ifboolexpr{not togl{onlyoneruleX@} or not togl{firstfootnoteruleX@printed}}{%
+    \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}%
+    \nointerlineskip%
+    \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
+    \nointerlineskip%
+    \vskip\csuse{afterruleX@#1}%
+  }{}%
+  \global\toggletrue{firstfootnoteruleX@printed}%
 }%
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \section{Specific skip for first series of footnotes}\label{skipfirstseries}
@@ -16300,6 +16337,8 @@
 % \changes{v1.9.0}{2014/02/05}{Add \protect\cs{fnpos} to choice the order of footnotes.}
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
+  \global\togglefalse{firstfootnoteruleX@printed}%
+  \global\togglefalse{Xfirstfootnoterule@printed}%
   \IfStrEq{familiar-critical}{\@fnpos}
     {\do@feetX\do@Xfeet}%
     {%
