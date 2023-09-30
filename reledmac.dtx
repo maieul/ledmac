@@ -600,6 +600,8 @@
 % \changes{v2.39.6}{2023/08/14}{Fix compatibility with memoir v3.8.}
 % \changes{v2.39.7}{2023/08/21}{Fix compatibility with \protect\cs{pagenumbering} of memoir v3.8.}
 % \changes{v2.39.7}{2023/08/21}{Again fix with hyperref, footnote and tabular environment}
+% \changes{v2.40.0}{2023/09/30}{Add\protect\cs{Xonlyonerule} and \protect\cs{onlyoneruleX} hooks}
+% \changes{v2.40.0}{2023/09/30}{Add\protect\option{onlyonerule} option}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -898,6 +900,7 @@
 % \item[nopbinverse] prevents page break within verse environment;
 % \item[noquotation] by default, the quotation environment is redefined within numbered text. You can disable this redefinition with \verb|noquotation| (see \reff{noquotation});
 % \item[noresetlinenumannotation] does not reset the annotations to line number at each line (see \reff{annotation});
+% \item[onlyonerule] by default, each series of footnotes has its own rule; this option makes sure only one footnote rule is printed in each page. See §~\ref{opt:onlyonerule} (p.~\pageref{opt:onlyonerule}) for more details.
 % \item[parapparatus] by default, the apparatus cannot contain paragraph breaks; this option enables paragraphing inside the apparatus;
 % \item[swcaseinsensitive] make \cs{sameword} command case insensitive;
 % \item[widthliketwocolumns] set the width of the text printed in a single column to be the same as the width of the text printed in two parallel columns with \parpackage. This is useful when alternating between normal and parallel typesetting;
@@ -2974,7 +2977,20 @@
 % The default value is \verb+0pt+.
 % You can do this with \protect\cs{prenotesX}\marg{l}. You can disable this feature by setting the length to 0pt.
 %
-% \subsubsection{Rule}
+% \subsubsection{Printing only one footnote rule per page}
+% By default, each series of notes has its own footnote rule.
+% \label{opt:onlyonerule} Using \option{onlyonerule} when loading the \Macpackage packages ensures that only one rule will be printed in each page.
+%
+% However, you may want to have only one footnote rule for all series of \emph{critical} footnotes, but also one (and only one) footnote rule for all series of \emph{familiar} footnotes.
+%
+% For example, if in one page you have three series of critical footnotes and four series of familiar footnotes, you may want to have, in all, two rules.
+%
+% To do that use
+% \begin{itemize}
+%   \item \DescribeMacro{Xonlyonerule} to produce only a single footnote rule for all critical footnotes;
+%   \item \DescribeMacro{onlyoneruleX} to produce only a single footnote rule for all familiar footnotes.
+% \end{itemize}
+%\subsubsection{Space after footnotes rules}
 % \changes{v1.12.0}{2014/08/05}{New hooks: \protect\cs{Xafterrule} and \protect\cs{afterruleX}}
 % \DescribeMacro{\Xafterrule}
 % You can change the vertical space printed after the rule of the critical notes with \protect\cs{Xafterrule}\oarg{s}\marg{l}.
@@ -4515,6 +4531,30 @@
 \ProvidesPackage{reledmac}[2023/08/21 v2.39.7 typesetting critical editions]%
 %    \end{macrocode}
 %
+% \subsection{Loading packages}
+% Loading package \protect\package{xargs} to declare commands with optional arguments.
+% Loading package \package{xparse} to declare fully expandable commands with optional argument. Ideally, we should use only \package{xparse} and not \package{xargs}. For historical reasons, we use both.
+% \protect\package{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \protect\cs{csname} etc.).
+% Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
+%    \begin{macrocode}
+\RequirePackage{xargs}%
+\RequirePackage{xparse}[2017/03/07]%
+\RequirePackage{etoolbox}%
+\@ifl@t@r\fmtversion{2015/10/01}%
+ {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
+   {\PackageWarning{reledmac}{You are using a LaTeX version older than 2016/03/31 patch 3.%
+   \MessageBreak You are strongly encouraged to use a newer version.}}%
+   {}%
+ }%
+ {\RequirePackage{etex}%
+ \csname reserveinserts\endcsname{32}%
+ }%
+\RequirePackage{suffix}%
+\RequirePackage{xstring}%
+\RequirePackage{ifluatex}%
+\RequirePackage{ragged2e}%
+\RequirePackage{ifxetex}%
+%    \end{macrocode}
 % \subsection{Package options}
 % \changes{v0.4.0}{2004/02/29}{Added final/draft options}
 % \changes{v1.13.0}{2014/09/16}{Added widthliketwocolumns option}
@@ -4632,6 +4672,11 @@
 \DeclareOptionX{antilabe}{%
   \antilabe@true%
 }%
+
+\newtoggle{onlyonerule@}%
+\DeclareOptionX{onlyonerule}{%
+  \toggletrue{onlyonerule@}%
+}%
 %    \end{macrocode}
 % We use the starred form of \protect\cs{ProcessOptionsX} which executes options in
 % the order listed in the source file: class options, then listed package
@@ -4660,30 +4705,6 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
-% \subsection{Loading packages}
-% Loading package \protect\package{xargs} to declare commands with optional arguments.
-% Loading package \package{xparse} to declare fully expandable commands with optional argument. Ideally, we should use only \package{xparse} and not \package{xargs}. For historical reasons, we use both.
-% \protect\package{Etoolbox} is also used to make code clearer - for example, in dynamic command names (which can replace \protect\cs{csname} etc.).
-% Use \protect\package{suffix} to declare commands with a starred version, \protect\package{xstring} to work with strings, \protect\package{ifluatex} and \protect\package{ifxetex} to test if \LuaTeX\ or \XeTeX\  is running, and \protect\package{ragged2e} to manage ragged justification for paragraphed notes.
-%  \begin{macrocode}
-\RequirePackage{xargs}
-\RequirePackage{xparse}[2017/03/07]%
-\RequirePackage{etoolbox}
-\@ifl@t@r\fmtversion{2015/10/01}
- {\ifboolexpr{not test{\@ifl@t@r\fmtversion{2016/03/31}} or (test{\ifdefstring{\fmtversion}{2016/03/31}} and test {\ifnumless{\patch@level}{3}})}%
-   {\PackageWarning{reledmac}{You are using a LaTeX version older than 2016/03/31 patch 3.%
-   \MessageBreak You are strongly encouraged to use a newer version.}}%
-   {}%
- }%
- {\RequirePackage{etex}%
- \csname reserveinserts\endcsname{32}%
- }%
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifluatex}
-\RequirePackage{ragged2e}
-\RequirePackage{ifxetex}%
-%    \end{macrocode}
 %
 % \subsection{Compatibility with \LuaTeX}
 % Here, we enable some primitives for \LuaTeX.
@@ -14229,29 +14250,74 @@
 % \end{macro}
 % \end{macro}
 % \section{Footnotes' rule}
+% \subsection{Printing only one footnote rule}
+% The \cs{Xonlyonerule} and \cs{onlyoneruleX} macros allow to print only one footnote rule in each page for, respectively, critical and familiar footnotes series. They just switch the low level \cs{Xonlyonerule@} and \cs{onlyoneruleX@} toggles.
+% \begin{macro}{Xonlyonerule}
+% \begin{macro}{Xonlyonerule@}
+% \begin{macro}{onlyoneruleX}
+% \begin{macro}{onlyoneruleX@}
+%    \begin{macrocode}
+\unless\ifnocritical@%
+  \newtoggle{Xonlyonerule@}%
+  \newcommandx{\Xonlyonerule}[1][1=true]{%
+    \settoggle{Xonlyonerule@}{#1}%
+  }%
+\fi%
+\unless\ifnofamiliar@%
+  \newtoggle{onlyoneruleX@}%
+  \newcommandx{\onlyoneruleX}[1][1=true]{%
+    \settoggle{onlyoneruleX@}{#1}%
+  }%
+\fi%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \subsection{Dealing with multiple columns}
 % Because the footnotes' rules can be shifted to the right when footnotes are set like two columns, we do not print them directly, but we put them in a \protect\cs{vbox}.
 %
 % \begin{macro}{\print@Xfootnoterule}
 % \begin{macro}{\print@footnoteXrule}
+% \begin{macro}{Xfirstfootnoterule@printed}
+% \begin{macro}{firstfootnoteruleX@printed}
 % \changes{v1.21.0}{2015/04/13}{Code refactoring: the spaces after the footnote rules are directly managed in \protect\cs{print@Xfootnoterule} and \protect\cs{print@footnoteXrule}}
 %    \begin{macrocode}
+\newtoggle{Xfirstfootnoterule@printed}%
 \newcommand{\print@Xfootnoterule}[1]{%
-  \vskip-\csuse{Xafterrule@#1}%Because count in \dimen\csuse{#1footins}
-  \nointerlineskip%
-  \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
-  \nointerlineskip%
-  \vskip\csuse{Xafterrule@#1}%
+  \ifboolexpr{%
+    (not togl{Xonlyonerule@} or not togl{Xfirstfootnoterule@printed})%
+    and%
+    not (togl{onlyonerule@} and (togl{firstfootnoteruleX@printed} or togl{Xfirstfootnoterule@printed}))%
+  }{%
+    \vskip-\csuse{Xafterrule@#1}%Because count in \dimen\csuse{#1footins}%
+    \nointerlineskip%
+    \moveleft-\leftskip\vbox{\csuse{#1footnoterule}}%
+    \nointerlineskip%
+    \vskip\csuse{Xafterrule@#1}%
+  }{}%
+  \global\toggletrue{Xfirstfootnoterule@printed}%
 }%
 
+\newtoggle{firstfootnoteruleX@printed}%
 \newcommand{\print@footnoteXrule}[1]{%
-  \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}
-  \nointerlineskip%
-  \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
-  \nointerlineskip%
-  \vskip\csuse{afterruleX@#1}%
+  \ifboolexpr{%
+    (not togl{onlyoneruleX@} or not togl{firstfootnoteruleX@printed})%
+    and%
+    not (togl{onlyonerule@} and (togl{firstfootnoteruleX@printed} or togl{Xfirstfootnoterule@printed}))%
+  }{%
+    \vskip-\csuse{afterruleX@#1}%Because count in \dimen\csuse{footins#1}%
+    \nointerlineskip%
+    \moveleft-\leftskip\vbox{\csuse{footnoterule#1}}%
+    \nointerlineskip%
+    \vskip\csuse{afterruleX@#1}%
+  }{}%
+  \global\toggletrue{firstfootnoteruleX@printed}%
 }%
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 % \end{macro}
 % \section{Specific skip for first series of footnotes}\label{skipfirstseries}
@@ -16300,6 +16366,8 @@
 % \changes{v1.9.0}{2014/02/05}{Add \protect\cs{fnpos} to choice the order of footnotes.}
 %    \begin{macrocode}
 \newcommand*{\l@ddoxtrafeet}{%
+  \global\togglefalse{firstfootnoteruleX@printed}%
+  \global\togglefalse{Xfirstfootnoterule@printed}%
   \IfStrEq{familiar-critical}{\@fnpos}
     {\do@feetX\do@Xfeet}%
     {%
