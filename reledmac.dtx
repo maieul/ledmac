@@ -602,6 +602,7 @@
 % \changes{v2.39.7}{2023/08/21}{Again fix with hyperref, footnote and tabular environment}
 % \changes{v2.40.0}{2023/09/30}{Add\protect\cs{Xonlyonerule} and \protect\cs{onlyoneruleX} hooks}
 % \changes{v2.40.0}{2023/09/30}{Add\protect\option{onlyonerule} option}
+% \changes{v2.40.1}{2024/05/11}{Reset \protect\cs{parfillskip} after paragraphed and columned footnote}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % \changes{v2.40.1}{2024/05/11}{Fix bug when using \protect\cs{edlabel} in \protect\env{edtabular} and related}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
@@ -10874,6 +10875,7 @@
 %    \item \protect\cs{splitmaxdepth}.
 %    \item \protect\cs{floatingpenalty}, that is penalty values being added when a long note flows from one page to another.
 % Here, we let it to 0 when we process parallel pages in \protect\package{eledpar}, in order to allow notes to flow from left to right pages and \emph{vice-versa}.
+%   \item\protect{\parfillskip} for ending of paragraph.
 % Otherwise, we let it to \protect\cs{@MM}, which is the standard \LaTeX\  \protect\cs{floatingpenalty}.
 % \end{itemize}
 % \changes{v0.7.0}{2005/02/18}{Added \protect\cs{footsplitskips} for use in many
@@ -10885,8 +10887,12 @@
   \unless\ifl@dprintingpages%
     \floatingpenalty=\@MM%
   \fi%
-  \splittopskip=\ht\strutbox \splitmaxdepth=\dp\strutbox
-  \leftskip=\z@skip \rightskip=\z@skip}
+  \splittopskip=\ht\strutbox%
+  \splitmaxdepth=\dp\strutbox%
+  \leftskip=\z@skip%
+  \rightskip=\z@skip%
+  \parfillskip=0pt plus 1fil%
+}
 
 %    \end{macrocode}
 % \end{macro}
@@ -11171,6 +11177,7 @@
 % Read \reff{width2columns} for the general description of the problem.
 %   \begin{macrocode}
   \leftskip0pt \rightskip0pt
+  \parfillskip=0pt plus 1fil
   \ifl@dpairing\else%
      \hsize=\old@hsize%
   \fi%
@@ -11351,6 +11358,7 @@
   \let\bidi@RTL@everypar\@empty%
   \noindent\leavevmode%
   \let\bidi@RTL@everypar\old@bidi@RTL@everypar%
+  \parfillskip=0pt plus 1fil%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -13919,6 +13927,7 @@
       }%
   \leftskip=\z@
   \rightskip=\z@
+  \parfillskip=0pt plus 1fil
   \setparindentX{#1}%
   \vskip\skip\@nameuse{footins#1}%
   \setnoteswidthliketwocolumnsX@{#1}%
