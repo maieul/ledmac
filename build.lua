@@ -6,6 +6,7 @@ checkconfigs = {
 	"config-pdftex-3",
 	"config-pdftex-4",
 	"config-pdftex-5",
+	"config-luatex-1",
 	"config-luatex-2",
 	"config-luatex-3",
 	"config-luatex-4",
