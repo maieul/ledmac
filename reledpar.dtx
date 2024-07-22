@@ -5543,17 +5543,6 @@
 % To counter this, we have to make sure that the correct language is
 % used at the proper times.
 %
-% \begin{macro}{\ifl@dusedbabel}
-% \begin{macro}{\l@dusedbabelfalse}
-% \begin{macro}{\l@dusedbabeltrue}
-% A flag for checking if \verb?babel? has been used as a package.
-%    \begin{macrocode}
-\newif\ifl@dusedbabel
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-%
 % \changes{v1.8.0}{2014/08/05}{Suppress \protect\cs{ifl@dsamelang} which did not work and was not logical, because both columns could have the same language but not the main language of the document.}
 %
 % \begin{macro}{\l@dchecklang}
@@ -5598,20 +5587,18 @@
 % Now do the \protect\package{babel} or \protect\package{polyglossia}  fix or, if necessary.
 %    \begin{macrocode}
 \AtBeginDocument{%
-  \@ifundefined{xpg@main@language}{%
+  \@ifpackageloaded{babel}{%
     \@ifundefined{bbl@main@language}{%
 %    \end{macrocode}
 %  Either \protect\package{babel}   has not been used or it has been used with no
 % specified language.
 %    \begin{macrocode}
-    \l@dusedbabelfalse
     }{%
 %    \end{macrocode}
 % Here we deal with the case where babel has been used. \protect\cs{selectlanguage}
 % has to be redefined to use our version of \protect\cs{bbl@set@language} and to
 % store the left or right language.
 %    \begin{macrocode}
-    \l@dusedbabeltrue
     \let\l@doldselectlanguage\selectlanguage
     \let\l@doldbbl@set@language\bbl@set@language
     \renewcommand{\selectlanguage}[1]{%
@@ -5635,7 +5622,7 @@
     \gdef\theledlanguageL{\bbl@main@language}%
     \gdef\theledlanguageR{\bbl@main@language}%
     }%
-   }
+  }{}%
 %    \end{macrocode}
 % If use \protect\package{polyglossia}
 % \changes{v1.8.0}{2014/08/05}{Correct left/right language setting with polyglossia.}
@@ -5643,25 +5630,28 @@
 % \changes{v2.22.4}{2019/11/04}{Provide compatibility with the latest version of polyglossia (v1.45).}
 % \changes{v2.23.0}{2020/03/08}{Restore compatibility with versions of polyglossia prior to v1.45.}
 % \begin{macrocode}
-  {%
-    \@ifpackagelater{polyglossia}{2022/04/10}{}{\led@err@polyglossiaTooOld}%
-    \let\old@otherlanguage\otherlanguage%
-       \renewcommand{\otherlanguage}[2][]{%
-        \selectlanguage[#1]{#2}%
-        \xpg@set@language@only@aux[#1]{#2}%
-        \ifledRcol  \gdef\theledlanguageR{#2}%
-        \else      \gdef\theledlanguageL{#2}%
-        \fi}%
+  \@ifpackageloaded{polyglossia}{%
+    \@ifpackagelater{polyglossia}{2024/07/15}{}{\led@err@polyglossiaTooOld}%
       \renewcommand{\l@duselanguage}[1]{%
         \csuse{no\languagename @numbers}%
-        \expandafter\@select@language\expandafter{#1}%
+        \selectlanguage*{#1}%
       }%
-      \xdef\theledlanguageL{\xpg@main@language}%
-      \xdef\theledlanguageR{\xpg@main@language}%
+      \AddToHook{env/Leftside/begin}{%
+        \AddToHookNext{cmd/polyglossia@language@switched/after}{%
+          \xdef\theledlanguageL{\languagename}%
+        }%
+      }%
+      \AddToHook{env/Rightside/begin}{%
+        \AddToHookNext{cmd/polyglossia@language@switched/after}{%
+          \xdef\theledlanguageR{\languagename}%
+        }%
+      }%
+      \xdef\theledlanguageL{\mainlanguagename}%
+      \xdef\theledlanguageR{\mainlanguagename}%
 %    \end{macrocode}
 % That is it.
 %    \begin{macrocode}
-  }%
+  }{}%
 }%
 %    \end{macrocode}
 % \end{macro}
