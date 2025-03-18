@@ -11319,8 +11319,16 @@
     {}%
     {\columnwidth=\expandafter\dimexpr\csuse{Xwidth@#1}\relax}%
   \dimen0=\baselineskip
-  \multiply\dimen0 by 1024
-  \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
+  \unless\ifdim\dimen0>\dimexpr\maxdimen/1024\relax%Historical, use \unless > because TeX don't have <=
+    \multiply\dimen0 by 1024%
+    \divide \dimen0 by \columnwidth%
+    \multiply\dimen0 by \footfudgefiddle\relax%
+  \else%For big baseline we multiply by 512, and later by 2
+    \multiply\dimen0 by 512%
+    \divide \dimen0 by \columnwidth%
+    \multiply\dimen0 by \footfudgefiddle\relax%
+    \multiply\dimen0 by 2\relax%
+  \fi%
   \csxdef{#1footfudgefactor}{%
     \expandafter\strip@pt\dimen0 }}}
 
