@@ -606,6 +606,7 @@
 % \changes{v2.40.1}{2024/05/11}{Fix bug when using \protect\cs{edlabel} in \protect\env{edtabular} and related}
 % \changes{v2.40.1}{2024/05/11}{Dealing with direction in \protect\cs{footnoteXtxt} when using LuaLaTeX}
 % \changes{v2.40.2}{2025/02/07}{Bug with right pstart number with continuousnumberingwithcolumns}
+% \changes{v2.40.3}{2025/03/25}{Fix arithmetic overflow when using paragraphed footnote with high baselineskip value}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4532,7 +4533,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2025/01/07 v2.40.2 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2025/03/25 v2.40.3 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Loading packages}
@@ -11319,8 +11320,16 @@
     {}%
     {\columnwidth=\expandafter\dimexpr\csuse{Xwidth@#1}\relax}%
   \dimen0=\baselineskip
-  \multiply\dimen0 by 1024
-  \divide \dimen0 by \columnwidth \multiply\dimen0 by \footfudgefiddle\relax
+  \unless\ifdim\dimen0>\dimexpr\maxdimen/1024\relax%Historical, use \unless > because TeX don't have <=
+    \multiply\dimen0 by 1024%
+    \divide \dimen0 by \columnwidth%
+    \multiply\dimen0 by \footfudgefiddle\relax%
+  \else%For big baseline we multiply by 512, and later by 2
+    \multiply\dimen0 by 512%
+    \divide \dimen0 by \columnwidth%
+    \multiply\dimen0 by \footfudgefiddle\relax%
+    \multiply\dimen0 by 2\relax%
+  \fi%
   \csxdef{#1footfudgefactor}{%
     \expandafter\strip@pt\dimen0 }}}
 
