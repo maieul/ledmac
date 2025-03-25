@@ -5,8 +5,8 @@
 from sys import argv
 import os.path
 import subprocess
-modele = "\input regression-test\n\
-\showoutput\n\
+modele = "\\input regression-test\n\
+\\showoutput\n\
 {text}"
 
 f = argv[1]
@@ -18,10 +18,10 @@ if extension == ".tex":
     tex = open(f)
     text = tex.read()
     text = text.replace('\\begin{document}','\\begin{document} \
-\makeatletter \
-\let\@bidi@pdfcustomproperties\\relax \
-\makeatother \
-            Font initialisation\START')
+\\makeatletter \
+\\let\\@bidi@pdfcustomproperties\\relax \
+\\makeatother \
+            Font initialisation\\START')
     tex.close()
 
     # create .lvt file
