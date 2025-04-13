@@ -12,5 +12,6 @@ checkconfigs = {
 	"config-luatex-4",
 	"config-xetex-2",
 	"config-xetex-3",
-	"config-xetex-4"
+	"config-xetex-4",
+	"config-xetex-5"
 }
