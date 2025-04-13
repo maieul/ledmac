@@ -7740,6 +7740,7 @@
 % \end{macro}
 % \begin{macro}{\flag@start@RTL}
 % \begin{macro}{\flag@end@RTL}
+%\label{flag:start:RTL}
 % With \XeLaTeX, there is a problem when using RTL: the writing of a command in the numbered auxiliary files (\verb+.1+, \verb+.2+ etc) is reversed when the first argument of \cs{edtext} is typset in one line, but it is \textbf{not} reversed when this first argument is typset in two lines or more.\footnote{This problem is caused by the way \XeTeX\ manages right-to-left typsetting. David Carlisle explains it on \url{http://tex.stackexchange.com/a/333373/7712} and provides a potential solution, using \cs{vadjust}. However in some cases this adds spurious vertical spaces in reledmac. That is why we are using the solution explained below.}
 %
 % To solve this problem, we use a crossref mechanism. At the first run, we put a label, but we do not write any \cs{@ref} command. When the value of the label can be tested, that is after three runs, we're doing:
@@ -19487,7 +19488,7 @@
 }%
 
 \def\stanza@hang{%
-  \leavevmode\startlock%
+  \leavevmode\stanzastartlock%
   \hangindent\if@RTL-\fi\expandafter%
   \csname sza@0@\endcsname\stanzaindentbase%
   \hangafter\@ne%
@@ -19575,7 +19576,7 @@
 
 \newcommandx{\@stopstanza}[2][1,2,usedefault]{%
   \unskip%
-  \endlock%
+  \stanzaendlock%
   \ifboolexpr{%
     not test{\ifdefvoid{\at@every@stop@stanza}}%
     and test{\ifstrempty{#1}}%
@@ -19628,7 +19629,7 @@
 
 \newcommandx*{\newverse}[4][1,2,3,4,usedefault]{%
   \unskip%
-  \endlock\pend[#1][#3]\sza@penalty\global%
+  \stanzaendlock\pend[#1][#3]\sza@penalty\global%
   \advance\stanza@count\@ne\stanza@line[#2][#4]%
   }
 
@@ -19652,6 +19653,63 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% In order to avoid increasing line number when a line of verse is typeset on two typographical line, we use \protect\cs{startlock} and \protect\cs{endlock} inserted automatically at the begin / end (respectivly) of a verse. But when using \XeTeX\ to typeset RTL text, the result are not good in the auxiliary numbered file\footnote{It is a \enquote{bug} of \XeTeX\ model of RTL, see\url{https://tex.stackexchange.com/questions/333365/bidi-rtl-and-write}.}, we must inverse in some case.
+% That is why we use auxiliary macros, in order to fix this issue.
+% The mechanism used is similar to \protect\cs{flag@start@RTL} and \protect\cs{flag@end@RTL}, described on §~\ref{flag:start:RTL} (p.~\pageref{flag:start:RTL}).
+% \begin{macro}{\stanzastartlock}
+% \begin{macro}{\stanzaendlock}
+% \begin{macro}{\stanza@startlock@RTL}
+% \begin{macro}{\stanza@endlock@RTL}
+%    \begin{macrocode}
+\newcommand{\stanzastartlock}{%
+  \ifboolexpr{%
+    bool{xetex}%
+    and bool {@RTL}%
+  }{%
+    \stanza@startlock@RTL% RTL with xetex : first endlock for auxiliary file
+  }%
+  {%
+    \startlock%
+  }%
+}%
+\newcommand{\stanzaendlock}{%
+  \ifboolexpr{%
+    bool{xetex}%
+    and bool {@RTL}%
+  }{%
+    \stanza@endlock@RTL% RTL with xetex : finally starlock for auxiliary file
+  }%
+  {%
+    \endlock%
+  }%
+}%
+\newcount\stanza@lock@RTL@count%
+\newcommand{\stanza@startlock@RTL}{%
+  \global\advance\stanza@lock@RTL@count\@ne%
+  \edlabel{stanza@startlock@\the\stanza@lock@RTL@count}%
+  \ifnumequal{\xabslineref{stanza@startlock@\the\stanza@lock@RTL@count}}{0}%
+    {}%
+    {%
+      \ifnumequal{\xabslineref{stanza@startlock@\the\stanza@lock@RTL@count}}{\xabslineref{stanza@endlock@\the\stanza@lock@RTL@count}}%
+        {\endlock}% If in same typographical line, we start by \endlock, in order to write \end@lock in last position in the numbered auxiliary file
+        {\startlock}%
+    }%
+}%
+\newcommand{\stanza@endlock@RTL}{%
+  \edlabel{stanza@endlock@\the\stanza@lock@RTL@count}%
+  \ifnumequal{\xabslineref{stanza@startlock@\the\stanza@lock@RTL@count}}{0}%
+    {}%
+    {%
+      \ifnumequal{\xabslineref{stanza@startlock@\the\stanza@lock@RTL@count}}{\xabslineref{stanza@endlock@\the\stanza@lock@RTL@count}}%
+        {\startlock}% If in same typographical line, we finish by \startlock, in order to write \start@lock in first position in the numbered auxiliary file
+        {\endlock}%
+    }%
+}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \subsection{Restore catcode and penalties}
 % The ampersand \& is used to mark the end of each stanza line, except the
 % last, which is marked with \verb+\&+. This means that \verb+\halign+ may
