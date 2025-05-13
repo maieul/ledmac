@@ -3423,6 +3423,7 @@
 % environment for parallel pages.
 %    \begin{macrocode}
 \newenvironment{pairs}{%}
+  \reledpar@init@language%
   \l@dpairingtrue
   \l@dpagingfalse
   \initnumbering@quote
@@ -3450,6 +3451,7 @@
 % \protect\cs{textwidth} (as known at the time the package is called). In this environment, there are two text in parallel on 2 pages.
 %    \begin{macrocode}
 \newenvironment{pages}{%
+  \reledpar@init@language%
   \l@dpairingtrue
   \l@dpagingtrue
   \initnumbering@quote
@@ -5585,9 +5587,9 @@
 % texts. \protect\cs{l@duselanguage} is similar to \protect\cs{selectlanguage}.
 %    \begin{macrocode}
 \newcommand*{\l@duselanguage}[1]{}
-\gdef\theledlanguageL{}
-\gdef\theledlanguageR{}
-
+\def\theledlanguageL{}%
+\def\theledlanguageR{}%
+\def\reledpar@init@language{}%Will be defined later, depending of language package (babel or polyglossia)
 %    \end{macrocode}
 %
 % Now do the \protect\package{babel} or \protect\package{polyglossia}  fix or, if necessary.
@@ -5622,11 +5624,13 @@
       \expandafter\l@doldselectlanguage\expandafter{#1}%
     }%
 %    \end{macrocode}
-% Lastly, initialise the left and right languages to the current \protect\package{babel}
+% Lastly, define the macro who initialise the left and right languages to the current \protect\package{babel}
 % one.
 %    \begin{macrocode}
-    \gdef\theledlanguageL{\bbl@main@language}%
-    \gdef\theledlanguageR{\bbl@main@language}%
+    \renewcommand{\reledpar@init@language}{%
+      \gdef\theledlanguageL{\bbl@main@language}%
+      \gdef\theledlanguageR{\bbl@main@language}%
+    }
     }%
   }{}%
 %    \end{macrocode}
@@ -5644,16 +5648,26 @@
       }%
       \AddToHook{env/Leftside/begin}{%
         \AddToHookNext{cmd/polyglossia@language@switched/after}{%
-          \xdef\theledlanguageL{\languagename}%
+          \ifl@dpairing%Ensure we are still in leftside
+            \unless\ifledRcol%
+              \xdef\theledlanguageL{\languagename}%
+            \fi%
+          \fi%
         }%
       }%
       \AddToHook{env/Rightside/begin}{%
         \AddToHookNext{cmd/polyglossia@language@switched/after}{%
-          \xdef\theledlanguageR{\languagename}%
+          \ifl@dpairing%Ensure we are still in rightside
+            \ifledRcol%
+              \xdef\theledlanguageR{\languagename}%
+            \fi%
+          \fi%
         }%
       }%
-      \xdef\theledlanguageL{\mainlanguagename}%
-      \xdef\theledlanguageR{\mainlanguagename}%
+      \renewcommand{\reledpar@init@language}{%
+        \xdef\theledlanguageL{\mainlanguagename}%
+        \xdef\theledlanguageR{\mainlanguagename}%
+      }
 %    \end{macrocode}
 % That is it.
 %    \begin{macrocode}
