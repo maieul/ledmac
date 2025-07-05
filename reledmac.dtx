@@ -2774,6 +2774,18 @@
 % The \meta{command} must not be a size in pt, but a \LaTeX\ macro, like \protect\cs{small}.
 %
 % \subsection{Wrapping notes}
+% \changes{v2.41.0}{2025/07/08}{Add \protect\cs{Xwrapnumbers} and \protect\cs{Xendwrapnumbers}}
+% \DescribeMacro{\Xwrapnumbers}
+% \cs{Xwrapnumbers}\oargs{s}\marg{cmd} is used to wrap, in the footnote, the reference number (pstart + page number + line number + annotation) in a command. For exemple, you may define a macro to wrap numbers in parenthesis, then calling it as argument of \cs{Xwrapnumbers}.
+% \begin{verbatim}
+%\newcommand{\reledmacparenthesis}[1]{(#1)}
+%\Xwrapnumbers{\reledmacparenthesis}
+% \end{verbatim}
+% Note that if the numbers are note printed, then the macro is not called. The result is boxed if you use \protect\cs{Xboxlinenum}.
+%
+% \DescribeMacro{\Xendwrapnumbers}
+% \cs{Xendwrapnumbers}\oargs{s}\marg{cmd} do the same for endnotes.
+% \subsubsection{Wrapping line number}
 % \subsubsection{Wrapping lemmas}
 % \changes{v2.10.0}{2016/05/08}{New hooks: \protect\cs{Xwraplemma} and \protect\cs{Xendwraplemma}}
 % \DescribeMacro{\Xwraplemma}\label{Xwraplemma}
@@ -12348,7 +12360,7 @@
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\printlinefootnotearea}
-% This macro prints the space before the line number, changes the font, then prints the line number and the space after it.
+% This macro prints the space before the line number, changes the font, then prints the line number, wrapped in custom macro, and then print the space after it.
 % It is called by \protect\cs{printlinefootnote}
 % depending on the options about repeating line numbers.
 % The first argument is line information, the second is the notes series (A, B, C,  etc.)
@@ -12387,36 +12399,38 @@
 % The previous \protect\cs{boxlinefootnote} calls it.
 %    \begin{macrocode}
 \newcommand{\printlinefootnotenumbers}[2]{%
-  \get@pstartcounter%
-  \ifboolexpr{%
-   (togl{Xpstart@#2} and bool{numberpstart})%
-   or togl{Xpstarteverytime@#2}%
-   and not (%
-      togl{Xpstartonlyfirst@#2}%
-      and test {\ifnumequal{\csuse{Xprevpstart@#2}}{\current@pstart}}%
-   )%
-  }%
-  {%
-    \printpstart%
-    \csuse{Xpstartseparator@#2}%
-  }{}%
-  \global\cslet{Xprevpstart@#2}{\current@pstart}%
-  \get@stanzacounter%
-  \ifboolexpr{%
-    togl{Xstanza@#2}%
-    and bool {numberstanza}%
-    and not (%
-      togl{Xstanzaonlyfirst@#2}%
-      and test {\ifnumequal{\csuse{Xprevstanza@#2}}{\current@stanza}}%
-    )%
-  }{%
-    \printstanza%
-    \csuse{Xstanzaseparator@#2}%
-  }{}%
-  \global\cslet{Xprevstanza@#2}{\current@stanza}%
-  \iftoggle{Xonlypstart@#2}{}{%
-    \csuse{Xtxtbeforenumber@#2}%
-    \printlines#1|\ifledRcol@\@Rlineflag\fi|}%
+  \csuse{Xwrapnumbers@#2}{%
+    \get@pstartcounter%
+    \ifboolexpr{%
+     (togl{Xpstart@#2} and bool{numberpstart})%
+     or togl{Xpstarteverytime@#2}%
+     and not (%
+        togl{Xpstartonlyfirst@#2}%
+        and test {\ifnumequal{\csuse{Xprevpstart@#2}}{\current@pstart}}%
+     )%
+    }%
+    {%
+      \printpstart%
+      \csuse{Xpstartseparator@#2}%
+    }{}%
+    \global\cslet{Xprevpstart@#2}{\current@pstart}%
+    \get@stanzacounter%
+    \ifboolexpr{%
+      togl{Xstanza@#2}%
+      and bool {numberstanza}%
+      and not (%
+        togl{Xstanzaonlyfirst@#2}%
+        and test {\ifnumequal{\csuse{Xprevstanza@#2}}{\current@stanza}}%
+      )%
+    }{%
+      \printstanza%
+      \csuse{Xstanzaseparator@#2}%
+    }{}%
+    \global\cslet{Xprevstanza@#2}{\current@stanza}%
+    \iftoggle{Xonlypstart@#2}{}{%
+      \csuse{Xtxtbeforenumber@#2}%
+      \printlines#1|\ifledRcol@\@Rlineflag\fi|}%
+    }%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -14679,12 +14693,18 @@
   \bgroup%
     \csuse{Xendnotenumfont@#2}%
     \ifdimequal{\csuse{Xendboxlinenum@#2}}{0pt}%
-      {\printendlines#1||\ifledRcol@\@Rlineflag\fi}%
+      {%
+        \csuse{Xendwrapnumbers@#2}{%
+          \printendlines#1||\ifledRcol@\@Rlineflag\fi%
+        }%
+      }%
       {\leavevmode%
        \hbox to \csuse{Xendboxlinenum@#2}%
        {%
        \IfSubStr{RC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
-       \printendlines#1||\ifledRcol@\@Rlineflag\fi%
+       \csuse{Xendwrapnumbers@#2}{%
+          \printendlines#1||\ifledRcol@\@Rlineflag\fi%
+        }%
        \IfSubStr{LC}{\csuse{Xendboxlinenumalign@#2}}{\hfill}{}%
       }}%
   \egroup%
@@ -15244,6 +15264,7 @@
       \newtoggle{Xparindent@#1}
       \newtoggle{Xlemmadisablefontselection@#1}
       \csgdef{Xwrapcontent@#1}{}%
+      \csgdef{Xwrapnumbers@#1}{}%
       \csgdef{Xbeforeinserting@#1}{}%
       \csgdef{Xhangindent@#1}{0pt}%
       \csgdef{Xragged@#1}{}%
@@ -15729,6 +15750,7 @@
       \csgdef{Xendwraplemma@#1}{}
       \csgdef{Xendwrapcontent@#1}{}%
       \csgdef{Xendtwolines@#1}{}%
+      \csgdef{Xendwrapnumbers@#1}{}%
       \csgdef{Xendmorethantwolines@#1}{}%
       \newtoggle{Xendtwolinesbutnotmore@#1}{}%
       \newtoggle{Xendtwolinesonlyinsamepage@#1}{}%
@@ -16056,6 +16078,7 @@
   \newhookcommand@series{Xbeforeinserting}%
   \newhookcommand@series{Xlemmafont}%
   \newhookcommand@series{Xwraplemma}%
+  \newhookcommand@series{Xwrapnumbers}%
   \newhooktoggle@series{Xparindent}
   \newhookcommand@series{Xhangindent}
   \newhookcommand@series{Xragged}
@@ -16251,6 +16274,7 @@
   \newhookcommand@series{Xendtxtbeforenotes}%
 
 \fi
+\newhookcommand@series{Xendwrapnumbers}[apprefwithpage,SErefwithpage]
 \newhooktoggle@series{Xendlineflag}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendtwolines}[apprefwithpage,SErefwithpage]
 \newhookcommand@series{Xendmorethantwolines}[apprefwithpage,SErefwithpage]
