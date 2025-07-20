@@ -2774,6 +2774,14 @@
 % The \meta{command} must not be a size in pt, but a \LaTeX\ macro, like \protect\cs{small}.
 %
 % \subsection{Wrapping notes}
+% \changes{v2.42.0}{2025/07/22}{Add \protect\cs{Xwrapcomponents}}
+% \DescribeMacro{\Xwrapcomponents}
+% \cs{Xwrapcomponents}\oar{s}\marg{cmd} is used to wrap all the components of a critical footnotes in a argumented macro. By \enquote{components} we mean \enquote{(page/line) numbers + lemma + separator + content of the note}.
+%
+% This hook may be used if you want to have footnote in left-to-right, while the main text is in right-to-left.
+% \begin{verbatim}
+% \Xwrapcomponents{\LR}
+% \end{verbatim}
 % \subsubsection{Wrapping line number}
 % \changes{v2.41.0}{2025/07/08}{Add \protect\cs{Xwrapnumbers} and \protect\cs{Xendwrapnumbers}}
 % \DescribeMacro{\Xwrapnumbers}
@@ -11130,10 +11138,6 @@
 % \verb"#2" is the lemma;
 % \verb"#3" is the note's text;
 % \verb"#4" is the note's series.
-% This version is very
-% rudimentary---it uses \protect\cs{printlines}
-% to print just the range of line numbers,
-% followed by a square bracket, the lemma, and the note text.
 %
 %    \begin{macrocode}
 \notbool{parapparatus@}{\newcommand*}{\newcommand}{\normalfootfmt}[4]{%
@@ -11141,9 +11145,7 @@
   \nottoggle{Xgroupbyline@#4}{\Xledsetnormalparstuff{#4}}{}%
   \Xsethangindent{#4}%
   \nottoggle{Xgroupbyline@#4}{\rule\z@\splittopskip}{}%
-  {\printlinefootnote{#1}{#4}}%
-  \print@lemma{#1}{#2}{#4}%
-  \csuse{Xwrapcontent@#4}{#3}%
+  \print@Xcomponents{#1}{#2}{#3}{#4}%
   \nottoggle{Xgroupbyline@#4}{\strut\par}{}%
 }%
 %    \end{macrocode}
@@ -11579,10 +11581,9 @@
   \Xstorelineinfo{#1}{#4}%
   \Xinsertparafootsep{#4}%
   \ledsetnormalparstuff@common%
-  \printlinefootnote{#1}{#4}%
-  \print@lemma{#1}{#2}{#4}%
-  \csuse{Xwrapcontent@#4}{#3}%
-  \penalty-10 }
+  \print@Xcomponents{#1}{#2}{#3}{#4}%
+  \penalty-10%
+}%
 %    \end{macrocode}
 % Note that in the above definition, the penalty of $-10$
 % encourages a line break between notes, so that notes have a
@@ -11889,9 +11890,7 @@
   \Xstorelineinfo{#1}{#4}%
   \threecol@begin@insert{#4}%
   \hspace{\parindent}%
-  \printlinefootnote{#1}{#4}%
-  \print@lemma{#1}{#2}{#4}%
-  \csuse{Xwrapcontent@#4}{#3}%
+  \print@Xcomponents{#1}{#2}{#3}{#4}%
   \nottoggle{Xgroupbyline@#4}%
     {\strut\par\allowbreak}%
     {}%
@@ -12043,9 +12042,7 @@
   \Xstorelineinfo{#1}{#4}%
   \twocol@begin@insert{#4}%
   \hspace{\parindent}%
-  \printlinefootnote{#1}{#4}%
-  \print@lemma{#1}{#2}{#4}%
-  \csuse{Xwrapcontent@#4}{#3}%
+  \print@Xcomponents{#1}{#2}{#3}{#4}%
   \nottoggle{Xgroupbyline@#4}%
     {\strut\par\allowbreak}%
     {}%
@@ -12238,6 +12235,25 @@
 }
 %    \end{macrocode}
 %
+% \end{macro}
+% \subsection{Print critical footnotes components}
+% The  components of a critical footnote are :
+% \begin{itemize}
+% \item \#1 The line number information (passed in a formal form, then formatted in human form) ;
+% \item \#2 The lemma ;
+% \item \#3 The editorial content (or, in abbreviated, content)
+% \end{itemize}
+% The \protect\cs{print@Xcomponents} macro prints them, wrapping eventually in a macro depending of the series (\#4).
+% \begin{macro}{\print@Xcomponents}
+%    \begin{macrocode}
+\newcommand{\print@Xcomponents}[4]{%
+  \csuse{Xwrapcomponents@#4}{%
+    \printlinefootnote{#1}{#4}%
+    \print@lemma{#1}{#2}{#4}%
+    \csuse{Xwrapcontent@#4}{#3}%
+  }%
+}
+%    \end{macrocode}
 % \end{macro}
 % \subsubsection{Lemma printing}
 %
@@ -15348,6 +15364,7 @@
       \csgdef{Xlinerangeseparator@#1}{\endashchar}%
 
       \csgdef{Xlemmafont@#1}{}%
+      \csgdef{Xwrapcomponents@#1}{}%
       \csgdef{Xwraplemma@#1}{}
       \csgdef{Xwidth@#1}{\hsize}%
       \csgdef{Xwraplinenumannotation@#1}{\textsuperscript}%
@@ -16077,6 +16094,7 @@
   \newhookcommand@series{Xwrapcontent}%
   \newhookcommand@series{Xbeforeinserting}%
   \newhookcommand@series{Xlemmafont}%
+  \newhookcommand@series{Xwrapcomponents}%
   \newhookcommand@series{Xwraplemma}%
   \newhookcommand@series{Xwrapnumbers}%
   \newhooktoggle@series{Xparindent}
