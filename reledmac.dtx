@@ -2775,6 +2775,7 @@
 %
 % \subsection{Wrapping notes}
 % \changes{v2.42.0}{2025/07/22}{Add \protect\cs{Xwrapcomponents}}
+% \changes{v2.42.0}{2025/07/22}{Add \protect\cs{Xendwrapcomponents}}
 % \DescribeMacro{\Xwrapcomponents}
 % \cs{Xwrapcomponents}\oar{s}\marg{cmd} is used to wrap all the components of a critical footnotes in a argumented macro. By \enquote{components} we mean \enquote{(page/line) numbers + lemma + separator + content of the note}.
 %
@@ -2782,6 +2783,8 @@
 % \begin{verbatim}
 % \Xwrapcomponents{\LR}
 % \end{verbatim}
+% \DescribeMacro{\Xendwrapcomponents}
+% \cs{Xendwrapcomponents}\oar{s}\marg{cmd} is the same as \cs{Xwrapcomponents}, but for endnotes.
 % \subsubsection{Wrapping line number}
 % \changes{v2.41.0}{2025/07/08}{Add \protect\cs{Xwrapnumbers} and \protect\cs{Xendwrapnumbers}}
 % \DescribeMacro{\Xwrapnumbers}
@@ -14603,27 +14606,29 @@
   \IfStrEq{#6}{R}{\ledRcol@true}{}%
   \def\@this@crossref@start{#7:start}%
   \def\@this@crossref@end{#7:end}%
-  \printlineendnote{#1}{#4}%
-  \IfStrEq{#6}{R}{\ledRcol@false}{}%
-  \nottoggle{Xendlemmadisablefontselection@#4}%
-    {\select@lemmafont#1|}%
-    {}%
-  \bgroup%
-    \csuse{Xendlemmafont@#4}%
-    \csuse{Xendwraplemma@#4}{#2}%
-  \egroup%
-  \ifboolexpr{%
-    togl {nosep@}%
-    or test{\ifcsempty{Xendlemmaseparator@#4}}%
-    }%
-    {\hskip\csuse{Xendinplaceoflemmaseparator@#4}\relax}%
-    {\nobreak%
-     \hskip\csuse{Xendbeforelemmaseparator@#4}%
-     \csuse{Xendlemmaseparator@#4}%
-     \hskip\csuse{Xendafterlemmaseparator@#4}%
-     \relax%
-    }%
-  \csuse{Xendwrapcontent@#4}{#3}%
+  \csuse{Xendwrapcomponents@#4}{%
+    \printlineendnote{#1}{#4}%
+    \IfStrEq{#6}{R}{\ledRcol@false}{}%
+    \nottoggle{Xendlemmadisablefontselection@#4}%
+      {\select@lemmafont#1|}%
+      {}%
+    \bgroup%
+      \csuse{Xendlemmafont@#4}%
+      \csuse{Xendwraplemma@#4}{#2}%
+    \egroup%
+    \ifboolexpr{%
+      togl {nosep@}%
+      or test{\ifcsempty{Xendlemmaseparator@#4}}%
+      }%
+      {\hskip\csuse{Xendinplaceoflemmaseparator@#4}\relax}%
+      {\nobreak%
+       \hskip\csuse{Xendbeforelemmaseparator@#4}%
+       \csuse{Xendlemmaseparator@#4}%
+       \hskip\csuse{Xendafterlemmaseparator@#4}%
+       \relax%
+      }%
+    \csuse{Xendwrapcontent@#4}{#3}%
+  }%
   \nottoggle{Xendparagraph@#4}{\par}{}%
   \def\do##1{%
     \setkeys[mac]{falsefootnoteoption}{##1}%
@@ -15764,6 +15769,7 @@
 %
 % \subsubsection{The options}
 %    \begin{macrocode}
+      \csgdef{Xendwrapcomponents@#1}{}%
       \csgdef{Xendwraplemma@#1}{}
       \csgdef{Xendwrapcontent@#1}{}%
       \csgdef{Xendtwolines@#1}{}%
@@ -16231,6 +16237,7 @@
 % Before generating the commands that are used to set the endnotes, such as \protect\cs{Xnumberonlyfirstinline}, \protect\cs{Xlemmaseparator}+ and the like, we check the \verb+noend+ option.
 %    \begin{macrocode}
 \unless\ifnoend@
+  \newhookcommand@series{Xendwrapcomponents}%
   \newhookcommand@series{Xendwraplemma}
   \newhookcommand@series{Xendwrapcontent}
   \newhookcommand@series{Xendnotenumfont}
