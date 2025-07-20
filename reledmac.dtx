@@ -2776,6 +2776,7 @@
 % \subsection{Wrapping notes}
 % \changes{v2.42.0}{2025/07/22}{Add \protect\cs{Xwrapcomponents}}
 % \changes{v2.42.0}{2025/07/22}{Add \protect\cs{Xendwrapcomponents}}
+% \changes{v2.42.0}{2025/07/22}{Add \protect\cs{wrapcomponentsX}}
 % \DescribeMacro{\Xwrapcomponents}
 % \cs{Xwrapcomponents}\oar{s}\marg{cmd} is used to wrap all the components of a critical footnotes in a argumented macro. By \enquote{components} we mean \enquote{(page/line) numbers + lemma + separator + content of the note}.
 %
@@ -2783,8 +2784,12 @@
 % \begin{verbatim}
 % \Xwrapcomponents{\LR}
 % \end{verbatim}
+%
 % \DescribeMacro{\Xendwrapcomponents}
 % \cs{Xendwrapcomponents}\oar{s}\marg{cmd} is the same as \cs{Xwrapcomponents}, but for endnotes.
+%
+% \DescribeMacro{\wrapcomponentsX}
+% \cs{wrapcomponentsX}\oar{s}\marg{cmd} is the same as \cs{Xwrapcomponents}, but for familiar footnote. In this case, \enquote{components} means \enquotes{footnote number + space + footnote text}.
 % \subsubsection{Wrapping line number}
 % \changes{v2.41.0}{2025/07/08}{Add \protect\cs{Xwrapnumbers} and \protect\cs{Xendwrapnumbers}}
 % \DescribeMacro{\Xwrapnumbers}
@@ -13411,9 +13416,16 @@
   \ledsetnormalparstuffX{#1}%
   \sethangindentX{#1}%
   \rule\z@\splittopskip%
-  {{\csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}}%
+  \csuse{wrapcomponentsX@#1}{%
+    \bgroup%
+      \csuse{notenumfontX@#1}%
+      \wrapped@footfootmarkX{#1}%
+    \egroup%
     \csuse{wrapcontentX@#1}{#2}%
-  \strut\par}}
+    \strut%
+  }%
+  \par%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -13741,13 +13753,17 @@
   \setparindentX{#1}%
   \tolerance=5000\relax%
   \par%
- \@tempdima=\parindent%
- \csuse{colalignX@#1}%
- \parindent=\@tempdima%
-  {\hspace{\parindent}%
-  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+  \@tempdima=\parindent%
+  \csuse{colalignX@#1}%
+  \parindent=\@tempdima%
+  \csuse{wrapcomponentsX@#1}{%
+    \hspace{\parindent}%
+    \csuse{notenumfontX@#1}%
+    \wrapped@footfootmarkX{#1}%
+    \strut%
     \csuse{wrapcontentX@#1}{#2}%
-    \strut\par}%
+    \strut\par%
+  }%
  \allowbreak%
 }%
 
@@ -13867,10 +13883,17 @@
  \@tempdima=\parindent%
   \csuse{colalignX@#1}%
   \parindent=\@tempdima%
-  {\hspace{\parindent}%
-  \csuse{notenumfontX@#1}\wrapped@footfootmarkX{#1}\strut%
+  \csuse{wrapcomponentsX@#1}{%
+    \hspace{\parindent}%
+    \csuse{notenumfontX@#1}%
+    \wrapped@footfootmarkX{#1}%
+    \strut%
     \csuse{wrapcontentX@#1}{#2}%
-    \strut\par}\allowbreak}
+    \strut%
+  }%
+  \par%
+  \allowbreak%
+}%
 
 %    \end{macrocode}
 % \end{macro}
@@ -14058,13 +14081,13 @@
    }%
   \insertparafootsepX{#1}%
   \ledsetnormalparstuff@common%
-  \bgroup%
-   \csuse{notenumfontX@#1}%
-   \wrapped@footfootmarkX{#1}%
-   \strut%
-   csuse{wrapcontentX@#1}{#2}%
+  \csuse{wrapcomponentsX@#1}{%
+    \csuse{notenumfontX@#1}%
+    \wrapped@footfootmarkX{#1}%
+    \strut%
+    \csuse{wrapcontentX@#1}{#2}%
     \penalty-10%
-  \egroup%
+  }%
 }%
 
 %    \end{macrocode}
@@ -15526,6 +15549,7 @@
 %    \begin{macrocode}
       \newtoggle{parindentX@#1}
       \csgdef{wrapcontentX@#1}{}%
+      \csgdef{wrapcomponentsX@#1}{}%
       \csgdef{hangindentX@#1}{0pt}%
       \csgdef{beforeinsertingX@#1}{}%
       \csgdef{raggedX@#1}{}%
@@ -16203,6 +16227,7 @@
 %    \begin{macrocode}
 \unless\ifnofamiliar@
   \newhookcommand@series{wrapcontentX}%
+  \newhookcommand@series{wrapcomponentsX}%
   \newhookcommand@series{beforeinsertingX}%
   \newhooktoggle@series{parindentX}
   \newhookcommand@series{hangindentX}
