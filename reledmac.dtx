@@ -611,6 +611,7 @@
 % \changes{v2.41.0}{2025/07/08}{Fix message when using \protect\cs{SEref} inside a critical footnote.}
 % \changes{v2.41.0}{2025/07/08}{Make \protect\cs{Xparindent} and \protect\cs{parindentX} working with ledgroup.}
 % \changes{v2.42.1}{2025/09/04}{Fix bug with line number side when footnote overlap multiple page}
+% \changes{v2.43.0}{2025/11/05}{Add \protect\cs{afternumberX}}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -2593,9 +2594,24 @@
 % \DescribeMacro{\Xafternumber}
 % With \protect\cs{Xafternumber}\oarg{s}\marg{l} you can add some space after the line number in a footnote. If the line number is not printed, neither is the space. The default value is 0.5~em.
 %
-% \DescribeMacro{\Xendbeforenumber}\DescribeMacro{\Xendaftrenumber}
+% \DescribeMacro{\Xendbeforenumber}\DescribeMacro{\Xendafternumber}
 % \cs{Xendbeforenumber} and \cs{Xendafterenumber} are the equivalents of \cs{Xbeforenumber} and \cs{Xafterenumber} for endnotes.
 %
+% \DescribeMacro{\afternumberX}
+% You can set \cs{afternumberX} to set the space after the footnote number in familiar footnote. The default value is 0~pt.
+%
+% This applies only to the number in the footnote, not in the body.
+%
+% Also, notes that \LaTeX add a space after superscripted text, so also after footnote number.
+%
+% So, you may decrease this space of your expected total space. To do that, is \cs{dimexpr} computation and \cs{scriptspace} value.
+%
+% For example, if you want a total space of 2~pt, you may add a space of 1.5~pt, because there are the 0.5~pt of space after superscripted number.
+%
+% So do
+% \begin{verbatim}
+% \afternumberX{\dimexpr 2pt - \scriptspace\relax}%
+% \end{verbatim}
 %\changes{v1.4.3}{2012/12/18}{Add \protect\cs{Xnonbreakableafternumber}.}
 %\DescribeMacro{\Xnonbreakableafternumber}
 % By default, the space defined by \protect\cs{Xafternumber} is breakable.
@@ -4565,7 +4581,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2025/08/04 v2.42.1 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2025/11/05 v2.43.0 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Loading packages}
@@ -14190,6 +14206,9 @@
   \else%
     \@nameuse{footfootmark#1}%
   \fi%
+  \ifdimequal{\csuse{afternumberX@#1}}{0pt}%
+    {}%
+    {\hspace{\csuse{afternumberX@#1}}}%
 }%
 %    \end{macrocode}
 % \end{macro}
@@ -15554,6 +15573,7 @@
       \csgdef{hangindentX@#1}{0pt}%
       \csgdef{beforeinsertingX@#1}{}%
       \csgdef{raggedX@#1}{}%
+      \csgdef{afternumberX@#1}{0pt}%
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
       \csgdef{hsizethreecolX@#1}{.3 \hsize}%
       \csgdef{colalignX@#1}{\raggedright}%
@@ -16227,6 +16247,7 @@
 % Before generating the optional commands for familiar notes, we check the \protect\cs{nofamiliar} option.
 %    \begin{macrocode}
 \unless\ifnofamiliar@
+  \newhookcommand@series{afternumberX}%
   \newhookcommand@series{wrapcontentX}%
   \newhookcommand@series{wrapcomponentsX}%
   \newhookcommand@series{beforeinsertingX}%
