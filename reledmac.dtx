@@ -2949,6 +2949,18 @@
 % \DescribeMacro{\hsizethreecolX}
 % \protect\cs{hsizethreecolX}\oarg{s}\marg{l} is used to change width of a column when familiar notes are displaying in three columns. Default value is \verb+.3 \hsize+.
 %
+% \subsubsection{Separator between columns}
+% \DescribeMacro{Xcolseparator}
+% \cs{Xcolseparator}\oarg{s}\marg{c}
+% allows you to define a separator to be inserted between columns of critical footnotes.
+% \meta{c} must be a series of \LaTeX macro. Typically, to insert a vertical
+% rule with a \protect{1em} space around, use:
+% \begin{verbatim}
+% \Xcolseparator{\hspace{1em}\vrule\hspace{1em}}%
+% \end{verbatim}
+% \DescribeMacro{colseparatorX}
+% \cs{Xcolseparator}\oarg{s}\marg{c}
+% allows you to define a separator to be inserted between columns of familiar footnotes.
 % \subsection{Options for paragraphed footnotes and notes grouped by line}\label{optionparagraphed}
 % \subsubsection{Mark separation of notes}
 % \DescribeMacro{\Xafternote} \DescribeMacro{\afternoteX}
@@ -11754,6 +11766,8 @@
 % the extra unboxing in \protect\cs{splitoff}, which allows the new \protect\cs{vbox} to
 % have its natural height as it goes into the alignment.
 %
+% Note also the use of \cs{@separator} which allows to define any
+% vertical rule (using \cs{Xcolseparator} and \cs{colseparatorX})
 % The \LaTeX\ \protect\cs{line} macro has no relationship to the
 % TeX \protect\cs{line}. The \LaTeX\ equivalent is \protect\cs{@@line}.
 % \changes{v2.7.0}{2015/11/29}{\protect\cs{rigidbalance} is split in \protect\cs{Xrigidbalance} and \protect\cs{rigidbalanceX}.}
@@ -11761,28 +11775,39 @@
 % We do not call directly \cs{rigidbalance}, but we call \cs{Xrigidbalance} for critical notes and \cs{rigidbalanceX} for familiar notes. Both of them call \cs{rigidbalance}.
 %    \begin{macrocode}
 \newcount\@k%
+\newcount\@k@initial%
 \newdimen\@h%
 \newcommand*{\Xrigidbalance}[3]{%
     \hsize=\expandafter\dimexpr\csuse{Xwidth@\@currentseries}\relax%
+    \gdef\@separator{\csuse{Xcolseparator@\@currentseries}}%
     \rigidbalance{#1}{#2}{#3}%
+    \global\undef\@separator%
 }%
 
 \newcommand*{\rigidbalanceX}[3]{%
     \hsize=\expandafter\dimexpr\csuse{widthX@\@currentseries}\relax%
+    \gdef\@separator{\csuse{colseparatorX@\@currentseries}}%
     \rigidbalance{#1}{#2}{#3}%
+    \global\undef\@separator%
 }%
 
 \newcommand*{\rigidbalance}[3]{%
   \setbox0=\box#1%
   \@k=#2%
   \@h=#3%
+  \@k@initial=#2%
   \@@line{\splittopskip=\@h \vbadness=\@M \hfilneg
   \valign{##\vfil\cr\dosplits}}%
 }%
 
 \newcommand*{\dosplits}{%
   \ifnum\@k>0%
-    \noalign{\hfil}%
+    \noalign{%
+      \hfil%
+      \ifnum\@k<\@k@initial%
+        \@separator%
+      \fi%
+    }%
     \splitoff%
     \global\advance\@k-1%
     \cr\dosplits%
@@ -15347,6 +15372,7 @@
       \csgdef{Xhsizetwocol@#1}{0.45 \hsize}%
       \csgdef{Xhsizethreecol@#1}{.3 \hsize}%
       \csgdef{Xcolalign@#1}{\raggedright}%
+      \csgdef{Xcolseparator@#1}{}%
       \csgdef{Xnotenumfont@#1}{\normalfont}%
       \csgdef{Xnotefontsize@#1}{\footnotesize}%
       \csgdef{Xbhooknote@#1}{}%
@@ -15587,6 +15613,7 @@
       \csgdef{hsizetwocolX@#1}{0.45 \hsize}%
       \csgdef{hsizethreecolX@#1}{.3 \hsize}%
       \csgdef{colalignX@#1}{\raggedright}%
+      \csgdef{colseparatorX@#1}{}%
       \csgdef{notenumfontX@#1}{\normalfont}%
       \csgdef{notefontsizeX@#1}{\footnotesize}%
       \csgdef{bhooknoteX@#1}{}%
@@ -16166,6 +16193,7 @@
   \newhookcommand@series{Xhsizetwocol}
   \newhookcommand@series{Xhsizethreecol}
   \newhookcommand@series{Xcolalign}%
+  \newhookcommand@series{Xcolseparator}%
   \newhookcommand@series{Xnotenumfont}
   \newhookcommand@series{Xbhooknote}
   \newhookcommand@series@reload{Xbhookgroup}{critical}
@@ -16267,6 +16295,7 @@
   \newhookcommand@series{hsizetwocolX}
   \newhookcommand@series{hsizethreecolX}
   \newhookcommand@series{colalignX}%
+  \newhookcommand@series{colseparatorX}%
   \newhookcommand@series{notenumfontX}
   \newhookcommand@series{bhooknoteX}
   \newhookcommand@series@reload{bhookgroupX}{familiar}
