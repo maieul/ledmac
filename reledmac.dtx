@@ -612,8 +612,8 @@
 % \changes{v2.41.0}{2025/07/08}{Make \protect\cs{Xparindent} and \protect\cs{parindentX} working with ledgroup.}
 % \changes{v2.42.1}{2025/09/04}{Fix bug with line number side when footnote overlap multiple page}
 % \changes{v2.43.0}{2025/11/05}{Add \protect\cs{afternumberX}}
-% \changes{v2.44.0}{2025/12/08}{Add \protect\cs{colseparatorX} and
-% \protect\cs{Xcolseparator}}
+% \changes{v2.44.0}{2025/12/08}{Add \protect\cs{colseparatorX} and \protect\cs{Xcolseparator}}
+% \changes{v2.44.1}{2026/01/27}{Fix \protect\option{sameparallelpagenumber} option of \protect\reledpar when using \protect\cs{xxmatter} commands of \protect\LaTeX}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4595,7 +4595,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2025/12/28 v2.44.0 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2026/01/27 v2.44.1 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Loading packages}
@@ -16907,21 +16907,25 @@
   \par@patch@thepage%
 }%
 
-\ifboolexpr{%
-  bool {l@dmemoir}%
-  and test {\ifdef{\@mempnum}}%Only with memoir < 3.8
-}{%
-  \apptocmd{\@mempnum}%
+\ifbool{l@dmemoir}{%
+  \ifdef{\@mempnum}{%Only with memoir < 3.8
+    \apptocmd{\@mempnum}%
     {\par@patch@pagenumbering}%
     {}%%
     {\led@error@fail@patch@mempnum}%
-  }%
-  {%
-  \pretocmd{\pagenumbering}%
+  }{%
+    \pretocmd{\pagenumbering}%
     {\par@patch@pagenumbering}%
     {}%
     {\led@error@fail@patch@pagenumbering}%
   }%
+}%
+{%
+  \apptocmd{\pagenumbering}%
+  {\par@patch@pagenumbering}%
+  {}%
+  {\led@error@fail@patch@pagenumbering}%
+}%
 
 \AtBeginDocument{\par@patch@thepage}%
 %    \end{macrocode}
