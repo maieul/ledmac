@@ -5624,6 +5624,7 @@
   \resetprevpage@num
   \global\stopmsdata@inserted@true%
   \global\let\@msdata@list\relax%
+  \global\old@parindent=\parindent%
   \global\csundef{@msdata@\add@msd@c @data}%
   }
 
@@ -12187,12 +12188,14 @@
 % \begin{macro}{\setparindentX}
 % These two commands set the paragraph indentation of the footnotes, depending on the settings of the user.
 %    \begin{macrocode}
+\newdimen\old@parindent%
+\AtBeginDocument{\old@parindent=\parindent}%
 \newcommand{\Xsetparindent}[1]{%
   \nottoggle{Xparindent@#1}{%
     \parindent=\z@%
   }%
   {%
-    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+    \parindent=\old@parindent%
   }%
 }%
 \newcommand{\setparindentX}[1]{%
@@ -12200,7 +12203,7 @@
     \parindent=\z@%
   }%
   {%
-    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+    \parindent=\old@parindent%
   }%
 }%
 %    \end{macrocode}
@@ -19685,8 +19688,6 @@
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
-   \unexpanded{\newdimen\parindent@beforestanza%
-   \parindent@beforestanza=\parindent}%Keep in memory the standard \parindent
    \global\stanza@count\@ne\stanza@modulo\@ne
    \noexpand\ifnum\expandafter\noexpand\csname sza@0@\endcsname=\z@%
       \def\noexpand\stanza@hang{\unexpanded{\leavevmode\null}}%
@@ -19733,7 +19734,6 @@
       {\before@every@stop@stanza\pend[#1][#2]}%
   \endgroup%
   \instanzafalse%
-  \global\undef\parindent@beforestanza%
 }
 
 \newcommand{\AtEveryStopStanza}[1]{%
