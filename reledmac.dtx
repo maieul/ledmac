@@ -615,6 +615,7 @@
 % \changes{v2.44.0}{2025/12/08}{Add \protect\cs{colseparatorX} and \protect\cs{Xcolseparator}}
 % \changes{v2.44.1}{2026/01/27}{Fix \protect\option{sameparallelpagenumber} option of \protect\reledpar when using \protect\cs{xxmatter} commands of \protect\LaTeX}
 % \changes{v2.44.2}{2026/02/06}{Fix bug in footnote position with recent version of \protect\LaTeX}
+% \changes{v2.44.3}{2026/02/23}{Fix bug with \protect\cs{parindentX} and \protect\cs{Xparindent} when setting differs from one series to another}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4596,7 +4597,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2026/02/06 v2.44.2 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2026/02/23 v2.44.3 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Loading packages}
@@ -5624,6 +5625,7 @@
   \resetprevpage@num
   \global\stopmsdata@inserted@true%
   \global\let\@msdata@list\relax%
+  \global\old@parindent=\parindent%
   \global\csundef{@msdata@\add@msd@c @data}%
   }
 
@@ -12187,12 +12189,14 @@
 % \begin{macro}{\setparindentX}
 % These two commands set the paragraph indentation of the footnotes, depending on the settings of the user.
 %    \begin{macrocode}
+\newdimen\old@parindent%
+\AtBeginDocument{\old@parindent=\parindent}%
 \newcommand{\Xsetparindent}[1]{%
   \nottoggle{Xparindent@#1}{%
     \parindent=\z@%
   }%
   {%
-    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+    \parindent=\old@parindent%
   }%
 }%
 \newcommand{\setparindentX}[1]{%
@@ -12200,7 +12204,7 @@
     \parindent=\z@%
   }%
   {%
-    \ifdef{\parindent@beforestanza}{\parindent=\parindent@beforestanza}{}%
+    \parindent=\old@parindent%
   }%
 }%
 %    \end{macrocode}
@@ -19685,8 +19689,6 @@
    \noexpand\instanzatrue\expandafter
    \begingroup%
    \catcode`\noexpand\&\active%
-   \unexpanded{\newdimen\parindent@beforestanza%
-   \parindent@beforestanza=\parindent}%Keep in memory the standard \parindent
    \global\stanza@count\@ne\stanza@modulo\@ne
    \noexpand\ifnum\expandafter\noexpand\csname sza@0@\endcsname=\z@%
       \def\noexpand\stanza@hang{\unexpanded{\leavevmode\null}}%
@@ -19733,7 +19735,6 @@
       {\before@every@stop@stanza\pend[#1][#2]}%
   \endgroup%
   \instanzafalse%
-  \global\undef\parindent@beforestanza%
 }
 
 \newcommand{\AtEveryStopStanza}[1]{%
