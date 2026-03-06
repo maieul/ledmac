@@ -616,6 +616,8 @@
 % \changes{v2.44.1}{2026/01/27}{Fix \protect\option{sameparallelpagenumber} option of \protect\reledpar when using \protect\cs{xxmatter} commands of \protect\LaTeX}
 % \changes{v2.44.2}{2026/02/06}{Fix bug in footnote position with recent version of \protect\LaTeX}
 % \changes{v2.44.3}{2026/02/23}{Fix bug with \protect\cs{parindentX} and \protect\cs{Xparindent} when setting differs from one series to another}
+% \changes{v2.44.4}{2026/03/06}{Fix bug with \protect\cs{parindentX} and \protect\cs{Xparindent} in ledgroup}
+% \changes{v2.44.4}{2026/03/06}{Fix multiple bug in endnotes when using multiple numbering section}
 %      Typeset scholarly editions with \LaTeX\thanks{This file (\dtxfilename)
 % has version number \fileversion, last revised \filedate.}}
 %
@@ -4597,7 +4599,7 @@
 %    \begin{macrocode}
 %<*code>
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{reledmac}[2026/02/23 v2.44.3 typesetting critical editions]%
+\ProvidesPackage{reledmac}[2026/03/06 v2.44.4 typesetting critical editions]%
 %    \end{macrocode}
 %
 % \subsection{Loading packages}
@@ -11161,7 +11163,6 @@
 \newcommand{\mpnormalvfootnote@inserted}[2]{%
     \noindent\csuse{Xbhooknote@#1}%
     \csuse{Xnotefontsize@#1}%
-    \nottoggle{Xgroupbyline@#1}{\Xledsetnormalparstuff{#1}}{}%
     \hsize\columnwidth%
     \@parboxrestore%
     \color@begingroup%
@@ -13451,7 +13452,6 @@
     \unvbox\@nameuse{mpfootins#1}
     \noindent\csuse{bhooknoteX@#1}%
     \csuse{notefontsizeX@#1}%
-    \ledsetnormalparstuffX{#1}%
     \hsize\columnwidth
     \@parboxrestore
     \color@begingroup
@@ -14628,8 +14628,11 @@
 %    \begin{macrocode}
 \newcommand{\l@dend@stuff}{%
  \def\do##1{%
-   \ifbool{l@dend@##1}{}%
-     {\l@dend@open{##1}}%
+   \ifbool{l@dend@##1}%
+     {}%
+     {%
+      \l@dend@open{##1}%
+     }%
    \expandafter\immediate\expandafter\write\csname l@d@##1end\endcsname{\string\l@d@section{\the\section@num}\@percentchar}%
    }%
  \dolistloop{\@series}%
@@ -14869,6 +14872,10 @@
 \newcommand*{\doendnotes}[1]{%
   \l@dend@close{#1}%
    \begingroup
+      \def\l@d@section##1{%
+        \global\section@num=##1%
+        \global\expandafter\csname #1end@bysection\endcsname=##1%
+      }%
       \csxdef{prevpagenum@#1}{}%
       \csxdef{prevpagerange@#1}{}%
       \global\toggletrue{Xendfirstnote@#1}%
@@ -14893,6 +14900,7 @@
  \begingroup%
     \makeatletter%
     \def\l@d@section##1{%
+      \global\section@num=##1%
       \global\toggletrue{Xendfirstnote@#1}%
       \ifnumequal{##1}{\csname #1end@bysection\endcsname}%
         {\cslet{#1end}{\endprint}}%
