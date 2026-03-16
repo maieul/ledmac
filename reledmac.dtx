@@ -12306,6 +12306,32 @@
 %    \end{macrocode}
 %
 % \end{macro}
+% \begin{macro}{\printpstart@end}
+% \begin{macro}{\printstanza@end}
+% The \cs{printpstart@end} is used to print final pstart number when using \cs{xxref}. As we do not want to define special counter only for this case, we manually set \TeX\ counter \cs{c@pstartL}, \cs{c@pstartR} and \cs{c@pstart}. Then we call \cs{printpstart}.
+%
+% The same principle is valuable for \cs{printstanza@end}.
+% As we call it inside \cs{printlines}, the definitions are made locally.
+%    \begin{macrocode}%
+\newcommand{\printpstart@end}{%
+  \ifdefined\c@pstartL%
+    \c@pstartL=\@this@pstart@end%
+    \c@pstartR=\@this@pstart@end%
+  \fi%
+  \c@pstart=\@this@pstart@end%
+  \printpstart%
+}%
+\newcommand{\printstanza@end}{%
+  \ifdefined\c@stanzaL%
+    \c@stanzaL=\@this@stanza@end%
+    \c@stanzaR=\@this@stanza@end%
+  \fi%
+  \c@stanza=\@this@stanza@end%
+  \printstanza%
+}%
+%    \end{macrocode}%
+% \end{macro}
+% \end{macro}
 % \subsection{Print critical footnotes components}
 % The  components of a critical footnote are :
 % \begin{itemize}
@@ -12732,6 +12758,8 @@
 % \begin{enumerate}
 % \item we print the ending page number;
 % \item or the ending line number is different from the starting line number and we didn't disable the line number printing
+%  \item or we print the pstart number and the ending pstart is different of the starting pstart
+%  \item or we print the stanza number and the ending stanza is different of the starting stanza
 % \end{enumerate}
 % If either of these conditions is true, we also print the annotation linked to the ending line number annotations.
 %    \begin{macrocode}
@@ -12740,6 +12768,14 @@
     or (%
       not test{\ifnumequal{#2}{#5}}%
       and bool{l@d@Xlinenumber}%
+    )%
+    or (%
+      togl{Xpstart@\@currentseries}%
+      and not test {\ifnumequal{\@this@pstart@start}{\@this@pstart@end}}%
+    )%
+    or (%
+      togl{Xstanza@\@currentseries}%
+      and not test {\ifnumequal{\@this@stanza@start}{\@this@stanza@end}}%
     )%
    }{%
     \l@d@elintrue%
@@ -13045,6 +13081,18 @@
          \csuse{Xpagelinesep@\@currentseries}%
        }{}%
     \fi%
+    \iftoggle{Xpstart@\@currentseries}{%
+      \ifnumequal{\@this@pstart@end}{\@this@pstart@start}{}{%
+        \printpstart@end%
+        \csuse{Xpstartseparator@\@currentseries}%
+      }%
+    }{}%
+    \iftoggle{Xstanza@\@currentseries}{%
+      \ifnumequal{\@this@stanza@end}{\@this@stanza@start}{}{%
+        \printstanza@end%
+        \csuse{Xstanzaseparator@\@currentseries}%
+      }%
+    }{}%
     \ifl@d@Xlinenumber%
       \ifl@d@elin%
         \wrap@edcrossref{\@this@crossref@end}{%
@@ -17539,6 +17587,10 @@
 % \end{macro}
 %
 % \begin{macro}{\xxref}
+% \begin{macro}{\this@pstart@start}
+% \begin{macro}{\this@pstart@end}
+% \begin{macro}{\this@stanza@start}
+% \begin{macro}{\this@stanza@end}
 % \changes{v1.19.0}{2015/03/06}{\protect\cs{xxref} works also with right side numbers, when \protect\cs{@Rlineflag} is not empty.}
 % \changes{v1.20.0}{2015/03/22}{Debug \protect\cs{xxref} when not loading \eledpar (Fix a bug added in 1.19.0).}
 % The \protect\cs{xxref} command takes two arguments, both of which are
@@ -17553,6 +17605,10 @@
 % to \protect\cs{edtext} for one reason or another.  Using \protect\cs{xxref} in the
 % second argument of \protect\cs{edtext} lets you set things up at least
 % semi-automatically.
+%
+% The \cs{@this@pstart@start}, \cs{@thisp@start@end}, \cs{this@stanza@start} and \cs{@this@stanza@end} are defined in \cs{xxref}. They are used later to calculate if we must print or not the second number.
+%
+% We also give them a default value to \verb`0` in order to avoid fatal error in test when \cs{xxref} is not used.
 %    \begin{macrocode}
 \newcommand*{\xxref}[2]{%
   {%
@@ -17584,9 +17640,11 @@
    \fi%
    \global\appto\@beforeinsertofthisedtext{%
      \def\@this@crossref@start{#1}%
-   }%
-   \global\appto\@beforeinsertofthisedtext{%
      \def\@this@crossref@end{#2}%
+     \edef\@this@pstart@start{\l@dgetref@num{6}{#1}}%
+     \edef\@this@stanza@start{\l@dgetref@num{7}{#1}}%
+     \edef\@this@pstart@end{\l@dgetref@num{6}{#2}}%
+     \edef\@this@stanza@end{\l@dgetref@num{7}{#2}}%
    }%
    \linenum{\@tempa|\@tempb}%
    \edef\@tempe{\@tempc|\@tempd}%
@@ -17594,8 +17652,16 @@
  }%
 }%
 
+\def\@this@pstart@start{0}%
+\def\@this@stanza@start{0}%
+\def\@this@pstart@end{0}%
+\def\@this@stanza@end{0}%
 
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
 % \end{macro}
 %
 % \begin{macro}{\appref}
@@ -17626,6 +17692,11 @@
 \def\Xpagelinesep@appref{\fullstop}%
 \def\Xpagelinesep@SEref{\fullstop}%
 
+
+\newtoggle{Xstanza@appref}%
+\newtoggle{Xstanza@SEref}%
+\newtoggle{Xpstart@appref}%
+\newtoggle{Xpstart@SEref}%
 
 \newtoggle{Xtwolinesbutnotmore@appref}%
 \newtoggle{Xtwolinesbutnotmore@SEref}%
@@ -17825,6 +17896,10 @@
    {\led@warn@pairRefUndefined{#2}\nfss@text{\reset@font\bfseries ??}}%
    {%
     \def\@this@crossref@start{#2:start}%
+    \edef\@this@pstart@start{\l@dgetref@num{6}{#2:start}}%
+    \edef\@this@stanza@start{\l@dgetref@num{7}{#2:start}}%
+    \edef\@this@pstart@end{\l@dgetref@num{6}{#2:end}}%
+    \edef\@this@stanza@end{\l@dgetref@num{7}{#2:end}}%
     \def\@this@crossref@end{#2:end}%
     \xdef\annot@start{\xannotationref{#2:start}}%
     \xdef\annot@end{\xannotationref{#2:end}}%
